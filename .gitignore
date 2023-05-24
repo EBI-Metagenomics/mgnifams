@@ -1,1 +1,2 @@
-db_venv/
+scripts/db_venv/
+scripts/mmseqs_clus/tmp/
