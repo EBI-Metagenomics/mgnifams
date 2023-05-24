@@ -1,2 +1,5 @@
 scripts/db_venv/
 scripts/mmseqs_clus/tmp/
+scripts/.nextflow/
+scripts/work/
+scripts/.nextflow.log*
