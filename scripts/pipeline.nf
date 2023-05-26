@@ -1,36 +1,22 @@
 #!/usr/bin/env nextflow
 
-// Define base path
-params.base_path = "../../../"
-
-// Define Python script paths
-
 params.base_url = "http://localhost:8000/sequence_explorer"
 
-// Fetch data from PostgreSQL db
-// and write it to a FASTA file
-// TODO change this with just input channel of a fasta file with the whole DB
-process fetchData {
-    output:
-    path "pgsql.fasta"
+Channel
+    .fromPath("pgsql.fasta")
+    .splitText(by: 50)
+    .set { split_files }
 
-    script:
-    """
-    db_to_fasta.py
-    """
-}
-
-// From protein ids, create urls for Django API
 process createUrls {
     input:
-    path pgsql
+    val fasta_content
 
     output:
     path "urls.txt"
 
     script:
     """
-    fasta_to_urls.py $pgsql ${params.base_url}
+    echo '${fasta_content}' | fasta_to_urls.py ${params.base_url}
     """
 }
 
@@ -49,5 +35,6 @@ process sendApiRequests {
 }
 
 workflow {
-    fetchData | createUrls | sendApiRequests
+    createUrls(split_files)
+    sendApiRequests(createUrls.out)
 }
