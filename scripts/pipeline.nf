@@ -4,9 +4,6 @@
 params.base_path = "../../../"
 
 // Define Python script paths
-params.db_to_fasta_script = "${params.base_path}db_to_fasta.py"
-params.fasta_to_urls_script = "${params.base_path}fasta_to_urls.py"
-params.query_urls_script = "${params.base_path}query_urls.py"
 
 params.base_url = "http://localhost:8000/sequence_explorer"
 
@@ -19,7 +16,7 @@ process fetchData {
 
     script:
     """
-    python3 ${params.db_to_fasta_script}
+    db_to_fasta.py
     """
 }
 
@@ -33,7 +30,7 @@ process createUrls {
 
     script:
     """
-    python3 ${params.fasta_to_urls_script} $pgsql ${params.base_url}
+    fasta_to_urls.py $pgsql ${params.base_url}
     """
 }
 
@@ -47,7 +44,7 @@ process sendApiRequests {
 
     script:
     """
-    python3 ${params.query_urls_script} $urls
+    query_urls.py $urls
     """
 }
 
