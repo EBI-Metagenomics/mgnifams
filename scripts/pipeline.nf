@@ -1,40 +1,56 @@
 #!/usr/bin/env nextflow
 
-params.base_url = "http://localhost:8000/sequence_explorer"
-
-Channel
-    .fromPath("pgsql.fasta")
-    .splitText(by: 50)
-    .set { split_files }
-
-process createUrls {
+process CREATE_DB {
     input:
-    val fasta_content
+    path fasta
 
     output:
-    path "urls.txt"
+    path "mmseqs_db/*"
 
     script:
     """
-    echo '${fasta_content}' | fasta_to_urls.py ${params.base_url}
+    mkdir mmseqs_db
+    mmseqs createdb ${fasta} mmseqs_db/${fasta}_db
     """
 }
 
-// Hit Django API for every protein and save the response HTML page
-process sendApiRequests {
+process LINCLUST {
     input:
-    path urls
+    path mmseqsDB
 
     output:
-    path "*_page.html"
+    path "mmseqs_clus/*"
 
     script:
     """
-    query_urls.py $urls
+    mkdir mmseqs_clus
+    mmseqs linclust ${mmseqsDB.baseName[1]} mmseqs_clus/${mmseqsDB.baseName[0]}_clu mmseqs_clus/tmp --min-seq-id 0.7 --cov-mode 1 -c 0.8
+    """
+    
+}
+
+process CREATE_TSV {
+    publishDir 'results', mode: 'copy'
+    
+    input:
+    path mmseqsDB
+    path mmseqsCLU
+
+    output:
+    path "${mmseqsCLU.baseName[0]}.tsv"
+
+    script:
+    """
+    mmseqs createtsv ${mmseqsDB.baseName[1]} ${mmseqsCLU.baseName[0]} ${mmseqsCLU.baseName[0]}.tsv
     """
 }
 
 workflow {
-    createUrls(split_files)
-    sendApiRequests(createUrls.out)
+    Channel
+        .fromPath("cluster_reps_50k.fa")
+        .set { fastaFile }
+
+    db_ch = CREATE_DB(fastaFile)
+    clust_ch = LINCLUST(db_ch)
+    CREATE_TSV(db_ch, clust_ch)
 }
