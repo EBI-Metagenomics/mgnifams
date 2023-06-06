@@ -4,3 +4,4 @@ scripts/.nextflow/
 scripts/work/
 scripts/.nextflow.log*
 scripts/tmp/*
+data/
