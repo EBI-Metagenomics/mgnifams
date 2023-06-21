@@ -2,3 +2,5 @@
 work/
 .nextflow.log*
 data/
+myenv/
+results/
