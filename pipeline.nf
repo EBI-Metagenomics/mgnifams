@@ -5,6 +5,7 @@ params.family_path = "results/family.fasta"
 
 include { CREATE_DB; LINCLUST; CREATE_TSV } from './modules/mmseqs2/mmseqs2.nf'
 include { MAFFT } from './modules/mafft/mafft.nf'
+include { HMMBUILD } from './modules/hmm/hmm.nf'
 
 // workflow {
 //     Channel
@@ -21,5 +22,6 @@ workflow {
         .fromPath(params.family_path) 
         .set { familyFile }
 
-        MAFFT(familyFile)
+        MAFFT(familyFile) | HMMBUILD
+        
 }
