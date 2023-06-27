@@ -1,5 +1,5 @@
 process HMMBUILD {
-    publishDir 'results', mode: 'copy'
+    publishDir 'data/output', mode: 'copy'
     
     input:
     path fasta
