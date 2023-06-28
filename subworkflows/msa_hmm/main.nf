@@ -5,6 +5,7 @@ include { HMMBUILD } from "$baseDir/modules/hmm/hmm.nf"
 
 workflow msa_hmm {
     take: familyFile
+
     main:
-        MAFFT(familyFile) | HMMBUILD 
+        MAFFT(familyFile) | HMMBUILD
 }
