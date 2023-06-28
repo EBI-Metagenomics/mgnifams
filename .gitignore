@@ -2,3 +2,6 @@
 .nextflow.log*
 work/
 data/
+report-*
+trace-*
+timeline-*

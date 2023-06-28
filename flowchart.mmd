@@ -1,0 +1,18 @@
+flowchart TD
+    p0((Channel.fromPath))
+    p1((Channel.fromPath))
+    p2[mmseqs2:CREATE_DB]
+    p3[mmseqs2:LINCLUST]
+    p4[mmseqs2:CREATE_TSV]
+    p5(( ))
+    p6[msa_hmm:MAFFT]
+    p7[msa_hmm:HMMBUILD]
+    p8(( ))
+    p0 -->|fastaFile| p2
+    p1 -->|familyFile| p6
+    p2 --> p3
+    p3 --> p4
+    p2 -->|mmseqsDB| p4
+    p4 --> p5
+    p6 --> p7
+    p7 --> p8

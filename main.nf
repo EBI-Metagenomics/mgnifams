@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 
-params.fasta_path = "data/input/mgnify_500K_proteins.fa.gz" // "data/cluster_reps_50k.fa"
-params.family_path = "data/output/family.fasta"
+params.fasta_path = "$baseDir/data/input/mgnify_500K_proteins.fa.gz" // "data/cluster_reps_50k.fa"
+params.family_path = "$baseDir/data/output/family.fasta"
 
-include { mmseqs2 } from './subworkflows/mmseqs2/main.nf'
-include { msa_hmm } from './subworkflows/msa_hmm/main.nf'
+include { mmseqs2 } from "$baseDir/subworkflows/mmseqs2/main.nf"
+include { msa_hmm } from "$baseDir/subworkflows/msa_hmm/main.nf"
 
 workflow {
     Channel

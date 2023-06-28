@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-include { CREATE_DB; LINCLUST; CREATE_TSV } from '../../modules/mmseqs2/mmseqs2.nf'
+include { CREATE_DB; LINCLUST; CREATE_TSV } from "$baseDir/modules/mmseqs2/mmseqs2.nf"
 
 workflow mmseqs2 {
     take: fastaFile
