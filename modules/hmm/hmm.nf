@@ -14,7 +14,7 @@ process HMMBUILD {
 }
 
 process HMMSCAN {
-    publishDir 'data/output/hmm', pattern: '*_scan.txt', mode: 'copy'
+    publishDir 'data/output/hmm', pattern: '*_scan.tblout', mode: 'copy'
 
     input:
     path hmm
@@ -25,11 +25,11 @@ process HMMSCAN {
     path "${hmm}.h3i"
     path "${hmm}.h3m"
     path "${hmm}.h3p"
-    path "${hmm}_scan.txt"
+    path "${hmm}_scan.tblout"
 
     script:
     """
     hmmpress ${hmm}
-    hmmscan ${hmm} ${uniprot_fasta} > ${hmm}_scan.txt
+    hmmscan --domtblout ${hmm}_scan.tblout ${hmm} ${uniprot_fasta} > /dev/null
     """
 }
