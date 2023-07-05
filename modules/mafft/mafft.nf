@@ -1,5 +1,5 @@
 process MAFFT {
-    publishDir 'data/output', mode: 'copy'
+    publishDir 'data/output/mafft', mode: 'copy'
     
     input:
     path fasta
@@ -9,6 +9,6 @@ process MAFFT {
 
     script:
     """
-    mafft --thread 8 ${fasta} > ${fasta}_mafft.fa
+    mafft --anysymbol --thread 8 ${fasta} > ${fasta}_mafft.fa
     """
 }

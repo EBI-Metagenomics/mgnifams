@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 
 params.fasta_path = "$baseDir/data/input/mgnify_500K_proteins.fa.gz"
+params.uniprot_sprot_fasta_path = "$baseDir/data/input/uniprot_sprot.fasta"
 
 include { mmseqs2 } from "$baseDir/subworkflows/mmseqs2/main.nf"
 include { fasta_families } from "$baseDir/subworkflows/fasta_families/main.nf"
@@ -11,7 +12,11 @@ workflow {
         .fromPath(params.fasta_path) 
         .set { fastaFile }
 
+    Channel
+        .fromPath(params.uniprot_sprot_fasta_path) 
+        .set { uniprot_sprot_fasta_path }
+
     cluster_tsv_ch = mmseqs2(fastaFile)
     families_ch = fasta_families(cluster_tsv_ch, fastaFile)
-    msa_hmm(families_ch)
+    msa_hmm(families_ch, uniprot_sprot_fasta_path)
 }
