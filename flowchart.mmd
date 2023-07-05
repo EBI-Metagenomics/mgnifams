@@ -1,34 +1,31 @@
 flowchart TD
     p0((Channel.fromPath))
-    p1((Channel.fromPath))
-    p2(( ))
-    p3[mmseqs2:CREATE_DB]
-    p4[mmseqs2:LINCLUST]
-    p5[mmseqs2:CREATE_TSV]
-    p6[fasta_families:EXPORT_REPS]
-    p7([splitText])
-    p8([map])
-    p9([first])
-    p10([first])
-    p11([take])
-    p12[fasta_families:CREATE_FAMILY_FA]
-    p13[msa_hmm:MAFFT]
-    p14[msa_hmm:HMMBUILD]
-    p15(( ))
-    p0 -->|fastaFile| p3
-    p1 -->|familyFile| p2
-    p3 --> p4
+    p1[mmseqs2:CREATE_DB]
+    p2[mmseqs2:LINCLUST]
+    p3[mmseqs2:CREATE_TSV]
+    p4[fasta_families:EXPORT_REPS]
+    p5([splitText])
+    p6([map])
+    p7([first])
+    p8([first])
+    p9([take])
+    p10[fasta_families:CREATE_FAMILY_FA]
+    p11[msa_hmm:MAFFT]
+    p12[msa_hmm:HMMBUILD]
+    p13(( ))
+    p0 -->|fastaFile| p1
+    p1 --> p2
+    p2 --> p3
+    p1 -->|mmseqsDB| p3
+    p3 -->|clust_tsv| p4
     p4 --> p5
-    p3 -->|mmseqsDB| p5
-    p5 -->|clust_tsv| p6
-    p6 --> p7
-    p7 --> p8
-    p8 -->|reps_ch| p11
-    p5 -->|clust_tsv| p9
-    p9 --> p12
-    p0 -->|fastaFile| p10
-    p10 --> p12
+    p5 --> p6
+    p6 -->|reps_ch| p9
+    p3 -->|clust_tsv| p7
+    p7 --> p10
+    p0 -->|fastaFile| p8
+    p8 --> p10
+    p9 --> p10
+    p10 -->|familyFile| p11
     p11 --> p12
-    p12 -->|familyFile| p13
-    p13 --> p14
-    p14 --> p15
+    p12 --> p13
