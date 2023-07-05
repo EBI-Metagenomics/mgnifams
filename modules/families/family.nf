@@ -1,20 +1,31 @@
 process EXPORT_REPS {
-    // TODO, for non 1-member clusters
+    publishDir 'data/output', mode: 'copy'
+
+    input:
+    path clust_tsv
+
+    output:
+    path "rep_names.txt"
+
+    script:
+    """
+    awk -F'\t' '{print \$1}' ${clust_tsv} | sort -u > rep_names.txt
+    """
 }
 
 process CREATE_FAMILY_FA {
     publishDir 'data/output', mode: 'copy'
     
     input:
-    path clusters
+    path clust_tsv
     path fasta
     val mgyp
 
     output:
-    path "${clusters}.family.fa"
+    path "${clust_tsv}.family.fa"
 
     script:
     """
-    python3 family_rep_into_fasta.py ${clusters} ${fasta} ${clusters}.family.fa ${mgyp}
+    python3 family_rep_into_fasta.py ${clust_tsv} ${fasta} ${clust_tsv}.family.fa ${mgyp}
     """
 }

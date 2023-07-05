@@ -1,15 +1,16 @@
 #!/usr/bin/env nextflow
 
-include { EXPORT_REPS, CREATE_FAMILY_FA } from "$baseDir/modules/families/family.nf"
+include { EXPORT_REPS; CREATE_FAMILY_FA } from "$baseDir/modules/families/family.nf"
 
-workflow families {
+workflow fasta_families {
     take: 
-        clust_tsv,
-        fastaFile
+    clust_tsv
+    fastaFile
 
-    main:
-        CREATE_FAMILY_FA(clust_tsv, fastaFile) // todo export reps first, then redo
+    main: // TODO
+    reps_ch = EXPORT_REPS(clust_tsv)
+    // CREATE_FAMILY_FA(reps_ch, fastaFile)
 
-    emit:
-        CREATE_FAMILY_FA.out
+    // emit:
+    // CREATE_FAMILY_FA.out
 }
