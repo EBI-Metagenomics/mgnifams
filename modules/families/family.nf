@@ -14,7 +14,7 @@ process EXPORT_REPS {
 }
 
 process CREATE_FAMILY_FA {
-    publishDir 'data/output', mode: 'copy'
+    publishDir 'data/output/families', mode: 'copy'
     
     input:
     path clust_tsv
@@ -22,10 +22,10 @@ process CREATE_FAMILY_FA {
     val mgyp
 
     output:
-    path "${clust_tsv}.family.fa"
+    path "${mgyp}_family.fa"
 
     script:
     """
-    python3 family_rep_into_fasta.py ${clust_tsv} ${fasta} ${clust_tsv}.family.fa ${mgyp}
+    python3 ${baseDir}/bin/family_rep_into_fasta.py ${clust_tsv} ${fasta} ${mgyp}_family.fa ${mgyp}
     """
 }

@@ -24,7 +24,6 @@ process LINCLUST {
     mkdir mmseqs_clus
     mmseqs linclust ${mmseqsDB.baseName[1]} mmseqs_clus/${mmseqsDB.baseName[0]}_clu mmseqs_clus/tmp --min-seq-id 0.3 --cov-mode 1 -c 0.8
     """
-    
 }
 
 process CREATE_TSV {

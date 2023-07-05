@@ -7,10 +7,10 @@ workflow fasta_families {
     clust_tsv
     fastaFile
 
-    main: // TODO
-    reps_ch = EXPORT_REPS(clust_tsv)
-    // CREATE_FAMILY_FA(reps_ch, fastaFile)
+    main:
+    reps_ch = EXPORT_REPS(clust_tsv).splitText().map { it.trim() } // removing new line chars at end of mgyps
+    CREATE_FAMILY_FA(clust_tsv.first(), fastaFile.first(), reps_ch.take(10)) // TODO, remove top 10
 
-    // emit:
-    // CREATE_FAMILY_FA.out
+    emit:
+    CREATE_FAMILY_FA.out
 }

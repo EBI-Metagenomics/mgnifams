@@ -5,3 +5,4 @@ data/
 report-*
 trace-*
 timeline-*
+venv/

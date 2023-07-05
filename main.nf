@@ -16,6 +16,6 @@ workflow {
         .set { familyFile }
 
     cluster_tsv_ch = mmseqs2(fastaFile)
-    fasta_families(cluster_tsv_ch, fastaFile)
-    msa_hmm(familyFile)
+    families_ch = fasta_families(cluster_tsv_ch, fastaFile)
+    msa_hmm(families_ch)
 }
