@@ -1,5 +1,8 @@
 process MAFFT {
-    publishDir 'data/output/mafft', mode: 'copy'
+    publishDir 'data/output/mafft', mode: 'copy', saveAs: { filename ->
+        def newFilename = filename.replaceAll("family.fa_mafft", "msa")
+        "${newFilename}"
+    }
     
     input:
     path fasta

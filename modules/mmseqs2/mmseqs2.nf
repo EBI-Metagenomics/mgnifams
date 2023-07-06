@@ -27,7 +27,10 @@ process LINCLUST {
 }
 
 process CREATE_TSV {
-    publishDir 'data/output', mode: 'copy'
+    publishDir 'data/output', mode: 'copy', saveAs: { filename ->
+        def newFilename = filename.replaceAll(".fa", "")
+        "${newFilename}"
+    }
     
     input:
     path mmseqsDB
