@@ -1,8 +1,5 @@
 #!/usr/bin/env nextflow
 
-params.fasta_path = "$baseDir/data/input/mgnify_500K_proteins.fa.gz"
-params.uniprot_sprot_fasta_path = "$baseDir/data/input/uniprot_sprot.fasta"
-
 include { mmseqs2 } from "$baseDir/subworkflows/mmseqs2/main.nf"
 include { fasta_families } from "$baseDir/subworkflows/fasta_families/main.nf"
 include { msa_hmm } from "$baseDir/subworkflows/msa_hmm/main.nf"
