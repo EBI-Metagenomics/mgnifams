@@ -32,7 +32,7 @@ process HMMSCAN {
     path "${hmm}.h3i"
     path "${hmm}.h3m"
     path "${hmm}.h3p"
-    path "${hmm}_scan.tblout"
+    path "${hmm}_scan.tblout", emit: tblout_ch
 
     script:
     """
