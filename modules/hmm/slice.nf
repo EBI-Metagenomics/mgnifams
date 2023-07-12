@@ -15,3 +15,14 @@ process SLICE {
     ${baseDir}/bin/slice_tblout.py ${tblout} ${tblout}_sliced.csv
     """
 }
+
+process SCANSLICE {
+    input:
+    path slice
+    path msa
+
+    script:
+    """
+    ${baseDir}/bin/scan_slice.py ${slice} ${msa}
+    """
+}

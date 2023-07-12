@@ -13,5 +13,6 @@ workflow msa_hmm {
     mafft_ch = MAFFT(familyFile)
     build_ch = HMMBUILD(mafft_ch)
     tblout_ch = HMMSCAN(build_ch, uniprot_sprot_fasta_path.first()).tblout_ch
-    SLICE(tblout_ch)
+    slice_ch = SLICE(tblout_ch)
+    SCANSLICE(slice_ch, mafft_ch)
 }
