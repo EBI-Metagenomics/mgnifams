@@ -12,7 +12,7 @@ process HMMBUILD {
 
     script:
     """
-    hmmbuild ${fasta}.hmm ${fasta}
+    hmmbuild ${fasta}.hmm ${fasta} > /dev/null 2>&1
     """
 }
 
@@ -36,7 +36,7 @@ process HMMSCAN {
 
     script:
     """
-    hmmpress ${hmm}
+    hmmpress ${hmm} > /dev/null 2>&1
     hmmscan --domtblout ${hmm}_scan.tblout ${hmm} ${uniprot_fasta} > /dev/null
     """
 }

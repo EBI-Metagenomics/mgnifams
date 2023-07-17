@@ -1,8 +1,9 @@
 #!/usr/bin/env nextflow
 
-include { mmseqs2 } from "$baseDir/subworkflows/mmseqs2/main.nf"
-include { fasta_families } from "$baseDir/subworkflows/fasta_families/main.nf"
-include { msa_hmm } from "$baseDir/subworkflows/msa_hmm/main.nf"
+include { execute_clustering } from "$baseDir/subworkflows/execute_clustering/main.nf"
+include { create_families } from "$baseDir/subworkflows/create_families/main.nf"
+include { produce_models } from "$baseDir/subworkflows/produce_models/main.nf"
+include { annotate_families } from "$baseDir/subworkflows/annotate_families/main.nf"
 
 workflow {
     Channel
@@ -13,7 +14,8 @@ workflow {
         .fromPath(params.uniprot_sprot_fasta_path) 
         .set { uniprot_sprot_fasta_path }
 
-    cluster_tsv_ch = mmseqs2(fastaFile)
-    families_ch = fasta_families(cluster_tsv_ch, fastaFile)
-    msa_hmm(families_ch, uniprot_sprot_fasta_path)
+    cluster_tsv_ch = execute_clustering(fastaFile)
+    families_ch = create_families(cluster_tsv_ch, fastaFile)
+    models = produce_models(families_ch)
+    annotate_families(models.mafft_ch, models.build_ch, uniprot_sprot_fasta_path)
 }

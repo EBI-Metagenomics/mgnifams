@@ -29,6 +29,6 @@ if __name__ == "__main__":
     slices = read_slices(args.slices_file)
     sequence = get_first_sequence(args.msa_file)
     substrings = get_substrings(sequence, slices)
-    print(substrings)
+    # print(substrings)
 
     # TODO keep substrings over threshold characters, hmm and pyhmmer against uniprot

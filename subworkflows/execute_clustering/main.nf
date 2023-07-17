@@ -2,7 +2,7 @@
 
 include { CREATE_DB; LINCLUST; CREATE_TSV } from "$baseDir/modules/mmseqs2/mmseqs2.nf"
 
-workflow mmseqs2 {
+workflow execute_clustering {
     take:
     fastaFile
 

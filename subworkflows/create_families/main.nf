@@ -2,7 +2,7 @@
 
 include { EXPORT_REPS; CREATE_FAMILY_FA } from "$baseDir/modules/families/family.nf"
 
-workflow fasta_families {
+workflow create_families {
     take: 
     clust_tsv
     fastaFile

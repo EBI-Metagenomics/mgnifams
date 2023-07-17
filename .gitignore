@@ -6,3 +6,4 @@ report-*
 trace-*
 timeline-*
 venv/
+eggnog-mapper/

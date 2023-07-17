@@ -8,7 +8,7 @@ process CREATE_DB {
     script:
     """
     mkdir mmseqs_db
-    mmseqs createdb ${fasta} mmseqs_db/${fasta}_db
+    mmseqs createdb ${fasta} mmseqs_db/${fasta}_db > /dev/null 2>&1
     """
 }
 
@@ -22,7 +22,7 @@ process LINCLUST {
     script:
     """
     mkdir mmseqs_clus
-    mmseqs linclust ${mmseqsDB.baseName[1]} mmseqs_clus/${mmseqsDB.baseName[0]}_clu mmseqs_clus/tmp --min-seq-id 0.3 --cov-mode 1 -c 0.8
+    mmseqs linclust ${mmseqsDB.baseName[1]} mmseqs_clus/${mmseqsDB.baseName[0]}_clu mmseqs_clus/tmp --min-seq-id 0.3 --cov-mode 1 -c 0.8 > /dev/null 2>&1
     """
 }
 
@@ -41,6 +41,6 @@ process CREATE_TSV {
 
     script:
     """
-    mmseqs createtsv ${mmseqsDB.baseName[1]} ${mmseqsDB.baseName[1]} ${mmseqsCLU.baseName[0]} ${mmseqsCLU.baseName[0]}.tsv
+    mmseqs createtsv ${mmseqsDB.baseName[1]} ${mmseqsDB.baseName[1]} ${mmseqsCLU.baseName[0]} ${mmseqsCLU.baseName[0]}.tsv > /dev/null 2>&1
     """
 }

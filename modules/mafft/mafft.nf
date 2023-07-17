@@ -12,6 +12,6 @@ process MAFFT {
 
     script:
     """
-    mafft --anysymbol --thread 8 ${fasta} > ${fasta}_mafft.fa
+    mafft --anysymbol --thread 8 ${fasta} > ${fasta}_mafft.fa 2> /dev/null
     """
 }
