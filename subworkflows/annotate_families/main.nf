@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 
 include { HMMSCAN } from "$baseDir/modules/hmm/hmm.nf"
+// TODO more annotation sources: InterPro, eggNOG, protENN
 
 workflow annotate_families {
     take:

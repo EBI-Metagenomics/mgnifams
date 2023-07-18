@@ -2,6 +2,7 @@
 
 import argparse
 import pandas as pd
+import os
 
 def read_slices(slices_file):
     col_names = ['from', 'to']
@@ -23,12 +24,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Scan a sliced mafft result first sequence for domains.')
     parser.add_argument('slices_file', type=str, help='The path to the slice ranges')
     parser.add_argument('msa_file', type=str, help='The path to the family msa')
+    parser.add_argument('output_file', type=str, help='The path to the output file')
 
     args = parser.parse_args()
 
     slices = read_slices(args.slices_file)
     sequence = get_first_sequence(args.msa_file)
     substrings = get_substrings(sequence, slices)
-    # print(substrings)
+    msa_filename = os.path.basename(args.msa_file)
 
-    # TODO keep substrings over threshold characters, hmm and pyhmmer against uniprot
+    # Open output file in write mode
+    with open(args.output_file, 'w') as f:
+        # Iterate over substrings and their corresponding slices
+        for s, (index, row) in zip(substrings, slices.iterrows()):
+            if len(s) > 10:
+                f.write(f">{msa_filename}_{row['from']}_{row['to']}\n{s}\n")
