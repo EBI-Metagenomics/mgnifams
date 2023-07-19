@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-include { SLICE; PRINT_SLICED } from "$baseDir/modules/slicing/slicing.nf"
+include { SLICE; PRINT_SLICED; CONCAT_FASTA } from "$baseDir/modules/slicing/slicing.nf"
 
 workflow slice_unannotated {
     take:
@@ -21,7 +21,8 @@ workflow slice_unannotated {
 
     // Use the joined channel in your processes, counts as 1 input, tuple
     sliced_ch = PRINT_SLICED(matched_files_ch.map { it -> [ it[1], it[2] ] }) // Pass msa_file and sliced_file to the PRINT_SLICED process, it[0] is the key
+    fasta_file = CONCAT_FASTA(sliced_ch.collect())
 
     emit:
-    sliced_ch
+    fasta_file
 }

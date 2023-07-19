@@ -26,10 +26,24 @@ process PRINT_SLICED {
     tuple path(msa), path(slice)
 
     output:
-    path "${msa}_sliced.fa"
+    path "${msa}_sliced.fa", optional: true
 
     script:
     """
-    ${baseDir}/bin/print_sliced_seq_reps.py ${slice} ${msa} ${msa}_sliced.fa
+    ${baseDir}/bin/print_sliced_seq_reps.py ${slice} ${msa} ${msa}_sliced.fa ${params.min_slice_length}
+    """
+}
+
+process CONCAT_FASTA {
+    publishDir 'data/output/slices', mode: 'copy'
+
+    input:
+    path fasta_files
+
+    output:
+    path "concatenated.fasta"
+
+    """
+    cat ${fasta_files.join(' ')} > concatenated.fasta
     """
 }

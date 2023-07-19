@@ -25,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('slices_file', type=str, help='The path to the slice ranges')
     parser.add_argument('msa_file', type=str, help='The path to the family msa')
     parser.add_argument('output_file', type=str, help='The path to the output file')
+    parser.add_argument('min_slice_length', type=int, help='The minimum length of unannotated slices to keep')
 
     args = parser.parse_args()
 
@@ -33,9 +34,12 @@ if __name__ == "__main__":
     substrings = get_substrings(sequence, slices)
     msa_filename = os.path.basename(args.msa_file)
 
-    # Open output file in write mode
+    
     with open(args.output_file, 'w') as f:
         # Iterate over substrings and their corresponding slices
         for s, (index, row) in zip(substrings, slices.iterrows()):
-            if len(s) > 10:
+            if len(s) >= args.min_slice_length:
                 f.write(f">{msa_filename}_{row['from']}_{row['to']}\n{s}\n")
+
+    if os.path.getsize(args.output_file) == 0: # remove file if nothing written, optional NF output
+        os.remove(args.output_file)
