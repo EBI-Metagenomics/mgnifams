@@ -14,7 +14,6 @@ workflow {
         .fromPath(params.tblOut_path) 
         .set { tblOut_ch }
 
-    sliced_ch = slice_unannotated(msa_ch, tblOut_ch)
-    // TODO: fasta_ch = combine into a fasta
-    // annotate_fasta(fasta_ch)
+    concat_fasta = slice_unannotated(msa_ch, tblOut_ch)
+    annotate_fasta(concat_fasta)
 }

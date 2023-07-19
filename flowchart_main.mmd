@@ -1,20 +1,20 @@
 flowchart TD
     p0((Channel.fromPath))
     p1((Channel.fromPath))
-    p2[mmseqs2:CREATE_DB]
-    p3[mmseqs2:LINCLUST]
-    p4[mmseqs2:CREATE_TSV]
-    p5[fasta_families:EXPORT_REPS]
+    p2[execute_clustering:CREATE_DB]
+    p3[execute_clustering:LINCLUST]
+    p4[execute_clustering:CREATE_TSV]
+    p5[create_families:EXPORT_REPS]
     p6([splitText])
     p7([map])
     p8([first])
     p9([first])
     p10([take])
-    p11[fasta_families:CREATE_FAMILY_FA]
-    p12[msa_hmm:MAFFT]
-    p13[msa_hmm:HMMBUILD]
+    p11[create_families:CREATE_FAMILY_FA]
+    p12[produce_models:MAFFT]
+    p13[produce_models:HMMBUILD]
     p14([first])
-    p15[msa_hmm:HMMSCAN]
+    p15[annotate_families:HMMSCAN]
     p16(( ))
     p17(( ))
     p18(( ))
@@ -35,11 +35,11 @@ flowchart TD
     p9 --> p11
     p10 --> p11
     p11 -->|familyFile| p12
-    p12 --> p13
-    p13 --> p15
+    p12 -->|mafft_ch| p13
+    p13 -->|build_ch| p15
     p14 --> p15
     p15 --> p20
     p15 --> p19
     p15 --> p18
     p15 --> p17
-    p15 --> p16
+    p15 -->|tblout_ch| p16

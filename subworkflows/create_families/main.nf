@@ -9,7 +9,7 @@ workflow create_families {
 
     main:
     reps_ch = EXPORT_REPS(clust_tsv).splitText().map { it.trim() } // removing new line chars at end of mgyps
-    CREATE_FAMILY_FA(clust_tsv.first(), fastaFile.first(), reps_ch.take(10)) // TODO, remove top 10
+    CREATE_FAMILY_FA(clust_tsv.first(), fastaFile.first(), reps_ch.take(20)) // TODO, remove top 20
 
     emit:
     CREATE_FAMILY_FA.out

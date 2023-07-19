@@ -1,0 +1,24 @@
+flowchart TD
+    p0((Channel.fromPath))
+    p1((Channel.fromPath))
+    p2([map])
+    p3[slice_unannotated:SLICE]
+    p4([map])
+    p5([join])
+    p6([map])
+    p7[slice_unannotated:PRINT_SLICED]
+    p8([collect])
+    p9[slice_unannotated:CONCAT_FASTA]
+    p10[annotate_fasta:INTERPROSCAN]
+    p11(( ))
+    p0 -->|msa_ch| p2
+    p1 -->|tblout_ch| p3
+    p2 -->|msa_mapped_ch| p5
+    p3 --> p4
+    p4 -->|slice_mapped_ch| p5
+    p5 -->|matched_files_ch| p6
+    p6 --> p7
+    p7 --> p8
+    p8 --> p9
+    p9 -->|fasta_ch| p10
+    p10 --> p11
