@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-include { MAFFT } from "$baseDir/modules/mafft/mafft.nf"
-include { HMMBUILD } from "$baseDir/modules/hmm/hmm.nf"
+include { MAFFT } from "$baseDir/modules/mafft.nf"
+include { HMMBUILD } from "$baseDir/modules/hmm.nf"
 
 workflow produce_models {
     take:

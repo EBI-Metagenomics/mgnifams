@@ -17,13 +17,15 @@ flowchart TD
     p15((Channel.fromPath))
     p16[annotate_families:INTERPROSCAN]
     p17(( ))
-    p18([first])
-    p19[annotate_families:HMMSCAN]
-    p20(( ))
-    p21(( ))
+    p18[annotate_families:EGGNOG_MAPPER]
+    p19(( ))
+    p20([first])
+    p21[annotate_families:HMMSCAN]
     p22(( ))
     p23(( ))
     p24(( ))
+    p25(( ))
+    p26(( ))
     p0 -->|fastaFile| p1
     p1 --> p2
     p2 --> p3
@@ -42,12 +44,14 @@ flowchart TD
     p12 -->|reps_fa| p16
     p10 -->|familyFile| p13
     p13 --> p14
-    p14 -->|build_ch| p19
-    p15 -->|uniprot_sprot_fasta_path| p18
+    p14 -->|build_ch| p21
+    p15 -->|uniprot_sprot_fasta_path| p20
     p16 --> p17
+    p12 -->|reps_fa| p18
     p18 --> p19
-    p19 --> p24
-    p19 --> p23
-    p19 --> p22
-    p19 --> p21
-    p19 -->|tblout_ch| p20
+    p20 --> p21
+    p21 --> p26
+    p21 --> p25
+    p21 --> p24
+    p21 --> p23
+    p21 -->|tblout_ch| p22

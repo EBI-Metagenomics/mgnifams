@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-include { SLICE; PRINT_SLICED; CONCAT_FASTA } from "$baseDir/modules/slicing/slicing.nf"
+include { SLICE; PRINT_SLICED; CONCAT_FASTA } from "$baseDir/modules/slicing.nf"
 
 workflow slice_unannotated {
     take:

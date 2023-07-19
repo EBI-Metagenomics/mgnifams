@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 include { EXPORT_REPS; CREATE_FAMILY_FA;
-          EXPORT_REPS_FA } from "$baseDir/modules/families/family.nf"
+          EXPORT_REPS_FA } from "$baseDir/modules/family.nf"
 
 workflow create_families {
     take: 

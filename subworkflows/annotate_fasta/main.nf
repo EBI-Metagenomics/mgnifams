@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-include { INTERPROSCAN } from "$baseDir/modules/annotation/interproscan.nf"
+include { INTERPROSCAN } from "$baseDir/modules/interproscan.nf"
 // TODO more annotation sources: Uniprot, eggNOG, protENN
 
 workflow annotate_fasta {
