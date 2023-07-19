@@ -10,12 +10,8 @@ workflow {
         .fromPath(params.fasta_path) 
         .set { fastaFile }
 
-    Channel
-        .fromPath(params.uniprot_sprot_fasta_path) 
-        .set { uniprot_sprot_fasta_path }
-
     cluster_tsv_ch = execute_clustering(fastaFile)
-    families_ch = create_families(cluster_tsv_ch, fastaFile)
-    models = produce_models(families_ch)
-    annotate_families(models.mafft_ch, models.build_ch, uniprot_sprot_fasta_path)
+    families = create_families(cluster_tsv_ch, fastaFile)
+    models = produce_models(families.families_ch)
+    annotate_families(families.reps_fasta, models.build_ch)
 }
