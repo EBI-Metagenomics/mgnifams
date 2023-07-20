@@ -10,8 +10,8 @@ workflow {
         .fromPath(params.fasta_path) 
         .set { fastaFile }
 
-    cluster_tsv_ch = execute_clustering(fastaFile)
-    families = create_families(cluster_tsv_ch, fastaFile)
-    models = produce_models(families.families_ch)
-    annotate_families(families.reps_fasta, models.build_ch)
+    mmseqs = execute_clustering(fastaFile)
+    families_ch = create_families(mmseqs.clu_tsv, fastaFile)
+    models = produce_models(families_ch)
+    annotate_families(mmseqs.rep_fa, models.build_ch)
 }

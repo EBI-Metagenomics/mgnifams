@@ -1,16 +1,18 @@
 #!/usr/bin/env nextflow
 
-include { CREATE_DB; LINCLUST; CREATE_TSV } from "$baseDir/modules/mmseqs2.nf"
+include { CREATEDB; LINCLUST; CREATETSV; CONVERT2FASTA } from "$baseDir/modules/mmseqs2.nf"
 
 workflow execute_clustering {
     take:
     fastaFile
 
     main:
-    db_ch = CREATE_DB(fastaFile)
-    clust_ch = LINCLUST(db_ch)
-    CREATE_TSV(db_ch, clust_ch)
-        
+    db_ch = CREATEDB(fastaFile)
+    clu_ch = LINCLUST(db_ch)
+    clu_tsv = CREATETSV(db_ch, clu_ch)
+    rep_fa = CONVERT2FASTA(db_ch, clu_ch)
+    
     emit:
-    CREATE_TSV.out
+    clu_tsv
+    rep_fa
 }

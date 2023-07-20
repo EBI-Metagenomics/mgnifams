@@ -1,20 +1,20 @@
 flowchart TD
     p0((Channel.fromPath))
-    p1[execute_clustering:CREATE_DB]
+    p1[execute_clustering:CREATEDB]
     p2[execute_clustering:LINCLUST]
-    p3[execute_clustering:CREATE_TSV]
-    p4[create_families:EXPORT_REPS]
-    p5([splitText])
-    p6([map])
-    p7([first])
+    p3[execute_clustering:CREATETSV]
+    p4[execute_clustering:CONVERT2FASTA]
+    p5[create_families:EXPORT_REPS]
+    p6([splitText])
+    p7([map])
     p8([first])
-    p9([take])
-    p10[create_families:CREATE_FAMILY_FA]
-    p11([collect])
-    p12[create_families:EXPORT_REPS_FA]
-    p13[produce_models:MAFFT]
-    p14[produce_models:HMMBUILD]
-    p15((Channel.fromPath))
+    p9([first])
+    p10([take])
+    p11[create_families:CREATE_FAMILY_FA]
+    p12[produce_models:MAFFT]
+    p13[produce_models:HMMBUILD]
+    p14((Channel.fromPath))
+    p15[annotate_families:getTopDebugLines]
     p16[annotate_families:INTERPROSCAN]
     p17(( ))
     p18[annotate_families:EGGNOG_MAPPER]
@@ -29,25 +29,26 @@ flowchart TD
     p0 -->|fastaFile| p1
     p1 --> p2
     p2 --> p3
-    p1 -->|mmseqsDB| p3
-    p3 -->|clust_tsv| p4
-    p4 --> p5
+    p1 -->|mmseqs_DB| p3
+    p3 -->|clust_tsv| p5
+    p1 -->|mmseqs_DB| p4
+    p2 -->|mmseqs_clu| p4
+    p4 -->|reps_fa| p15
     p5 --> p6
-    p6 -->|reps_ch| p9
-    p3 -->|clust_tsv| p7
-    p7 --> p10
-    p0 -->|fastaFile| p8
-    p8 --> p10
-    p9 --> p10
-    p10 -->|familyFile| p11
-    p11 --> p12
-    p12 -->|reps_fa| p16
-    p10 -->|familyFile| p13
-    p13 --> p14
-    p14 -->|build_ch| p21
-    p15 -->|uniprot_sprot_fasta_path| p20
+    p6 --> p7
+    p7 -->|reps_ch| p10
+    p3 -->|clust_tsv| p8
+    p8 --> p11
+    p0 -->|fastaFile| p9
+    p9 --> p11
+    p10 --> p11
+    p11 -->|familyFile| p12
+    p12 --> p13
+    p13 -->|build_ch| p21
+    p14 -->|uniprot_sprot_fasta_path| p20
+    p15 --> p16
     p16 --> p17
-    p12 -->|reps_fa| p18
+    p15 -->|fasta_file| p18
     p18 --> p19
     p20 --> p21
     p21 --> p26

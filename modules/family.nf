@@ -29,20 +29,3 @@ process CREATE_FAMILY_FA {
     python3 ${baseDir}/bin/family_rep_into_fasta.py ${clust_tsv} ${fasta} ${mgyp}_family.fa ${mgyp}
     """
 }
-
-process EXPORT_REPS_FA {
-    publishDir 'data/output', mode: 'copy'
-
-    input:
-    path fasta_files
-
-    output:
-    path "reps.fa"
-
-    script:
-    """
-    for fasta in ${fasta_files.join(' ')}; do
-        seqtk subseq \$fasta <(echo "\$(head -1 \$fasta | cut -c 2-)") >> reps.fa
-    done
-    """
-}

@@ -1,46 +1,85 @@
-process CREATE_DB {
+process CREATEDB {
+    publishDir 'data/output/mmseqs', mode: 'copy'
+
     input:
     path fasta
 
     output:
-    path "mmseqs_db/*"
+    path "DB/*"
 
     script:
+    fastaName = "${fasta.getName().tokenize('.')[0]}"
+
     """
-    mkdir mmseqs_db
-    mmseqs createdb ${fasta} mmseqs_db/${fasta}_db > /dev/null 2>&1
+    mkdir DB
+    mmseqs createdb ${fasta} DB/${fastaName}_DB > /dev/null 2>&1
     """
 }
 
 process LINCLUST {
+    publishDir 'data/output/mmseqs', mode: 'copy'
+
     input:
-    path mmseqsDB
+    path mmseqs_DB
 
     output:
-    path "mmseqs_clus/*"
+    path "clu/*"
 
     script:
+    dbName = "${mmseqs_DB[0]}"
+
     """
-    mkdir mmseqs_clus
-    mmseqs linclust ${mmseqsDB.baseName[1]} mmseqs_clus/${mmseqsDB.baseName[0]}_clu mmseqs_clus/tmp --min-seq-id 0.3 --cov-mode 1 -c 0.8 > /dev/null 2>&1
+    mkdir clu
+    mmseqs linclust \
+    ${dbName} \
+    clu/${dbName}_clu \
+    tmp \
+    --min-seq-id ${params.seq_identity} \
+    --cov-mode 1 \
+    -c ${params.coverage} > /dev/null 2>&1
     """
 }
 
-process CREATE_TSV {
-    publishDir 'data/output', mode: 'copy', saveAs: { filename ->
-        def newFilename = filename.replaceAll(".fa", "")
-        "${newFilename}"
-    }
+process CREATETSV {
+    publishDir 'data/output/mmseqs', mode: 'copy'
     
     input:
-    path mmseqsDB
-    path mmseqsCLU
+    path mmseqs_DB
+    path mmseqs_clu
 
     output:
-    path "${mmseqsCLU.baseName[0]}.tsv"
+    path "${cluName}.tsv"
 
     script:
+    dbName = "${mmseqs_DB[0]}"
+    cluName = "${mmseqs_clu.baseName[0]}"
+
     """
-    mmseqs createtsv ${mmseqsDB.baseName[1]} ${mmseqsDB.baseName[1]} ${mmseqsCLU.baseName[0]} ${mmseqsCLU.baseName[0]}.tsv > /dev/null 2>&1
+    mmseqs createtsv \
+    ${dbName} \
+    ${dbName} \
+    ${cluName} \
+    ${cluName}.tsv > /dev/null 2>&1
+    """
+}
+
+process CONVERT2FASTA {
+    publishDir 'data/output/mmseqs', mode: 'copy'
+
+    input:
+    path mmseqs_DB
+    path mmseqs_clu
+
+    output:
+    path "${cluName}_rep.fasta"
+
+    script:
+    dbName = "${mmseqs_DB[0]}"
+    cluName = "${mmseqs_clu.baseName[0]}"
+
+    """
+    mmseqs createsubdb ${cluName} ${dbName} ${cluName}_rep
+    mmseqs createsubdb ${cluName} ${dbName}_h ${cluName}_rep_h
+    mmseqs convert2fasta ${cluName}_rep ${cluName}_rep.fasta
     """
 }
