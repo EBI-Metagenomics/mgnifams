@@ -8,10 +8,10 @@ include { annotate_families } from "$baseDir/subworkflows/annotate_families/main
 workflow {
     Channel
         .fromPath(params.fasta_path) 
-        .set { fastaFile }
+        .set { fasta_file }
 
-    mmseqs = execute_clustering(fastaFile)
-    families_ch = create_families(mmseqs.clu_tsv, fastaFile)
+    mmseqs = execute_clustering(fasta_file)
+    families_ch = create_families(mmseqs.clu_tsv, fasta_file)
     models = produce_models(families_ch)
     annotate_families(mmseqs.rep_fa, models.build_ch)
 }

@@ -5,14 +5,14 @@ process CREATEDB {
     path fasta
 
     output:
-    path "DB/*"
+    path "${fastaName}_DB/*"
 
     script:
     fastaName = "${fasta.getName().tokenize('.')[0]}"
 
     """
-    mkdir DB
-    mmseqs createdb ${fasta} DB/${fastaName}_DB > /dev/null 2>&1
+    mkdir ${fastaName}_DB
+    mmseqs createdb ${fasta} ${fastaName}_DB/${fastaName}_DB > /dev/null 2>&1
     """
 }
 
@@ -23,16 +23,16 @@ process LINCLUST {
     path mmseqs_DB
 
     output:
-    path "clu/*"
+    path "${dbName}_clu/*"
 
     script:
     dbName = "${mmseqs_DB[0]}"
 
     """
-    mkdir clu
+    mkdir ${dbName}_clu
     mmseqs linclust \
     ${dbName} \
-    clu/${dbName}_clu \
+    ${dbName}_clu/${dbName}_clu \
     tmp \
     --min-seq-id ${params.seq_identity} \
     --cov-mode 1 \
@@ -81,5 +81,36 @@ process CONVERT2FASTA {
     mmseqs createsubdb ${cluName} ${dbName} ${cluName}_rep
     mmseqs createsubdb ${cluName} ${dbName}_h ${cluName}_rep_h
     mmseqs convert2fasta ${cluName}_rep ${cluName}_rep.fasta
+    """
+}
+
+process CLUSTERUPDATE {
+    publishDir 'data/output/mmseqs', mode: 'copy'
+    
+    input:
+    path mmseqs_DB_old
+    path mmseqs_DB_new
+    path mmseqs_DB_old_clu
+
+    output:
+    path "${new_dbName}_update/DB/*"
+    path "${new_dbName}_update/clu/*"
+
+    script:
+    old_dbName = "${mmseqs_DB_old.baseName[0]}"
+    new_dbName = "${mmseqs_DB_new.baseName[0]}"
+    old_cluName = "${mmseqs_DB_old_clu.baseName[0]}"
+
+    """
+    mkdir ${new_dbName}_update
+    mkdir ${new_dbName}_update/DB
+    mkdir ${new_dbName}_update/clu
+    mmseqs clusterupdate \
+    ${old_dbName} \
+    ${new_dbName} \
+    ${old_cluName} \
+    ${new_dbName}_update/DB/DB_new_updated \
+    ${new_dbName}_update/clu/DB_update_clu \
+    tmp
     """
 }

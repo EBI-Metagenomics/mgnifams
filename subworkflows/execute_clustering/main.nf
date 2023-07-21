@@ -4,10 +4,10 @@ include { CREATEDB; LINCLUST; CREATETSV; CONVERT2FASTA } from "$baseDir/modules/
 
 workflow execute_clustering {
     take:
-    fastaFile
+    fasta_file
 
     main:
-    db_ch = CREATEDB(fastaFile)
+    db_ch = CREATEDB(fasta_file)
     clu_ch = LINCLUST(db_ch)
     clu_tsv = CREATETSV(db_ch, clu_ch)
     rep_fa = CONVERT2FASTA(db_ch, clu_ch)
