@@ -22,8 +22,8 @@ with open(cluster_tsv_file) as f:
 # Extract the sequences for a specific cluster
 cluster_seqs = clusters[cluster_rep_id]
 
-# Load the gzipped sequence database
-with gzip.open(sequence_db_file, "rt") as handle:
+# Load the unzipped sequence database
+with open(sequence_db_file, "rt") as handle: # if zipped: gzip.open instead
     seq_db = SeqIO.to_dict(SeqIO.parse(handle, "fasta"))
 
 # Write the cluster sequences to a new FASTA file
