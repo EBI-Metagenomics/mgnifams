@@ -24,7 +24,14 @@ cluster_seqs = clusters[cluster_rep_id]
 
 # Load the unzipped sequence database
 with open(sequence_db_file, "rt") as handle: # if zipped: gzip.open instead
-    seq_db = SeqIO.to_dict(SeqIO.parse(handle, "fasta"))
+    seq_db = {}
+    for record in SeqIO.parse(handle, "fasta"):
+        # Check if the header is in Uniprot format
+        if record.id.startswith('sp|'):
+            seq_id = record.id.split('|')[1]  # Split on '|' and take the second element
+        else:
+            seq_id = record.id
+        seq_db[seq_id] = record
 
 # Write the cluster sequences to a new FASTA file
 with open(output_file, "w") as f:

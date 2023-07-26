@@ -14,7 +14,7 @@ process EXPORT_REPS {
 }
 
 process CREATE_FAMILY_FA {
-    publishDir 'data/output/families', mode: 'copy'
+    publishDir 'data/output/families/all', mode: 'copy'
     
     input:
     path clust_tsv
@@ -27,5 +27,20 @@ process CREATE_FAMILY_FA {
     script:
     """
     python3 ${baseDir}/bin/family_rep_into_fasta.py ${clust_tsv} ${fasta} ${mgyp}_family.fa ${mgyp}
+    """
+}
+
+process KEEP_UNKNOWN {
+    publishDir 'data/output/families/unknown', mode: 'copy'
+    
+    input:
+    path fasta
+
+    output:
+    path "${fasta.baseName}_u.fa", optional: true
+
+    script:
+    """
+    python3 ${baseDir}/bin/keep_unknown_family.py ${fasta} ${fasta.baseName}_u.fa
     """
 }
