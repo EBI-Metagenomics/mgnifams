@@ -1,6 +1,6 @@
 process HMMBUILD {
     publishDir 'data/output/hmm/build', mode: 'copy', saveAs: { filename ->
-        def newFilename = filename.replaceAll("_unknown.fa_mafft.fa", "")
+        def newFilename = filename.replaceAll("_family.fa_mafft.fa", "")
         "${newFilename}"
     }
     

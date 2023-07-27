@@ -9,7 +9,8 @@ include { annotate_families } from "$baseDir/subworkflows/annotate_families/main
 workflow {
     combined_fasta_file = initiate_proteins()
     mmseqs = execute_clustering(combined_fasta_file)
-    families_ch = create_families(mmseqs.clu_tsv, combined_fasta_file)
-    models = produce_models(families_ch)
+    families_all = create_families(mmseqs.clu_tsv, combined_fasta_file)
+    models = produce_models(families_all)
+    // TODO separate known and unknown fmailies after this point
     annotate_families(mmseqs.rep_fa, models.build_ch)
 }
