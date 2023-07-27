@@ -19,7 +19,7 @@ process HMMBUILD {
 process HMMSCAN {
     publishDir 'data/output/hmm/scan', mode: 'copy',
         pattern: '*_scan.tblout', saveAs: { filename ->
-            def newFilename = filename.replaceAll("_unknown.fa_mafft.fa.hmm_scan", "_domains")
+            def newFilename = filename.replaceAll(".fa_mafft.fa.hmm_scan", "_domains")
             "${newFilename}"
         }
 

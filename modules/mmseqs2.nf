@@ -78,9 +78,9 @@ process CONVERT2FASTA {
     cluName = "${mmseqs_clu.baseName[0]}"
 
     """
-    mmseqs createsubdb ${cluName} ${dbName} ${cluName}_rep
-    mmseqs createsubdb ${cluName} ${dbName}_h ${cluName}_rep_h
-    mmseqs convert2fasta ${cluName}_rep ${cluName}_rep.fasta
+    mmseqs createsubdb ${cluName} ${dbName} ${cluName}_rep > /dev/null 2>&1
+    mmseqs createsubdb ${cluName} ${dbName}_h ${cluName}_rep_h > /dev/null 2>&1
+    mmseqs convert2fasta ${cluName}_rep ${cluName}_rep.fasta > /dev/null 2>&1
     """
 }
 

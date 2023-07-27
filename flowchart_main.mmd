@@ -7,32 +7,36 @@ flowchart TD
     p5[execute_clustering:CREATEDB]
     p6[execute_clustering:LINCLUST]
     p7[execute_clustering:CREATETSV]
-    p8[execute_clustering:CONVERT2FASTA]
-    p9[create_families:EXPORT_REPS]
-    p10([splitText])
-    p11([map])
-    p12([first])
-    p13([first])
-    p14([take])
-    p15[create_families:CREATE_FAMILY_FA]
-    p16[create_families:KEEP_UNKNOWN]
-    p17[create_families:KEEP_KNOWN]
-    p18(( ))
-    p19[produce_models:MAFFT]
-    p20[produce_models:HMMBUILD]
-    p21((Channel.fromPath))
-    p22[annotate_families:getTopDebugLines]
-    p23[annotate_families:INTERPROSCAN]
+    p8[execute_clustering:EXPORT_CLUSTERS_CSV]
+    p9(( ))
+    p10[execute_clustering:CONVERT2FASTA]
+    p11[create_families:EXPORT_REPS]
+    p12[create_families:EXPORT_FAMILIES_CSV]
+    p13(( ))
+    p14([splitText])
+    p15([map])
+    p16([first])
+    p17([first])
+    p18([take])
+    p19[create_families:CREATE_FAMILY_FA]
+    p20[produce_unknown_models:MAFFT]
+    p21[produce_unknown_models:HMMBUILD]
+    p22[produce_known_models:MAFFT]
+    p23[produce_known_models:HMMBUILD]
     p24(( ))
-    p25[annotate_families:EGGNOG_MAPPER]
-    p26(( ))
-    p27([first])
-    p28[annotate_families:HMMSCAN]
-    p29(( ))
+    p25((Channel.fromPath))
+    p26[annotate_families:getTopDebugLines]
+    p27[annotate_families:INTERPROSCAN]
+    p28(( ))
+    p29[annotate_families:EGGNOG_MAPPER]
     p30(( ))
-    p31(( ))
-    p32(( ))
+    p31([first])
+    p32[annotate_families:HMMSCAN]
     p33(( ))
+    p34(( ))
+    p35(( ))
+    p36(( ))
+    p37(( ))
     p0 -->|mgnify_fasta_file| p2
     p1 -->|uniprot_sprot_fasta_input_debug_file| p2
     p2 -->|fastaFile| p3
@@ -41,32 +45,36 @@ flowchart TD
     p5 --> p6
     p6 --> p7
     p5 -->|mmseqs_DB| p7
-    p7 -->|clust_tsv| p9
-    p5 -->|mmseqs_DB| p8
-    p6 -->|mmseqs_clu| p8
-    p8 -->|reps_fa| p22
-    p9 --> p10
-    p10 --> p11
-    p11 -->|reps_ch| p14
-    p7 -->|clust_tsv| p12
-    p12 --> p15
-    p2 -->|fastaFile| p13
-    p13 --> p15
+    p7 -->|clust_tsv| p8
+    p8 --> p9
+    p5 -->|mmseqs_DB| p10
+    p6 -->|mmseqs_clu| p10
+    p10 -->|reps_fa| p26
+    p7 -->|clust_tsv| p11
+    p11 --> p12
+    p12 --> p13
+    p11 --> p14
     p14 --> p15
-    p15 --> p16
-    p16 -->|familyFile| p19
-    p15 -->|fasta| p17
-    p17 --> p18
-    p19 --> p20
-    p20 -->|build_ch| p28
-    p21 -->|uniprot_sprot_fasta_path| p27
+    p15 -->|reps_ch| p18
+    p7 -->|clust_tsv| p16
+    p16 --> p19
+    p2 -->|fastaFile| p17
+    p17 --> p19
+    p18 --> p19
+    p19 -->|familyFile| p22
+    p19 -->|familyFile| p20
+    p20 --> p21
+    p21 -->|build_ch| p32
     p22 --> p23
     p23 --> p24
-    p22 -->|fasta_file| p25
-    p25 --> p26
+    p25 -->|uniprot_sprot_fasta_path| p31
+    p26 --> p27
     p27 --> p28
-    p28 --> p33
-    p28 --> p32
-    p28 --> p31
-    p28 --> p30
-    p28 -->|tblout_ch| p29
+    p26 -->|fasta_file| p29
+    p29 --> p30
+    p31 --> p32
+    p32 --> p37
+    p32 --> p36
+    p32 --> p35
+    p32 --> p34
+    p32 -->|tblout_ch| p33

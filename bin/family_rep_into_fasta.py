@@ -4,36 +4,47 @@ import sys
 import gzip
 from Bio import SeqIO
 
+def get_matching_cluster_items(cluster_tsv_file, cluster_rep_id):
+    with open(cluster_tsv_file) as f:
+        cluster_items = []
+        for line in f:
+            columns = line.strip().split("\t")
+            if columns[0] == cluster_rep_id:
+                cluster_items.append(columns[1])
+    return cluster_items
+
+def filter_sequences(sequence_db_file, cluster_items):
+    with open(sequence_db_file, "rt") as handle:
+        filtered_records = []
+        for record in SeqIO.parse(handle, "fasta"):
+            is_uniprot = False
+            # Check if the header is in Uniprot format
+            if record.id.startswith('sp|'):
+                seq_id = record.id.split('|')[1]  # Split on '|' and take the second element
+                is_uniprot = True
+            else:
+                seq_id = record.id
+            if seq_id in cluster_items:
+                filtered_records.append(record)
+                if is_uniprot:
+                    global contains_sp
+                    contains_sp = True
+    return filtered_records
+
 # Get command line arguments
 cluster_tsv_file = sys.argv[1]
 sequence_db_file = sys.argv[2]
 output_file = sys.argv[3]
 cluster_rep_id = sys.argv[4]
+contains_sp = False
 
-# Load the cluster TSV file
-with open(cluster_tsv_file) as f:
-    clusters = {}
-    for line in f:
-        rep_id, seq_id = line.strip().split("\t")
-        if rep_id not in clusters:
-            clusters[rep_id] = []
-        clusters[rep_id].append(seq_id)
+cluster_items = get_matching_cluster_items(cluster_tsv_file, cluster_rep_id)
+filtered_records = filter_sequences(sequence_db_file, cluster_items)
 
-# Extract the sequences for a specific cluster
-cluster_seqs = clusters[cluster_rep_id]
+if not contains_sp:
+    output_file = "unknown/" + output_file
+else:
+    output_file = "known/" + output_file
 
-# Load the unzipped sequence database
-with open(sequence_db_file, "rt") as handle: # if zipped: gzip.open instead
-    seq_db = {}
-    for record in SeqIO.parse(handle, "fasta"):
-        # Check if the header is in Uniprot format
-        if record.id.startswith('sp|'):
-            seq_id = record.id.split('|')[1]  # Split on '|' and take the second element
-        else:
-            seq_id = record.id
-        seq_db[seq_id] = record
-
-# Write the cluster sequences to a new FASTA file
-with open(output_file, "w") as f:
-    for seq_id in cluster_seqs:
-        SeqIO.write(seq_db[seq_id], f, "fasta")
+with open(output_file, "w") as out_handle:
+    SeqIO.write(filtered_records, out_handle, "fasta")
