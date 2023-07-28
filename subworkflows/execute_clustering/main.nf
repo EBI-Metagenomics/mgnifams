@@ -12,9 +12,9 @@ workflow execute_clustering {
     clu_ch = LINCLUST(db_ch)
     clu_tsv = CREATETSV(db_ch, clu_ch)
     EXPORT_CLUSTERS_CSV(clu_tsv)
-    rep_fa = CONVERT2FASTA(db_ch, clu_ch)
+    // rep_fa = CONVERT2FASTA(db_ch, clu_ch)
     
     emit:
     clu_tsv
-    rep_fa
+    // rep_fa
 }

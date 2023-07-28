@@ -14,5 +14,5 @@ workflow {
     unknown_models = produce_unknown_models(families.unknown_ch)
     known_models = produce_known_models(families.known_ch)
     // TODO separate known and unknown families annotation
-    annotate_families(mmseqs.rep_fa, unknown_models.build_ch)
+    annotate_families(families.unknown_reps_fasta, unknown_models.build_ch)
 }
