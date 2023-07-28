@@ -12,7 +12,7 @@ flowchart TD
 	p6 --> p7["execute_clustering:CREATETSV"]
 	style p7 fill:#f5c158
 	p5 -->|"mmseqs_DB"| p7
-	p7 -->|"clust_tsv"| p8["execute_clustering:EXPORT_CLUSTERS_CSV"]
+	p7 -->|"clust_tsv"| p8["execute_clustering:EXPORT_CLUSTERING_CSV"]
 	style p8 fill:#baf8b1
 	p8 --> p9((" "))
 	p7 -->|"clust_tsv"| p10["create_families:EXPORT_REPS"]

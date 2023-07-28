@@ -12,7 +12,7 @@ process EXPORT_PROTEINS_CSV {
     """
 }
 
-process EXPORT_CLUSTERS_CSV {
+process EXPORT_CLUSTERING_CSV {
     publishDir 'data/output/tables', mode: 'copy'
 
     input:
@@ -31,11 +31,12 @@ process EXPORT_FAMILIES_CSV {
 
     input:
     path rep_names
+    val mode
 
     output:
-    path "mgnifams_families.csv"
+    path "mgnifams_${mode}_families.csv"
 
     """
-    python3 ${baseDir}/bin/export_families_csv.py ${rep_names} mgnifams_families.csv
+    python3 ${baseDir}/bin/export_families_csv.py ${rep_names} mgnifams_${mode}_families.csv ${mode}
     """
 }

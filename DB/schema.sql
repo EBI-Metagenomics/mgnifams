@@ -5,12 +5,13 @@ CREATE TABLE Proteins (
 
 CREATE TABLE Families (
     ID VARCHAR(16) PRIMARY KEY,
+    IsKnown BOOLEAN,
     MSA BLOB,
     HMM BLOB,
     FOREIGN KEY(ID) REFERENCES Proteins(ID)
 );
 
-CREATE TABLE Clusters (
+CREATE TABLE Clustering (
     ProteinID VARCHAR(16),
     FamilyID VARCHAR(16),
     PRIMARY KEY (ProteinID, FamilyID),

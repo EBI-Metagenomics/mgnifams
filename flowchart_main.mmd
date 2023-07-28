@@ -7,37 +7,45 @@ flowchart TD
     p5[execute_clustering:CREATEDB]
     p6[execute_clustering:LINCLUST]
     p7[execute_clustering:CREATETSV]
-    p8[execute_clustering:EXPORT_CLUSTERS_CSV]
+    p8[execute_clustering:EXPORT_CLUSTERING_CSV]
     p9(( ))
     p10[create_families:EXPORT_REPS]
-    p11[create_families:EXPORT_FAMILIES_CSV]
-    p12(( ))
-    p13([splitText])
-    p14([map])
-    p15([first])
-    p16([first])
-    p17([take])
-    p18[create_families:CREATE_FAMILY_FA]
-    p19([collect])
-    p20[create_families:EXPORT_REPS_FA]
-    p21[produce_unknown_models:MAFFT]
-    p22[produce_unknown_models:HMMBUILD]
-    p23[produce_known_models:MAFFT]
-    p24[produce_known_models:HMMBUILD]
-    p25(( ))
-    p26((Channel.fromPath))
-    p27[annotate_families:getTopDebugLines]
-    p28[annotate_families:INTERPROSCAN]
-    p29(( ))
-    p30[annotate_families:EGGNOG_MAPPER]
-    p31(( ))
-    p32([first])
-    p33[annotate_families:HMMSCAN]
-    p34(( ))
-    p35(( ))
-    p36(( ))
+    p11([splitText])
+    p12([map])
+    p13([first])
+    p14([first])
+    p15([take])
+    p16[create_families:CREATE_FAMILY_FA]
+    p17([map])
+    p18([collectFile])
+    p19(( ))
+    p20[create_families:EXPORT_KNOWN_FAMILIES_CSV]
+    p21(( ))
+    p22([collect])
+    p23[create_families:EXPORT_REPS_FA]
+    p24([map])
+    p25([collectFile])
+    p26(( ))
+    p27[create_families:EXPORT_UNKNOWN_FAMILIES_CSV]
+    p28(( ))
+    p29[produce_unknown_models:MAFFT]
+    p30[produce_unknown_models:HMMBUILD]
+    p31[produce_known_models:MAFFT]
+    p32[produce_known_models:HMMBUILD]
+    p33(( ))
+    p34((Channel.fromPath))
+    p35[annotate_families:getTopDebugLines]
+    p36[annotate_families:INTERPROSCAN]
     p37(( ))
-    p38(( ))
+    p38[annotate_families:EGGNOG_MAPPER]
+    p39(( ))
+    p40([first])
+    p41[annotate_families:HMMSCAN]
+    p42(( ))
+    p43(( ))
+    p44(( ))
+    p45(( ))
+    p46(( ))
     p0 -->|mgnify_fasta_file| p2
     p1 -->|uniprot_sprot_fasta_input_debug_file| p2
     p2 -->|fastaFile| p3
@@ -51,31 +59,39 @@ flowchart TD
     p7 -->|clust_tsv| p10
     p10 --> p11
     p11 --> p12
-    p10 --> p13
-    p13 --> p14
-    p14 -->|reps_ch| p17
-    p7 -->|clust_tsv| p15
-    p15 --> p18
-    p2 -->|fastaFile| p16
-    p16 --> p18
+    p12 -->|reps_ch| p15
+    p7 -->|clust_tsv| p13
+    p13 --> p16
+    p2 -->|fastaFile| p14
+    p14 --> p16
+    p15 --> p16
+    p16 -->|familyFile| p17
+    p16 -->|familyFile| p22
     p17 --> p18
-    p18 -->|familyFile| p23
-    p18 -->|familyFile| p19
-    p19 --> p20
-    p20 -->|unknown_reps_fasta| p27
-    p18 -->|familyFile| p21
-    p21 --> p22
-    p22 -->|build_ch| p33
-    p23 --> p24
+    p18 -->|known_ids_file| p20
+    p19 -->|mode| p20
+    p20 --> p21
+    p22 --> p23
+    p23 -->|unknown_reps_fasta| p35
+    p16 -->|familyFile| p24
     p24 --> p25
-    p26 -->|uniprot_sprot_fasta_path| p32
+    p25 -->|unknown_ids_file| p27
+    p26 -->|mode| p27
     p27 --> p28
-    p28 --> p29
-    p27 -->|fasta_file| p30
-    p30 --> p31
+    p16 -->|familyFile| p29
+    p29 --> p30
+    p30 -->|build_ch| p41
+    p16 -->|familyFile| p31
+    p31 --> p32
     p32 --> p33
-    p33 --> p38
-    p33 --> p37
-    p33 --> p36
-    p33 --> p35
-    p33 -->|tblout_ch| p34
+    p34 -->|uniprot_sprot_fasta_path| p40
+    p35 --> p36
+    p36 --> p37
+    p35 -->|fasta_file| p38
+    p38 --> p39
+    p40 --> p41
+    p41 --> p46
+    p41 --> p45
+    p41 --> p44
+    p41 --> p43
+    p41 -->|tblout_ch| p42
