@@ -8,6 +8,5 @@ workflow annotate_known {
     
     main:
     known_annotations_ch = EXPORT_KNOWN_ANNOTATIONS_CSV(known_fasta)
-    known_annotations_ch.collect().view()
-    // CONCAT_KNOWN_ANNOTATIONS(known_annotations_ch.collect())
+    CONCAT_KNOWN_ANNOTATIONS(known_annotations_ch.collect())
 }

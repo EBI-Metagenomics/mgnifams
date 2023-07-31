@@ -55,8 +55,18 @@ process EXPORT_KNOWN_ANNOTATIONS_CSV {
 
 process CONCAT_KNOWN_ANNOTATIONS {
     publishDir 'data/output/tables', mode: 'copy'
+    
+    input:
+    path known_fasta
+
+    output:
+    path "mgnifams_known_annotations.csv"
 
     """
-    echo yes
+    echo "FamilyID,Annotation,Description,Source,IsKnown" > mgnifams_known_annotations.csv
+    for csv_file in ${known_fasta}
+    do
+        cat \$csv_file >> mgnifams_known_annotations.csv
+    done
     """
 }
