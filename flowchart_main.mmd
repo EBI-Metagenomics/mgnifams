@@ -2,24 +2,33 @@ flowchart TD
     p0((Channel.fromPath))
     p1((Channel.fromPath))
     p2[initiate_proteins:CONCAT_FILES]
+    style p2 fill:#eae3b3
     p3[initiate_proteins:EXPORT_PROTEINS_CSV]
+    style p3 fill:#baf8b1
     p4(( ))
     p5[execute_clustering:CREATEDB]
+    style p5 fill:#f5c158
     p6[execute_clustering:LINCLUST]
+    style p6 fill:#f5c158
     p7[execute_clustering:CREATETSV]
+    style p7 fill:#f5c158
     p8[execute_clustering:EXPORT_CLUSTERING_CSV]
+    style p8 fill:#baf8b1
     p9(( ))
     p10[create_families:EXPORT_REPS]
+    style p10 fill:#ff8585
     p11([splitText])
     p12([map])
     p13([first])
     p14([first])
     p15([take])
     p16[create_families:CREATE_FAMILY_FA]
+    style p16 fill:#ff8585
     p17([map])
     p18([collectFile])
     p19(( ))
     p20[create_families:EXPORT_KNOWN_FAMILIES_CSV]
+    style p20 fill:#baf8b1
     p21(( ))
     p22([collect])
     p23[create_families:EXPORT_REPS_FA]
@@ -27,29 +36,51 @@ flowchart TD
     p25([collectFile])
     p26(( ))
     p27[create_families:EXPORT_UNKNOWN_FAMILIES_CSV]
+    style p27 fill:#baf8b1
     p28(( ))
     p29[produce_unknown_models:MAFFT]
+    style p29 fill:#c8c8c8
     p30[produce_unknown_models:HMMBUILD]
+    style p30 fill:#c8c8c8
     p31[produce_known_models:MAFFT]
+    style p31 fill:#787878
     p32[produce_known_models:HMMBUILD]
+    style p32 fill:#787878
     p33(( ))
     p34((Channel.fromPath))
     p35[annotate_unknown:getTopDebugLines]
+    style p35 fill:#9cccff
     p36[annotate_unknown:INTERPROSCAN]
-    p37(( ))
-    p38[annotate_unknown:EGGNOG_MAPPER]
-    p39(( ))
-    p40([first])
-    p41[annotate_unknown:HMMSCAN]
+    style p36 fill:#9cccff
+    p37[annotate_unknown:EGGNOG_MAPPER]
+    style p37 fill:#9cccff
+    p38([first])
+    p39[annotate_unknown:HMMSCAN]
+    style p39 fill:#9cccff
+    p40(( ))
+    p41(( ))
     p42(( ))
     p43(( ))
-    p44(( ))
-    p45(( ))
-    p46(( ))
-    p47[annotate_known:EXPORT_KNOWN_ANNOTATIONS_CSV]
-    p48([collect])
-    p49[annotate_known:CONCAT_KNOWN_ANNOTATIONS]
+    p44[annotate_unknown:EXPORT_INTERPRO_ANNOTATIONS_CSV]
+    style p44 fill:#baf8b1
+    p45[annotate_unknown:EXPORT_EGGNOG_ANNOTATIONS_CSV]
+    style p45 fill:#baf8b1
+    p46[annotate_unknown:EXPORT_UNIPROT_ANNOTATIONS_CSV]
+    style p46 fill:#baf8b1
+    p47([collect])
+    p48([concat])
+    p49([collect])
     p50(( ))
+    p51[annotate_unknown:CONCAT_ANNOTATIONS]
+    style p51 fill:#baf8b1
+    p52(( ))
+    p53[annotate_known:EXPORT_KNOWN_ANNOTATIONS_CSV]
+    style p53 fill:#baf8b1
+    p54([collect])
+    p55(( ))
+    p56[annotate_known:CONCAT_ANNOTATIONS]
+    style p56 fill:#baf8b1
+    p57(( ))
     p0 -->|mgnify_fasta_file| p2
     p1 -->|uniprot_sprot_fasta_input_debug_file| p2
     p2 -->|fastaFile| p3
@@ -84,22 +115,31 @@ flowchart TD
     p27 --> p28
     p16 -->|familyFile| p29
     p29 --> p30
-    p30 -->|build_ch| p41
+    p30 -->|build_ch| p39
     p16 -->|known_fasta| p31
     p31 --> p32
     p32 --> p33
-    p34 -->|uniprot_sprot_fasta_path| p40
+    p34 -->|uniprot_sprot_fasta_path| p38
     p35 --> p36
-    p36 --> p37
-    p35 -->|fasta_file| p38
+    p36 --> p44
+    p35 -->|fasta_file| p37
+    p37 --> p45
     p38 --> p39
-    p40 --> p41
-    p41 --> p46
-    p41 --> p45
-    p41 --> p44
-    p41 --> p43
-    p41 -->|tblout_ch| p42
-    p16 -->|known_fasta| p47
+    p39 --> p43
+    p39 --> p42
+    p39 --> p41
+    p39 --> p40
+    p39 -->|tblout_ch| p46
+    p44 --> p48
+    p45 --> p48
+    p46 --> p47
     p47 --> p48
     p48 --> p49
-    p49 --> p50
+    p49 --> p51
+    p50 -->|mode| p51
+    p51 --> p52
+    p16 -->|known_fasta| p53
+    p53 --> p54
+    p54 --> p56
+    p55 -->|mode| p56
+    p56 --> p57

@@ -53,20 +53,57 @@ process EXPORT_KNOWN_ANNOTATIONS_CSV {
     """
 }
 
-process CONCAT_KNOWN_ANNOTATIONS {
+process CONCAT_ANNOTATIONS {
     publishDir 'data/output/tables', mode: 'copy'
     
     input:
     path known_fasta
+    val mode
 
     output:
-    path "mgnifams_known_annotations.csv"
+    path "mgnifams_${mode}_annotations.csv"
 
     """
-    echo "FamilyID,Annotation,Description,Source,IsKnown" > mgnifams_known_annotations.csv
+    echo "FamilyID,Annotation,Description,Source,IsKnown" > mgnifams_${mode}_annotations.csv
     for csv_file in ${known_fasta}
     do
-        cat \$csv_file >> mgnifams_known_annotations.csv
+        cat \$csv_file >> mgnifams_${mode}_annotations.csv
     done
+    """
+}
+
+process EXPORT_INTERPRO_ANNOTATIONS_CSV {
+    input:
+    path interpro
+
+    output:
+    path "interpro_annotations.csv", optional: true
+
+    """
+    python3 ${baseDir}/bin/export_interpro_annotations_csv.py ${interpro} interpro_annotations.csv
+    """
+}
+
+process EXPORT_EGGNOG_ANNOTATIONS_CSV {
+    input:
+    path eggnog
+
+    output:
+    path "eggnog_annotations.csv", optional: true
+
+    """
+    python3 ${baseDir}/bin/export_eggnog_annotations_csv.py ${eggnog} eggnog_annotations.csv
+    """
+}
+
+process EXPORT_UNIPROT_ANNOTATIONS_CSV {
+    input:
+    path uniprot
+
+    output:
+    path "${uniprot.baseName}_uniprot_annotations.csv", optional: true
+
+    """
+    python3 ${baseDir}/bin/export_uniprot_annotations_csv.py ${uniprot} ${uniprot.baseName}_uniprot_annotations.csv
     """
 }
