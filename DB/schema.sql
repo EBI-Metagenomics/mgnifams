@@ -23,7 +23,8 @@ CREATE TABLE Annotations (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     FamilyID VARCHAR(16),
     Annotation VARCHAR(30) NOT NULL,
-    Description TEXT NOT NULL,
-    Source VARCHAR(30) NOT NULL,
+    Description TEXT,
+    Source VARCHAR(30),
+    IsKnown BOOLEAN,
     FOREIGN KEY(FamilyID) REFERENCES Families(ID)
 );

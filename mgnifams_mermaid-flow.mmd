@@ -34,22 +34,22 @@ flowchart TD
 	p18 -->|"familyFile"| p19(["collect"])
 	p19 --> p20["create_families:EXPORT_REPS_FA"]
 	style p20 fill:#ff8585
-	p20 -->|"unknown_reps_fasta"| p27["annotate_families:getTopDebugLines"]
+	p20 -->|"unknown_reps_fasta"| p27["annotate_unknown:getTopDebugLines"]
 	style p27 fill:#9cccff
 	p18 -->|"familyFile"| p21["produce_unknown_models:MAFFT"]
 	style p21 fill:#c8c8c8
 	p21 --> p22["produce_unknown_models:HMMBUILD"]
 	style p22 fill:#c8c8c8
-	p22 -->|"build_ch"| p33["annotate_families:HMMSCAN"]
+	p22 -->|"build_ch"| p33["annotate_unknown:HMMSCAN"]
 	style p33 fill:#9cccff
 	p23 --> p24["produce_known_models:HMMBUILD"]
 	style p24 fill:#787878
 	p24 --> p25((" "))
 	p26(("Channel.fromPath")) -->|"uniprot_sprot_fasta_path"| p32(["first"])
-	p27 --> p28["annotate_families:INTERPROSCAN"]
+	p27 --> p28["annotate_unknown:INTERPROSCAN"]
 	style p28 fill:#9cccff
 	p28 --> p29((" "))
-	p27 -->|"fasta_file"| p30["annotate_families:EGGNOG_MAPPER"]
+	p27 -->|"fasta_file"| p30["annotate_unknown:EGGNOG_MAPPER"]
 	style p30 fill:#9cccff
 	p30 --> p31((" "))
 	p32 --> p33

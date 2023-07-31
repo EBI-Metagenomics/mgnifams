@@ -40,3 +40,23 @@ process EXPORT_FAMILIES_CSV {
     python3 ${baseDir}/bin/export_families_csv.py ${rep_names} mgnifams_${mode}_families.csv ${mode}
     """
 }
+
+process EXPORT_KNOWN_ANNOTATIONS_CSV {
+    input:
+    path known_fasta
+
+    output:
+    path "${known_fasta.baseName}_annotations.csv", optional: true
+
+    """
+    python3 ${baseDir}/bin/export_known_annotations_csv.py ${known_fasta} ${known_fasta.baseName}_annotations.csv
+    """
+}
+
+process CONCAT_KNOWN_ANNOTATIONS {
+    publishDir 'data/output/tables', mode: 'copy'
+
+    """
+    echo yes
+    """
+}

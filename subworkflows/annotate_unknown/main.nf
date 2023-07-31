@@ -19,7 +19,7 @@ process getTopDebugLines { // TODO remove in Codon
     """
 }
 
-workflow annotate_families {
+workflow annotate_unknown {
     take:
     unknown_reps_fasta
     build_ch
