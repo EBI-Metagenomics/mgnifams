@@ -1,9 +1,10 @@
 process HMMBUILD {
-    publishDir 'data/output/hmm/build', mode: 'copy', saveAs: { filename ->
+    publishDir "${params.outDir}hmm/build", mode: "copy", saveAs: { filename ->
         def newFilename = filename.replaceAll("_family.fa_mafft.fa", "")
         "${newFilename}"
     }
-    
+    label "hmmer"
+
     input:
     path fasta
 
@@ -17,11 +18,12 @@ process HMMBUILD {
 }
 
 process HMMSCAN {
-    publishDir 'data/output/hmm/scan', mode: 'copy',
-        pattern: '*_scan.tblout', saveAs: { filename ->
+    publishDir "${params.outDir}hmm/scan", mode: "copy",
+        pattern: "*_scan.tblout", saveAs: { filename ->
             def newFilename = filename.replaceAll(".fa_mafft.fa.hmm_scan", "_domains")
             "${newFilename}"
         }
+    label "hmmer"
 
     input:
     path hmm

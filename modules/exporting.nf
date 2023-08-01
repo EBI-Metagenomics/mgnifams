@@ -1,5 +1,6 @@
 process EXPORT_PROTEINS_CSV {
-    publishDir 'data/output/tables', mode: 'copy'
+    publishDir "${params.outDir}tables", mode: "copy"
+    label "venv"
 
     input:
     path fasta
@@ -8,12 +9,12 @@ process EXPORT_PROTEINS_CSV {
     path "mgnifams_proteins.csv"
 
     """
-    python3 ${baseDir}/bin/export_proteins_csv.py ${fasta} mgnifams_proteins.csv
+    python3 ${params.scriptDir}export_proteins_csv.py ${fasta} mgnifams_proteins.csv
     """
 }
 
 process EXPORT_CLUSTERING_CSV {
-    publishDir 'data/output/tables', mode: 'copy'
+    publishDir "${params.outDir}tables", mode: "copy"
 
     input:
     path cluster_file
@@ -27,8 +28,9 @@ process EXPORT_CLUSTERING_CSV {
 }
 
 process EXPORT_FAMILIES_CSV {
-    publishDir 'data/output/tables', mode: 'copy'
-
+    publishDir "${params.outDir}tables", mode: "copy"
+    label "venv"
+    
     input:
     path rep_names
     val mode
@@ -37,11 +39,13 @@ process EXPORT_FAMILIES_CSV {
     path "mgnifams_${mode}_families.csv"
 
     """
-    python3 ${baseDir}/bin/export_families_csv.py ${rep_names} mgnifams_${mode}_families.csv ${mode}
+    python3 ${params.scriptDir}export_families_csv.py ${rep_names} mgnifams_${mode}_families.csv ${mode}
     """
 }
 
 process EXPORT_KNOWN_ANNOTATIONS_CSV {
+    label "venv"
+    
     input:
     path known_fasta
 
@@ -49,12 +53,12 @@ process EXPORT_KNOWN_ANNOTATIONS_CSV {
     path "${known_fasta.baseName}_annotations.csv", optional: true
 
     """
-    python3 ${baseDir}/bin/export_known_annotations_csv.py ${known_fasta} ${known_fasta.baseName}_annotations.csv
+    python3 ${params.scriptDir}export_known_annotations_csv.py ${known_fasta} ${known_fasta.baseName}_annotations.csv
     """
 }
 
 process CONCAT_ANNOTATIONS {
-    publishDir 'data/output/tables', mode: 'copy'
+    publishDir "${params.outDir}tables", mode: "copy"
     
     input:
     path known_fasta
@@ -73,6 +77,8 @@ process CONCAT_ANNOTATIONS {
 }
 
 process EXPORT_INTERPRO_ANNOTATIONS_CSV {
+    label "venv"
+    
     input:
     path interpro
 
@@ -80,11 +86,13 @@ process EXPORT_INTERPRO_ANNOTATIONS_CSV {
     path "interpro_annotations.csv", optional: true
 
     """
-    python3 ${baseDir}/bin/export_interpro_annotations_csv.py ${interpro} interpro_annotations.csv
+    python3 ${params.scriptDir}export_interpro_annotations_csv.py ${interpro} interpro_annotations.csv
     """
 }
 
 process EXPORT_EGGNOG_ANNOTATIONS_CSV {
+    label "venv"
+
     input:
     path eggnog
 
@@ -92,11 +100,13 @@ process EXPORT_EGGNOG_ANNOTATIONS_CSV {
     path "eggnog_annotations.csv", optional: true
 
     """
-    python3 ${baseDir}/bin/export_eggnog_annotations_csv.py ${eggnog} eggnog_annotations.csv
+    python3 ${params.scriptDir}export_eggnog_annotations_csv.py ${eggnog} eggnog_annotations.csv
     """
 }
 
 process EXPORT_UNIPROT_ANNOTATIONS_CSV {
+    label "venv"
+    
     input:
     path uniprot
 
@@ -104,6 +114,6 @@ process EXPORT_UNIPROT_ANNOTATIONS_CSV {
     path "${uniprot.baseName}_uniprot_annotations.csv", optional: true
 
     """
-    python3 ${baseDir}/bin/export_uniprot_annotations_csv.py ${uniprot} ${uniprot.baseName}_uniprot_annotations.csv
+    python3 ${params.scriptDir}export_uniprot_annotations_csv.py ${uniprot} ${uniprot.baseName}_uniprot_annotations.csv
     """
 }

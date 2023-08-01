@@ -5,11 +5,14 @@ include { EXPORT_PROTEINS_CSV } from "$baseDir/modules/exporting.nf"
 
 workflow initiate_proteins {
     main:
+    def mgnify_fasta_path = params.dataDir + params.mgnify_fasta_name
+    def uniprot_sprot_fasta_input_debug_path = params.dataDir + params.uniprot_sprot_fasta_input_debug_name
+
     Channel
-        .fromPath(params.mgnify_fasta_path) 
+        .fromPath(mgnify_fasta_path) 
         .set { mgnify_fasta_file }
     Channel
-        .fromPath(params.uniprot_sprot_fasta_input_debug_path) 
+        .fromPath(uniprot_sprot_fasta_input_debug_path) 
         .set { uniprot_sprot_fasta_input_debug_file } // TODO change to main Uniprot file
 
     combined_fasta_file = CONCAT_FILES(mgnify_fasta_file, uniprot_sprot_fasta_input_debug_file)

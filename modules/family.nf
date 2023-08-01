@@ -1,5 +1,5 @@
 process EXPORT_REPS {
-    publishDir 'data/output', mode: 'copy'
+    publishDir "${params.outDir}", mode: "copy"
 
     input:
     path clust_tsv
@@ -14,7 +14,8 @@ process EXPORT_REPS {
 }
 
 process CREATE_FAMILY_FA {
-    publishDir 'data/output/families/', mode: 'copy'
+    publishDir "${params.outDir}families/", mode: "copy"
+    label "venv"
 
     input:
     path clust_tsv
@@ -29,12 +30,13 @@ process CREATE_FAMILY_FA {
     """
     mkdir known
     mkdir unknown
-    python3 ${baseDir}/bin/family_rep_into_fasta.py ${clust_tsv} ${fasta} ${mgyp}_family.fa ${mgyp}
+    python3 ${params.scriptDir}family_rep_into_fasta.py ${clust_tsv} ${fasta} ${mgyp}_family.fa ${mgyp}
     """
 }
 
 process EXPORT_REPS_FA {
-    publishDir 'data/output', mode: 'copy'
+    publishDir "${params.outDir}", mode: "copy"
+    label "seqtk"
 
     input:
     path fasta_files

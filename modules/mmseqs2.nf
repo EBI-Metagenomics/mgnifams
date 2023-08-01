@@ -1,5 +1,6 @@
 process CREATEDB {
-    publishDir 'data/output/mmseqs', mode: 'copy'
+    publishDir "${params.outDir}mmseqs", mode: "copy"
+    label "mmseqs"
 
     input:
     path fasta
@@ -17,7 +18,8 @@ process CREATEDB {
 }
 
 process LINCLUST {
-    publishDir 'data/output/mmseqs', mode: 'copy'
+    publishDir "${params.outDir}mmseqs", mode: "copy"
+    label "mmseqs"
 
     input:
     path mmseqs_DB
@@ -41,8 +43,9 @@ process LINCLUST {
 }
 
 process CREATETSV {
-    publishDir 'data/output/mmseqs', mode: 'copy'
-    
+    publishDir "${params.outDir}mmseqs", mode: "copy"
+    label "mmseqs"
+
     input:
     path mmseqs_DB
     path mmseqs_clu
@@ -64,7 +67,8 @@ process CREATETSV {
 }
 
 process CONVERT2FASTA {
-    publishDir 'data/output/mmseqs', mode: 'copy'
+    publishDir "${params.outDir}mmseqs", mode: "copy"
+    label "mmseqs"
 
     input:
     path mmseqs_DB
@@ -85,7 +89,8 @@ process CONVERT2FASTA {
 }
 
 process CLUSTERUPDATE {
-    publishDir 'data/output/mmseqs', mode: 'copy'
+    publishDir "${params.outDir}mmseqs", mode: "copy"
+    label "mmseqs"
     
     input:
     path mmseqs_DB_old

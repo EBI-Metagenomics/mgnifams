@@ -1,6 +1,6 @@
 process INTERPROSCAN {
-    publishDir 'data/output/annotations/interproscan', mode: 'copy'
-    
+    publishDir "${params.outDir}annotations/interproscan", mode: "copy"
+
     input:
     path fasta
 
