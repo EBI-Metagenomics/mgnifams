@@ -1,9 +1,12 @@
 process EGGNOG_MAPPER {
-    publishDir 'data/output/annotations/eggnog', mode: 'copy'
+    publishDir "${params.outDir}annotations/eggnog", mode: "copy"
+    // container "quay.io/microbiome-informatics/genomes-pipeline.eggnog-mapper:v2.1.11"
+    label "venv"
     cpus 10
 
     input:
     path fasta_file
+    // path eggnog_diamond_db
 
     output:
     path "${fasta_file.baseName}.emapper.hits"
@@ -12,4 +15,11 @@ process EGGNOG_MAPPER {
     """
     python3 ${params.eggnog_dir}emapper.py -m diamond -i ${fasta_file} --cpu ${task.cpus} --output ${fasta_file.baseName}
     """
+    // emapper.py \
+    // -i ${fasta_file} \
+    // --dmnd_db ${eggnog_diamond_db} \
+    // -m diamond \
+    // --cpu ${task.cpus} \
+    // --output ${fasta_file.baseName}
+    
 }
