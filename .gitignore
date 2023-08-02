@@ -2,8 +2,8 @@
 .nextflow.log*
 work/
 data/
-report-*
-trace-*
-timeline-*
+report*
+trace*
+timeline*
 venv/
 temp/

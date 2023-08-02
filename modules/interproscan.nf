@@ -1,5 +1,6 @@
 process INTERPROSCAN {
     publishDir "${params.outDir}annotations/interproscan", mode: "copy"
+    label "ips"
     cpus 10
 
     input:
