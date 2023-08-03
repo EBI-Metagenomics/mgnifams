@@ -29,15 +29,21 @@ workflow annotate_unknown {
     def uniprot_sprot_fasta_path = params.dataDir + params.uniprot_sprot_fasta_name
     
     Channel
+        .fromPath(params.eggnong_data_dir) 
+        .set { ch_eggnong_data_dir }
+    Channel
+        .fromPath(params.eggnong_diamond_db) 
+        .set { ch_eggnog_diamond_db }
+    Channel
+        .fromPath(params.eggnog_db) 
+        .set { ch_eggnog_db }
+    Channel
         .fromPath(uniprot_sprot_fasta_path) 
         .set { uniprot_sprot_fasta_file }
-    // Channel
-    //     .fromPath(params.eggnog_diamond_db) 
-    //     .set { eggnog_diamond_db_path }
-
+    
     top_reps = getTopDebugLines(unknown_reps_fasta) // TODO remove
     interpro_ch = INTERPROSCAN(top_reps) // TODO: reps_fa
-    eggnog_ch = EGGNOG_MAPPER(top_reps) // TODO:  reps_fa // eggnog_diamond_db_path
+    eggnog_ch = EGGNOG_MAPPER(top_reps, ch_eggnong_data_dir, ch_eggnog_diamond_db, ch_eggnog_db) // TODO:  reps_fa
     tblout_ch = HMMSCAN(build_ch, uniprot_sprot_fasta_file.first()).tblout_ch
     interpro_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(interpro_ch)
     eggnog_csv = EXPORT_EGGNOG_ANNOTATIONS_CSV(eggnog_ch)
