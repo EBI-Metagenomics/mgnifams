@@ -3,7 +3,7 @@
 include { HMMSCAN } from "$baseDir/modules/hmm.nf"
 include { INTERPROSCAN } from "$baseDir/modules/interproscan.nf"
 include { EGGNOG_MAPPER } from "$baseDir/modules/eggnog.nf"
-// TODO protENN
+// TODO protENN/protNML
 include { EXPORT_INTERPRO_ANNOTATIONS_CSV; EXPORT_EGGNOG_ANNOTATIONS_CSV; EXPORT_UNIPROT_ANNOTATIONS_CSV; CONCAT_ANNOTATIONS } from "$baseDir/modules/exporting.nf"
 
 process getTopDebugLines { // TODO remove in Codon
