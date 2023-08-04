@@ -1,19 +1,16 @@
 #!/usr/bin/env nextflow
 
-// include { preprocess? } from "$baseDir/subworkflows/xxx/main.nf"
 include { slice_unannotated } from "$baseDir/subworkflows/slice_unannotated/main.nf"
-include { annotate_fasta } from "$baseDir/subworkflows/annotate_fasta/main.nf"
+include { annotate_slices } from "$baseDir/subworkflows/annotate_slices/main.nf"
 
 workflow {
-    // preprocess?
     Channel
-        .fromPath(params.msa_path) 
-        .set { msa_ch }
-
+        .fromPath(params.fasta_file) 
+        .set { fasta_path }
     Channel
-        .fromPath(params.tblOut_path) 
-        .set { tblOut_ch }
+        .fromPath(params.annotations_file) 
+        .set { annotations_path }
 
-    concat_fasta = slice_unannotated(msa_ch, tblOut_ch)
-    annotate_fasta(concat_fasta)
+    sliced_fasta = slice_unannotated(fasta_path, annotations_path, params.min_slice_length)
+    // annotate_slices(sliced_fasta)
 }

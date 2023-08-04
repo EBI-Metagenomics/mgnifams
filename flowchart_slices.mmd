@@ -9,7 +9,7 @@ flowchart TD
     p7[slice_unannotated:PRINT_SLICED]
     p8([collect])
     p9[slice_unannotated:CONCAT_FASTA]
-    p10[annotate_fasta:INTERPROSCAN]
+    p10[annotate_slices:INTERPROSCAN]
     p11(( ))
     p0 -->|msa_ch| p2
     p1 -->|tblout_ch| p3
