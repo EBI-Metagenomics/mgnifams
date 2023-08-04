@@ -13,7 +13,7 @@ process HMMBUILD {
 
     script:
     """
-    hmmbuild ${fasta}.hmm ${fasta} > /dev/null 2>&1
+    hmmbuild ${fasta}.hmm ${fasta}
     """
 }
 
