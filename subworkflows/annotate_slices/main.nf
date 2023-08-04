@@ -1,14 +1,12 @@
 #!/usr/bin/env nextflow
 
 include { INTERPROSCAN } from "$baseDir/modules/interproscan.nf"
-// TODO more annotation sources: Uniprot, eggNOG, protENN, probably merge part of it with annotate_family subworkflow (instead of hmmscan Uniprot)
+include { EGGNOG_MAPPER } from "$baseDir/modules/eggnog.nf"
 
 workflow annotate_slices {
     take:
     fasta_ch
     
     main:
-    INTERPROSCAN(fasta_ch)
-
-    // emit:
+    interpro_ch = INTERPROSCAN(fasta_ch)
 }
