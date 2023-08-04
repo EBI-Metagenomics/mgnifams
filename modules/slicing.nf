@@ -1,6 +1,6 @@
 process SLICE {
     publishDir "${params.outDir}slices", mode: "copy"
-
+    label "venv"
     input:
     path fasta_path
     path annotations_path
@@ -11,6 +11,6 @@ process SLICE {
 
     script:
     """
-    python3 ${params.scriptDir}slice_proteins.py ${fasta_path} ${annotations_path} ${min_slice_length} sliced_fasta.csv
+    python3 ${params.scriptDir}slicing/slice_proteins.py ${fasta_path} ${annotations_path} ${min_slice_length} sliced_fasta.csv
     """
 }
