@@ -57,11 +57,25 @@ process EXPORT_KNOWN_ANNOTATIONS_CSV {
     """
 }
 
+process EXPORT_BLASTP_ANNOTATIONS_CSV {
+    label "venv"
+    
+    input:
+    path fasta
+
+    output:
+    path "${fasta.baseName}_annotations.csv", optional: true
+
+    """
+    python3 ${params.scriptDir}export_blastp_annotations_csv.py ${fasta} ${fasta.baseName}_annotations.csv
+    """
+}
+
 process CONCAT_ANNOTATIONS {
     publishDir "${params.outDir}tables", mode: "copy"
     
     input:
-    path known_fasta
+    path fasta
     val mode
 
     output:
@@ -69,7 +83,7 @@ process CONCAT_ANNOTATIONS {
 
     """
     echo "FamilyID,Annotation,Description,Source,IsKnown" > mgnifams_${mode}_annotations.csv
-    for csv_file in ${known_fasta}
+    for csv_file in ${fasta}
     do
         cat \$csv_file >> mgnifams_${mode}_annotations.csv
     done
