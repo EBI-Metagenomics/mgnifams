@@ -1,24 +1,51 @@
 flowchart TD
     p0((Channel.fromPath))
     p1((Channel.fromPath))
-    p2([map])
+    p2(( ))
     p3[slice_unannotated:SLICE]
-    p4([map])
-    p5([join])
-    p6([map])
-    p7[slice_unannotated:PRINT_SLICED]
-    p8([collect])
-    p9[slice_unannotated:CONCAT_FASTA]
-    p10[annotate_slices:INTERPROSCAN]
-    p11(( ))
-    p0 -->|msa_ch| p2
-    p1 -->|tblout_ch| p3
-    p2 -->|msa_mapped_ch| p5
-    p3 --> p4
-    p4 -->|slice_mapped_ch| p5
-    p5 -->|matched_files_ch| p6
-    p6 --> p7
-    p7 --> p8
-    p8 --> p9
-    p9 -->|fasta_ch| p10
+    style p3 fill:#eae3b3
+    p4((Channel.fromPath))
+    p5((Channel.fromPath))
+    p6((Channel.fromPath))
+    p7((Channel.fromPath))
+    p8[annotate_slices:INTERPROSCAN]
+    style p8 fill:#9cccff
+    p9[annotate_slices:EGGNOG_MAPPER]
+    style p9 fill:#9cccff
+    p10[annotate_slices:MAKEBLASTDB]
+    style p10 fill:#9cccff
+    p11[annotate_slices:BLASTP]
+    style p11 fill:#9cccff
+    p12[annotate_slices:EXPORT_INTERPRO_ANNOTATIONS_CSV]
+    style p12 fill:#baf8b1
+    p13[annotate_slices:EXPORT_EGGNOG_ANNOTATIONS_CSV]
+    style p13 fill:#baf8b1
+    p14[annotate_slices:EXPORT_BLASTP_ANNOTATIONS_CSV]
+    style p14 fill:#baf8b1
+    p15([concat])
+    p16([collect])
+    p17(( ))
+    p18[annotate_slices:CONCAT_ANNOTATIONS]
+    style p18 fill:#baf8b1
+    p19(( ))
+    p0 -->|fasta_ch| p3
+    p1 -->|annotations_ch| p3
+    p2 -->|min_slice_length| p3
+    p3 -->|fasta_ch| p8
+    p4 -->|ch_eggnong_data_dir| p9
+    p5 -->|ch_eggnog_diamond_db| p9
+    p6 -->|ch_eggnog_db| p9
+    p7 -->|uniprot_sprot_fasta_file| p10
+    p8 --> p12
+    p3 -->|fasta_ch| p9
+    p9 --> p13
     p10 --> p11
+    p3 -->|fasta_ch| p11
+    p11 --> p14
+    p12 --> p15
+    p13 --> p15
+    p14 --> p15
+    p15 --> p16
+    p16 --> p18
+    p17 -->|mode| p18
+    p18 --> p19

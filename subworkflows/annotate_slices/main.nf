@@ -2,7 +2,8 @@
 
 include { INTERPROSCAN } from "$baseDir/modules/interproscan.nf"
 include { EGGNOG_MAPPER } from "$baseDir/modules/eggnog.nf"
-include { EXPORT_INTERPRO_ANNOTATIONS_CSV; EXPORT_EGGNOG_ANNOTATIONS_CSV; CONCAT_ANNOTATIONS } from "$baseDir/modules/exporting.nf"
+include { MAKEBLASTDB; BLASTP } from "$baseDir/modules/blast.nf"
+include { EXPORT_INTERPRO_ANNOTATIONS_CSV; EXPORT_EGGNOG_ANNOTATIONS_CSV; EXPORT_BLASTP_ANNOTATIONS_CSV; CONCAT_ANNOTATIONS } from "$baseDir/modules/exporting.nf"
 
 workflow annotate_slices {
     take:
@@ -26,7 +27,11 @@ workflow annotate_slices {
 
     interpro_ch = INTERPROSCAN(fasta_ch)
     eggnog_ch = EGGNOG_MAPPER(fasta_ch, ch_eggnong_data_dir, ch_eggnog_diamond_db, ch_eggnog_db)
+    library_ch = MAKEBLASTDB(uniprot_sprot_fasta_file)
+    blastp_ch = BLASTP(fasta_ch, library_ch)
+
     interpro_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(interpro_ch)
     eggnog_csv = EXPORT_EGGNOG_ANNOTATIONS_CSV(eggnog_ch)
-    CONCAT_ANNOTATIONS(interpro_csv.concat(eggnog_csv).collect(), 'unknown')
+    blastp_csv = EXPORT_BLASTP_ANNOTATIONS_CSV(blastp_ch)
+    CONCAT_ANNOTATIONS(interpro_csv.concat(eggnog_csv, blastp_csv).collect(), 'unknown')
 }
