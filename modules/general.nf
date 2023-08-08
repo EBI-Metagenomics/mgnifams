@@ -1,13 +1,18 @@
 process CONCAT_FILES {
     input:
-    path file1
-    path file2
+    path mgy_folder
+    path uniprot_sp
 
     output:
     path "combined_input.fa"
 
+    script:
     """
-    gunzip -c ${file1} > ${file1.baseName}
-    cat ${file1.baseName} ${file2} > combined_input.fa
+    for file in ${mgy_folder}; do
+        baseName=\${file%.gz}
+        gunzip -c \$file > \$baseName
+        cat \$baseName >> combined_input.fa
+    done
+    cat ${uniprot_sp} >> combined_input.fa
     """
 }
