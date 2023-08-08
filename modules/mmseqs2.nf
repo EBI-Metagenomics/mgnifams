@@ -38,7 +38,8 @@ process LINCLUST {
     tmp \
     --min-seq-id ${params.seq_identity} \
     --cov-mode 1 \
-    -c ${params.coverage} > /dev/null 2>&1
+    -c ${params.coverage} \
+    --threads ${task.cpus} > /dev/null 2>&1
     """
 }
 
@@ -62,7 +63,8 @@ process CREATETSV {
     ${dbName} \
     ${dbName} \
     ${cluName} \
-    ${cluName}.tsv > /dev/null 2>&1
+    ${cluName}.tsv \
+    --threads ${task.cpus} > /dev/null 2>&1
     """
 }
 
@@ -116,6 +118,7 @@ process CLUSTERUPDATE {
     ${old_cluName} \
     ${new_dbName}_update/DB/DB_new_updated \
     ${new_dbName}_update/clu/DB_update_clu \
-    tmp
+    tmp \
+    --threads ${task.cpus} > /dev/null 2>&1
     """
 }
