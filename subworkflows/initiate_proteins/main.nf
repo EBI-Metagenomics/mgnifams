@@ -1,24 +1,19 @@
 #!/usr/bin/env nextflow
 
-include { CONCAT_FILES } from "$baseDir/modules/general.nf"
+include { KEEP_UNANNOTATED } from "$baseDir/modules/parsing.nf"
 include { EXPORT_PROTEINS_CSV } from "$baseDir/modules/exporting.nf"
 
 workflow initiate_proteins {
     main:
-    def mgy_fasta_path = params.mgy_dataDir + params.mgy_fasta_name
-    def uniprot_sprot_fasta_input_path = params.dataDir + params.uniprot_sprot_fasta_input_name
+    def mgy90_path = params.mgy90_dataDir + params.mgy90_name
 
     Channel
-        .fromPath(mgy_fasta_path)
-        .collect()
-        .set { mgy_folder }
-    Channel
-        .fromPath(uniprot_sprot_fasta_input_path) 
-        .set { uniprot_sp }
+        .fromPath(mgy90_path)
+        .set { mgy90_file }
 
-    combined_fasta_file = CONCAT_FILES(mgy_folder, uniprot_sp)
-    EXPORT_PROTEINS_CSV(combined_fasta_file)
+    fasta_file = KEEP_UNANNOTATED(mgy90_file)
+    EXPORT_PROTEINS_CSV(fasta_file)
 
     emit:
-    combined_fasta_file
+    fasta_file
 }

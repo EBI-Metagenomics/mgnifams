@@ -11,9 +11,9 @@ include { annotate_known } from "$baseDir/subworkflows/annotate_known/main.nf"
 workflow {
     combined_fasta_file = initiate_proteins()
     mmseqs = execute_clustering(combined_fasta_file)
-    families = create_families(mmseqs.clu_tsv, combined_fasta_file)
-    unknown_models = produce_unknown_models(families.unknown_ch)
-    known_models = produce_known_models(families.known_ch)
-    annotate_unknown(families.unknown_reps_fasta, unknown_models.build_ch)
-    annotate_known(families.known_ch)
+    // families = create_families(mmseqs.clu_tsv, combined_fasta_file)
+    // unknown_models = produce_unknown_models(families.unknown_ch)
+    // known_models = produce_known_models(families.known_ch)
+    // annotate_unknown(families.unknown_reps_fasta, unknown_models.build_ch)
+    // annotate_known(families.known_ch)
 }
