@@ -25,10 +25,11 @@ workflow annotate_slices {
         .fromPath(uniprot_sprot_fasta_path) 
         .set { uniprot_sprot_fasta_file }
 
-    interpro_ch = INTERPROSCAN(fasta_ch)
-    eggnog_ch = EGGNOG_MAPPER(fasta_ch, ch_eggnong_data_dir, ch_eggnog_diamond_db, ch_eggnog_db)
+    fasta_chunks_ch = fasta_ch.splitFasta( by: params.chunk_size, file: true )
+    interpro_ch = INTERPROSCAN(fasta_chunks_ch).collectFile(name: "ips_annotations.tsv")
+    eggnog_ch = EGGNOG_MAPPER(fasta_chunks_ch, ch_eggnong_data_dir.first(), ch_eggnog_diamond_db.first(), ch_eggnog_db.first()).collectFile(name: "eggnog_annotations.tsv")
     library_ch = MAKEBLASTDB(uniprot_sprot_fasta_file)
-    blastp_ch = BLASTP(fasta_ch, library_ch)
+    blastp_ch = BLASTP(fasta_chunks_ch, library_ch.first()).collectFile(name: "blastp_annotations.tsv")
 
     interpro_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(interpro_ch)
     eggnog_csv = EXPORT_EGGNOG_ANNOTATIONS_CSV(eggnog_ch)

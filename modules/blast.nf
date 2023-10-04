@@ -25,7 +25,7 @@ process BLASTP {
     path library
 
     output:
-    path "blastp_results.csv"
+    path "${fasta}.csv"
 
     script:
     dbName = "${library.baseName[0]}"
@@ -34,7 +34,7 @@ process BLASTP {
     blastp \
     -db ${dbName} \
     -query ${fasta} \
-    -out blastp_results.csv \
+    -out ${fasta}.csv \
     -num_threads ${task.cpus} \
     -outfmt 10
     """
