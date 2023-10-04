@@ -22,6 +22,7 @@ workflow create_families {
     EXPORT_FAMILIES_CSV(unknown_ids_file, 'unknown')
 
     emit:
+    reps_file
     unknown_ch
     unknown_reps_fasta
 }

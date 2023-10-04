@@ -33,5 +33,8 @@ workflow annotate_slices {
     interpro_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(interpro_ch)
     eggnog_csv = EXPORT_EGGNOG_ANNOTATIONS_CSV(eggnog_ch)
     blastp_csv = EXPORT_BLASTP_ANNOTATIONS_CSV(blastp_ch)
-    CONCAT_ANNOTATIONS(interpro_csv.concat(eggnog_csv, blastp_csv).collect(), 'unknown')
+    annotations_ch = CONCAT_ANNOTATIONS(interpro_csv.concat(eggnog_csv, blastp_csv).collect(), 'unknown')
+
+    emit:
+    annotations_ch
 }

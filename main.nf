@@ -3,15 +3,15 @@
 include { initiate_proteins } from "$baseDir/subworkflows/initiate_proteins/main.nf"
 include { execute_clustering } from "$baseDir/subworkflows/execute_clustering/main.nf"
 include { create_families } from "$baseDir/subworkflows/create_families/main.nf"
-include { produce_models as produce_unknown_models } from "$baseDir/subworkflows/produce_models/main.nf"
-include { produce_models as produce_known_models } from "$baseDir/subworkflows/produce_models/main.nf"
-include { annotate_unknown } from "$baseDir/subworkflows/annotate_unknown/main.nf"
-include { annotate_known } from "$baseDir/subworkflows/annotate_known/main.nf"
+include { produce_models } from "$baseDir/subworkflows/produce_models/main.nf"
+include { annotate_slices } from "$baseDir/subworkflows/annotate_slices/main.nf"
+include { FIND_UNANNOTATED_IDS } from "$baseDir/modules/general.nf"
 
 workflow {
     combined_fasta_file = initiate_proteins()
     mmseqs = execute_clustering(combined_fasta_file)
     families = create_families(mmseqs.clu_tsv, combined_fasta_file)
-    // unknown_models = produce_unknown_models(families.unknown_ch)
-    // annotate_unknown(families.unknown_reps_fasta, unknown_models.build_ch)
+    unknown_models = produce_models(families.unknown_ch)
+    annotations_ch = annotate_slices(families.unknown_reps_fasta)
+    FIND_UNANNOTATED_IDS(annotations_ch, families.reps_file)
 }
