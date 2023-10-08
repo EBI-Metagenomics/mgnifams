@@ -28,8 +28,8 @@ process CREATE_FAMILY_FA {
 
     script:
     """
-    mkdir known
-    mkdir unknown
+    mkdir -p known
+    mkdir -p unknown
     python3 ${params.scriptDir}family_rep_into_fasta.py ${clust_tsv} ${fasta} ${mgyp}_family.fa ${mgyp}
     """
 }
