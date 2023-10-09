@@ -9,9 +9,9 @@ workflow produce_models {
 
     main:
     mafft_ch = MAFFT(familyFile)
-    build_ch = HMMBUILD(mafft_ch)
+    // build_ch = HMMBUILD(mafft_ch)
 
     emit:
     mafft_ch
-    build_ch
+    // build_ch
 }
