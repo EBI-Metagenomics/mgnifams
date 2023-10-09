@@ -10,8 +10,8 @@ include { FIND_UNANNOTATED_IDS } from "$baseDir/modules/general.nf"
 workflow {
     combined_fasta_file = initiate_proteins()
     mmseqs = execute_clustering(combined_fasta_file)
-    families = create_families(mmseqs.clu_tsv, combined_fasta_file)
-    unknown_models = produce_models(families.unknown_ch)
-    annotations_ch = annotate_slices(families.unknown_reps_fasta)
-    FIND_UNANNOTATED_IDS(annotations_ch, families.reps_file)
+    families = create_families(combined_fasta_file, mmseqs.clu_tsv)
+    // unknown_models = produce_models(families.unknown_ch)
+    // annotations_ch = annotate_slices(families.unknown_reps_fasta)
+    // FIND_UNANNOTATED_IDS(annotations_ch, families.reps_file)
 }
