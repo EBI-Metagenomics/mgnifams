@@ -1,5 +1,4 @@
 process EGGNOG_MAPPER {
-    publishDir "${params.outDir}annotations/eggnog", mode: "copy"
     label "eggnog"
 
     input:

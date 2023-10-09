@@ -17,7 +17,6 @@ process MAKEBLASTDB {
 }
 
 process BLASTP {
-    publishDir "${params.outDir}annotations/blast", mode: "copy"
     label "blast"
 
     input:
