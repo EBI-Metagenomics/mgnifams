@@ -12,6 +12,6 @@ workflow {
     mmseqs = execute_clustering(combined_fasta_file)
     families = create_families(combined_fasta_file, mmseqs.clu_tsv)
     unknown_models = produce_models(families.non_singletons_folder)
-    // annotations_ch = annotate_slices(families.unknown_reps_fasta)
-    // FIND_UNANNOTATED_IDS(annotations_ch, families.reps_file)
+    annotations_ch = annotate_slices(families.reps_fasta)
+    FIND_UNANNOTATED_IDS(annotations_ch, families.reps_ids)
 }
