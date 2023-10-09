@@ -10,7 +10,7 @@ process PARSE_FAMILIES {
     path "rep_names.txt"   , emit: reps_ids
     path "reps.fa"         , emit: reps_fasta
     path "singletons.txt"  , optional: true, emit: singleton_ids
-    path "non_singletons/*", optional: true, emit: non_singletons_ch
+    path "non_singletons/*", optional: true, emit: non_singletons_folder
 
     script:
     """

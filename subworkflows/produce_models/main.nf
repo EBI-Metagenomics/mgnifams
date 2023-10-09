@@ -8,10 +8,10 @@ workflow produce_models {
     familyFile
 
     main:
-    mafft_ch = MAFFT(familyFile)
-    // build_ch = HMMBUILD(mafft_ch)
+    mafft_folder = MAFFT(familyFile)
+    build_folder = HMMBUILD(mafft_folder)
 
     emit:
-    mafft_ch
-    // build_ch
+    mafft_folder
+    build_folder
 }

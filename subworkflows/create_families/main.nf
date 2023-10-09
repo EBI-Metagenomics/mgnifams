@@ -13,12 +13,12 @@ workflow create_families {
     reps_ids = families.reps_ids
     reps_fasta = families.reps_fasta
     singleton_ids = families.singleton_ids
-    non_singletons_ch = families.non_singletons_ch
+    non_singletons_folder = families.non_singletons_folder
     // EXPORT_FAMILIES_CSV(unknown_ids_file, 'unknown')
 
     emit:
     reps_ids
     reps_fasta
     singleton_ids
-    non_singletons_ch
+    non_singletons_folder
 }
