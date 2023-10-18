@@ -73,7 +73,7 @@ process EXPORT_BLASTP_ANNOTATIONS_CSV {
 
 process CONCAT_ANNOTATIONS {
     publishDir "${params.outdir}tables", mode: "copy"
-    
+
     input:
     path fasta
     val mode
@@ -97,10 +97,10 @@ process EXPORT_INTERPRO_ANNOTATIONS_CSV {
     path interpro
 
     output:
-    path "interpro_annotations.csv", optional: true
+    path "${interpro}.csv", optional: true
 
     """
-    python3 ${params.scriptDir}export_interpro_annotations_csv.py ${interpro} interpro_annotations.csv
+    python3 ${params.scriptDir}export_interpro_annotations_csv.py ${interpro} ${interpro}.csv
     """
 }
 
@@ -111,10 +111,10 @@ process EXPORT_EGGNOG_ANNOTATIONS_CSV {
     path eggnog
 
     output:
-    path "eggnog_annotations.csv", optional: true
+    path "${eggnog}.csv", optional: true
 
     """
-    python3 ${params.scriptDir}export_eggnog_annotations_csv.py ${eggnog} eggnog_annotations.csv
+    python3 ${params.scriptDir}export_eggnog_annotations_csv.py ${eggnog} ${eggnog}.csv
     """
 }
 
