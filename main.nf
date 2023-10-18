@@ -36,10 +36,10 @@ workflow {
     // ----------------------------
 
     blastp_csv = EXPORT_BLASTP_ANNOTATIONS_CSV(annotations_ch.blastp_csv.map { meta, path -> path })
-    inteproscan_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(annotations_ch.inteproscan_tsv.map { meta, path -> path })
+    // inteproscan_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(annotations_ch.inteproscan_tsv.map { meta, path -> path })
     eggnogmapper_csv = EXPORT_EGGNOG_ANNOTATIONS_CSV(annotations_ch.eggnogmapper_csv.map { meta, path -> path })
-    annotations_ch = blastp_csv.concat(inteproscan_csv, eggnogmapper_csv).collect()
-    annotations_ch = CONCAT_ANNOTATIONS(annotations_ch, 'strategy90')
-    FIND_UNANNOTATED_IDS(annotations_ch, families.reps_ids)
-    // unknown_models = produce_models(families.families_folder)
+    // annotations_ch = blastp_csv.concat(inteproscan_csv, eggnogmapper_csv).collect()
+    // annotations_ch = CONCAT_ANNOTATIONS(annotations_ch, 'strategy90')
+    // FIND_UNANNOTATED_IDS(annotations_ch, families.reps_ids)
+    // // unknown_models = produce_models(families.families_folder)
 }

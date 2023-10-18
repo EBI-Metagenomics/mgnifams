@@ -21,16 +21,16 @@ workflow FASTA_DOMAINANNOTATION {
     BLAST_BLASTP ( ch_fasta, BLAST_MAKEBLASTDB.out.db )
     ch_versions = ch_versions.mix(BLAST_BLASTP.out.versions)
 
-    out_ext = 'tsv'
-    INTERPROSCAN ( ch_fasta, out_ext )
-    ch_versions = ch_versions.mix(INTERPROSCAN.out.versions)
+    // out_ext = 'tsv'
+    // INTERPROSCAN ( ch_fasta, out_ext )
+    // ch_versions = ch_versions.mix(INTERPROSCAN.out.versions)
 
     EGGNOGMAPPER ( ch_fasta, val_eggnog_db, val_eggnog_data_dir, val_diamond_db )
     ch_versions = ch_versions.mix(EGGNOGMAPPER.out.versions)
 
     emit:
     blastp_csv       = BLAST_BLASTP.out.csv // channel: [ val(meta), [ csv ] ]
-    inteproscan_tsv  = INTERPROSCAN.out.tsv // channel: [ val(meta), [ tsv ] ]
+    // inteproscan_tsv  = INTERPROSCAN.out.tsv // channel: [ val(meta), [ tsv ] ]
     eggnogmapper_csv = EGGNOGMAPPER.out.csv // channel: [ val(meta), [ csv ] ]
 
     versions = ch_versions // channel: [ versions.yml ]
