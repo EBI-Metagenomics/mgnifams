@@ -1,5 +1,5 @@
 process EXPORT_PROTEINS_CSV {
-    publishDir "${params.outDir}tables", mode: "copy"
+    publishDir "${params.outdir}tables", mode: "copy"
     label "venv"
 
     input:
@@ -14,7 +14,7 @@ process EXPORT_PROTEINS_CSV {
 }
 
 process EXPORT_CLUSTERING_CSV {
-    publishDir "${params.outDir}tables", mode: "copy"
+    publishDir "${params.outdir}tables", mode: "copy"
 
     input:
     path cluster_file
@@ -28,7 +28,7 @@ process EXPORT_CLUSTERING_CSV {
 }
 
 process EXPORT_FAMILIES_CSV {
-    publishDir "${params.outDir}tables", mode: "copy"
+    publishDir "${params.outdir}tables", mode: "copy"
     label "venv"
     
     input:
@@ -72,7 +72,7 @@ process EXPORT_BLASTP_ANNOTATIONS_CSV {
 }
 
 process CONCAT_ANNOTATIONS {
-    publishDir "${params.outDir}tables", mode: "copy"
+    publishDir "${params.outdir}tables", mode: "copy"
     
     input:
     path fasta

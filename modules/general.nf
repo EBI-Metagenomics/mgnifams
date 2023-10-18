@@ -18,7 +18,7 @@ process CONCAT_FILES {
 }
 
 process FIND_UNANNOTATED_IDS {
-    publishDir "${params.outDir}", mode: "copy"
+    publishDir "${params.outdir}", mode: "copy"
 
     input:
     path annotations_csv

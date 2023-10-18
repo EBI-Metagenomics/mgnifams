@@ -13,7 +13,7 @@ process KEEP_FAMILIES {
 }
 
 process PARSE_FAMILIES {
-    publishDir "${params.outDir}families/", mode: "copy"
+    publishDir "${params.outdir}families/", mode: "copy"
     label "venv"
 
     input:

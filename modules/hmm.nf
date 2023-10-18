@@ -1,5 +1,5 @@
 process HMMBUILD {
-    publishDir "${params.outDir}", mode: 'copy', saveAs: { filename ->
+    publishDir "${params.outdir}", mode: 'copy', saveAs: { filename ->
         def newFilename = filename.replaceAll("_msa", "")
         "${newFilename}"
     }
@@ -22,7 +22,7 @@ process HMMBUILD {
 }
 
 process HMMSCAN {
-    publishDir "${params.outDir}hmm/scan", mode: "copy",
+    publishDir "${params.outdir}hmm/scan", mode: "copy",
         pattern: "*_scan.tblout", saveAs: { filename ->
             def newFilename = filename.replaceAll(".fa_mafft.fa.hmm_scan", "_domains")
             "${newFilename}"

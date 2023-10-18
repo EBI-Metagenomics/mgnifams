@@ -1,5 +1,5 @@
 process MAFFT {
-    publishDir "${params.outDir}", mode: 'copy'
+    publishDir "${params.outdir}", mode: 'copy'
     label "mafft"
 
     input:
