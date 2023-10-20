@@ -29,16 +29,12 @@ workflow {
 
     def uniprot_sprot_fasta_path = params.dataDir + params.uniprot_sprot_fasta_name
     blast_fasta = Channel.value( uniprot_sprot_fasta_path )
-    eggnog_db = Channel.value( file(params.eggnog_db) ) 
-    eggnog_data_dir = eggnog_db.parent
-    eggnog_diamond_db = Channel.fromPath(params.eggnong_diamond_db) 
-    annotations_ch = FASTA_DOMAINANNOTATION( input, blast_fasta, eggnog_db, eggnog_data_dir, eggnog_diamond_db.first())
+    annotations_ch = FASTA_DOMAINANNOTATION( input, blast_fasta)
     // ----------------------------
 
     blastp_csv = EXPORT_BLASTP_ANNOTATIONS_CSV(annotations_ch.blastp_csv.map { meta, path -> path })
-    // inteproscan_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(annotations_ch.inteproscan_tsv.map { meta, path -> path })
-    eggnogmapper_csv = EXPORT_EGGNOG_ANNOTATIONS_CSV(annotations_ch.eggnogmapper_csv.map { meta, path -> path })
-    // annotations_ch = blastp_csv.concat(inteproscan_csv, eggnogmapper_csv).collect()
+    inteproscan_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(annotations_ch.inteproscan_tsv.map { meta, path -> path })
+    // annotations_ch = blastp_csv.concat(inteproscan_csv).collect()
     // annotations_ch = CONCAT_ANNOTATIONS(annotations_ch, 'strategy90')
     // FIND_UNANNOTATED_IDS(annotations_ch, families.reps_ids)
     // // unknown_models = produce_models(families.families_folder)
