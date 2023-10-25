@@ -28,12 +28,12 @@ workflow {
         .set { input }
 
     def uniprot_sprot_fasta_path = params.dataDir + params.uniprot_sprot_fasta_name
-    blast_fasta = Channel.value( uniprot_sprot_fasta_path )
-    annotations_ch = FASTA_DOMAINANNOTATION( input, blast_fasta)
+    blast_fasta = Channel.of( [ [id:'test'], uniprot_sprot_fasta_path ] )
+    annotations_ch = FASTA_DOMAINANNOTATION( input, blast_fasta, "diamond" )
     // ----------------------------
 
-    blastp_csv = EXPORT_BLASTP_ANNOTATIONS_CSV(annotations_ch.blastp_csv.map { meta, path -> path })
-    inteproscan_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(annotations_ch.inteproscan_tsv.map { meta, path -> path })
+    // blastp_csv = EXPORT_BLASTP_ANNOTATIONS_CSV(annotations_ch.blastp_csv.map { meta, path -> path })
+    // inteproscan_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(annotations_ch.inteproscan_tsv.map { meta, path -> path })
     // annotations_ch = blastp_csv.concat(inteproscan_csv).collect()
     // annotations_ch = CONCAT_ANNOTATIONS(annotations_ch, 'strategy90')
     // FIND_UNANNOTATED_IDS(annotations_ch, families.reps_ids)
