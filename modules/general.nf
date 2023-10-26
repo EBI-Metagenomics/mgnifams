@@ -1,3 +1,20 @@
+process EXTRACT_UNIQUE_IDS {
+    debug true
+
+    input:
+    path tsvFiles
+
+    output:
+    file "unique_ids.txt"
+
+    script:
+    """
+    for file in ${tsvFiles}; do 
+        awk -F '\t' '{ print \$1 }' \$file | sort | uniq; 
+    done | sort | uniq > unique_ids.txt
+    """
+}
+
 process CONCAT_FILES {
     input:
     path mgy_folder

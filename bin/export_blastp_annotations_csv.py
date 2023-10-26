@@ -4,7 +4,7 @@ import os
 
 def create_csv(input_tsv, output_csv):
     try:
-        df = pd.read_csv(input_tsv, header=None)
+        df = pd.read_csv(input_tsv, delimiter='\t', header=None)
     except pd.errors.EmptyDataError:
         # Create an empty DataFrame if there's an error reading the input file
         df = pd.DataFrame()

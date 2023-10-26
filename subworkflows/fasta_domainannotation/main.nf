@@ -35,7 +35,7 @@ workflow FASTA_DOMAINANNOTATION {
     INTERPROSCAN ( ch_fasta.map { meta, fasta -> fasta }, params.interproscan_db )
 
     emit:
-    blastp_tsv      = blastp_tsv // channel: [ val(meta), [ tsv ] ]
+    blastp_tsv      = blastp_tsv           // channel: [ val(meta), [ tsv ] ]
     inteproscan_tsv = INTERPROSCAN.out.tsv // channel: [ val(meta), [ tsv ] ]
-    versions        = ch_versions // channel: [ versions.yml ]
+    versions        = ch_versions          // channel: [ versions.yml ]
 }
