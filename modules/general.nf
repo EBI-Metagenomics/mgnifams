@@ -1,5 +1,5 @@
 process EXTRACT_UNIQUE_IDS {
-    debug true
+    label "general"
 
     input:
     path tsvFiles
@@ -36,6 +36,7 @@ process CONCAT_FILES {
 
 process FIND_UNANNOTATED_IDS {
     publishDir "${params.outdir}", mode: "copy"
+    label "general"
     
     input:
     path annotations_csv
