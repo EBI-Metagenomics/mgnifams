@@ -31,7 +31,7 @@ workflow {
 
     def uniprot_sprot_fasta_path = params.dataDir + params.uniprot_sprot_fasta_name
     blast_fasta = Channel.of( [ [id:'test'], uniprot_sprot_fasta_path ] )
-    annotations_ch = FASTA_DOMAINANNOTATION( input, blast_fasta, "blast" ) // TODO diamond
+    annotations_ch = FASTA_DOMAINANNOTATION( input, blast_fasta, "diamond" )
     // ----------------------------
 
     blastp_ids = EXTRACT_UNIQUE_BLASTP_IDS(annotations_ch.blastp_tsv
