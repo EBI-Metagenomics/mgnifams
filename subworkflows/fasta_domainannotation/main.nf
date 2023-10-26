@@ -32,8 +32,7 @@ workflow FASTA_DOMAINANNOTATION {
         throw new Exception("Invalid mode value '$val_blast_mode'. Should be 'blast' or 'diamond'.")
     }
 
-    INTERPROSCAN ( ch_fasta, 'tsv' )
-    ch_versions = ch_versions.mix(INTERPROSCAN.out.versions)
+    INTERPROSCAN ( ch_fasta.map { meta, fasta -> fasta }, params.interproscan_db )
 
     emit:
     blastp_tsv      = blastp_tsv // channel: [ val(meta), [ tsv ] ]
