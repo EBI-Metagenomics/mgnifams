@@ -10,7 +10,19 @@ workflow annotate_structures {
     
     main:
     FIND_FASTA_BY_ID(ids, fasta)
+    pdb_fasta_chunks_ch = FIND_FASTA_BY_ID.out.splitFasta( by: params.pdb_chunk_size, file: true )
+    pdb_fasta_chunks_ch
+        .map { filepath ->
+            def parts = filepath.baseName.split('\\.')
+            def number = parts[1]
+            def id = "pdb${number}"
+            return [ [id:id], [file(filepath)] ]
+        }
+        .set { input }
+    ESMFOLD(input)
+    // esm_output = ESMFOLD.map { meta, pdb -> pdb }.view()
+    // esm_output.view()
 
-    emit:
-    FIND_FASTA_BY_ID.out
+    // emit:
+    // esm_output
 }

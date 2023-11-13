@@ -51,4 +51,5 @@ workflow {
     // // unknown_models = produce_models(families.families_folder)
 
     annotate_structures(FIND_UNANNOTATED_IDS.out, families.reps_fasta)
+    
 }
