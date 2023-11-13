@@ -58,3 +58,19 @@ process FIND_UNANNOTATED_IDS {
     fi
     """
 }
+
+process FIND_FASTA_BY_ID {
+    label "general"
+
+    input:
+    path ids
+    path fasta
+
+    output:
+    file "wp1_unannotated.fasta"
+
+    script:
+    """
+    python3 ${params.scriptDir}find_fasta_by_id.py ${ids} ${fasta} wp1_unannotated.fasta
+    """
+}

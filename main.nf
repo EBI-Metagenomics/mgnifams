@@ -7,11 +7,11 @@ include { FASTA_DOMAINANNOTATION                          } from "$baseDir/subwo
 include { EXTRACT_UNIQUE_IDS as EXTRACT_UNIQUE_BLASTP_IDS } from "$baseDir/modules/general.nf"
 include { EXTRACT_UNIQUE_IDS as EXTRACT_UNIQUE_IPS_IDS    } from "$baseDir/modules/general.nf"
 include { FIND_UNANNOTATED_IDS                            } from "$baseDir/modules/general.nf"
-
 // include { EXPORT_INTERPRO_ANNOTATIONS_CSV } from "$baseDir/modules/exporting.nf"
 // include { EXPORT_BLASTP_ANNOTATIONS_CSV   } from "$baseDir/modules/exporting.nf"
 // include { CONCAT_ANNOTATIONS              } from "$baseDir/modules/exporting.nf"
 // include { produce_models                  } from "$baseDir/subworkflows/produce_models/main.nf"
+include { annotate_structures                             } from "$baseDir/subworkflows/annotate_structures/main.nf"
 
 workflow {
     combined_fasta_file = initiate_proteins()
@@ -49,4 +49,6 @@ workflow {
     // annotations_ch = CONCAT_ANNOTATIONS(annotations_ch, 'strategy90')
     FIND_UNANNOTATED_IDS(annotations_ch, families.reps_ids)
     // // unknown_models = produce_models(families.families_folder)
+
+    annotate_structures(FIND_UNANNOTATED_IDS.out, families.reps_fasta)
 }
