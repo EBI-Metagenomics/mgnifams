@@ -1,24 +1,28 @@
 process HMMBUILD {
-    publishDir "${params.outDir}hmm/build", mode: "copy", saveAs: { filename ->
-        def newFilename = filename.replaceAll("_family.fa_mafft.fa", "")
+    publishDir "${params.outdir}", mode: 'copy', saveAs: { filename ->
+        def newFilename = filename.replaceAll("_msa", "")
         "${newFilename}"
     }
     label "hmmer"
 
     input:
-    path fasta
+    path msa_folder
 
     output:
-    path "${fasta}.hmm"
+    path("hmm/*")
 
     script:
     """
-    hmmbuild ${fasta}.hmm ${fasta}
+    mkdir -p hmm
+    for fasta in ${msa_folder}; do
+        id=\$(basename \$fasta .fa)
+        hmmbuild hmm/\${id}.hmm \$fasta
+    done
     """
 }
 
 process HMMSCAN {
-    publishDir "${params.outDir}hmm/scan", mode: "copy",
+    publishDir "${params.outdir}hmm/scan", mode: "copy",
         pattern: "*_scan.tblout", saveAs: { filename ->
             def newFilename = filename.replaceAll(".fa_mafft.fa.hmm_scan", "_domains")
             "${newFilename}"

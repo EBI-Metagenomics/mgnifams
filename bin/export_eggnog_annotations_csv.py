@@ -3,21 +3,29 @@ import argparse
 import os
 
 def create_csv(input_tsv, output_csv):
-    df = pd.read_csv(input_tsv, sep='\t', header=None)
-    
-    # Split second column using "." as separator and keep the second part
-    df[1] = df[1].apply(lambda x: x.split('.')[1])
-    
-    # Create new columns with static values
-    df['None'] = None
-    df['eggNOG'] = 'eggNOG'
-    df['False'] = False
+    try:
+        df = pd.read_csv(input_tsv, sep='\t', header=None)
+    except pd.errors.EmptyDataError:
+        # Create an empty DataFrame if there's an error reading the input file
+        df = pd.DataFrame()
 
-    # Select the required columns and rename them
-    df_out = df[[0,1,'None', 'eggNOG', 'False']].copy()
-    df_out.columns = ['FamilyID', 'Annotation', 'Description', 'Source', 'IsKnown']
+    if not df.empty:
+        # Split second column using "." as separator and keep the second part
+        df[1] = df[1].apply(lambda x: x.split('.')[1])
 
-    df_out.to_csv(output_csv, sep=',', index=False, header=False)
+        # Create new columns with static values
+        df['None'] = None
+        df['eggNOG'] = 'eggNOG'
+        df['False'] = False
+
+        # Select the required columns and rename them
+        df_out = df[[0,1,'None', 'eggNOG', 'False']].copy()
+        df_out.columns = ['FamilyID', 'Annotation', 'Description', 'Source', 'IsKnown']
+
+        df_out.to_csv(output_csv, sep=',', index=False, header=False)
+    else:
+        # Create an empty file if the DataFrame is empty
+        open(output_csv, 'w').close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Create a CSV file with specific columns from a TSV file')
@@ -27,7 +35,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     create_csv(args.input_tsv, args.output_csv)
-    
-    # Remove file if it is empty
-    if os.path.getsize(args.output_csv) == 0:
-        os.remove(args.output_csv)

@@ -1,18 +1,19 @@
 process MAFFT {
-    publishDir "${params.outDir}mafft", mode: "copy", saveAs: { filename ->
-        def newFilename = filename.replaceAll("family.fa_mafft", "msa")
-        "${newFilename}"
-    }
+    publishDir "${params.outdir}", mode: 'copy'
     label "mafft"
 
     input:
-    path fasta
+    path non_singletons_folder
 
     output:
-    path "${fasta}_mafft.fa"
+    path("mafft/*")
 
     script:
     """
-    mafft --anysymbol --thread 8 ${fasta} > ${fasta}_mafft.fa 2> /dev/null
+    mkdir -p mafft
+    for fasta in ${non_singletons_folder}; do
+        id=\$(basename \$fasta .fasta)
+        mafft --anysymbol --thread 8 \$fasta > mafft/\${id}_msa.fa 2> /dev/null
+    done
     """
 }

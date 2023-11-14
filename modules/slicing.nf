@@ -1,5 +1,5 @@
 process SLICE {
-    publishDir "${params.outDir}slices", mode: "copy"
+    publishDir "${params.outdir}slices", mode: "copy"
     label "venv"
     input:
     path fasta_path
