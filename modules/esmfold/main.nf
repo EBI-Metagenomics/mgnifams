@@ -2,8 +2,7 @@ process ESMFOLD {
     tag "$meta.id"
     label 'process_high'
 
-    conda '/home/vangelis/miniconda3/envs/esmfold_new_test' // /hps/nobackup/rdf/metagenomics/service-team/users/vangelis/miniconda3/envs/esmfold_new
-    // /hps/nobackup/rdf/metagenomics/service-team/users/vangelis/miniconda3/envs/esmfold_gpu
+    conda params.esm_conda_path
     
     input:
     tuple val(meta), path(fasta)
@@ -44,6 +43,7 @@ process ESMFOLD {
     """
     mkdir -p ${prefix}
     touch ${prefix}/${fasta}.pdb
+    ${prefix}_scores.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
