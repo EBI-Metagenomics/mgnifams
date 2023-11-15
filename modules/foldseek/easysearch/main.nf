@@ -2,7 +2,7 @@ process FOLDSEEK_EASYSEARCH {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "${moduleDir}/environment.yml"
+    // conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/foldseek:8.ef4e960--pl5321hb365157_0':
         'biocontainers/foldseek:8.ef4e960--pl5321hb365157_0' }"

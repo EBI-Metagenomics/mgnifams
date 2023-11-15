@@ -1,7 +1,8 @@
 #!/usr/bin/env nextflow
 
-include { FIND_FASTA_BY_ID } from "$baseDir/modules/general.nf"
-include { ESMFOLD } from "$baseDir/modules/esmfold/main.nf"
+include { FIND_FASTA_BY_ID    } from "$baseDir/modules/general.nf"
+include { ESMFOLD             } from "$baseDir/modules/esmfold/main.nf"
+include { FOLDSEEK_EASYSEARCH } from "$baseDir/modules/foldseek/easysearch/main.nf" // as FOLDSEEK_EASYSEARCH_PDB
 
 workflow annotate_structures {
     take:
@@ -20,9 +21,11 @@ workflow annotate_structures {
         }
         .set { input }
     ESMFOLD(input)
-    // esm_output = ESMFOLD.map { meta, pdb -> pdb }.view()
-    // esm_output.view()
 
-    // emit:
-    // esm_output
+    def foldseek_pdb_path = params.foldseek_db_path + "pdb"
+    input_db = [ [ id:'pdb' ], [ file(foldseek_pdb_path) ] ]
+    FOLDSEEK_EASYSEARCH(ESMFOLD.out.pdb, input_db)
+
+    emit:
+    FOLDSEEK_EASYSEARCH.out.aln
 }
