@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
-include { initiate_proteins                               } from "$baseDir/subworkflows/initiate_proteins/main.nf"
-include { execute_clustering                              } from "$baseDir/subworkflows/execute_clustering/main.nf"
-include { create_families                                 } from "$baseDir/subworkflows/create_families/main.nf"
+include { INITIATE_PROTEINS                               } from "$baseDir/subworkflows/initiate_proteins/main.nf"
+include { EXECUTE_CLUSTERING                              } from "$baseDir/subworkflows/execute_clustering/main.nf"
+include { CREATE_FAMILIES                                 } from "$baseDir/subworkflows/create_families/main.nf"
 include { FASTA_DOMAINANNOTATION                          } from "$baseDir/subworkflows/fasta_domainannotation/main.nf"
 include { EXTRACT_UNIQUE_IDS as EXTRACT_UNIQUE_BLASTP_IDS } from "$baseDir/modules/general.nf"
 include { EXTRACT_UNIQUE_IDS as EXTRACT_UNIQUE_IPS_IDS    } from "$baseDir/modules/general.nf"
@@ -10,13 +10,13 @@ include { FIND_UNANNOTATED_IDS                            } from "$baseDir/modul
 // include { EXPORT_INTERPRO_ANNOTATIONS_CSV } from "$baseDir/modules/exporting.nf"
 // include { EXPORT_BLASTP_ANNOTATIONS_CSV   } from "$baseDir/modules/exporting.nf"
 // include { CONCAT_ANNOTATIONS              } from "$baseDir/modules/exporting.nf"
-// include { produce_models                  } from "$baseDir/subworkflows/produce_models/main.nf"
-include { annotate_structures                             } from "$baseDir/subworkflows/annotate_structures/main.nf"
+// include { PRODUCE_MODELS                  } from "$baseDir/subworkflows/produce_models/main.nf"
+include { ANNOTATE_STRUCTURES                             } from "$baseDir/subworkflows/annotate_structures/main.nf"
 
 workflow {
-    combined_fasta_file = initiate_proteins()
-    mmseqs = execute_clustering(combined_fasta_file)
-    families = create_families(combined_fasta_file, mmseqs.clu_tsv)
+    combined_fasta_file = INITIATE_PROTEINS()
+    mmseqs = EXECUTE_CLUSTERING(combined_fasta_file)
+    families = CREATE_FAMILIES(combined_fasta_file, mmseqs.clu_tsv)
     
     // FASTA_DOMAINANNOTATION -----
     fasta_chunks_ch = families.reps_fasta.splitFasta( by: params.chunk_size, file: true )
@@ -50,6 +50,6 @@ workflow {
     FIND_UNANNOTATED_IDS(annotations_ch, families.reps_ids)
     // // unknown_models = produce_models(families.families_folder)
 
-    annotate_structures(FIND_UNANNOTATED_IDS.out, families.reps_fasta)
+    ANNOTATE_STRUCTURES(FIND_UNANNOTATED_IDS.out, families.reps_fasta)
     
 }

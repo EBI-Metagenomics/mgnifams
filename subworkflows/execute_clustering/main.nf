@@ -3,7 +3,7 @@
 include { CREATEDB; LINCLUST; CREATETSV } from "$baseDir/modules/mmseqs2.nf"
 include { EXPORT_CLUSTERING_CSV } from "$baseDir/modules/exporting.nf"
 
-workflow execute_clustering {
+workflow EXECUTE_CLUSTERING {
     take:
     fasta_file
 

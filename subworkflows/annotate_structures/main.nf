@@ -5,7 +5,7 @@ include { ESMFOLD             } from "$baseDir/modules/esmfold/main.nf"
 include { FOLDCOMP_COMPRESS   } from "$baseDir/modules/foldcomp/compress/main.nf"
 include { FOLDSEEK_EASYSEARCH } from "$baseDir/modules/foldseek/easysearch/main.nf" // as FOLDSEEK_EASYSEARCH_PDB
 
-workflow annotate_structures {
+workflow ANNOTATE_STRUCTURES {
     take:
     ids
     fasta

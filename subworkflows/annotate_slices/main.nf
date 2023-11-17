@@ -5,7 +5,7 @@ include { EGGNOG_MAPPER } from "$baseDir/modules/eggnog.nf"
 include { MAKEBLASTDB; BLASTP } from "$baseDir/modules/blast.nf"
 include { EXPORT_INTERPRO_ANNOTATIONS_CSV; EXPORT_EGGNOG_ANNOTATIONS_CSV; EXPORT_BLASTP_ANNOTATIONS_CSV; CONCAT_ANNOTATIONS } from "$baseDir/modules/exporting.nf"
 
-workflow annotate_slices {
+workflow ANNOTATE_SLICES {
     take:
     fasta_ch
     

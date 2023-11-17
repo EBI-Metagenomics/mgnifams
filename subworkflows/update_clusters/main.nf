@@ -2,7 +2,7 @@
 
 include { CREATEDB; CLUSTERUPDATE } from "$baseDir/modules/mmseqs2.nf"
 
-workflow update_clusters {
+workflow UPDATE_CLUSTERS {
     take:
     new_fasta_ch
     old_db_ch

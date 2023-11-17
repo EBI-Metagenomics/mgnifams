@@ -4,7 +4,7 @@ include { KEEP_FAMILIES  } from "$baseDir/modules/family.nf"
 include { PARSE_FAMILIES } from "$baseDir/modules/family.nf"
 // include { EXPORT_FAMILIES_CSV } from "$baseDir/modules/exporting.nf"
 
-workflow create_families {
+workflow CREATE_FAMILIES {
     take:
     fastaFile
     clust_tsv

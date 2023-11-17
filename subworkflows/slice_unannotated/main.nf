@@ -2,7 +2,7 @@
 
 include { SLICE } from "$baseDir/modules/slicing.nf"
 
-workflow slice_unannotated {
+workflow SLICE_UNANNOTATED {
     main:
     def fasta_path = params.dataDir + params.fasta_file
     def annotations_path = params.dataDir + params.annotations_file
