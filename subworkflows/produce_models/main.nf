@@ -1,17 +1,20 @@
 #!/usr/bin/env nextflow
 
-include { MAFFT } from "$baseDir/modules/mafft.nf"
-include { HMMBUILD } from "$baseDir/modules/hmm.nf"
+include { MAFFT          } from "../../modules/mafft/main.nf"
+include { HMMER_HMMBUILD } from "../../modules/hmmer/hmmbuild/main.nf"
 
 workflow PRODUCE_MODELS {
     take:
     familyFile
 
     main:
-    mafft_folder = MAFFT(familyFile)
-    build_folder = HMMBUILD(mafft_folder)
+    input = familyFile.map { file ->
+        return [ [id:file.getBaseName()], file]
+    }
+    fas_ch = MAFFT( input, [] ).fas
+    hmm_ch = HMMER_HMMBUILD( fas_ch, [] ).hmm
 
     emit:
-    mafft_folder
-    build_folder
+    fas_ch
+    hmm_ch
 }
