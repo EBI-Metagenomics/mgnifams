@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 include { CREATEDB; LINCLUST; CREATETSV } from "$baseDir/modules/mmseqs2.nf"
-include { EXPORT_CLUSTERING_CSV } from "$baseDir/modules/exporting.nf"
+include { EXPORT_CLUSTERING_CSV } from "$baseDir/modules/export.nf"
 
 workflow EXECUTE_CLUSTERING {
     take:

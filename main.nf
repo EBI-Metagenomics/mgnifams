@@ -7,10 +7,6 @@ include { FASTA_DOMAINANNOTATION                          } from "$baseDir/subwo
 include { EXTRACT_UNIQUE_IDS as EXTRACT_UNIQUE_BLASTP_IDS } from "$baseDir/modules/general.nf"
 include { EXTRACT_UNIQUE_IDS as EXTRACT_UNIQUE_IPS_IDS    } from "$baseDir/modules/general.nf"
 include { FIND_UNANNOTATED_IDS                            } from "$baseDir/modules/general.nf"
-// include { EXPORT_INTERPRO_ANNOTATIONS_CSV } from "$baseDir/modules/exporting.nf"
-// include { EXPORT_BLASTP_ANNOTATIONS_CSV   } from "$baseDir/modules/exporting.nf"
-// include { CONCAT_ANNOTATIONS              } from "$baseDir/modules/exporting.nf"
-// include { PRODUCE_MODELS                  } from "$baseDir/subworkflows/produce_models/main.nf"
 include { ANNOTATE_STRUCTURES                             } from "$baseDir/subworkflows/annotate_structures/main.nf"
 
 workflow {
@@ -29,7 +25,7 @@ workflow {
         }
         .set { input }
 
-    def uniprot_sprot_fasta_path = params.dataDir + params.uniprot_sprot_fasta_name
+    def uniprot_sprot_fasta_path = params.dataDir + "/" + params.uniprot_sprot_fasta_name
     blast_fasta = Channel.of( [ [id:'test'], uniprot_sprot_fasta_path ] )
     annotations_ch = FASTA_DOMAINANNOTATION( input, blast_fasta, "diamond" )
     // ----------------------------
@@ -38,18 +34,9 @@ workflow {
             .map { meta, path -> path }
             .collect())
     interproscan_ids = EXTRACT_UNIQUE_IPS_IDS(annotations_ch.inteproscan_tsv.collect())
-
-    // blastp_csv = EXPORT_BLASTP_ANNOTATIONS_CSV(annotations_ch.blastp_tsv.map { meta, path -> path }).collectFile(name: 'blastp.csv')
-    // inteproscan_csv = EXPORT_INTERPRO_ANNOTATIONS_CSV(annotations_ch.inteproscan_tsv.map { meta, path -> path }).collectFile(name: 'interproscan.csv')
-    
     annotations_ch = blastp_ids
         .concat(interproscan_ids)
         .collectFile()
-
-    // annotations_ch = CONCAT_ANNOTATIONS(annotations_ch, 'strategy90')
     FIND_UNANNOTATED_IDS(annotations_ch, families.reps_ids)
-    // // unknown_models = produce_models(families.families_folder)
-
     ANNOTATE_STRUCTURES(FIND_UNANNOTATED_IDS.out, families.reps_fasta)
-    
 }

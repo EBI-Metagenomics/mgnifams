@@ -1,5 +1,5 @@
 process CREATEDB {
-    publishDir "${params.outdir}mmseqs", mode: "copy"
+    publishDir "${params.outdir}/mmseqs", mode: "copy"
     label "mmseqs"
 
     input:
@@ -18,7 +18,7 @@ process CREATEDB {
 }
 
 process LINCLUST {
-    publishDir "${params.outdir}mmseqs", mode: "copy"
+    publishDir "${params.outdir}/mmseqs", mode: "copy"
     label "mmseqs"
 
     input:
@@ -44,7 +44,7 @@ process LINCLUST {
 }
 
 process CREATETSV {
-    publishDir "${params.outdir}mmseqs", mode: "copy"
+    publishDir "${params.outdir}/mmseqs", mode: "copy"
     label "mmseqs"
 
     input:
@@ -69,7 +69,7 @@ process CREATETSV {
 }
 
 process CONVERT2FASTA {
-    publishDir "${params.outdir}mmseqs", mode: "copy"
+    publishDir "${params.outdir}/mmseqs", mode: "copy"
     label "mmseqs"
 
     input:
@@ -91,7 +91,7 @@ process CONVERT2FASTA {
 }
 
 process CLUSTERUPDATE {
-    publishDir "${params.outdir}mmseqs", mode: "copy"
+    publishDir "${params.outdir}/mmseqs", mode: "copy"
     label "mmseqs"
     
     input:

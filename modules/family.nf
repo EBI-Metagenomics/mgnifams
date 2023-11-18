@@ -1,4 +1,4 @@
-process KEEP_FAMILIES {
+process FILTER_FAMILIES {
     input:
     path clust_tsv
     val threshold
@@ -8,12 +8,12 @@ process KEEP_FAMILIES {
 
     script:
     """
-    ${params.scriptDir}filter_families.sh ${clust_tsv} ${threshold} filtered_clusters.tsv
+    ${params.scriptDir}/filter_families.sh ${clust_tsv} ${threshold} filtered_clusters.tsv
     """
 }
 
 process PARSE_FAMILIES {
-    publishDir "${params.outdir}families/", mode: "copy"
+    publishDir "${params.outdir}/families/", mode: "copy"
     label "venv"
 
     input:
@@ -27,6 +27,6 @@ process PARSE_FAMILIES {
 
     script:
     """
-    python3 ${params.scriptDir}parse_families.py ${fasta} ${clust_tsv}
+    python3 ${params.scriptDir}/parse_families.py ${fasta} ${clust_tsv}
     """
 }

@@ -71,6 +71,6 @@ process FIND_FASTA_BY_ID {
 
     script:
     """
-    python3 ${params.scriptDir}find_fasta_by_id.py ${ids} ${fasta} wp1_unannotated.fasta
+    python3 ${params.scriptDir}/find_fasta_by_id.py ${ids} ${fasta} wp1_unannotated.fasta
     """
 }

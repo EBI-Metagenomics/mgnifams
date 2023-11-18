@@ -1,5 +1,5 @@
 process HMMER_HMMBUILD {
-    publishDir "${params.outdir}hmm", mode: "copy"
+    publishDir "${params.outdir}/hmm", mode: "copy"
     tag "$meta.id"
     label 'process_low'
 

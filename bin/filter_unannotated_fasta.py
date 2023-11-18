@@ -4,7 +4,7 @@ import bz2
 
 # Check if the correct number of arguments is provided
 if len(sys.argv) != 3:
-    print("Usage: python3 bin/keep_unannotated_fasta.py test-data/sequence_explorer_protein_test.csv.bz2 data/output/unannotated.fasta")
+    print("Usage: python3 bin/filter_unannotated_fasta.py test-data/sequence_explorer_protein_test.csv.bz2 data/output/unannotated.fasta")
     sys.exit(1)
 
 input_filename = sys.argv[1]

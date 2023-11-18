@@ -1,5 +1,5 @@
 process MAFFT {
-    publishDir "${params.outdir}mafft", mode: "copy"
+    publishDir "${params.outdir}/mafft", mode: "copy"
     tag "$meta.id"
     label 'process_high'
 
