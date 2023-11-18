@@ -10,10 +10,6 @@ def fasta_to_csv(fasta_file, csv_file):
         writer.writeheader()
         for seq_record in SeqIO.parse(fasta_file, "fasta"):
             seq_id = seq_record.id
-            # Modify sequence ID if it starts with "sp|"
-            if seq_id.startswith("sp|"):
-                seq_id = seq_id.split("|")[1]
-
             writer.writerow({'ID': seq_id, 'Sequence': str(seq_record.seq)})
 
 def main():

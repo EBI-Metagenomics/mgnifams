@@ -18,12 +18,13 @@ process FILTER_UNANNOTATED_SLICES {
 
     input:
     path mgnify90_csv
+    val min_slice_length
 
     output:
     path "mgnifams_input.fa"
 
     script:
     """
-    python3 ${params.scriptDir}/filter_unannotated_slices_fasta.py ${mgnify90_csv} mgnifams_input.fa
+    python3 ${params.scriptDir}/filter_unannotated_slices_fasta.py ${mgnify90_csv} mgnifams_input.fa ${min_slice_length}
     """
 }
