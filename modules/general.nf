@@ -1,4 +1,4 @@
-process UNZIPBZ2 {
+process UNZIP_BZ2 {
     label "general"
 
     input:
@@ -13,9 +13,9 @@ process UNZIPBZ2 {
     """
 }
 
-process REMOVEHEADER {
+process REMOVE_HEADER {
+    publishDir "${params.outdir}/input", mode: "copy"
     label "general"
-    debug true
 
     input:
     path file

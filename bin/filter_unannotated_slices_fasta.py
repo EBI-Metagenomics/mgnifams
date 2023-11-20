@@ -44,6 +44,7 @@ def writeFastaSingleLine(records, file_handle):
         file_handle.write(f">{record.id}\n{str(record.seq)}\n")
 
 def main(input_file, output_file, min_slice_length):
+    csv.field_size_limit(500000)
     min_slice_length = int(min_slice_length)
     with open(input_file, "r") as infile, open(output_file, "w") as outfile:
         csv_reader = csv.reader(infile)

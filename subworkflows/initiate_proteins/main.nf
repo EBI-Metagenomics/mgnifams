@@ -1,7 +1,5 @@
 #!/usr/bin/env nextflow
 
-include { UNZIPBZ2                  } from "$launchDir/modules/general.nf"
-include { REMOVEHEADER              } from "$launchDir/modules/general.nf"
 include { FILTER_UNANNOTATED_SLICES } from "$launchDir/modules/initiate.nf"
 include { PUBLISH_INPUT_FASTA       } from "$launchDir/modules/initiate.nf"
 include { EXPORT_PROTEINS_CSV       } from "$launchDir/modules/export.nf"
@@ -9,11 +7,9 @@ include { EXPORT_PROTEINS_CSV       } from "$launchDir/modules/export.nf"
 workflow INITIATE_PROTEINS {
     main:
     Channel
-        .fromPath(params.mgy90_path)
-        .set { mgy90_file_bz2 }
+        .fromPath(params.preprocessed_mgy90_path)
+        .set { mgy90_file }
 
-    mgy90_file_with_header = UNZIPBZ2(mgy90_file_bz2)    
-    mgy90_file = REMOVEHEADER(mgy90_file_with_header)
     mgy90_file
         .splitText(file:true, by: params.input_csv_chunk_size)
         .set { mgy90_chunks_ch }
