@@ -9,7 +9,7 @@ process UNZIPBZ2 {
 
     script:
     """
-    bzip2 -dk < ${bz2} > ${bz2.baseName}
+    bzip2 -d < ${bz2} > ${bz2.baseName}
     """
 }
 
