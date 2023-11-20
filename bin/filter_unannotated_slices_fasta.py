@@ -16,26 +16,28 @@ def sliceProtein(row, min_slice_length):
     data = json.loads(metadata)
     pfams = data.get("p", [])
     
-    # Sort pfams by start position
-    pfams.sort(key=lambda x: x[-2])
+    # Create a sorted list of non-overlapping Pfam regions
+    sorted_pfams = sorted((pfam[-2], pfam[-1]) for pfam in pfams)
+    merged_pfams = []
+    for start, end in sorted_pfams:
+        if not merged_pfams or start > merged_pfams[-1][1]:
+            merged_pfams.append([start, end])
+        else:
+            merged_pfams[-1][1] = max(merged_pfams[-1][1], end)
 
     sliced_sequences = {}
     current_start = 1
-    for pfam in pfams:
-        start, end = pfam[-2], pfam[-1]
+    for start, end in merged_pfams:
         if start - current_start >= min_slice_length:
             key = f"{mgyp}_{current_start}_{start - 1}"
             sliced_sequences[key] = sequence[current_start - 1:start - 1]
         current_start = end + 1
 
-    # Check the remaining sequence after the last pfam
     if len(sequence) - current_start + 1 >= min_slice_length:
         key = f"{mgyp}_{current_start}_{len(sequence)}"
         sliced_sequences[key] = sequence[current_start - 1:]
 
     return sliced_sequences
-
-
 
 def writeFastaSingleLine(records, file_handle):
     for record in records:
