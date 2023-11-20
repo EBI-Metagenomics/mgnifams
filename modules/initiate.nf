@@ -1,18 +1,3 @@
-process FILTER_UNANNOTATED {
-    label "venv"
-
-    input:
-    path mgnify90_csv
-
-    output:
-    path "mgnifams_input.fa"
-
-    script:
-    """
-    python3 ${params.scriptDir}/filter_unannotated_fasta.py ${mgnify90_csv} mgnifams_input.fa
-    """
-}
-
 process FILTER_UNANNOTATED_SLICES {
     label "venv"
 
@@ -21,10 +6,25 @@ process FILTER_UNANNOTATED_SLICES {
     val min_slice_length
 
     output:
-    path "mgnifams_input.fa"
+    path "${mgnify90_csv.baseName}.fa"
 
     script:
     """
-    python3 ${params.scriptDir}/filter_unannotated_slices_fasta.py ${mgnify90_csv} mgnifams_input.fa ${min_slice_length}
+    python3 ${params.scriptDir}/filter_unannotated_slices_fasta.py ${mgnify90_csv} ${mgnify90_csv.baseName}.fa ${min_slice_length}
+    """
+}
+
+process PUBLISH_INPUT_FASTA {
+    publishDir "${params.outdir}/input", mode: "copy"
+
+    input:
+    path fasta
+
+    output:
+    path "${fasta}"
+
+    script:
+    """
+    echo MGnifams input fasta published.
     """
 }

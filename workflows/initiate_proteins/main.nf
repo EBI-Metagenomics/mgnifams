@@ -3,5 +3,5 @@
 include { INITIATE_PROTEINS } from "$launchDir/subworkflows/initiate_proteins/main.nf"
 
 workflow {
-    INITIATE_PROTEINS("slice")
+    INITIATE_PROTEINS()
 }

@@ -1,3 +1,34 @@
+process UNZIPBZ2 {
+    label "general"
+
+    input:
+    path bz2
+
+    output:
+    file "${bz2.baseName}"
+
+    script:
+    """
+    bzip2 -dk < ${bz2} > ${bz2.baseName}
+    """
+}
+
+process REMOVEHEADER {
+    label "general"
+    debug true
+
+    input:
+    path file
+
+    output:
+    path "${file.baseName}_no_header.${file.extension}"
+
+    script:
+    """
+    tail -n +2 ${file} > ${file.baseName}_no_header.${file.extension}
+    """
+}
+
 process EXTRACT_UNIQUE_IDS {
     label "general"
 

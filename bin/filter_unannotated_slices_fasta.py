@@ -1,9 +1,8 @@
-import bz2
 import json
+import csv
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import sys
-import csv
 
 def hasPfam(metadata):
     try:
@@ -17,6 +16,7 @@ def sliceProtein(row, min_slice_length):
     data = json.loads(metadata)
     pfams = data.get("p", [])
     
+    # Sort pfams by start position
     pfams.sort(key=lambda x: x[-2])
 
     sliced_sequences = {}
@@ -35,32 +35,41 @@ def sliceProtein(row, min_slice_length):
 
     return sliced_sequences
 
-def writeFastaSingleLine(record, file):
-    with open(file, 'a') as f:
-        f.write(f">{record.id}\n{str(record.seq)}\n")
+
+
+def writeFastaSingleLine(records, file_handle):
+    for record in records:
+        file_handle.write(f">{record.id}\n{str(record.seq)}\n")
 
 def main(input_file, output_file, min_slice_length):
     min_slice_length = int(min_slice_length)
-    with bz2.open(input_file, "rt") as infile, open(output_file, "w") as outfile:
+    with open(input_file, "r") as infile, open(output_file, "w") as outfile:
         csv_reader = csv.reader(infile)
-        next(csv_reader, None) # Skip the header line
+        records_batch = []
+
         for row in csv_reader:
             if len(row) != 5:
                 print(f"Skipping malformed line: {row}")
                 continue
-            mgyp, sequence, _, _, metadata = row  # Unpack the row as a list
+            mgyp, sequence, _, _, metadata = row
             if hasPfam(metadata):
                 row_dict = {"mgyp": mgyp, "sequence": sequence, "metadata": metadata}
                 sliced_sequences = sliceProtein(row_dict, min_slice_length)
                 for key, seq in sliced_sequences.items():
-                    record = SeqRecord(Seq(seq), id=key, description="")
-                    writeFastaSingleLine(record, output_file)
+                    records_batch.append(SeqRecord(Seq(seq), id=key, description=""))
             else:
-                record = SeqRecord(Seq(sequence), id=mgyp, description="")
-                writeFastaSingleLine(record, output_file)
+                records_batch.append(SeqRecord(Seq(sequence), id=mgyp, description=""))
+
+            if len(records_batch) >= 10000:  # Adjust batch size as needed
+                writeFastaSingleLine(records_batch, outfile)
+                records_batch.clear()
+
+        # Write any remaining records
+        if records_batch:
+            writeFastaSingleLine(records_batch, outfile)
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print("Usage: python3 filter_unannotated_slices_fasta.py <input_file> <output_file> <min_slice_length>")
+        print("Usage: python filter_unannotated_slices_fasta.py <input_file> <output_file> <min_slice_length>")
         sys.exit(1)
     main(sys.argv[1], sys.argv[2], sys.argv[3])

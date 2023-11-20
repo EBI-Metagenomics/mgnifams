@@ -1,25 +1,27 @@
 #!/usr/bin/env nextflow
 
-include { FILTER_UNANNOTATED        } from "$launchDir/modules/initiate.nf"
+include { UNZIPBZ2                  } from "$launchDir/modules/general.nf"
+include { REMOVEHEADER              } from "$launchDir/modules/general.nf"
 include { FILTER_UNANNOTATED_SLICES } from "$launchDir/modules/initiate.nf"
+include { PUBLISH_INPUT_FASTA       } from "$launchDir/modules/initiate.nf"
 include { EXPORT_PROTEINS_CSV       } from "$launchDir/modules/export.nf"
 
 workflow INITIATE_PROTEINS {
-    take:
-    mode
-    
     main:
     Channel
         .fromPath(params.mgy90_path)
-        .set { mgy90_file }
+        .set { mgy90_file_bz2 }
 
-    if (mode == "slice") {
-        fasta = FILTER_UNANNOTATED_SLICES(mgy90_file, params.min_slice_length)
-    } else {
-        fasta = FILTER_UNANNOTATED(mgy90_file)
-    }
-    EXPORT_PROTEINS_CSV(fasta)
+    mgy90_file_with_header = UNZIPBZ2(mgy90_file_bz2)    
+    mgy90_file = REMOVEHEADER(mgy90_file_with_header)
+    mgy90_file
+        .splitText(file:true, by: params.input_csv_chunk_size)
+        .set { mgy90_chunks_ch }
+    fasta = FILTER_UNANNOTATED_SLICES(mgy90_chunks_ch, params.min_slice_length)
+    out_fasta = fasta.collectFile(name: "mgnifams_input.fa")
+    PUBLISH_INPUT_FASTA(out_fasta)
+    EXPORT_PROTEINS_CSV(out_fasta)
 
     emit:
-    fasta
+    out_fasta
 }
