@@ -1,22 +1,15 @@
 #!/usr/bin/env nextflow
 
-include { FILTER_FAMILIES  } from "$baseDir/modules/family.nf"
-include { PARSE_FAMILIES } from "$baseDir/modules/family.nf"
+include { REFINE_FAMILIES } from "${launchDir}/modules/family.nf"
 
 workflow CREATE_FAMILIES {
     take:
-    fastaFile
-    clust_tsv
+    families_tsv
+    mgnifams_fasta
     
     main:
-    filtered_families = FILTER_FAMILIES(clust_tsv, params.family_member_threshold)
-    families = PARSE_FAMILIES(fastaFile, filtered_families.filtered_clusters)
-    reps_ids = families.reps_ids
-    reps_fasta = families.reps_fasta
-    families_folder = families.families_folder
+    refined_families = REFINE_FAMILIES(families_tsv, mgnifams_fasta, params.minimum_members).tsv
 
     emit:
-    reps_ids
-    reps_fasta
-    families_folder
+    refined_families
 }

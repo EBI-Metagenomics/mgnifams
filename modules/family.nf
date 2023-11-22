@@ -3,14 +3,16 @@ process REFINE_FAMILIES {
 
     input:
     tuple val(meta), path(families_tsv)
-    val(threshold)
+    path(fasta)
+    val(minimum_members)
 
     output:
-    tuple val(meta), path("refined_families.tsv"), emit: refined_families_tsv
+    tuple val(meta), path("refined_families.tsv"), emit: tsv
+    path("log.txt")                              , emit: log
 
     script:
     """
-    python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${threshold} filtered_clusters.tsv
+    python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv > log.txt
     """
 }
 
