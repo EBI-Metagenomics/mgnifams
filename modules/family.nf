@@ -1,3 +1,19 @@
+process REFINE_FAMILIES {
+    publishDir "${params.outdir}/families/", mode: "copy"
+
+    input:
+    tuple val(meta), path(families_tsv)
+    val(threshold)
+
+    output:
+    tuple val(meta), path("refined_families.tsv"), emit: refined_families_tsv
+
+    script:
+    """
+    python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${threshold} filtered_clusters.tsv
+    """
+}
+
 process FILTER_FAMILIES {
     input:
     path clust_tsv
