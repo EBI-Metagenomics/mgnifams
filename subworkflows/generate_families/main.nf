@@ -2,7 +2,7 @@
 
 include { REFINE_FAMILIES } from "${launchDir}/modules/family.nf"
 
-workflow CREATE_FAMILIES {
+workflow GENERATE_FAMILIES {
     take:
     families_tsv
     mgnifams_fasta

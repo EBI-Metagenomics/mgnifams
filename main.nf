@@ -2,7 +2,7 @@
 
 include { INITIATE_PROTEINS                               } from "$baseDir/subworkflows/initiate_proteins/main.nf"
 include { EXECUTE_CLUSTERING                              } from "$baseDir/subworkflows/execute_clustering/main.nf"
-include { CREATE_FAMILIES                                 } from "$baseDir/subworkflows/create_families/main.nf"
+include { GENERATE_FAMILIES                               } from "$baseDir/subworkflows/generate_families/main.nf"
 include { FASTA_DOMAINANNOTATION                          } from "$baseDir/subworkflows/fasta_domainannotation/main.nf"
 include { EXTRACT_UNIQUE_IDS as EXTRACT_UNIQUE_BLASTP_IDS } from "$baseDir/modules/general.nf"
 include { EXTRACT_UNIQUE_IDS as EXTRACT_UNIQUE_IPS_IDS    } from "$baseDir/modules/general.nf"
@@ -12,7 +12,7 @@ include { ANNOTATE_STRUCTURES                             } from "$baseDir/subwo
 workflow {
     combined_fasta_file = INITIATE_PROTEINS()
     mmseqs = EXECUTE_CLUSTERING(combined_fasta_file)
-    families = CREATE_FAMILIES(combined_fasta_file, mmseqs.clu_tsv)
+    families = GENERATE_FAMILIES(combined_fasta_file, mmseqs.clu_tsv)
     
     // FASTA_DOMAINANNOTATION -----
     fasta_chunks_ch = families.reps_fasta.splitFasta( by: params.chunk_size, file: true )
