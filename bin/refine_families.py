@@ -24,11 +24,11 @@ def find_next_largest_family(bookkeeping_df):
 
     return largest_family_rep, largest_family_members.tolist() if isinstance(largest_family_members, pd.Series) else [largest_family_members]
 
-def get_family_fasta(members, fasta_file, output_fasta):
+def get_family_fasta(members, fasta_dict, output_fasta):
+    sequences_to_write = [fasta_dict[member] for member in members if member in fasta_dict]
+
     with open(output_fasta, "w") as output_handle:
-        for record in SeqIO.parse(fasta_file, "fasta"):
-            if record.id in members:
-                SeqIO.write(record, output_handle, "fasta")
+        SeqIO.write(sequences_to_write, output_handle, "fasta")
 
 def generate_msa(input_fasta, output_msa):
     mafft_command = ["mafft", "--quiet", "--auto", input_fasta]
@@ -81,6 +81,7 @@ def main():
     output_file = sys.argv[4]
 
     # Benchmarking # TODO remove
+    total_time_reading_input_fasta = 0
     total_time_get_family_fasta = 0
     total_time_generate_msa = 0
     total_time_generate_hmm = 0
@@ -110,19 +111,24 @@ def main():
     bookkeeping_df['checked'] = False
     checked_sequences = []
 
+    start_time = time.time()
+    # Loading mgnifams_input.fa in memory, to reduce I/O in every iteration
+    fasta_dict = {record.id: record for record in SeqIO.parse(fasta_file, "fasta")}
+    total_time_reading_input_fasta += time.time() - start_time
+
     while True:
         family_rep, largest_family = find_next_largest_family(bookkeeping_df)
         if not largest_family or len(largest_family) < minimum_members:
             break
 
-        print(f"Processing family: {family_rep}")
+        # print(f"Processing family: {family_rep}")
         inner_loop_counter = 0
         while True:
             inner_loop_counter += 1
-            print(inner_loop_counter)
+            # print(inner_loop_counter)
             
             start_time = time.time()
-            get_family_fasta(largest_family, fasta_file, family_sequences_path)
+            get_family_fasta(largest_family, fasta_dict, family_sequences_path)
             total_time_get_family_fasta += time.time() - start_time
 
             start_time = time.time()
