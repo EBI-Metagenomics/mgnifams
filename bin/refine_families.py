@@ -4,6 +4,8 @@ import subprocess
 import pandas as pd
 from Bio import SeqIO
 
+import time # benchmarking, TODO remove
+
 def create_family_dataframe(families_tsv):
     df = pd.read_csv(families_tsv, sep='\t', header=None, names=['representative', 'member'])
     family_sizes = df.groupby('representative').size()
@@ -63,13 +65,10 @@ def write_to_file(output_file, family_rep, family_members):
             file.write(f"{family_rep}\t{member}\n")
 
 def update_bookkeeping(bookkeeping_df, largest_family):
-    # Marking sequences as checked
-    for sequence in largest_family:
-        if sequence in bookkeeping_df.index:
-            bookkeeping_df.at[sequence, 'checked'] = True
-
-    # Recalculating the family sizes
-    bookkeeping_df['size'] = bookkeeping_df.groupby('representative')['checked'].transform(lambda x: (x == False).sum())
+    # Vectorized update for 'checked' status
+    bookkeeping_df.loc[bookkeeping_df['member'].isin(largest_family), 'checked'] = True
+    # Efficiently recalculating family sizes
+    bookkeeping_df['size'] = bookkeeping_df.groupby(level=0)['checked'].apply(lambda x: (~x).sum())
 
 def main():
     if len(sys.argv) != 5:
@@ -80,6 +79,16 @@ def main():
     fasta_file = sys.argv[2]
     minimum_members = int(sys.argv[3])
     output_file = sys.argv[4]
+
+    # Benchmarking # TODO remove
+    total_time_get_family_fasta = 0
+    total_time_generate_msa = 0
+    total_time_generate_hmm = 0
+    total_time_recruit_sequences = 0
+    total_time_filter_recruited = 0
+    total_time_write_to_file = 0
+    total_time_update_bookkeeping = 0
+    ###
 
     tmp_folder = "tmp"
     msa_folder = "msa"
@@ -112,24 +121,52 @@ def main():
             inner_loop_counter += 1
             print(inner_loop_counter)
             
+            start_time = time.time()
             get_family_fasta(largest_family, fasta_file, family_sequences_path)
+            total_time_get_family_fasta += time.time() - start_time
+
+            start_time = time.time()
             generate_msa(family_sequences_path, family_alignment_path)
+            total_time_generate_msa += time.time() - start_time
+
+            start_time = time.time()
             generate_hmm(family_alignment_path, family_model_path)
+            total_time_generate_hmm += time.time() - start_time
+
+            start_time = time.time()
             recruit_sequences(family_model_path, fasta_file, recruited_sequences_path)
+            total_time_recruit_sequences += time.time() - start_time
+
+            start_time = time.time()
             filtered_seq_names = filter_recruited(recruited_sequences_path, evalue_threshold, bitscore_threshold, checked_sequences)
+            total_time_filter_recruited += time.time() - start_time
 
             new_sequences = set(filtered_seq_names) - set(largest_family)
             if new_sequences:
                 largest_family.extend(new_sequences)
                 continue
             else:
+                start_time = time.time()
                 write_to_file(output_file, family_rep, largest_family)
+                total_time_write_to_file += time.time() - start_time
+
                 checked_sequences.extend(largest_family) # TODO keep this? not hcecking for already family recruited sequences in next loops
-                update_bookkeeping(bookkeeping_df, largest_family)# flag as checked and recalculate sizes in bookkeeping
+
+                start_time = time.time()
+                update_bookkeeping(bookkeeping_df, largest_family) # flag as checked and recalculate sizes in bookkeeping
+                total_time_update_bookkeeping += time.time() - start_time
                 # TODO keep msa and hmm? better not at this point
                 # os.rename(family_alignment_path, os.path.join(msa_folder, f"{family_rep}.msa"))
                 # os.rename(family_model_path, os.path.join(hmm_folder, f"{family_rep}.hmm"))
                 break
+
+    print(f"Total time for get_family_fasta: {total_time_get_family_fasta} seconds")
+    print(f"Total time for generate_msa: {total_time_generate_msa} seconds")
+    print(f"Total time for generate_hmm: {total_time_generate_hmm} seconds")
+    print(f"Total time for recruit_sequences: {total_time_recruit_sequences} seconds")
+    print(f"Total time for filter_recruited: {total_time_filter_recruited} seconds")
+    print(f"Total time for write_to_file: {total_time_write_to_file} seconds")
+    print(f"Total time for update_bookkeeping: {total_time_update_bookkeeping} seconds")
 
 if __name__ == "__main__":
     main()
