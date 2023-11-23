@@ -1,6 +1,5 @@
 process REFINE_FAMILIES {
     publishDir "${params.outdir}/families/", mode: "copy"
-    label "venv"
 
     input:
     tuple val(meta), path(families_tsv)
