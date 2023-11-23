@@ -59,10 +59,21 @@ def filter_recruited(recruitment_file, evalue_threshold, bitscore_threshold, che
 
     return filtered_sequences
 
+# TODO try for larger inputs
+# def filter_recruited(recruitment_file, evalue_threshold, bitscore_threshold, checked_sequences):
+#     df = pd.read_csv(recruitment_file, sep='\s+', comment='#', header=None, usecols=[0, 4, 5])
+#     df.columns = ['sequence_name', 'evalue', 'bitscore']
+
+#     filtered_df = df[(~df['sequence_name'].isin(checked_sequences)) & 
+#                      (df['evalue'] < evalue_threshold) & 
+#                      (df['bitscore'] >= bitscore_threshold)]
+
+#     return filtered_df['sequence_name'].tolist()
+
 def write_to_file(output_file, family_rep, family_members):
+    lines = [f"{family_rep}\t{member}\n" for member in family_members]
     with open(output_file, 'a') as file:
-        for member in family_members:
-            file.write(f"{family_rep}\t{member}\n")
+        file.writelines(lines)
 
 def update_bookkeeping(bookkeeping_df, largest_family):
     # Vectorized update for 'checked' status
