@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-include { REFINE_FAMILIES } from "${launchDir}/modules/family.nf"
+include { REFINE_FAMILIES } from "${launchDir}/modules/family/main.nf"
 
 workflow GENERATE_FAMILIES {
     take:

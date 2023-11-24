@@ -1,6 +1,8 @@
 process REFINE_FAMILIES {
     publishDir "${params.outdir}/families/", mode: "copy"
 
+    conda "${moduleDir}/environment.yml"
+    
     input:
     tuple val(meta), path(families_tsv)
     path(fasta)
