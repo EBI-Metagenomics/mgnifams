@@ -1,4 +1,4 @@
-name: my_nextflow_env
+name: family_mafft_hmmer
 channels:
   - conda-forge
   - bioconda
