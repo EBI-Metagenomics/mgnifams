@@ -1,6 +1,7 @@
 import sys
 import os
 import subprocess
+import shutil
 import pandas as pd
 from Bio import SeqIO
 
@@ -10,6 +11,7 @@ def create_family_dataframe(families_tsv):
     df = pd.read_csv(families_tsv, sep='\t', header=None, names=['representative', 'member'])
     family_sizes = df.groupby('representative').size()
     bookkeeping_df = df.set_index('representative').join(family_sizes.rename('size'), on='representative')
+    bookkeeping_df['checked'] = False
 
     return bookkeeping_df
 
@@ -24,7 +26,7 @@ def find_next_largest_family(bookkeeping_df):
 
     return largest_family_rep, largest_family_members.tolist() if isinstance(largest_family_members, pd.Series) else [largest_family_members]
 
-def get_family_fasta(members, fasta_dict, output_fasta):
+def get_fasta_file(members, fasta_dict, output_fasta):
     sequences_to_write = [fasta_dict[member] for member in members if member in fasta_dict]
 
     with open(output_fasta, "w") as output_handle:
@@ -32,6 +34,11 @@ def get_family_fasta(members, fasta_dict, output_fasta):
 
 def generate_msa(input_fasta, output_msa):
     mafft_command = ["mafft", "--quiet", "--auto", input_fasta]
+    with open(output_msa, "w") as output_handle:
+        subprocess.run(mafft_command, stdout=output_handle)
+
+def append_msa(input_fasta, existing_msa, output_msa):
+    mafft_command = ["mafft", "--quiet", "--addfragments", input_fasta, existing_msa]
     with open(output_msa, "w") as output_handle:
         subprocess.run(mafft_command, stdout=output_handle)
 
@@ -91,6 +98,8 @@ def main():
     minimum_members = int(sys.argv[3])
     output_file = sys.argv[4]
 
+    log_file = 'log.txt'
+
     # Benchmarking # TODO remove
     # total_time_reading_input_fasta = 0
     # total_time_get_family_fasta = 0
@@ -117,14 +126,22 @@ def main():
 
     evalue_threshold = 0.001
     bitscore_threshold = 20
-
-    bookkeeping_df = create_family_dataframe(families_tsv)
-    bookkeeping_df['checked'] = False
     checked_sequences = []
+    new_sequences = []
 
+    with open(log_file, 'a') as file:
+        file.write("Creating families bookkeeping dataframe.\n")
+    bookkeeping_df = create_family_dataframe(families_tsv)
+    with open(log_file, 'a') as file:
+        file.write("Done\n")
+    
     # start_time = time.time()
+    with open(log_file, 'a') as file:
+        file.write("Loading mgnifams input fasta into memory.\n")
     # Loading mgnifams_input.fa in memory, to reduce I/O in every iteration
     fasta_dict = {record.id: record for record in SeqIO.parse(fasta_file, "fasta")}
+    with open(log_file, 'a') as file:
+        file.write("Done\n")
     # total_time_reading_input_fasta += time.time() - start_time
 
     while True:
@@ -132,18 +149,28 @@ def main():
         if not largest_family or len(largest_family) < minimum_members:
             break
 
-        print(f"Processing family: {family_rep}")
+        with open(log_file, 'a') as file:
+            file.write("\n" + f"S: {family_rep}, s: {len(largest_family)}" + "\n")
+        family_alignment_path = os.path.join(tmp_folder, 'family_alignment.msa')
+        if os.path.exists(family_alignment_path):
+            os.remove(family_alignment_path)
         inner_loop_counter = 0
         while True:
             inner_loop_counter += 1
-            print(inner_loop_counter)
-            
-            # start_time = time.time()
-            get_family_fasta(largest_family, fasta_dict, family_sequences_path)
-            # total_time_get_family_fasta += time.time() - start_time
+            with open(log_file, 'a') as file:
+                file.write(str(inner_loop_counter) + "\n")
 
             # start_time = time.time()
-            generate_msa(family_sequences_path, family_alignment_path)
+            if not os.path.exists(family_alignment_path):
+                # print("New family", ', '.join(largest_family))
+                get_fasta_file(largest_family, fasta_dict, family_sequences_path)
+                generate_msa(family_sequences_path, family_alignment_path)
+            else:
+                # print("Appending:", ', '.join(new_sequences))
+                get_fasta_file(new_sequences, fasta_dict, family_sequences_path)
+                temp_msa_path = os.path.join(tmp_folder, 'temp_family_alignment.msa')
+                shutil.copyfile(family_alignment_path, temp_msa_path)
+                append_msa(family_sequences_path, temp_msa_path, family_alignment_path)
             # total_time_generate_msa += time.time() - start_time
 
             # start_time = time.time()
@@ -171,13 +198,15 @@ def main():
 
                 # start_time = time.time()
                 update_bookkeeping(bookkeeping_df, largest_family) # flag as checked and recalculate sizes in bookkeeping
+                with open(log_file, 'a') as file:
+                    file.write(f"E: {family_rep}, s: {len(largest_family)}")
                 # total_time_update_bookkeeping += time.time() - start_time
                 # TODO keep msa and hmm? better not at this point
                 # os.rename(family_alignment_path, os.path.join(msa_folder, f"{family_rep}.msa"))
                 # os.rename(family_model_path, os.path.join(hmm_folder, f"{family_rep}.hmm"))
                 break
 
-    # print(f"Total time for get_family_fasta: {# total_time_get_family_fasta} seconds")
+    # print(f"Total time for get_fasta_file: {# total_time_get_family_fasta} seconds")
     # print(f"Total time for generate_msa: {# total_time_generate_msa} seconds")
     # print(f"Total time for generate_hmm: {# total_time_generate_hmm} seconds")
     # print(f"Total time for recruit_sequences: {# total_time_recruit_sequences} seconds")

@@ -1,6 +1,6 @@
 process REFINE_FAMILIES {
     publishDir "${params.outdir}/families/", mode: "copy"
-
+    
     conda "${moduleDir}/environment.yml"
     
     input:
@@ -14,7 +14,7 @@ process REFINE_FAMILIES {
 
     script:
     """
-    python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv > log.txt
+    python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv
     """
 }
 
