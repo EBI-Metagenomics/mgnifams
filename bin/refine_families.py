@@ -129,19 +129,20 @@ def main():
     checked_sequences = []
     new_sequences = []
 
+    start_time = time.time()
     with open(log_file, 'a') as file:
         file.write("Creating families bookkeeping dataframe.\n")
     bookkeeping_df = create_family_dataframe(families_tsv)
     with open(log_file, 'a') as file:
-        file.write("Done\n")
+        file.write(str(time.time() - start_time) +"\n")
     
-    # start_time = time.time()
+    start_time = time.time()
     with open(log_file, 'a') as file:
         file.write("Loading mgnifams input fasta into memory.\n")
     # Loading mgnifams_input.fa in memory, to reduce I/O in every iteration
     fasta_dict = {record.id: record for record in SeqIO.parse(fasta_file, "fasta")}
     with open(log_file, 'a') as file:
-        file.write("Done\n")
+        file.write(str(time.time() - start_time) +"\n")
     # total_time_reading_input_fasta += time.time() - start_time
 
     while True:
@@ -160,44 +161,96 @@ def main():
             with open(log_file, 'a') as file:
                 file.write(str(inner_loop_counter) + "\n")
 
-            # start_time = time.time()
+            start_time = time.time()
             if not os.path.exists(family_alignment_path):
                 # print("New family", ', '.join(largest_family))
+                with open(log_file, 'a') as file:
+                    file.write("get_fasta_file.\n")
                 get_fasta_file(largest_family, fasta_dict, family_sequences_path)
+                with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
+                start_time = time.time()
+                with open(log_file, 'a') as file:
+                    file.write("generate msa.\n")
                 generate_msa(family_sequences_path, family_alignment_path)
+                with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
             else:
                 # print("Appending:", ', '.join(new_sequences))
+                with open(log_file, 'a') as file:
+                    file.write("get_fasta_file append.\n")
                 get_fasta_file(new_sequences, fasta_dict, family_sequences_path)
+                with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
+                start_time = time.time()
+                with open(log_file, 'a') as file:
+                    file.write("copying msa.\n")
                 temp_msa_path = os.path.join(tmp_folder, 'temp_family_alignment.msa')
                 shutil.copyfile(family_alignment_path, temp_msa_path)
+                with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
+                with open(log_file, 'a') as file:
+                    file.write("append msa.\n")
                 append_msa(family_sequences_path, temp_msa_path, family_alignment_path)
+                with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
             # total_time_generate_msa += time.time() - start_time
 
-            # start_time = time.time()
+            start_time = time.time()
+            with open(log_file, 'a') as file:
+                    file.write("generate hmm.\n")
             generate_hmm(family_alignment_path, family_model_path)
+            with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
             # total_time_generate_hmm += time.time() - start_time
 
-            # start_time = time.time()
+            start_time = time.time()
+            with open(log_file, 'a') as file:
+                    file.write("recruit_sequences.\n")
             recruit_sequences(family_model_path, fasta_file, recruited_sequences_path)
+            with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
             # total_time_recruit_sequences += time.time() - start_time
 
-            # start_time = time.time()
+            start_time = time.time()
+            with open(log_file, 'a') as file:
+                    file.write("filter_recruited.\n")
             filtered_seq_names = filter_recruited(recruited_sequences_path, evalue_threshold, bitscore_threshold, checked_sequences)
+            with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
             # total_time_filter_recruited += time.time() - start_time
 
+            start_time = time.time()
+            with open(log_file, 'a') as file:
+                    file.write("set diff new seqs.\n")
             new_sequences = set(filtered_seq_names) - set(largest_family)
+            with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
             if new_sequences:
                 largest_family.extend(new_sequences)
                 continue
             else:
-                # start_time = time.time()
+                start_time = time.time()
+                with open(log_file, 'a') as file:
+                    file.write("write outfile.\n")
                 write_to_file(output_file, family_rep, largest_family)
+                with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
                 # total_time_write_to_file += time.time() - start_time
 
-                checked_sequences.extend(largest_family) # TODO keep this? not hcecking for already family recruited sequences in next loops
+                start_time = time.time()
+                with open(log_file, 'a') as file:
+                    file.write("extending checked.\n")
+                checked_sequences.extend(largest_family) # TODO keep this? not checking for already family recruited sequences in next loops
+                with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
 
-                # start_time = time.time()
+                start_time = time.time()
+                with open(log_file, 'a') as file:
+                    file.write("update_bookkeeping\n")
                 update_bookkeeping(bookkeeping_df, largest_family) # flag as checked and recalculate sizes in bookkeeping
+                with open(log_file, 'a') as file:
+                    file.write(str(time.time() - start_time) +"\n")
                 with open(log_file, 'a') as file:
                     file.write(f"E: {family_rep}, s: {len(largest_family)}")
                 # total_time_update_bookkeeping += time.time() - start_time
