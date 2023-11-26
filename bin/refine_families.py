@@ -125,7 +125,7 @@ def main():
     recruited_sequences_path = os.path.join(tmp_folder, 'recruited_sequences.txt')
 
     evalue_threshold = 0.001
-    bitscore_threshold = 20
+    bitscore_threshold = 200
     checked_sequences = []
     new_sequences = []
 
@@ -146,7 +146,12 @@ def main():
     # total_time_reading_input_fasta += time.time() - start_time
 
     while True:
+        start_time = time.time()
+        with open(log_file, 'a') as file:
+            file.write("\nfind_next_largest_family\n")
         family_rep, largest_family = find_next_largest_family(bookkeeping_df)
+        with open(log_file, 'a') as file:
+            file.write(str(time.time() - start_time) +"\n")
         if not largest_family or len(largest_family) < minimum_members:
             break
 
