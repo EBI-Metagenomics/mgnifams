@@ -10,6 +10,8 @@ process REFINE_FAMILIES {
 
     output:
     tuple val(meta), path("refined_families.tsv"), emit: tsv
+    tuple val(meta), path("msa/*")               , emit: msa
+    tuple val(meta), path("hmm/*")               , emit: hmm
     path("log.txt")                              , emit: log
 
     script:
