@@ -4,7 +4,10 @@ import subprocess
 import shutil
 import pickle
 import pandas as pd
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
+from Bio import AlignIO
 
 import time # benchmarking, TODO remove
 
@@ -52,6 +55,8 @@ def define_globals():
         "tmp_align_msa_path"           : os.path.join(tmp_folder, 'align_msa.fa'),
         "tmp_hmm_path"                 : os.path.join(tmp_folder, 'model.hmm'),
         "tmp_domtblout_path"           : os.path.join(tmp_folder, 'domtblout.txt'),
+        "tmp_intermediate_esl_path"    : os.path.join(tmp_folder, 'intermediate_esl.fa'),
+        "tmp_esl_weight_path"          : os.path.join(tmp_folder, 'esl_weight.fa'),
         "tmp_sequences_to_remove_path" : os.path.join(tmp_folder, 'sequences_to_remove.txt'),
         "seed_msa_path"                : os.path.join(seed_msa_folder, 'seed_msa.fa'),
         "align_msa_path"               : os.path.join(align_msa_folder, 'align_msa.fa'),
@@ -167,9 +172,22 @@ def run_hmmsearch(hmm_file, fasta_file, output_recruitment):
         file.write("run_hmmsearch: ")
         file.write(str(time.time() - start_time) + "\n")
 
-def filter_recruited(recruitment_file, evalue_threshold, length_threshold):
+def mask_sequence_name(sequence_name, env_from, env_to, fasta_dict):
+    masked_name = f"{sequence_name}/{env_from}_{env_to}"
+
+    if sequence_name in fasta_dict:
+        sub_sequence = fasta_dict[sequence_name].seq[env_from - 1:env_to]  # -1 because Python uses 0-based indexing
+        masked_seq_record = SeqRecord(Seq(sub_sequence), id=masked_name, description="")
+
+        with open(tmp_family_sequences_path, "a") as output_handle:
+            SeqIO.write(masked_seq_record, output_handle, "fasta")
+
+    return masked_name
+
+def filter_recruited(recruitment_file, evalue_threshold, length_threshold, fasta_dict):
     start_time = time.time()
 
+    os.remove(tmp_family_sequences_path)
     filtered_sequences = []
     with open(recruitment_file, 'r') as file:
         for line in file:
@@ -181,7 +199,15 @@ def filter_recruited(recruitment_file, evalue_threshold, length_threshold):
                 env_to = int(columns[20])
                 env_length = env_to - env_from + 1
                 if evalue < evalue_threshold and env_length >= length_threshold * qlen:
-                    filtered_sequences.append(columns[0])
+                    sequence_name = columns[0]
+                    tlen = float(columns[2])
+                    if (env_length < tlen):
+                        sequence_name = mask_sequence_name(sequence_name, env_from, env_to, fasta_dict)
+                    else:
+                        with open(tmp_family_sequences_path, "a") as output_handle:
+                            SeqIO.write([fasta_dict[sequence_name]], output_handle, "fasta")
+
+                    filtered_sequences.append(sequence_name)
     
     with open(log_file, 'a') as file:
         file.write("filter_recruited: ")
@@ -192,18 +218,38 @@ def filter_recruited(recruitment_file, evalue_threshold, length_threshold):
 def run_hmmalign(input_file, hmm_file, output_file):
     start_time = time.time()
 
-    hmmalign_command = ["hmmalign", "--out", output_file, hmm_file, input_file]
+    hmmalign_command = ["hmmalign", "-o", output_file, "--amino", hmm_file, input_file]
     subprocess.run(hmmalign_command, stdout=subprocess.DEVNULL)
 
     with open(log_file, 'a') as file:
         file.write("run_hmmalign: ")
         file.write(str(time.time() - start_time) + "\n")
 
+def get_number_of_remaining_sequences(output_file):
+    with open(output_file, "r") as file:
+        alignment = AlignIO.read(file, "stockholm")
+
+    return len(alignment)
+
 def run_esl_weight(input_file, output_file, threshold=0.80):
     start_time = time.time()
 
-    esl_weight_command = ["esl-weight", "-o", output_file, "-t", str(threshold), input_file]
-    subprocess.run(esl_weight_command, stdout=subprocess.DEVNULL)
+    shutil.copy(input_file, tmp_intermediate_esl_path)
+
+    while True:
+        esl_weight_command = ["esl-weight", "--amino", "-f", "--idf", str(threshold), "-o", output_file, tmp_intermediate_esl_path]
+        subprocess.run(esl_weight_command, stdout=subprocess.DEVNULL)
+        number_of_remaining_sequences = get_number_of_remaining_sequences(output_file)
+        with open(log_file, 'a') as file:
+            file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
+        if (number_of_remaining_sequences <= 2000):
+            break
+        else:
+            with open(log_file, 'a') as file:
+                file.write("Rerunning run_esl_weight: ")
+            shutil.copy(output_file, tmp_intermediate_esl_path) # TODO test 
+
+    shutil.move(tmp_intermediate_esl_path, output_file)
 
     with open(log_file, 'a') as file:
         file.write("run_esl_weight: ")
@@ -278,31 +324,35 @@ def main():
         if not family_members or len(family_members) < minimum_family_members:
             break
         
+        write_family_fasta_file(family_members, fasta_dict, tmp_family_sequences_path)
         discard_flag = False
         for family_iteration in range(1, 4):
             with open(log_file, 'a') as file:
                 file.write(str(family_iteration) + "\n")
 
-            write_family_fasta_file(family_members, fasta_dict, tmp_family_sequences_path) # TODO check after esl-weight if need to move this before for loop
+            
             run_msa(tmp_family_sequences_path, tmp_seed_msa_path)
             run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
             run_hmmsearch(tmp_hmm_path, mgnifams_input_file, tmp_domtblout_path)
-            filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold)
+            filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, fasta_dict) # also writes in tmp_family_sequences_path
             if not filtered_seq_names or len(filtered_seq_names) < minimum_family_members:
                 discard_flag = True
                 break
 
             recruited_sequences = set(filtered_seq_names) - set(family_members)
             family_members = filtered_seq_names
-            if recruited_sequences:
-                write_family_fasta_file(family_members, fasta_dict, tmp_family_sequences_path)
-                run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
-                exit()
-                break
-                # TODO esl_weight, 0.8 until <2000
-                continue
-            else:
-                break
+            # if recruited_sequences: # TODO uncomment
+            ###
+            run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
+            run_esl_weight(tmp_align_msa_path, tmp_esl_weight_path, threshold=0.8)
+            # TODO continue from here, get tmp/esl_weight.fa sequence names, and keep only those from family_sequences.fa
+            # filter_out_redundant() # TODO
+            exit()
+            break
+            continue
+            ###
+            # else: # TODO uncomment
+            #     break # TODO uncomment
         
         if not discard_flag:
             append_family_file(output_families_file, family_rep, family_members)
