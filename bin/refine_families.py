@@ -125,15 +125,15 @@ def get_next_largest_family(clusters_bookkeeping_df):
 
     return largest_family_rep, largest_family_members.tolist() if isinstance(largest_family_members, pd.Series) else [largest_family_members]
 
-def write_fasta_file(members, fasta_dict, output_fasta, mode):
+def write_family_fasta_file(members, fasta_dict, output_fasta):
     start_time = time.time()
     sequences_to_write = [fasta_dict[member] for member in members if member in fasta_dict]
 
-    with open(output_fasta, mode) as output_handle:
+    with open(output_fasta, "w") as output_handle:
         SeqIO.write(sequences_to_write, output_handle, "fasta")
 
     with open(log_file, 'a') as file:
-        file.write("write_fasta_file: ")
+        file.write("write_family_fasta_file: ")
         file.write(str(time.time() - start_time) + "\n")
 
 def run_msa(input_fasta, output_msa):
@@ -177,10 +177,10 @@ def filter_recruited(recruitment_file, evalue_threshold, length_threshold):
                 columns = line.split()
                 evalue = float(columns[6])
                 qlen = float(columns[5])
-                hmm_from = int(columns[15])
-                hmm_to = int(columns[16])
-                hmm_length = hmm_to - hmm_from + 1
-                if evalue < evalue_threshold and hmm_length >= length_threshold * qlen:
+                env_from = int(columns[19])
+                env_to = int(columns[20])
+                env_length = env_to - env_from + 1
+                if evalue < evalue_threshold and env_length >= length_threshold * qlen:
                     filtered_sequences.append(columns[0])
     
     with open(log_file, 'a') as file:
@@ -272,47 +272,45 @@ def main():
 
     clusters_bookkeeping_df = create_clusters_bookkeeping_df() if arg_clusters_bookkeeping_df_file is None else load_clusters_bookkeeping_df()
     fasta_dict = create_mgnifams_input_dict() if arg_updated_mgnifams_input_file is None else load_mgnifams_input_dict()
-
-    exit() # TODO continue from here
     
     while True:
         family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
         if not family_members or len(family_members) < minimum_family_members:
             break
         
-        family_iteration = 0
-        write_fasta_mode = "w"
-        total_recruited_sequences = []
-        while True:
-            family_iteration += 1
-            if (family_iteration > 3):
-                break
+        discard_flag = False
+        for family_iteration in range(1, 4):
             with open(log_file, 'a') as file:
                 file.write(str(family_iteration) + "\n")
 
-            write_fasta_file(family_members, fasta_dict, tmp_family_sequences_path, write_fasta_mode) # TODO check update
+            write_family_fasta_file(family_members, fasta_dict, tmp_family_sequences_path) # TODO check after esl-weight if need to move this before for loop
             run_msa(tmp_family_sequences_path, tmp_seed_msa_path)
             run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
-            run_hmmsearch(tmp_hmm_path, mgnifams_input_file, tmp_domtblout_path) # TODO update mgnifams_input_file used
+            run_hmmsearch(tmp_hmm_path, mgnifams_input_file, tmp_domtblout_path)
             filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold)
+            if not filtered_seq_names or len(filtered_seq_names) < minimum_family_members:
+                discard_flag = True
+                break
+
             recruited_sequences = set(filtered_seq_names) - set(family_members)
+            family_members = filtered_seq_names
             if recruited_sequences:
-                # TODO hmmalign
-                run_hmmalign(input_file, hmm_file, output_file)
+                write_family_fasta_file(family_members, fasta_dict, tmp_family_sequences_path)
+                run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
+                exit()
                 break
                 # TODO esl_weight, 0.8 until <2000
-
-                total_recruited_sequences.extend(recruited_sequences)
-                family_members.extend(recruited_sequences)
-                write_fasta_mode = "a"
                 continue
             else:
                 break
-
-        append_family_file(output_families_file, family_rep, family_members)
+        
+        if not discard_flag:
+            append_family_file(output_families_file, family_rep, family_members)
+            # TODO move 4 model files to their out folders
+        
         save_iteration(clusters_bookkeeping_df, family_rep)
-        update_bookkeeping(total_recruited_sequences, clusters_bookkeeping_df, fasta_dict)
-        remove_sequences_from_pool(tmp_sequences_to_remove_path, mgnifams_input_file) # TODO update mgnifams_input_file used
+        update_bookkeeping(family_members, clusters_bookkeeping_df, fasta_dict)
+        remove_sequences_from_pool(tmp_sequences_to_remove_path, mgnifams_input_file) # TODO check if update mgnifams_input_file updates output correctly
         break # TODO export family stuff here
 
 if __name__ == "__main__":
