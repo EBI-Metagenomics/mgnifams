@@ -2,89 +2,121 @@ import sys
 import os
 import subprocess
 import shutil
+import pickle
 import pandas as pd
 from Bio import SeqIO
 
 import time # benchmarking, TODO remove
 
 def parse_args():
-        if len(sys.argv) != 5:
-            print("Usage: python3 refine_families.py [Families TSV] [FASTA file] [Minimum number of family members] [Output file]")
-            sys.exit(1)
+    # Minimum 5 arguments (including the script name), maximum 7
+    if not (5 <= len(sys.argv) <= 7):
+        print("""
+            Usage: python3 refine_families.py [Linclust file] [MGnifams FASTA file] [Minimum family members]
+            [Output families file] [Optional 1: Clusters bookkeeping df .pkl file] [Optional 2: Updated mgnifams input dict .pkl file]
+        """)
+        sys.exit(1)
 
-        global families_tsv 
-        families_tsv = sys.argv[1]
-        global fasta_file
-        fasta_file = sys.argv[2]
-        global minimum_members
-        minimum_members = int(sys.argv[3])
-        global output_file
-        output_file = sys.argv[4]
+    globals().update({
+        "linclust_input_file"    : sys.argv[1],
+        "mgnifams_input_file"    : sys.argv[2],
+        "minimum_family_members" : int(sys.argv[3]),
+        "output_families_file"   : sys.argv[4]
+    })
+
+    # Optional arguments
+    globals().update({"arg_clusters_bookkeeping_df_file": sys.argv[5] if len(sys.argv) >= 6 else None})
+    globals().update({"arg_updated_mgnifams_input_file" : sys.argv[6] if len(sys.argv) >= 7 else None})        
 
 def define_globals():
-    global log_file
-    log_file = "log.txt"
-    global tmp_folder
-    tmp_folder = "tmp"
-    global msa_folder
-    msa_folder = "msa"
-    global hmm_folder
-    hmm_folder = "hmm"
-    for folder in [tmp_folder, msa_folder, hmm_folder]:
+    globals().update({
+        "log_file"                     : "log.txt",
+        "clusters_bookkeeping_df_file" : "clusters_bookkeeping_df.pkl",
+        "updated_mgnifams_input_file"  : "updated_mgnifams_input.pkl",
+        "tmp_folder"                   : "tmp",
+        "seed_msa_folder"              : "seed_msa",
+        "align_msa_folder"             : "msa",
+        "hmm_folder"                   : "hmm",
+        "domtblout_folder"             : "dombtblout",
+        "evalue_threshold"             : 0.001,
+        "length_threshold"             : 0.8
+    })
+
+    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder]:
         if not os.path.exists(folder):
             os.makedirs(folder)
-        if not os.path.exists(tmp_folder):
-            os.makedirs(tmp_folder)
-    global family_sequences_path
-    family_sequences_path = os.path.join(tmp_folder, 'family_sequences.fasta')
-    global family_alignment_path
-    family_alignment_path = os.path.join(tmp_folder, 'family_alignment.msa')
-    global family_model_path
-    family_model_path = os.path.join(tmp_folder, 'family_model.hmm')
-    global recruited_sequences_path
-    recruited_sequences_path = os.path.join(tmp_folder, 'domtblout.txt')
 
-    global evalue_threshold
-    evalue_threshold = 0.001
-    global length_threshold
-    length_threshold = 0.8
-    global recruited_sequences
-    recruited_sequences = []
+    globals().update({
+        "tmp_family_sequences_path"    : os.path.join(tmp_folder, 'family_sequences.fa'),
+        "tmp_seed_msa_path"            : os.path.join(tmp_folder, 'seed_msa.fa'),
+        "tmp_align_msa_path"           : os.path.join(tmp_folder, 'align_msa.fa'),
+        "tmp_hmm_path"                 : os.path.join(tmp_folder, 'model.hmm'),
+        "tmp_domtblout_path"           : os.path.join(tmp_folder, 'domtblout.txt'),
+        "tmp_sequences_to_remove_path" : os.path.join(tmp_folder, 'sequences_to_remove.txt'),
+        "seed_msa_path"                : os.path.join(seed_msa_folder, 'seed_msa.fa'),
+        "align_msa_path"               : os.path.join(align_msa_folder, 'align_msa.fa'),
+        "hmm_path"                     : os.path.join(hmm_folder, 'model.hmm'),
+        "domtblout_path"               : os.path.join(domtblout_folder, 'domtblout.txt')
+    })
     
-def create_family_dataframe(families_tsv):
+def create_clusters_bookkeeping_df():
     start_time = time.time()
 
-    df = pd.read_csv(families_tsv, sep='\t', header=None, names=['representative', 'member'])
+    df = pd.read_csv(linclust_input_file, sep='\t', header=None, names=['representative', 'member'])
     family_sizes = df.groupby('representative').size()
-    bookkeeping_df = df.set_index('representative').join(family_sizes.rename('size'), on='representative')
+    clusters_bookkeeping_df = df.set_index('representative').join(family_sizes.rename('size'), on='representative')
+    clusters_bookkeeping_df.to_pickle(clusters_bookkeeping_df_file)
 
     with open(log_file, 'w') as file:
-        file.write("create_family_dataframe: ")
-        file.write(str(time.time() - start_time) +"\n")
+        file.write("create_clusters_bookkeeping_df: ")
+        file.write(str(time.time() - start_time) + "\n")
 
-    return bookkeeping_df
+    return clusters_bookkeeping_df
 
-# TODO load state alternative
-def load_mgnifams_input():
+def load_clusters_bookkeeping_df():
     start_time = time.time()
-    with open(log_file, 'a') as file:
-        file.write("load_mgnifams_input: ")
 
-    fasta_dict = {record.id: record for record in SeqIO.parse(fasta_file, "fasta")}
+    clusters_bookkeeping_df = pd.read_pickle(arg_clusters_bookkeeping_df_file)
+
+    with open(log_file, 'w') as file:
+        file.write("load_clusters_bookkeeping_df: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    return clusters_bookkeeping_df
+
+def create_mgnifams_input_dict():
+    start_time = time.time()
+
+    fasta_dict = {record.id: record for record in SeqIO.parse(mgnifams_input_file, "fasta")}
+    with open(updated_mgnifams_input_file, 'wb') as file:
+        pickle.dump(fasta_dict, file)
 
     with open(log_file, 'a') as file:
-        file.write(str(time.time() - start_time) +"\n")
+        file.write("create_mgnifams_input_dict: ")
+        file.write(str(time.time() - start_time) + "\n")
 
     return fasta_dict
 
-def get_next_largest_family(bookkeeping_df):
+def load_mgnifams_input_dict():
+    start_time = time.time()
+
+    with open(arg_updated_mgnifams_input_file, 'rb') as file:
+        fasta_dict = pickle.load(file)
+
+    with open(log_file, 'a') as file:
+        file.write("load_mgnifams_input_dict: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    return fasta_dict
+
+def get_next_largest_family(clusters_bookkeeping_df):
     start_time = time.time()
     
-    if bookkeeping_df.empty:
+    if clusters_bookkeeping_df.empty:
         return None, None
 
-    largest_family_rep = bookkeeping_df['size'].idxmax()
-    largest_family_members = bookkeeping_df.loc[largest_family_rep]['member']
+    largest_family_rep = clusters_bookkeeping_df['size'].idxmax()
+    largest_family_members = clusters_bookkeeping_df.loc[largest_family_rep]['member']
 
     with open(log_file, 'a') as file:
         file.write("get_next_largest_family: ")
@@ -157,6 +189,26 @@ def filter_recruited(recruitment_file, evalue_threshold, length_threshold):
 
     return filtered_sequences
 
+def run_hmmalign(input_file, hmm_file, output_file):
+    start_time = time.time()
+
+    hmmalign_command = ["hmmalign", "--out", output_file, hmm_file, input_file]
+    subprocess.run(hmmalign_command, stdout=subprocess.DEVNULL)
+
+    with open(log_file, 'a') as file:
+        file.write("run_hmmalign: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+def run_esl_weight(input_file, output_file, threshold=0.80):
+    start_time = time.time()
+
+    esl_weight_command = ["esl-weight", "-o", output_file, "-t", str(threshold), input_file]
+    subprocess.run(esl_weight_command, stdout=subprocess.DEVNULL)
+
+    with open(log_file, 'a') as file:
+        file.write("run_esl_weight: ")
+        file.write(str(time.time() - start_time) + "\n")
+
 def append_family_file(output_file, family_rep, family_members):
     start_time = time.time()
 
@@ -169,32 +221,32 @@ def append_family_file(output_file, family_rep, family_members):
         file.write(str(time.time() - start_time) + "\n")
         file.write(f"E: {family_rep}, s: {len(family_members)}\n")
 
-def save_iteration(bookkeeping_df):
+def save_iteration(clusters_bookkeeping_df, family_rep):
     start_time = time.time()
 
-    os.rename(family_alignment_path, os.path.join(msa_folder, f"{family_rep}.msa"))
-    os.rename(family_model_path, os.path.join(hmm_folder, f"{family_rep}.hmm"))
-    bookkeeping_df.to_pickle('tmp/bookkeeping_df.pkl')
+    os.rename(tmp_seed_msa_path, os.path.join(msa_folder, f"{family_rep}.msa"))
+    os.rename(hmm_folder, os.path.join(hmm_folder, f"{family_rep}.hmm"))
+    clusters_bookkeeping_df.to_pickle(tmp_bookkeeping_df_path)
 
     with open(log_file, 'a') as file:
         file.write("save_iteration: ")
         file.write(str(time.time() - start_time) + "\n")
 
-def update_bookkeeping(filtered_seq_names, bookkeeping_df, fasta_dict):
+def update_bookkeeping(filtered_seq_names, clusters_bookkeeping_df, fasta_dict):
     start_time = time.time()    
 
-    with open("tmp/sequences_to_remove.txt", "a") as to_remove_file:
+    with open(tmp_sequences_to_remove_path, "a") as to_remove_file:
         for seq_name in filtered_seq_names:
             to_remove_file.write(f"^>{seq_name}$\n")
             to_remove_file.write(f"^{fasta_dict[seq_name].seq}$\n")
 
             del fasta_dict[seq_name] # remove from dict
 
-            representative = bookkeeping_df[bookkeeping_df['member'] == seq_name].index[0]
-            bookkeeping_df.loc[bookkeeping_df.index.get_level_values('representative') == representative, 'size'] -= 1 # size -1 for family
+            representative = clusters_bookkeeping_df[clusters_bookkeeping_df['member'] == seq_name].index[0]
+            clusters_bookkeeping_df.loc[clusters_bookkeeping_df.index.get_level_values('representative') == representative, 'size'] -= 1 # size -1 for family
 
-    mask = ~bookkeeping_df['member'].isin(filtered_seq_names)
-    bookkeeping_df = bookkeeping_df[mask].copy() # remove from df
+    mask = ~clusters_bookkeeping_df['member'].isin(filtered_seq_names)
+    clusters_bookkeeping_df = clusters_bookkeeping_df[mask].copy() # remove from df
 
     with open(log_file, 'a') as file:
         file.write("update_bookkeeping: ")
@@ -204,9 +256,9 @@ def remove_sequences_from_pool(to_remove_file, fasta_file):
     start_time = time.time()
 
     grep_command = ["grep", "-v", "-f", to_remove_file, fasta_file]
-    with open("tmp/mgnifams_input.fa", "w") as outfile:
+    with open(tmp_mgnifams_input_path, "w") as outfile:
         subprocess.run(grep_command, stdout=outfile)
-    shutil.move("tmp/mgnifams_input.fa", fasta_file)
+    shutil.move(tmp_mgnifams_input_path, fasta_file)
     if os.path.exists(to_remove_file):
         os.remove(to_remove_file)
 
@@ -218,12 +270,14 @@ def main():
     parse_args()
     define_globals()
 
-    bookkeeping_df = create_family_dataframe(families_tsv)
-    fasta_dict = load_mgnifams_input()
+    clusters_bookkeeping_df = create_clusters_bookkeeping_df() if arg_clusters_bookkeeping_df_file is None else load_clusters_bookkeeping_df()
+    fasta_dict = create_mgnifams_input_dict() if arg_updated_mgnifams_input_file is None else load_mgnifams_input_dict()
+
+    exit() # TODO continue from here
     
     while True:
-        family_rep, family_members = get_next_largest_family(bookkeeping_df)
-        if not family_members or len(family_members) < minimum_members:
+        family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
+        if not family_members or len(family_members) < minimum_family_members:
             break
         
         family_iteration = 0
@@ -231,31 +285,35 @@ def main():
         total_recruited_sequences = []
         while True:
             family_iteration += 1
+            if (family_iteration > 3):
+                break
             with open(log_file, 'a') as file:
                 file.write(str(family_iteration) + "\n")
 
-            write_fasta_file(family_members, fasta_dict, family_sequences_path, write_fasta_mode)
-            run_msa(family_sequences_path, family_alignment_path)
-            # TODO esl-weight here if >1000 sequences in MSA?
-            run_hmmbuild(family_alignment_path, family_model_path)
-            run_hmmsearch(family_model_path, fasta_file, recruited_sequences_path)
-            filtered_seq_names = filter_recruited(recruited_sequences_path, evalue_threshold, length_threshold)
-
+            write_fasta_file(family_members, fasta_dict, tmp_family_sequences_path, write_fasta_mode) # TODO check update
+            run_msa(tmp_family_sequences_path, tmp_seed_msa_path)
+            run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
+            run_hmmsearch(tmp_hmm_path, mgnifams_input_file, tmp_domtblout_path) # TODO update mgnifams_input_file used
+            filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold)
             recruited_sequences = set(filtered_seq_names) - set(family_members)
             if recruited_sequences:
+                # TODO hmmalign
+                run_hmmalign(input_file, hmm_file, output_file)
+                break
+                # TODO esl_weight, 0.8 until <2000
+
                 total_recruited_sequences.extend(recruited_sequences)
                 family_members.extend(recruited_sequences)
                 write_fasta_mode = "a"
                 continue
             else:
-                break # TODO continue from here
-                append_family_file(output_file, family_rep, family_members)
-                save_iteration(bookkeeping_df)
-                update_bookkeeping(total_recruited_sequences, bookkeeping_df, fasta_dict)
-                remove_sequences_from_pool("tmp/sequences_to_remove.txt", fasta_file)
                 break
 
-        break
+        append_family_file(output_families_file, family_rep, family_members)
+        save_iteration(clusters_bookkeeping_df, family_rep)
+        update_bookkeeping(total_recruited_sequences, clusters_bookkeeping_df, fasta_dict)
+        remove_sequences_from_pool(tmp_sequences_to_remove_path, mgnifams_input_file) # TODO update mgnifams_input_file used
+        break # TODO export family stuff here
 
 if __name__ == "__main__":
     main()
