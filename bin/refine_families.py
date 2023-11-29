@@ -40,7 +40,7 @@ def define_globals():
         "seed_msa_folder"              : "seed_msa",
         "align_msa_folder"             : "msa",
         "hmm_folder"                   : "hmm",
-        "domtblout_folder"             : "dombtblout",
+        "domtblout_folder"             : "domtblout",
         "evalue_threshold"             : 0.001,
         "length_threshold"             : 0.8
     })
@@ -85,30 +85,30 @@ def load_clusters_bookkeeping_df():
 
     return clusters_bookkeeping_df
 
-def create_mgnifams_input_dict():
+def create_mgnifams_fasta_dict():
     start_time = time.time()
 
-    fasta_dict = {record.id: record for record in SeqIO.parse(mgnifams_input_file, "fasta")}
+    mgnifams_fasta_dict = {record.id: record for record in SeqIO.parse(mgnifams_input_file, "fasta")}
     with open(updated_mgnifams_input_file, 'wb') as file:
-        pickle.dump(fasta_dict, file)
+        pickle.dump(mgnifams_fasta_dict, file)
 
     with open(log_file, 'a') as file:
-        file.write("create_mgnifams_input_dict: ")
+        file.write("create_mgnifams_fasta_dict: ")
         file.write(str(time.time() - start_time) + "\n")
 
-    return fasta_dict
+    return mgnifams_fasta_dict
 
-def load_mgnifams_input_dict():
+def load_mgnifams_fasta_dict():
     start_time = time.time()
 
     with open(arg_updated_mgnifams_input_file, 'rb') as file:
-        fasta_dict = pickle.load(file)
+        mgnifams_fasta_dict = pickle.load(file)
 
     with open(log_file, 'a') as file:
-        file.write("load_mgnifams_input_dict: ")
+        file.write("load_mgnifams_fasta_dict: ")
         file.write(str(time.time() - start_time) + "\n")
 
-    return fasta_dict
+    return mgnifams_fasta_dict
 
 def get_next_largest_family(clusters_bookkeeping_df):
     start_time = time.time()
@@ -126,9 +126,9 @@ def get_next_largest_family(clusters_bookkeeping_df):
 
     return largest_family_rep, largest_family_members.tolist() if isinstance(largest_family_members, pd.Series) else [largest_family_members]
 
-def write_family_fasta_file(members, fasta_dict, output_fasta):
+def write_family_fasta_file(members, mgnifams_fasta_dict, output_fasta):
     start_time = time.time()
-    sequences_to_write = [fasta_dict[member] for member in members if member in fasta_dict]
+    sequences_to_write = [mgnifams_fasta_dict[member] for member in members if member in mgnifams_fasta_dict]
 
     with open(output_fasta, "w") as output_handle:
         SeqIO.write(sequences_to_write, output_handle, "fasta")
@@ -174,11 +174,11 @@ def run_hmmsearch(hmm_file, fasta_file, output_recruitment):
         file.write("run_hmmsearch: ")
         file.write(str(time.time() - start_time) + "\n")
 
-def mask_sequence_name(sequence_name, env_from, env_to, fasta_dict):
+def mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict):
     masked_name = f"{sequence_name}/{env_from}_{env_to}"
 
-    if sequence_name in fasta_dict:
-        sub_sequence = fasta_dict[sequence_name].seq[env_from - 1:env_to]  # -1 because Python uses 0-based indexing
+    if sequence_name in mgnifams_fasta_dict:
+        sub_sequence = str(mgnifams_fasta_dict[sequence_name].seq[env_from - 1:env_to])  # -1 because Python uses 0-based indexing
         masked_seq_record = SeqRecord(Seq(sub_sequence), id=masked_name, description="")
 
         with open(tmp_family_sequences_path, "a") as output_handle:
@@ -186,7 +186,7 @@ def mask_sequence_name(sequence_name, env_from, env_to, fasta_dict):
 
     return masked_name
 
-def filter_recruited(recruitment_file, evalue_threshold, length_threshold, fasta_dict):
+def filter_recruited(recruitment_file, evalue_threshold, length_threshold, mgnifams_fasta_dict):
     start_time = time.time()
 
     os.remove(tmp_family_sequences_path)
@@ -204,10 +204,10 @@ def filter_recruited(recruitment_file, evalue_threshold, length_threshold, fasta
                     sequence_name = columns[0]
                     tlen = float(columns[2])
                     if (env_length < tlen):
-                        sequence_name = mask_sequence_name(sequence_name, env_from, env_to, fasta_dict)
+                        sequence_name = mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict)
                     else:
                         with open(tmp_family_sequences_path, "a") as output_handle:
-                            SeqIO.write([fasta_dict[sequence_name]], output_handle, "fasta")
+                            SeqIO.write([mgnifams_fasta_dict[sequence_name]], output_handle, "fasta")
 
                     filtered_sequences.append(sequence_name)
     
@@ -294,56 +294,52 @@ def append_family_file(output_file, family_rep, family_members):
         file.write(str(time.time() - start_time) + "\n")
         file.write(f"E: {family_rep}, s: {len(family_members)}\n")
 
-def save_iteration(clusters_bookkeeping_df, family_rep):
-    start_time = time.time()
-
-    os.rename(tmp_seed_msa_path, os.path.join(msa_folder, f"{family_rep}.msa"))
-    os.rename(hmm_folder, os.path.join(hmm_folder, f"{family_rep}.hmm"))
-    clusters_bookkeeping_df.to_pickle(tmp_bookkeeping_df_path)
-
-    with open(log_file, 'a') as file:
-        file.write("save_iteration: ")
-        file.write(str(time.time() - start_time) + "\n")
-
 def move_produced_models(family_rep, size):
     shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder, f'{family_rep}_{size}.fa'))
     shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'{family_rep}_{size}.fa'))
     shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'{family_rep}_{size}.hmm'))
     shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'{family_rep}_{size}.domtblout'))
 
-def update_bookkeeping(filtered_seq_names, clusters_bookkeeping_df, fasta_dict):
+def update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members):
     start_time = time.time()    
 
-    with open(tmp_sequences_to_remove_path, "a") as to_remove_file:
-        for seq_name in filtered_seq_names:
-            to_remove_file.write(f"^>{seq_name}$\n")
-            to_remove_file.write(f"^{fasta_dict[seq_name].seq}$\n")
-
-            del fasta_dict[seq_name] # remove from dict
-
-            representative = clusters_bookkeeping_df[clusters_bookkeeping_df['member'] == seq_name].index[0]
-            clusters_bookkeeping_df.loc[clusters_bookkeeping_df.index.get_level_values('representative') == representative, 'size'] -= 1 # size -1 for family
-
-    mask = ~clusters_bookkeeping_df['member'].isin(filtered_seq_names)
-    clusters_bookkeeping_df = clusters_bookkeeping_df[mask].copy() # remove from df
-
-    with open(log_file, 'a') as file:
-        file.write("update_bookkeeping: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-def remove_sequences_from_pool(to_remove_file, fasta_file):
-    start_time = time.time()
-
-    grep_command = ["grep", "-v", "-f", to_remove_file, fasta_file]
-    with open(tmp_mgnifams_input_path, "w") as outfile:
-        subprocess.run(grep_command, stdout=outfile)
-    shutil.move(tmp_mgnifams_input_path, fasta_file)
-    if os.path.exists(to_remove_file):
-        os.remove(to_remove_file)
+    sequences_to_remove = []
+    split_members = [member.split('/')[0] for member in family_members]
+    # Match these sequences to their family representatives and keep unique
+    unique_reps = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(split_members)].index.unique()
+    # Get all members of these unique reps into sequences_to_remove
+    for rep in unique_reps:
+        members = clusters_bookkeeping_df.loc[rep, 'member']
+        if isinstance(members, pd.Series):
+            sequences_to_remove.extend(members.tolist())
+        else:
+            sequences_to_remove.append(members)  
+    # Remove all lines having these family_reps from the clusters_bookkeeping_df
+    clusters_bookkeeping_df = clusters_bookkeeping_df[~clusters_bookkeeping_df.index.isin(unique_reps)]
+    
+    clusters_bookkeeping_df.to_pickle(clusters_bookkeeping_df_file)
 
     with open(log_file, 'a') as file:
-        file.write("remove_sequences_from_pool: ")
+        file.write("update_clusters_bookkeeping_df: ")
         file.write(str(time.time() - start_time) + "\n")
+
+    return clusters_bookkeeping_df, sequences_to_remove
+
+def update_mgnifams_fasta_dict(mgnifams_fasta_dict, sequences_to_remove):
+    start_time = time.time()    
+
+    # Remove sequences_to_remove from the dictionary
+    for seq in sequences_to_remove:
+        mgnifams_fasta_dict.pop(seq, None) # pop with None avoids KeyError if seq not in dict
+    
+    with open(updated_mgnifams_input_file, 'wb') as file:
+        pickle.dump(mgnifams_fasta_dict, file)
+
+    with open(log_file, 'a') as file:
+        file.write("update_mgnifams_fasta_dict: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    return mgnifams_fasta_dict
 
 def remove_tmp_files(folder_path):
     for item in os.listdir(folder_path):
@@ -356,14 +352,14 @@ def main():
     define_globals()
 
     clusters_bookkeeping_df = create_clusters_bookkeeping_df() if arg_clusters_bookkeeping_df_file is None else load_clusters_bookkeeping_df()
-    fasta_dict = create_mgnifams_input_dict() if arg_updated_mgnifams_input_file is None else load_mgnifams_input_dict()
+    mgnifams_fasta_dict = create_mgnifams_fasta_dict() if arg_updated_mgnifams_input_file is None else load_mgnifams_fasta_dict()
     
     while True:
         family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
         if not family_members or len(family_members) < minimum_family_members:
             break
         
-        write_family_fasta_file(family_members, fasta_dict, tmp_family_sequences_path)
+        write_family_fasta_file(family_members, mgnifams_fasta_dict, tmp_family_sequences_path)
         total_checked_sequences = family_members
         exit_flag = False
         family_iteration = 0
@@ -380,9 +376,9 @@ def main():
             run_msa(tmp_family_sequences_path, tmp_seed_msa_path, len(family_members))
             run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
             run_hmmsearch(tmp_hmm_path, mgnifams_input_file, tmp_domtblout_path)
-            filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, fasta_dict) # also writes in tmp_family_sequences_path
+            filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict) # also writes in tmp_family_sequences_path
             run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
-
+            
             recruited_sequences = set(filtered_seq_names) - set(total_checked_sequences)
             if not recruited_sequences:
                 exit_flag = True
@@ -397,11 +393,11 @@ def main():
         # Exiting family loop
         append_family_file(output_families_file, family_rep, family_members)
         move_produced_models(family_rep, len(family_members))
-        # save_iteration(clusters_bookkeeping_df, family_rep)
-        # update_bookkeeping(family_members, clusters_bookkeeping_df, fasta_dict)
-        # remove_sequences_from_pool(tmp_sequences_to_remove_path, mgnifams_input_file) # TODO check if update mgnifams_input_file updates output correctly
+        clusters_bookkeeping_df, sequences_to_remove = update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members)
+        mgnifams_fasta_dict = update_mgnifams_fasta_dict(mgnifams_fasta_dict, sequences_to_remove)
         remove_tmp_files(tmp_folder)
-        break
+
+    # End of all families
 
 if __name__ == "__main__":
     main()

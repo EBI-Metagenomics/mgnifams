@@ -4,22 +4,25 @@ process REFINE_FAMILIES {
     conda "${moduleDir}/environment.yml"
     
     input:
-    tuple val(meta), path(families_tsv)
+    path(families_tsv)
     path(fasta)
     val(minimum_members)
+    // path(clusters_bookkeeping_df_pkl)
+    // path(updated_mgnifams_input_pkl)
 
     output:
-    tuple val(meta), path("refined_families.tsv"), emit: tsv
-    tuple val(meta), path("*_df.pkl")            , emit: df_pkl
-    tuple val(meta), path("*_dict.pkl")          , emit: dict_pkl
-    tuple val(meta), path("msa/*")               , emit: msa
-    tuple val(meta), path("hmm/*")               , emit: hmm
-    path("log.txt")                              , emit: log
+    path("refined_families.tsv"), emit: tsv
+    path("seed_msa/*")          , emit: seed_msa
+    path("msa/*")               , emit: msa
+    path("hmm/*")               , emit: hmm
+    path("domtblout/*")         , emit: domtblout
+    path("log.txt")             , emit: log
 
     script:
     """
     python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv
     """
+    // python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv ${clusters_bookkeeping_df_pkl} ${updated_mgnifams_input_pkl}
 }
 
 process FILTER_FAMILIES {
