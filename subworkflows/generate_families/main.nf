@@ -6,11 +6,12 @@ workflow GENERATE_FAMILIES {
     take:
     families_tsv
     mgnifams_fasta
-    // families_pkl
+    families_pkl
     // mgnifams_pkl
     
     main:
-    refined_families = REFINE_FAMILIES(families_tsv, mgnifams_fasta, params.minimum_members)
+    // refined_families = REFINE_FAMILIES(families_tsv, mgnifams_fasta, params.minimum_members)
+    refined_families = REFINE_FAMILIES(families_tsv, mgnifams_fasta, params.minimum_members, families_pkl)
     // refined_families = REFINE_FAMILIES(families_tsv, mgnifams_fasta, params.minimum_members, families_pkl, mgnifams_pkl) // from saved state
 
     emit:

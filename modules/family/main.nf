@@ -7,7 +7,7 @@ process REFINE_FAMILIES {
     path(families_tsv)
     path(fasta)
     val(minimum_members)
-    // path(clusters_bookkeeping_df_pkl)
+    path(clusters_bookkeeping_df_pkl)
     // path(updated_mgnifams_input_pkl)
 
     output:
@@ -20,8 +20,9 @@ process REFINE_FAMILIES {
 
     script:
     """
-    python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv
+    python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv ${clusters_bookkeeping_df_pkl}
     """
+    // python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv
     // python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv ${clusters_bookkeeping_df_pkl} ${updated_mgnifams_input_pkl}
 }
 
