@@ -249,11 +249,26 @@ def run_esl_weight(input_file, output_file, threshold=0.80):
                 file.write("Rerunning run_esl_weight: ")
             shutil.copy(output_file, tmp_intermediate_esl_path) # TODO test 
 
-    shutil.move(tmp_intermediate_esl_path, output_file)
-
     with open(log_file, 'a') as file:
         file.write("run_esl_weight: ")
         file.write(str(time.time() - start_time) + "\n")
+
+def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
+    # Step 1: Read identifiers from tmp_esl_weight_path using AlignIO
+    identifiers = set()
+    with open(tmp_esl_weight_path, "r") as stockholm_file:
+        alignment = AlignIO.read(stockholm_file, "stockholm")
+        for record in alignment:
+            identifiers.add(record.id)
+
+    # Step 2: Read and filter sequences in tmp_family_sequences_path
+    filtered_sequences = []
+    for record in SeqIO.parse(tmp_family_sequences_path, "fasta"):
+        if record.id.split('/')[0] in identifiers:
+            filtered_sequences.append(record)
+
+    # Step 3: Write the filtered sequences back
+    SeqIO.write(filtered_sequences, tmp_family_sequences_path, "fasta")
 
 def append_family_file(output_file, family_rep, family_members):
     start_time = time.time()
@@ -346,7 +361,7 @@ def main():
             run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
             run_esl_weight(tmp_align_msa_path, tmp_esl_weight_path, threshold=0.8)
             # TODO continue from here, get tmp/esl_weight.fa sequence names, and keep only those from family_sequences.fa
-            # filter_out_redundant() # TODO
+            filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path)
             exit()
             break
             continue
