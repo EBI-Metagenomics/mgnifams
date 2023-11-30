@@ -3,6 +3,7 @@ import os
 import subprocess
 import shutil
 import pickle
+import dill
 import pandas as pd
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -90,7 +91,7 @@ def create_mgnifams_fasta_dict():
 
     mgnifams_fasta_dict = {record.id: record for record in SeqIO.parse(mgnifams_input_file, "fasta")}
     with open(updated_mgnifams_input_file, 'wb') as file:
-        pickle.dump(mgnifams_fasta_dict, file)
+        dill.dump(mgnifams_fasta_dict, file)
 
     with open(log_file, 'a') as file:
         file.write("create_mgnifams_fasta_dict: ")
@@ -102,7 +103,7 @@ def load_mgnifams_fasta_dict():
     start_time = time.time()
 
     with open(arg_updated_mgnifams_input_file, 'rb') as file:
-        mgnifams_fasta_dict = pickle.load(file)
+        mgnifams_fasta_dict = dill.load(file)
 
     with open(log_file, 'a') as file:
         file.write("load_mgnifams_fasta_dict: ")
