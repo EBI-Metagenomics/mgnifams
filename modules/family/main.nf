@@ -1,14 +1,49 @@
+process CREATE_CLUSTERS_PKL {
+    publishDir "${params.outdir}/input/", mode: "copy"
+    
+    conda "${moduleDir}/environment.yml"
+    
+    input:
+    path(clusters_tsv)
+
+    output:
+    path("clusters_bookkeeping_df.pkl"), emit: pkl
+    path("log.txt")                    , emit: log
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/create_clusters_bookkeeping_df.py ${clusters_tsv}
+    """
+}
+
+process CREATE_FASTA_PKL {
+    publishDir "${params.outdir}/input/", mode: "copy"
+    
+    conda "${moduleDir}/environment.yml"
+    
+    input:
+    path(fasta)
+
+    output:
+    path("mgnifams_dict.pkl"), emit: pkl
+    path("log.txt")          , emit: log
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/create_mgnifams_fasta_dict.py ${fasta}
+    """
+}
+
 process REFINE_FAMILIES {
     publishDir "${params.outdir}/families/", mode: "copy"
     
     conda "${moduleDir}/environment.yml"
     
     input:
-    path(families_tsv)
+    path(clusters_pkl)
     path(fasta)
+    path(fasta_pkl)
     val(minimum_members)
-    path(clusters_bookkeeping_df_pkl)
-    // path(updated_mgnifams_input_pkl)
 
     output:
     path("refined_families.tsv"), emit: tsv
@@ -20,10 +55,8 @@ process REFINE_FAMILIES {
 
     script:
     """
-    python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv ${clusters_bookkeeping_df_pkl}
+    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${fasta} ${fasta_pkl} ${minimum_members}
     """
-    // python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv
-    // python3 ${params.scriptDir}/refine_families.py ${families_tsv} ${fasta} ${minimum_members} refined_families.tsv ${clusters_bookkeeping_df_pkl} ${updated_mgnifams_input_pkl}
 }
 
 process FILTER_FAMILIES {
