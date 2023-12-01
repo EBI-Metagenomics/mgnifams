@@ -9,7 +9,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 from Bio import AlignIO
 
-import time # benchmarking, TODO remove
+import time # benchmarking
 
 def parse_args():
     if not (len(sys.argv) == 4):
@@ -212,7 +212,8 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
         number_of_remaining_sequences = get_number_of_remaining_sequences(output_file)
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
-        if (number_of_remaining_sequences <= 2000): # TODO test with largest dataset, lower threshold
+        if (number_of_remaining_sequences <= 2000):
+            threshold -= 0.1
             break
         else:
             with open(log_file, 'a') as file:
