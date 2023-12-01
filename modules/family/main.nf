@@ -16,24 +16,6 @@ process CREATE_CLUSTERS_PKL {
     """
 }
 
-process CREATE_FASTA_PKL {
-    publishDir "${params.outdir}/input/", mode: "copy"
-    
-    conda "${moduleDir}/environment.yml"
-    
-    input:
-    path(fasta)
-
-    output:
-    path("mgnifams_dict.pkl"), emit: pkl
-    path("log.txt")          , emit: log
-
-    script:
-    """
-    python3 ${params.scriptDir}/family/create_mgnifams_fasta_dict.py ${fasta}
-    """
-}
-
 process REFINE_FAMILIES {
     publishDir "${params.outdir}/families/", mode: "copy"
     
@@ -42,7 +24,6 @@ process REFINE_FAMILIES {
     input:
     path(clusters_pkl)
     path(fasta)
-    path(fasta_pkl)
     val(minimum_members)
 
     output:
@@ -55,7 +36,7 @@ process REFINE_FAMILIES {
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${fasta} ${fasta_pkl} ${minimum_members}
+    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${fasta} ${minimum_members}
     """
 }
 
