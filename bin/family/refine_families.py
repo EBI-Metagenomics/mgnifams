@@ -92,7 +92,7 @@ def get_next_largest_family(clusters_bookkeeping_df):
         file.write(str(time.time() - start_time) +"\n")
         file.write(f"S: {largest_family_rep}, s: {len(largest_family_members)}\n")
 
-    return largest_family_rep, largest_family_members.tolist() if isinstance(largest_family_members, pd.Series) else [largest_family_members]
+    return largest_family_members.tolist() if isinstance(largest_family_members, pd.Series) else [largest_family_members]
 
 def write_family_fasta_file(members, mgnifams_fasta_dict, output_fasta):
     start_time = time.time()
@@ -125,7 +125,7 @@ def run_msa(input_fasta, output_msa, family_size):
 def run_hmmbuild(msa_file, output_hmm):
     start_time = time.time()                    
 
-    hmmbuild_command = ["hmmbuild", "--informat", "afa", output_hmm, msa_file]
+    hmmbuild_command = ["hmmbuild", "--amino", "--informat", "afa", output_hmm, msa_file]
     subprocess.run(hmmbuild_command, stdout=subprocess.DEVNULL)
     
     with open(log_file, 'a') as file:
@@ -213,12 +213,12 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
         if (number_of_remaining_sequences <= 2000):
-            threshold -= 0.1
             break
         else:
+            threshold -= 0.1
             with open(log_file, 'a') as file:
                 file.write("Rerunning run_esl_weight: ")
-            shutil.copy(output_file, tmp_intermediate_esl_path)  
+            shutil.copy(output_file, tmp_intermediate_esl_path)
 
     with open(log_file, 'a') as file:
         file.write("run_esl_weight: ")
@@ -238,9 +238,9 @@ def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
     filtered_sequences = []
     kept_identifiers = [] 
     for record in SeqIO.parse(tmp_family_sequences_path, "fasta"):
-        if record.id.split('/')[0] in identifiers:
+        if record.id in identifiers:
             filtered_sequences.append(record)
-            kept_identifiers.append(record.id)
+            kept_identifiers.append(record.id.split('/')[0])
 
     # Step 3: Write the filtered sequences back
     SeqIO.write(filtered_sequences, tmp_family_sequences_path, "fasta")
@@ -251,23 +251,23 @@ def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
 
     return kept_identifiers
 
-def append_family_file(output_file, family_rep, family_members):
+def append_family_file(output_file, iteration, family_members):
     start_time = time.time()
 
-    lines = [f"{family_rep}\t{member}\n" for member in family_members]
+    lines = [f"mgnifam{iteration}\t{member}\n" for member in family_members]
     with open(output_file, 'a') as file:
         file.writelines(lines)
 
     with open(log_file, 'a') as file:
         file.write("append_family_file: ")
         file.write(str(time.time() - start_time) + "\n")
-        file.write(f"E: {family_rep}, s: {len(family_members)}\n")
+        file.write(f"E: mgnifam{iteration}, s: {len(family_members)}\n")
 
-def move_produced_models(family_rep, size):
-    shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder, f'{family_rep}_{size}.fa'))
-    shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'{family_rep}_{size}.fa'))
-    shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'{family_rep}_{size}.hmm'))
-    shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'{family_rep}_{size}.domtblout'))
+def move_produced_models(iteration, size):
+    shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder, f'mgnfam{iteration}_{size}.fa'))
+    shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'mgnfam{iteration}_{size}.fa'))
+    shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'mgnfam{iteration}_{size}.hmm'))
+    shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'mgnfam{iteration}_{size}.domtblout'))
 
 def update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members):
     start_time = time.time()    
@@ -321,8 +321,10 @@ def main():
 
     clusters_bookkeeping_df = load_clusters_bookkeeping_df()
     mgnifams_fasta_dict = create_mgnifams_fasta_dict()
+    iteration = 0
     while True:
-        family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
+        iteration += 1
+        family_members = get_next_largest_family(clusters_bookkeeping_df)
         if not family_members or len(family_members) < arg_minimum_family_members:
             with open(log_file, 'a') as file:
                 file.write("Exiting all...")
@@ -360,8 +362,8 @@ def main():
             family_members = filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path) # also writes in tmp_family_sequences_path
 
         # Exiting family loop
-        append_family_file(output_families_file, family_rep, family_members)
-        move_produced_models(family_rep, len(family_members))
+        append_family_file(output_families_file, iteration, family_members)
+        move_produced_models(iteration, len(family_members))
         clusters_bookkeeping_df, sequences_to_remove = update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members)
         mgnifams_fasta_dict = update_mgnifams_fasta_dict(mgnifams_fasta_dict, sequences_to_remove)
         remove_tmp_files(tmp_folder)
