@@ -272,12 +272,12 @@ def move_produced_models(iteration, size):
 def update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members):
     start_time = time.time()    
 
-    sequences_to_remove = []
+    sequences_to_remove = [] # TODO split function: get cluster_reps_to_remove()
     split_members = [member.split('/')[0] for member in family_members]
     # Match these sequences to their family representatives and keep unique
-    unique_reps = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(split_members)].index.unique()
+    unique_reps = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(split_members)].index.unique() # TODO write outfile
     # Get all members of these unique reps into sequences_to_remove
-    for rep in unique_reps:
+    for rep in unique_reps: # TODO create other functions for this, to be called again in the restart
         members = clusters_bookkeeping_df.loc[rep, 'member']
         if isinstance(members, pd.Series):
             sequences_to_remove.extend(members.tolist())
