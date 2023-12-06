@@ -1,76 +1,35 @@
-process CREATEDB {
-    publishDir "${params.outdir}/mmseqs", mode: "copy"
-    label "mmseqs"
-
-    input:
-    path fasta
-
-    output:
-    path "${fastaName}_DB/*"
-
-    script:
-    fastaName = "${fasta.getName().tokenize('.')[0]}"
-
-    """
-    mkdir ${fastaName}_DB
-    mmseqs createdb ${fasta} ${fastaName}_DB/${fastaName}_DB > /dev/null 2>&1
-    """
-}
-
-process LINCLUST {
-    publishDir "${params.outdir}/mmseqs", mode: "copy"
-    label "mmseqs"
-
-    input:
-    path mmseqs_DB
-
-    output:
-    path "${dbName}_clu/*"
-
-    script:
-    dbName = "${mmseqs_DB[0]}"
-
-    """
-    mkdir ${dbName}_clu
-    mmseqs linclust \
-    ${dbName} \
-    ${dbName}_clu/${dbName}_clu \
-    tmp \
-    --min-seq-id ${params.seq_identity} \
-    --cov-mode 1 \
-    -c ${params.coverage} \
-    --threads ${task.cpus} > /dev/null 2>&1
-    """
-}
-
 process CREATETSV {
     publishDir "${params.outdir}/mmseqs", mode: "copy"
-    label "mmseqs"
+    
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mmseqs2:15.6f452--pl5321h6a68c12_0':
+        'biocontainers/mmseqs2:15.6f452--pl5321h6a68c12_0' }"
 
     input:
-    path mmseqs_DB
-    path mmseqs_clu
+    tuple val(meta1), path(mmseqs_DB)
+    tuple val(meta2), path(mmseqs_clu)
 
     output:
-    path "${cluName}.tsv"
+    tuple val(meta2), path("${mmseqs_clu}.tsv"), emit: tsv
 
     script:
-    dbName = "${mmseqs_DB[0]}"
-    cluName = "${mmseqs_clu.baseName[0]}"
-
     """
-    mmseqs createtsv \
-    ${dbName} \
-    ${dbName} \
-    ${cluName} \
-    ${cluName}.tsv \
-    --threads ${task.cpus} > /dev/null 2>&1
+    mmseqs \\
+        createtsv \\
+        ${mmseqs_DB}/${mmseqs_DB} \\
+        ${mmseqs_DB}/${mmseqs_DB} \\
+        ${mmseqs_clu}/${mmseqs_clu} \\
+        ${mmseqs_clu}.tsv \\
+        --threads ${task.cpus} \\
     """
 }
 
 process CONVERT2FASTA {
     publishDir "${params.outdir}/mmseqs", mode: "copy"
-    label "mmseqs"
+
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mmseqs2:15.6f452--pl5321h6a68c12_0':
+        'biocontainers/mmseqs2:15.6f452--pl5321h6a68c12_0' }"
 
     input:
     path mmseqs_DB
@@ -92,8 +51,11 @@ process CONVERT2FASTA {
 
 process CLUSTERUPDATE {
     publishDir "${params.outdir}/mmseqs", mode: "copy"
-    label "mmseqs"
     
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mmseqs2:15.6f452--pl5321h6a68c12_0':
+        'biocontainers/mmseqs2:15.6f452--pl5321h6a68c12_0' }"
+
     input:
     path mmseqs_DB_old
     path mmseqs_DB_new

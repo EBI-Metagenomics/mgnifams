@@ -1,20 +1,18 @@
 #!/usr/bin/env nextflow
 
-include { CREATEDB; LINCLUST; CREATETSV } from "$baseDir/modules/mmseqs2.nf"
-include { EXPORT_CLUSTERING_CSV } from "$baseDir/modules/export.nf"
+include { MMSEQS_CREATEDB  } from "$launchDir/modules/mmseqs/createdb/main.nf"
+include { MMSEQS_LINCLUST  } from "$launchDir/modules/mmseqs/linclust/main.nf"
+include { CREATETSV        } from "$launchDir/modules/mmseqs2.nf"
 
 workflow EXECUTE_CLUSTERING {
     take:
     fasta_file
 
     main:
-    db_ch = CREATEDB(fasta_file)
-    clu_ch = LINCLUST(db_ch)
-    clu_tsv = CREATETSV(db_ch, clu_ch)
-    EXPORT_CLUSTERING_CSV(clu_tsv)
-    // rep_fa = CONVERT2FASTA(db_ch, clu_ch)
+    mmseqs_db = MMSEQS_CREATEDB( [ [ id:'mmseqs_db' ], fasta_file ] ).db
+    mmseqs_families = MMSEQS_LINCLUST(mmseqs_db).db_cluster
+    families_tsv = CREATETSV(mmseqs_db, mmseqs_families)
     
     emit:
-    clu_tsv
-    // rep_fa
+    families_tsv
 }
