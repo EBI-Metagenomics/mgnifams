@@ -18,6 +18,7 @@ def parse_args():
 
     globals().update({
         "arg_clusters_bookkeeping_df_pkl_file" : sys.argv[1],
+        # TODO "arg_refined_families_tsv_file" 2nd arg: (updated_)refined_families, to find and remove clusters
         "arg_mgnifams_dict_fasta_file"         : sys.argv[2],
         "arg_minimum_family_members"           : int(sys.argv[3])
     })   
@@ -59,6 +60,18 @@ def load_clusters_bookkeeping_df():
 
     with open(log_file, 'w') as file:
         file.write("load_clusters_bookkeeping_df: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    return clusters_bookkeeping_df
+
+#TODO
+def update_clusters_bookkeeping_df():
+    start_time = time.time()
+
+    # TODO arg_refined_families_tsv_file
+
+    with open(log_file, 'w') as file:
+        file.write("update_clusters_bookkeeping_df: ")
         file.write(str(time.time() - start_time) + "\n")
 
     return clusters_bookkeeping_df
@@ -195,11 +208,11 @@ def run_hmmalign(input_file, hmm_file, output_file):
         file.write("run_hmmalign: ")
         file.write(str(time.time() - start_time) + "\n")
 
-def get_number_of_remaining_sequences(output_file):
-    with open(output_file, "r") as file:
-        alignment = AlignIO.read(file, "stockholm")
+def get_sequences_from_stockholm(file):
+    with open(file, "r") as f:
+        alignment = AlignIO.read(f, "stockholm")
 
-    return len(alignment)
+    return alignment
 
 def run_esl_weight(input_file, output_file, threshold=0.8):
     start_time = time.time()
@@ -209,7 +222,7 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
     while True:
         esl_weight_command = ["esl-weight", "--amino", "-f", "--idf", str(threshold), "-o", output_file, tmp_intermediate_esl_path]
         subprocess.run(esl_weight_command, stdout=subprocess.DEVNULL)
-        number_of_remaining_sequences = get_number_of_remaining_sequences(output_file)
+        number_of_remaining_sequences = len(get_sequences_from_stockholm(output_file))
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
         if (number_of_remaining_sequences <= 2000):
@@ -229,10 +242,9 @@ def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
 
     # Step 1: Read identifiers from tmp_esl_weight_path using AlignIO
     identifiers = set()
-    with open(tmp_esl_weight_path, "r") as stockholm_file:
-        alignment = AlignIO.read(stockholm_file, "stockholm")
-        for record in alignment:
-            identifiers.add(record.id)
+    alignment = get_sequences_from_stockholm(tmp_esl_weight_path)
+    for record in alignment:
+        identifiers.add(record.id)
 
     # Step 2: Read and filter sequences in tmp_family_sequences_path
     filtered_sequences = []
@@ -250,6 +262,19 @@ def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
         file.write(str(time.time() - start_time) + "\n")
 
     return kept_identifiers
+
+def get_final_family_members(filtered_seq_names):
+    start_time = time.time()
+
+    family_members = set()
+    for name in filtered_seq_names:
+        family_members.add(name.split('/')[0])
+
+    with open(log_file, 'a') as file:
+        file.write("get_final_family_members: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    return family_members
 
 def append_family_file(output_file, iteration, family_members):
     start_time = time.time()
@@ -269,13 +294,13 @@ def move_produced_models(iteration, size):
     shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'mgnfam{iteration}_{size}.hmm'))
     shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'mgnfam{iteration}_{size}.domtblout'))
 
+# TODO update
 def update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members):
     start_time = time.time()    
 
     sequences_to_remove = [] # TODO split function: get cluster_reps_to_remove()
-    split_members = [member.split('/')[0] for member in family_members]
     # Match these sequences to their family representatives and keep unique
-    unique_reps = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(split_members)].index.unique() # TODO write outfile
+    unique_reps = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(family_members)].index.unique()
     # Get all members of these unique reps into sequences_to_remove
     for rep in unique_reps: # TODO create other functions for this, to be called again in the restart
         members = clusters_bookkeeping_df.loc[rep, 'member']
@@ -286,7 +311,7 @@ def update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members):
     # Remove all lines having these family_reps from the clusters_bookkeeping_df
     clusters_bookkeeping_df = clusters_bookkeeping_df[~clusters_bookkeeping_df.index.isin(unique_reps)]
     
-    clusters_bookkeeping_df.to_pickle(updated_clusters_bookkeeping_df_pkl_file)
+    # clusters_bookkeeping_df.to_pickle(updated_clusters_bookkeeping_df_pkl_file) # TODO remove, replace with new restart strategy
 
     with open(log_file, 'a') as file:
         file.write("update_clusters_bookkeeping_df: ")
@@ -334,6 +359,7 @@ def main():
         total_checked_sequences = family_members
         exit_flag = False
         family_iteration = 0
+        filtered_seq_names = []
         while True:
             family_iteration += 1
             if (family_iteration > 3):
@@ -349,7 +375,7 @@ def main():
             run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
             filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict) # also writes in tmp_family_sequences_path
             run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
-            
+
             recruited_sequences = set(filtered_seq_names) - set(total_checked_sequences)
             if not recruited_sequences:
                 exit_flag = True
@@ -362,6 +388,7 @@ def main():
             family_members = filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path) # also writes in tmp_family_sequences_path
 
         # Exiting family loop
+        family_members = get_final_family_members(filtered_seq_names)
         append_family_file(output_families_file, iteration, family_members)
         move_produced_models(iteration, len(family_members))
         clusters_bookkeeping_df, sequences_to_remove = update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members)
