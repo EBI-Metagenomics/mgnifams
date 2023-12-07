@@ -5,17 +5,13 @@ include { REFINE_FAMILIES     } from "${launchDir}/modules/family/main.nf"
 
 workflow GENERATE_FAMILIES {
     take:
-    families_tsv
+    clusters_tsv
+    refined_families_tsv
     mgnifams_fasta
-    mode
-    
+
     main:
-    if (mode == "load_state") {
-        families_pkl = file(params.families_pkl_path)
-    } else {
-        families_pkl = CREATE_CLUSTERS_PKL(families_tsv).pkl
-    }
-    refined_families = REFINE_FAMILIES(families_pkl, mgnifams_fasta, params.minimum_members)
+    clusters_pkl = CREATE_CLUSTERS_PKL(clusters_tsv).pkl
+    refined_families = REFINE_FAMILIES(clusters_pkl, refined_families_tsv, mgnifams_fasta, params.minimum_members)
 
     emit:
     tsv = refined_families.tsv

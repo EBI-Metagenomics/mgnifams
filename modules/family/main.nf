@@ -23,6 +23,7 @@ process REFINE_FAMILIES {
     
     input:
     path(clusters_pkl)
+    path(families_tsv)
     path(fasta)
     val(minimum_members)
 
@@ -36,7 +37,7 @@ process REFINE_FAMILIES {
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${fasta} ${minimum_members}
+    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${fasta} ${minimum_members}
     """
 }
 

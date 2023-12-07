@@ -1,5 +1,4 @@
 import sys
-import shutil
 import pickle
 import pandas as pd
 
@@ -16,8 +15,8 @@ def parse_args():
 
 def define_globals():
     globals().update({
-        "log_file"                         : "log.txt",
-        "clusters_bookkeeping_df_pkl_file" : "clusters_bookkeeping_df.pkl"
+        "log_file"                          : "log.txt",
+        "clusters_bookkeeping_df_pkl_file"  : "clusters_bookkeeping_df.pkl"
     })
     
 def create_clusters_bookkeeping_df():
@@ -26,7 +25,8 @@ def create_clusters_bookkeeping_df():
     df = pd.read_csv(linclust_input_file, sep='\t', header=None, names=['representative', 'member'])
     family_sizes = df.groupby('representative').size()
     clusters_bookkeeping_df = df.set_index('representative').join(family_sizes.rename('size'), on='representative')
-    clusters_bookkeeping_df.to_pickle(clusters_bookkeeping_df_pkl_file)
+    with open(clusters_bookkeeping_df_pkl_file, 'wb') as file:
+        pickle.dump(clusters_bookkeeping_df, file)
 
     with open(log_file, 'w') as file:
         file.write("create_clusters_bookkeeping_df: ")
