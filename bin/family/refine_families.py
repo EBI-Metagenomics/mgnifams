@@ -66,8 +66,7 @@ def copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_fami
 def load_clusters_bookkeeping_df(arg_clusters_bookkeeping_df_pkl_file):
     start_time = time.time()
 
-    with open(arg_clusters_bookkeeping_df_pkl_file, 'rb') as file:
-        clusters_bookkeeping_df = pickle.load(file)
+    clusters_bookkeeping_df = pd.read_pickle(arg_clusters_bookkeeping_df_pkl_file)
 
     with open(log_file, 'a') as file:
         file.write("load_clusters_bookkeeping_df: ")
