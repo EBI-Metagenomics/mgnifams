@@ -9,7 +9,7 @@ workflow ANNOTATE_MODELS {
     db
     
     main:
-    a2m_fasta_ch = HHSUITE_REFORMAT(fasta_ch, "sto", "a3m").fa
+    a2m_fasta_ch = HHSUITE_REFORMAT(fasta_ch, "fas", "a3m").fa
     hhr_ch = HHSUITE_HHBLITS(a2m_fasta_ch, db, "pfam").hhr // TODO check if .first is needed in db
 
     emit:
