@@ -124,14 +124,8 @@ def write_fasta_sequences(sequences, file_path, mode):
         SeqIO.write(sequences, output_handle, "fasta")
 
 def write_family_fasta_file(members, mgnifams_fasta_dict, output_fasta):
-    start_time = time.time()
     sequences_to_write = [mgnifams_fasta_dict[member] for member in members if member in mgnifams_fasta_dict]
-
     write_fasta_sequences(sequences_to_write, output_fasta, "w")
-
-    with open(log_file, 'a') as file:
-        file.write("write_family_fasta_file: ")
-        file.write(str(time.time() - start_time) + "\n")
 
 def run_msa(input_fasta, output_msa, family_size):
     start_time = time.time()
@@ -277,16 +271,7 @@ def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
     return kept_identifiers
 
 def get_final_family_original_names(filtered_seq_names):
-    start_time = time.time()
-
-    family_members = set()
-    for name in filtered_seq_names:
-        family_members.add(name.split('/')[0])
-
-    with open(log_file, 'a') as file:
-        file.write("get_final_family_original_names: ")
-        file.write(str(time.time() - start_time) + "\n")
-
+    family_members = {name.split('/')[0] for name in filtered_seq_names}
     return family_members
 
 def append_family_file(output_file, iteration, family_members):
@@ -312,16 +297,15 @@ def update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members):
 
     # Match family_members to their family representatives and keep unique
     unique_reps = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(family_members)].index.unique()
-    sequences_to_remove = []
-    # Get all members of these unique reps into sequences_to_remove
-    for rep in unique_reps:
-        members = clusters_bookkeeping_df.loc[rep, 'member']
-        if isinstance(members, pd.Series):
-            sequences_to_remove.extend(members.tolist())
-        else:
-            sequences_to_remove.append(members)
+    # Flatten the 'member' column and filter based on unique_reps, then get unique values
+    sequences_to_remove = clusters_bookkeeping_df.loc[clusters_bookkeeping_df.index.isin(unique_reps), 'member']
+    if isinstance(sequences_to_remove.iloc[0], list):  # Check if the 'member' column contains lists
+        sequences_to_remove = sequences_to_remove.explode().unique().tolist()
+    else:
+        sequences_to_remove = sequences_to_remove.unique().tolist()
     # Remove all lines having these family_reps from the clusters_bookkeeping_df
-    clusters_bookkeeping_df = clusters_bookkeeping_df[~clusters_bookkeeping_df.index.isin(unique_reps)]
+    indices_to_remove = clusters_bookkeeping_df.index[clusters_bookkeeping_df.index.isin(unique_reps)]
+    clusters_bookkeeping_df.drop(index=indices_to_remove, inplace=True)
 
     with open(log_file, 'a') as file:
         file.write("update_clusters_bookkeeping_df: ")
