@@ -8,7 +8,6 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 from Bio import AlignIO
-
 import time # benchmarking
 
 def parse_args():
@@ -81,7 +80,8 @@ def exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_
         refined_families_df = pd.read_csv(arg_refined_families_tsv_file, delimiter='\t', header=None, dtype=str)
         members_to_remove = refined_families_df.iloc[:, 1].apply(lambda x: x.split('/')[0]).unique().tolist()
         clusters_to_remove = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(members_to_remove)].index.unique().tolist()
-        clusters_bookkeeping_df = clusters_bookkeeping_df[~clusters_bookkeeping_df.index.isin(clusters_to_remove)]
+        # Modify the DataFrame in place
+        clusters_bookkeeping_df.drop(index=clusters_to_remove, inplace=True)
 
     with open(log_file, 'a') as file:
         file.write("exclude_existing_families: ")
@@ -107,17 +107,17 @@ def get_next_largest_family(clusters_bookkeeping_df):
         return None, None
 
     largest_family_rep = clusters_bookkeeping_df['size'].idxmax()
-    largest_family_members = clusters_bookkeeping_df.loc[largest_family_rep]['member']
-    if isinstance(largest_family_members, str):
-        # If it's a single string, convert to a list with one element, else len counts the str characters
-        largest_family_members = [largest_family_members]
+    largest_family_members = clusters_bookkeeping_df.loc[largest_family_rep, 'member']
+    # Ensure that largest_family_members is a list
+    if not isinstance(largest_family_members, list):
+        largest_family_members = [largest_family_members] if isinstance(largest_family_members, str) else largest_family_members.tolist()
 
     with open(log_file, 'a') as file:
-        file.write("get_next_largest_family: ")
-        file.write(str(time.time() - start_time) +"\n")
+        file.write("\nget_next_largest_family: ")
+        file.write(str(time.time() - start_time) + "\n")
         file.write(f"S: {largest_family_rep}, s: {len(largest_family_members)}\n")
 
-    return largest_family_members.tolist() if isinstance(largest_family_members, pd.Series) else [largest_family_members]
+    return largest_family_members
 
 def write_fasta_sequences(sequences, file_path, mode):
     with open(file_path, mode) as output_handle:
@@ -245,8 +245,6 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
         file.write(str(time.time() - start_time) + "\n")
 
 def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
-    start_time = time.time()
-
     # Step 1: Read identifiers from tmp_esl_weight_path using AlignIO
     identifiers = set()
     alignment = get_sequences_from_stockholm(tmp_esl_weight_path)
@@ -264,26 +262,14 @@ def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
     # Step 3: Write the filtered sequences back
     write_fasta_sequences(filtered_sequences, tmp_family_sequences_path, "w")
 
-    with open(log_file, 'a') as file:
-        file.write("filter_out_redundant: ")
-        file.write(str(time.time() - start_time) + "\n")
-
     return kept_identifiers
 
-def get_final_family_original_names(filtered_seq_names):
-    family_members = {name.split('/')[0] for name in filtered_seq_names}
-    return family_members
-
 def append_family_file(output_file, iteration, family_members):
-    start_time = time.time()
-
     lines = [f"mgnifam{iteration}\t{member}\n" for member in family_members]
     with open(output_file, 'a') as file:
         file.writelines(lines)
 
     with open(log_file, 'a') as file:
-        file.write("append_family_file: ")
-        file.write(str(time.time() - start_time) + "\n")
         file.write(f"E: mgnifam{iteration}, s: {len(family_members)}\n")
 
 def move_produced_models(iteration, size):
@@ -291,6 +277,10 @@ def move_produced_models(iteration, size):
     shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'mgnfam{iteration}_{size}.fa'))
     shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'mgnfam{iteration}_{size}.hmm'))
     shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'mgnfam{iteration}_{size}.domtblout'))
+
+def get_final_family_original_names(filtered_seq_names):
+    family_members = {name.split('/')[0] for name in filtered_seq_names}
+    return family_members
 
 def update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members):
     start_time = time.time()    
@@ -339,8 +329,8 @@ def remove_tmp_files(folder_path):
 def main():
     parse_args()
     define_globals()
-    copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file, arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file)
 
+    copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file, arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file)
     clusters_bookkeeping_df = load_clusters_bookkeeping_df(arg_clusters_bookkeeping_df_pkl_file)
     clusters_bookkeeping_df = exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_file) # restarting mechanism
     mgnifams_fasta_dict = create_mgnifams_fasta_dict(arg_mgnifams_dict_fasta_file)
