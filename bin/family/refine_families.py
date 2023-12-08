@@ -316,8 +316,11 @@ def update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members):
 def update_mgnifams_fasta_dict(mgnifams_fasta_dict, sequences_to_remove):
     start_time = time.time()
     
-    # Filter out the sequences to remove using dictionary comprehension
-    mgnifams_fasta_dict = {key: value for key, value in mgnifams_fasta_dict.items() if key not in sequences_to_remove}
+    # Convert sequences_to_remove to a set for faster lookup
+    sequences_to_remove_set = set(sequences_to_remove)
+    # Remove sequences in place
+    for seq in sequences_to_remove_set:
+        mgnifams_fasta_dict.pop(seq, None)
 
     write_fasta_sequences(mgnifams_fasta_dict.values(), updated_mgnifams_dict_fasta_file, "w")
 
