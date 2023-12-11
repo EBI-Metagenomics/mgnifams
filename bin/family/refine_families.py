@@ -117,7 +117,7 @@ def get_next_largest_family(clusters_bookkeeping_df):
         file.write(str(time.time() - start_time) + "\n")
         file.write(f"S: {largest_family_rep}, s: {len(largest_family_members)}\n")
 
-    return largest_family_members
+    return largest_family_rep, largest_family_members
 
 def write_fasta_sequences(sequences, file_path, mode):
     with open(file_path, mode) as output_handle:
@@ -282,11 +282,15 @@ def get_final_family_original_names(filtered_seq_names):
     family_members = {name.split('/')[0] for name in filtered_seq_names}
     return family_members
 
-def update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_members):
-    start_time = time.time()    
-
+def get_cluster_reps(clusters_bookkeeping_df, family_members):
     # Match family_members to their family representatives and keep unique
     unique_reps = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(family_members)].index.unique()
+
+    return unique_reps
+
+def update_clusters_bookkeeping_df(clusters_bookkeeping_df, unique_reps):
+    start_time = time.time()    
+
     # Flatten the 'member' column and filter based on unique_reps, then get unique values
     sequences_to_remove = clusters_bookkeeping_df.loc[clusters_bookkeeping_df.index.isin(unique_reps), 'member']
     if isinstance(sequences_to_remove.iloc[0], list):  # Check if the 'member' column contains lists
@@ -337,7 +341,7 @@ def main():
     iteration = arg_iteration
     while True:
         iteration += 1
-        family_members = get_next_largest_family(clusters_bookkeeping_df)
+        largest_family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
         if not family_members or len(family_members) < arg_minimum_family_members:
             with open(log_file, 'a') as file:
                 file.write("Exiting all...")
@@ -345,6 +349,7 @@ def main():
         
         write_family_fasta_file(family_members, mgnifams_fasta_dict, tmp_family_sequences_path)
         total_checked_sequences = family_members
+        discard_flag = False
         exit_flag = False
         family_iteration = 0
         filtered_seq_names = []
@@ -362,6 +367,9 @@ def main():
             run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
             run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
             filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict) # also writes in tmp_family_sequences_path
+            if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
+                discard_flag = True
+                break
             run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
 
             recruited_sequences = set(filtered_seq_names) - set(total_checked_sequences)
@@ -376,10 +384,19 @@ def main():
             family_members = filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path) # also writes in tmp_family_sequences_path
 
         # Exiting family loop
-        append_family_file(updated_refined_families_tsv_file, iteration, filtered_seq_names)
-        move_produced_models(iteration, len(filtered_seq_names))
-        family_original_names = get_final_family_original_names(filtered_seq_names)
-        clusters_bookkeeping_df, sequences_to_remove = update_clusters_bookkeeping_df(clusters_bookkeeping_df, family_original_names)
+        if (discard_flag): # unsuccessfully
+            with open(log_file, 'a') as file:
+                file.write("Discarding cluster " + str(largest_family_rep) + "\n")
+
+            iteration -= 1
+            unique_reps = [largest_family_rep]
+        else: # successfully
+            append_family_file(updated_refined_families_tsv_file, iteration, filtered_seq_names)
+            move_produced_models(iteration, len(filtered_seq_names))
+            family_original_names = get_final_family_original_names(filtered_seq_names)
+            unique_reps = get_cluster_reps(clusters_bookkeeping_df, family_original_names)
+
+        clusters_bookkeeping_df, sequences_to_remove = update_clusters_bookkeeping_df(clusters_bookkeeping_df, unique_reps)
         mgnifams_fasta_dict = update_mgnifams_fasta_dict(mgnifams_fasta_dict, sequences_to_remove)
         remove_tmp_files(tmp_folder)
 
