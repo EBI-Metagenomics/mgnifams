@@ -1,7 +1,7 @@
 process HHSUITE_REFORMAT {
     tag "$meta.id"
     label 'process_single'
-
+    
     conda "${moduleDir}/environment.yml"
 
     input:
@@ -10,8 +10,8 @@ process HHSUITE_REFORMAT {
     val(outformat)
 
     output:
-    tuple val(meta), path("*.${outformat}"), emit: fa
-    path "versions.yml"                    , emit: versions
+    tuple val(meta), path("reformatted"), emit: fa
+    path "versions.yml"                 , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,13 +20,19 @@ process HHSUITE_REFORMAT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    ${moduleDir}/templates/reformat.pl \\
-        $args \\
-        ${informat} \\
-        ${outformat} \\
-        ${fa} \\
-        ${prefix}.${outformat}
+    mkdir -p reformatted
 
+    for file in ${fa}/*; do
+        name=\$(basename \$file .fa)
+
+        ${moduleDir}/templates/reformat.pl \\
+            $args \\
+            ${informat} \\
+            ${outformat} \\
+            \$file \\
+            reformatted/\$name.${outformat}
+    done
+    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         hh-suite: \$(hhblits -h | grep 'HHblits' | sed -n -e 's/.*\\([0-9]\\+\\.[0-9]\\+\\.[0-9]\\+\\).*/\\1/p')
@@ -37,7 +43,9 @@ process HHSUITE_REFORMAT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.${outformat}
+    mkdir -p reformatted
+
+    touch reformatted/${prefix}.${outformat}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

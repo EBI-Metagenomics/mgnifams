@@ -1,5 +1,5 @@
-process HHSUITE_HHBLITS {
-    publishDir "${params.outdir}/hh/hhblits", mode: "copy"
+process HHSUITE_HHSEARCH {
+    publishDir "${params.outdir}/hh/hhsearch", mode: "copy"
     tag "$meta.id"
     label 'process_medium'
 
@@ -28,7 +28,7 @@ process HHSUITE_HHBLITS {
 
     for a3m_file in ${a3m_folder}/*; do
         name=\$(basename \$a3m_file .a3m)
-        hhblits \\
+        hhsearch \\
             $args \\
             -cpu $task.cpus \\
             -i \$a3m_file \\
