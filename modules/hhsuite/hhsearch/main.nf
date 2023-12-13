@@ -1,5 +1,4 @@
 process HHSUITE_HHSEARCH {
-    publishDir "${params.outdir}/hh/hhsearch", mode: "copy"
     tag "$meta.id"
     label 'process_medium'
 

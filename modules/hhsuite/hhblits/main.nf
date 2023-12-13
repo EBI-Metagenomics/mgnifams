@@ -1,5 +1,4 @@
 process HHSUITE_HHBLITS {
-    publishDir "${params.outdir}/hh/hhblits", mode: "copy"
     tag "$meta.id"
     label 'process_medium'
 
