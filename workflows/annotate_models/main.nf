@@ -10,5 +10,5 @@ workflow {
         }
         .set { msa_ch }
     
-    ANNOTATE_MODELS( msa_ch, params.hhdb_folder_path )
+    ANNOTATE_MODELS( msa_ch, params.hhdb_folder_path, "hhblits" )
 }
