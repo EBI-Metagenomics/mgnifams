@@ -29,6 +29,23 @@ process REMOVE_HEADER {
     """
 }
 
+process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
+    label "general"
+
+    input:
+    path msa
+    path ids
+    val mode
+
+    output:
+    path "family_reps.fasta"
+
+    script:
+    """
+    python3 ${params.scriptDir}/extract_first_stockholm_sequences.py ${msa} ${ids} ${mode} family_reps.fasta
+    """
+}
+
 process EXTRACT_UNIQUE_IDS {
     label "general"
 
