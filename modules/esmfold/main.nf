@@ -1,6 +1,7 @@
 process ESMFOLD {
     tag "$meta.id"
     label 'process_high'
+    publishDir "${params.outdir}/pdb", mode: "copy"
 
     conda params.esm_conda_path
     
