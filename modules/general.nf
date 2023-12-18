@@ -30,7 +30,7 @@ process REMOVE_HEADER {
 }
 
 process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
-    label "general"
+    label "venv"
 
     input:
     path msa
