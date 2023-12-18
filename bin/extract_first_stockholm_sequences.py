@@ -14,9 +14,10 @@ def process_file(file_path, ids, output_fasta, mode):
     alignment = AlignIO.read(file_path, "stockholm")
     first_record = alignment[0]
     sequence = ''.join([c.upper() for c in first_record.seq if c.isalpha()])
+    sequence_id = first_record.id.replace('/', '_')
 
     with open(output_fasta, 'a') as out_f:
-        out_f.write(f">{basename}_{first_record.id}\n{sequence}\n")
+        out_f.write(f">{basename}-{sequence_id}\n{sequence}\n")
 
 def main(input_msa_folder, unannotated_ids_path, mode, output_fasta):
     if mode not in ["unannotated", "all"]:
