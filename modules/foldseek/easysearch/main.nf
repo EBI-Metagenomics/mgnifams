@@ -13,8 +13,8 @@ process FOLDSEEK_EASYSEARCH {
     tuple val(meta_db), path(db)
 
     output:
-    tuple val(meta), path("${meta.id}.m8"), emit: aln
-    path "versions.yml"                   , emit: versions
+    tuple val(meta), path("*.m8"), emit: aln
+    path "versions.yml"          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -27,7 +27,7 @@ process FOLDSEEK_EASYSEARCH {
         easy-search \\
         ${pdb} \\
         ${db}/${meta_db.id} \\
-        ${prefix}.m8 \\
+        ${meta_db.id}_${prefix}.m8 \\
         tmpFolder \\
         ${args}
 
@@ -42,7 +42,7 @@ process FOLDSEEK_EASYSEARCH {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    touch ${prefix}.m8
+    touch ${meta_db.id}_${prefix}.m8
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
