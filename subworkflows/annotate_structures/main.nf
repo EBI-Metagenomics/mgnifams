@@ -4,14 +4,13 @@ include { FOLDSEEK_EASYSEARCH } from "$launchDir/modules/foldseek/easysearch/mai
 
 workflow ANNOTATE_STRUCTURES {
     take:
-    pdb_dir
+    pdb_ch
     
     main:
     def foldseek_pdb_path = params.foldseek_db_path + "/pdb"
     
-    pdb = [ [ id:'pdb_data' ], pdb_dir ]
     pdb_db = [ [ id:'pdb' ], file(foldseek_pdb_path) ]
-    pdb_aln = FOLDSEEK_EASYSEARCH(pdb, pdb_db).aln
+    pdb_aln = FOLDSEEK_EASYSEARCH(pdb_ch, pdb_db).aln
 
     emit:
     pdb_aln
