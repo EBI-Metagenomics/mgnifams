@@ -3,6 +3,7 @@
 include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_PDB        } from "$launchDir/modules/foldseek/easysearch/main.nf"
 include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_ALPHAFOLDB } from "$launchDir/modules/foldseek/easysearch/main.nf"
 include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_ESM        } from "$launchDir/modules/foldseek/easysearch/main.nf"
+include { FIND_ANNOTATED_FAMILIES_BY_STRUCTURE                  } from "$launchDir/modules/foldseek/find.nf"
 
 workflow ANNOTATE_STRUCTURES {
     take:
@@ -26,8 +27,16 @@ workflow ANNOTATE_STRUCTURES {
         esm_aln = FOLDSEEK_EASYSEARCH_ESM(pdb_ch, esm_db).aln
     }
 
+    result_files = pdb_aln
+        .concat(alphafold_aln)
+        .concat(esm_aln)
+        .map { it[1] }
+        .collectFile(name: 'foldseek_results.m8')
+    annotated =  FIND_ANNOTATED_FAMILIES_BY_STRUCTURE(result_files).annotated
+
     emit:
     pdb_aln
     alphafold_aln
     esm_aln
+    annotated
 }
