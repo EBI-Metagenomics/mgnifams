@@ -10,6 +10,6 @@ process FIND_ANNOTATED_FAMILIES_BY_STRUCTURE {
 
     script:
     """
-    awk '{print \$1}' ${m8s} | cut -d'_' -f 1 | sort | uniq > annotated.txt
+    awk '{print \$1}' ${m8s} | cut -d'-' -f 1 | sort | uniq > annotated.txt
     """
 }
