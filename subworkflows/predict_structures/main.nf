@@ -2,6 +2,7 @@
 
 include { EXTRACT_FIRST_STOCKHOLM_SEQUENCES } from "$launchDir/modules/general.nf"
 include { ESMFOLD                           } from "$launchDir/modules/esmfold/main.nf"
+include { PARSE_CIF                         } from "$launchDir/modules/esmfold/parse_cif.nf"
 include { FOLDCOMP_COMPRESS                 } from "$launchDir/modules/foldcomp/compress/main.nf"
 
 workflow PREDICT_STRUCTURES {
@@ -23,9 +24,11 @@ workflow PREDICT_STRUCTURES {
         }
         .set { input }
     pdb_ch = ESMFOLD(input).pdb
+    cif_ch = PARSE_CIF(pdb_ch).cif
     fcz_ch = FOLDCOMP_COMPRESS(pdb_ch).fcz
 
     emit:
     pdb_ch
+    cif_ch
     fcz_ch
 }

@@ -70,21 +70,20 @@ def concat_files(file1, file2, output_file):
     subprocess.run(command, shell=True, check=True, executable='/bin/bash')
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python parse_to_cif.py <pdb_file>")
+    if len(sys.argv) != 3:
+        print("Usage: python parse_to_cif.py <pdb_file> <output_file>")
         sys.exit(1)
 
-    pdb_file = sys.argv[1]
-    file1 = "temp1.cif"
-    file2 = "temp2.cif"
-    output_file = os.path.splitext(pdb_file)[0] + '.cif'
+    pdb_file    = sys.argv[1]
+    output_file = sys.argv[2]
+    file1       = "temp1.cif"
+    file2       = "temp2.cif"
 
     write_header(file1)
     process_pdb(pdb_file, file1)
     append_cif_model(pdb_file, file2)
     concat_files(file1, file2, output_file)
     
-    print(f"Output written to {output_file}")
     os.remove(file1)
     os.remove(file2)
 
