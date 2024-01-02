@@ -29,6 +29,7 @@ process FOLDSEEK_EASYSEARCH {
         ${db}/${meta_db.id} \\
         ${meta_db.id}_${prefix}.m8 \\
         tmpFolder \\
+        -e 0.001 \\
         ${args}
 
     cat <<-END_VERSIONS > versions.yml
