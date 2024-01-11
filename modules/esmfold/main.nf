@@ -4,9 +4,10 @@ process ESMFOLD {
     publishDir "${params.outdir}/pdb", mode: "copy"
 
     conda params.esm_conda_path
-    
+
     input:
     tuple val(meta), path(fasta)
+    val(compute_mode)
 
     output:
     tuple val(meta), path("${meta.id}")           , emit: pdb
@@ -21,6 +22,7 @@ process ESMFOLD {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def is_compressed = fasta.getExtension() == "gz" ? true : false
     def fasta_name = is_compressed ? fasta.getBaseName() : fasta
+    def compute_flag = compute_mode == 'gpu' ? '' : '--cpu-only'
     """
     if [ "${is_compressed}" == "true" ]; then
         gzip -c -d ${fasta} > ${fasta_name}
@@ -29,7 +31,7 @@ process ESMFOLD {
     esm-fold \\
         -i ${fasta_name} \\
         -o ${prefix} \\
-        --cpu-only \\
+        ${compute_flag} \\
         ${args} > ${prefix}_scores.txt
 
     cat <<-END_VERSIONS > versions.yml
@@ -44,7 +46,7 @@ process ESMFOLD {
     """
     mkdir -p ${prefix}
     touch ${prefix}/${fasta}.pdb
-    ${prefix}_scores.txt
+    touch ${prefix}_scores.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

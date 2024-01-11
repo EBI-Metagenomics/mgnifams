@@ -3,17 +3,17 @@ process FOLDCOMP_COMPRESS {
     label 'process_low'
     publishDir "${params.outdir}/pdb_compressed", mode: "copy"
 
-    // conda "${moduleDir}/environment.yml"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/foldcomp:0.0.5--h43eeafb_2':
-        'biocontainers/foldcomp:0.0.5--h43eeafb_2' }"
+        'https://depot.galaxyproject.org/singularity/foldcomp:0.0.7--h43eeafb_0':
+        'biocontainers/foldcomp:0.0.7--h43eeafb_0' }"
 
     input:
     tuple val(meta), path(pdb)
 
     output:
-    tuple val(meta), path("{${meta.id}_fcz,*.fcz}"), emit: fcz
-    path "versions.yml"                            , emit: versions
+    tuple val(meta), path("*fcz"), emit: fcz
+    path "versions.yml"          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -32,7 +32,7 @@ process FOLDCOMP_COMPRESS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        foldcomp: v0.0.5
+        foldcomp: \$(foldcomp --version)
     END_VERSIONS
     """
 
@@ -44,7 +44,7 @@ process FOLDCOMP_COMPRESS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        foldcomp: v0.0.5
+        foldcomp: \$(foldcomp --version)
     END_VERSIONS
     """
 }

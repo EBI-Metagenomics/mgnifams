@@ -24,6 +24,10 @@ input:
       type: file
       description: Input fasta file containing queries sequences
       pattern: "*.{fa,fasta,fa.gz,fasta.gz}"
+  - compute_mode:
+      type: string
+      description: Execution mode depending on if system has a GPU
+      pattern: "gpu|cpu"
 output:
   - meta:
       type: map

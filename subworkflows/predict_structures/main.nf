@@ -23,7 +23,7 @@ workflow PREDICT_STRUCTURES {
             return [ [id:id], [file(filepath)] ]
         }
         .set { input }
-    pdb_ch = ESMFOLD(input).pdb
+    pdb_ch = ESMFOLD(input, params.compute_mode).pdb
     cif_ch = PARSE_CIF(pdb_ch).cif
     fcz_ch = FOLDCOMP_COMPRESS(pdb_ch).fcz
 
