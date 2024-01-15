@@ -1,6 +1,7 @@
 process HHSUITE_REFORMAT {
     tag "$meta.id"
     label 'process_single'
+    publishDir "${params.outdir}/a3m", mode: "copy"
     
     conda "${moduleDir}/environment.yml"
 
