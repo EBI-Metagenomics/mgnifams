@@ -1,10 +1,12 @@
 #!/usr/bin/env nextflow
 
-include { PREPROCESS_INPUT   } from "$launchDir/subworkflows/preprocess_input/main.nf"
-include { INITIATE_PROTEINS  } from "$launchDir/subworkflows/initiate_proteins/main.nf"
-include { EXECUTE_CLUSTERING } from "$launchDir/subworkflows/execute_clustering/main.nf"
-include { GENERATE_FAMILIES  } from "$launchDir/subworkflows/generate_families/main.nf"
-include { ANNOTATE_MODELS    } from "$launchDir/subworkflows/annotate_models/main.nf"
+include { PREPROCESS_INPUT    } from "$launchDir/subworkflows/preprocess_input/main.nf"
+include { INITIATE_PROTEINS   } from "$launchDir/subworkflows/initiate_proteins/main.nf"
+include { EXECUTE_CLUSTERING  } from "$launchDir/subworkflows/execute_clustering/main.nf"
+include { GENERATE_FAMILIES   } from "$launchDir/subworkflows/generate_families/main.nf"
+include { ANNOTATE_MODELS     } from "$launchDir/subworkflows/annotate_models/main.nf"
+include { PREDICT_STRUCTURES  } from "$launchDir/subworkflows/predict_structures/main.nf"
+include { ANNOTATE_STRUCTURES } from "$launchDir/subworkflows/annotate_structures/main.nf"
 
 workflow {
     Channel
@@ -24,4 +26,13 @@ workflow {
         }
         .set { seed_msa_dir }
     unannotated = ANNOTATE_MODELS( seed_msa_dir, params.hhdb_folder_path, "hhblits" )
+    generated_families.msa
+        .map { files ->
+            String filePath = files[0]
+            int lastIndex = filePath.lastIndexOf('/')
+            String msa_dir = filePath.substring(0, lastIndex + 1)
+        }
+        .set { msa_dir }
+    pdb_ch = PREDICT_STRUCTURES( msa_dir, unannotated, "all" ).pdb_ch
+    ANNOTATE_STRUCTURES( pdb_ch )
 }
