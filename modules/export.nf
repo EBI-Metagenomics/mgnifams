@@ -13,7 +13,7 @@ process EXPORT_PROTEINS_CSV {
     """
 }
 
-process EXPORT_PROTEINS_CSV {
+process EXPORT_MGNIFAMS_CSV {
     publishDir "${params.outdir}/tables", mode: "copy"
     label "venv"
 

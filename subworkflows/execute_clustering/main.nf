@@ -9,7 +9,7 @@ workflow EXECUTE_CLUSTERING {
     fasta_file
 
     main:
-    mmseqs_db = MMSEQS_CREATEDB( [ [ id:'mmseqs_db' ], fasta_file ] ).db
+    mmseqs_db = MMSEQS_CREATEDB( fasta_file.map { fasta -> [ [ id:'mmseqs_db' ], fasta ] } ).db
     mmseqs_families = MMSEQS_LINCLUST(mmseqs_db).db_cluster
     families_tsv = CREATETSV(mmseqs_db, mmseqs_families)
     

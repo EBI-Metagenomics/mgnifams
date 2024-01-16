@@ -5,11 +5,10 @@ include { PUBLISH_INPUT_FASTA       } from "$launchDir/modules/initiate.nf"
 include { EXPORT_PROTEINS_CSV       } from "$launchDir/modules/export.nf"
 
 workflow INITIATE_PROTEINS {
-    main:
-    Channel
-        .fromPath(params.preprocessed_mgy90_path)
-        .set { mgy90_file }
+    take:
+    mgy90_file
 
+    main:
     mgy90_file
         .splitText(file:true, by: params.input_csv_chunk_size)
         .set { mgy90_chunks_ch }
