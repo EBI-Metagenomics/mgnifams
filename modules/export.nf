@@ -6,10 +6,10 @@ process EXPORT_PROTEINS_CSV {
     path fasta
 
     output:
-    path "mgnifams_proteins.csv"
+    path "proteins.csv"
 
     """
-    python3 ${params.scriptDir}/export_proteins_csv.py ${fasta} mgnifams_proteins.csv
+    python3 ${params.scriptDir}/export_proteins_csv.py ${fasta} proteins.csv
     """
 }
 

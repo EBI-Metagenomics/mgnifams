@@ -9,6 +9,12 @@ CREATE TABLE mgnifam (
     hmm_file TEXT
 );
 
+CREATE TABLE mgnifam_proteins (
+    id SERIAL PRIMARY KEY,
+    mgnifam_id INT REFERENCES mgnifam(id),
+    protein INT
+);
+
 CREATE TABLE mgnifam_pfams (
     id SERIAL PRIMARY KEY,
     mgnifam_id INT REFERENCES mgnifam(id),
