@@ -1,5 +1,14 @@
 #!/usr/bin/env nextflow
 
+include { validateParameters; paramsHelp; paramsSummaryLog } from 'plugin/nf-validation'
+
+if (params.help) {
+    log.info paramsHelp("nextflow run main.nf -dsl2 -c nextflow_main.config -profile slurm --mgy90_path sequence_explorer_protein.csv.bz2")
+    exit 0
+}
+validateParameters()
+log.info paramsSummaryLog(workflow)
+
 include { PREPROCESS_INPUT    } from "$launchDir/subworkflows/preprocess_input/main.nf"
 include { INITIATE_PROTEINS   } from "$launchDir/subworkflows/initiate_proteins/main.nf"
 include { EXECUTE_CLUSTERING  } from "$launchDir/subworkflows/execute_clustering/main.nf"
