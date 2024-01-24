@@ -157,6 +157,39 @@ def read_fasta_to_matrix(file_path):
 
     return matrix, original_names
 
+def calculate_trim_positions(sequence_matrix, occupancy_threshold):
+    numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
+    num_rows = numeric_matrix.shape[0]
+    column_sums = np.sum(numeric_matrix, axis=0)
+    column_sums_percentage = column_sums / num_rows
+    start_position = np.argmax(column_sums_percentage > occupancy_threshold)
+    end_position = len(column_sums_percentage) - np.argmax(column_sums_percentage[::-1] > occupancy_threshold) - 1
+
+    return start_position, end_position
+
+def write_trimmed_sequences(sequence_matrix_trimmed, original_sequence_names, tmp_seed_msa_path):
+    trimmed_records = []
+    for i, sequence in enumerate(sequence_matrix_trimmed):
+        trimmed_sequence = ''.join(map(str, sequence))
+        original_name = original_sequence_names[i]
+        trimmed_record = SeqIO.SeqRecord(Seq(trimmed_sequence), id=original_name, description="")
+        trimmed_records.append(trimmed_record)
+
+    with open(tmp_seed_msa_path, "w") as output_fasta:
+        SeqIO.write(trimmed_records, output_fasta, "fasta")
+        
+def trim_seed_msa(tmp_seed_msa_path, occupancy_threshold=0.5):
+    start_time = time.time()
+
+    sequence_matrix, original_sequence_names = read_fasta_to_matrix(tmp_seed_msa_path)
+    start_position, end_position = calculate_trim_positions(sequence_matrix,occupancy_threshold)
+    sequence_matrix_trimmed = sequence_matrix[:, start_position:end_position+1]
+    write_trimmed_sequences(sequence_matrix_trimmed, original_sequence_names, tmp_seed_msa_path)
+    
+    with open(log_file, 'a') as file:
+        file.write("trim_seed_msa: ")
+        file.write(str(time.time() - start_time) + "\n")
+
 def run_hmmbuild(msa_file, output_hmm):
     start_time = time.time()                    
 
@@ -377,43 +410,7 @@ def main():
                 file.write(str(family_iteration) + "\n")
             
             run_msa(tmp_family_sequences_path, tmp_seed_msa_path, len(family_members))
-
-            sequence_matrix, original_sequence_names = read_fasta_to_matrix(tmp_seed_msa_path)
-            numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
-            print(numeric_matrix)
-            num_rows = numeric_matrix.shape[0]
-            print(num_rows)
-            column_sums = np.sum(numeric_matrix, axis=0)
-            print(column_sums)
-            column_sums_percentage = column_sums / num_rows
-            print(column_sums_percentage)
-            start_position = np.argmax(column_sums_percentage > 0.5)
-
-            # Get the index of the first element above 0.5 from the end
-            end_position = len(column_sums_percentage) - np.argmax(column_sums_percentage[::-1] > 0.5) - 1
-
-            print("Start position:", start_position)
-            print("End position:", end_position)
-            sequence_matrix_trimmed = sequence_matrix[:, start_position:end_position+1]
-
-            # Print the trimmed matrix
-            print(sequence_matrix_trimmed)
-
-            trimmed_records = []
-            for i, sequence in enumerate(sequence_matrix_trimmed):
-                trimmed_sequence = ''.join(map(str, sequence))
-                original_name = original_sequence_names[i]
-                trimmed_record = SeqIO.SeqRecord(Seq(trimmed_sequence), id=original_name, description="")
-                trimmed_records.append(trimmed_record)
-
-            # Specify the path for the new FASTA file
-            output_fasta_path = "trimmed_sequences.fasta"
-
-            # Write the SeqRecord objects to the new FASTA file
-            with open(output_fasta_path, "w") as output_fasta:
-                SeqIO.write(trimmed_records, output_fasta, "fasta")
-            exit()
-
+            trim_seed_msa(tmp_seed_msa_path)
             run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
             run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
             filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict) # also writes in tmp_family_sequences_path
