@@ -182,7 +182,7 @@ def trim_seed_msa(tmp_seed_msa_path, occupancy_threshold=0.5):
     start_time = time.time()
 
     sequence_matrix, original_sequence_names = read_fasta_to_matrix(tmp_seed_msa_path)
-    start_position, end_position = calculate_trim_positions(sequence_matrix,occupancy_threshold)
+    start_position, end_position = calculate_trim_positions(sequence_matrix, occupancy_threshold)
     sequence_matrix_trimmed = sequence_matrix[:, start_position:end_position+1]
     write_trimmed_sequences(sequence_matrix_trimmed, original_sequence_names, tmp_seed_msa_path)
     
@@ -209,6 +209,19 @@ def run_hmmsearch(hmm_file, fasta_file, output_recruitment):
     with open(log_file, 'a') as file:
         file.write("run_hmmsearch: ")
         file.write(str(time.time() - start_time) + "\n")
+
+def extract_sequence_names_from_domtblout(domtblout_path):
+    sequence_names = []
+
+    with open(domtblout_path, 'r') as file:
+        for line in file:
+            if line.startswith('#') or line.strip() == '':
+                continue
+            columns = line.split()
+            sequence_name = columns[0]
+            sequence_names.append(sequence_name)
+
+    return sequence_names
 
 def mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict):
     masked_name = f"{sequence_name}/{env_from}_{env_to}"
@@ -413,19 +426,20 @@ def main():
             trim_seed_msa(tmp_seed_msa_path)
             run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
             run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
+            recruited_sequence_names = extract_sequence_names_from_domtblout(tmp_domtblout_path)
             filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict) # also writes in tmp_family_sequences_path
             if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                 discard_flag = True
                 break
             run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
 
-            recruited_sequences = set(filtered_seq_names) - set(total_checked_sequences)
-            if not recruited_sequences:
+            new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
+            if not new_recruited_sequences:
                 exit_flag = True
             if (exit_flag):
                 break
 
-            total_checked_sequences.extend(filtered_seq_names)
+            total_checked_sequences.extend(recruited_sequence_names)
             total_checked_sequences = list(set(total_checked_sequences))
             run_esl_weight(tmp_align_msa_path, tmp_esl_weight_path)
             family_members = filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path) # also writes in tmp_family_sequences_path
