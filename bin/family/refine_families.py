@@ -190,6 +190,8 @@ def trim_seed_msa(tmp_seed_msa_path, occupancy_threshold=0.5):
         file.write("trim_seed_msa: ")
         file.write(str(time.time() - start_time) + "\n")
 
+    return original_sequence_names
+
 def run_hmmbuild(msa_file, output_hmm):
     start_time = time.time()                    
 
@@ -234,7 +236,7 @@ def mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict):
 
     return masked_name
 
-def filter_recruited(recruitment_file, evalue_threshold, length_threshold, mgnifams_fasta_dict):
+def filter_recruited(recruitment_file, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag):
     start_time = time.time()
 
     os.remove(tmp_family_sequences_path)
@@ -249,6 +251,7 @@ def filter_recruited(recruitment_file, evalue_threshold, length_threshold, mgnif
                 env_to = int(columns[20])
                 env_length = env_to - env_from + 1
                 if evalue < evalue_threshold and env_length >= length_threshold * qlen:
+                    # TODO if evalue < evalue_threshold and (not exit_flag or (exit_flag and env_length >= length_threshold * qlen)):
                     sequence_name = columns[0]
                     tlen = float(columns[2])
                     if (env_length < tlen):
@@ -263,6 +266,18 @@ def filter_recruited(recruitment_file, evalue_threshold, length_threshold, mgnif
         file.write(str(time.time() - start_time) + "\n")
 
     return filtered_sequences
+
+def check_seed_membership(original_sequence_names, filtered_seq_names):
+    def extract_first_part(sequence_name):
+        return sequence_name.split('/')[0]
+
+    original_first_parts = set(map(extract_first_part, original_sequence_names))
+    filtered_first_parts = set(map(extract_first_part, filtered_seq_names))
+    common_first_parts = original_first_parts & filtered_first_parts
+    common_count = len(common_first_parts)
+    percentage_membership = common_count / len(original_sequence_names)
+
+    return percentage_membership
 
 def run_hmmalign(input_file, hmm_file, output_file):
     start_time = time.time()
@@ -423,20 +438,36 @@ def main():
                 file.write(str(family_iteration) + "\n")
             
             run_msa(tmp_family_sequences_path, tmp_seed_msa_path, len(family_members))
-            trim_seed_msa(tmp_seed_msa_path)
+            original_sequence_names = trim_seed_msa(tmp_seed_msa_path)
             run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
             run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
             recruited_sequence_names = extract_sequence_names_from_domtblout(tmp_domtblout_path)
-            filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict) # also writes in tmp_family_sequences_path
+            filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
             if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                 discard_flag = True
                 break
-            run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
 
+            membership_percentage = check_seed_membership(original_sequence_names, filtered_seq_names) # TODO only on exiting turn
+            if (membership_percentage < 0.9):
+                discard_flag = True
+                with open(log_file, 'a') as file:
+                    file.write(f"Discard-Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+                break
+            elif (membership_percentage < 1):
+                with open(log_file, 'a') as file:
+                    file.write(f"Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+            
+            run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
             new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
             if not new_recruited_sequences:
                 exit_flag = True
             if (exit_flag):
+                # TODO on exiting strategy here
+                # hmmbuild2
+                # hmmsearch
+                # filter_recruited without length
+                # check_seed_membership
+                # hmmalign
                 break
 
             total_checked_sequences.extend(recruited_sequence_names)
