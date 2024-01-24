@@ -4,6 +4,7 @@ import pickle
 import subprocess
 import shutil
 import pandas as pd
+import numpy as np
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
@@ -143,6 +144,18 @@ def run_msa(input_fasta, output_msa, family_size):
     with open(log_file, 'a') as file:
         file.write("run_msa: ")
         file.write(str(time.time() - start_time) + "\n")
+
+def read_fasta_to_matrix(file_path):
+    records = list(SeqIO.parse(file_path, "fasta"))
+    max_length = max(len(record.seq) for record in records)
+    matrix = np.zeros((len(records), max_length), dtype=np.dtype('U1'))
+    original_names = []
+
+    for i, record in enumerate(records):
+        original_names.append(record.id)
+        matrix[i, :len(record.seq)] = list(str(record.seq))
+
+    return matrix, original_names
 
 def run_hmmbuild(msa_file, output_hmm):
     start_time = time.time()                    
@@ -364,6 +377,43 @@ def main():
                 file.write(str(family_iteration) + "\n")
             
             run_msa(tmp_family_sequences_path, tmp_seed_msa_path, len(family_members))
+
+            sequence_matrix, original_sequence_names = read_fasta_to_matrix(tmp_seed_msa_path)
+            numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
+            print(numeric_matrix)
+            num_rows = numeric_matrix.shape[0]
+            print(num_rows)
+            column_sums = np.sum(numeric_matrix, axis=0)
+            print(column_sums)
+            column_sums_percentage = column_sums / num_rows
+            print(column_sums_percentage)
+            start_position = np.argmax(column_sums_percentage > 0.5)
+
+            # Get the index of the first element above 0.5 from the end
+            end_position = len(column_sums_percentage) - np.argmax(column_sums_percentage[::-1] > 0.5) - 1
+
+            print("Start position:", start_position)
+            print("End position:", end_position)
+            sequence_matrix_trimmed = sequence_matrix[:, start_position:end_position+1]
+
+            # Print the trimmed matrix
+            print(sequence_matrix_trimmed)
+
+            trimmed_records = []
+            for i, sequence in enumerate(sequence_matrix_trimmed):
+                trimmed_sequence = ''.join(map(str, sequence))
+                original_name = original_sequence_names[i]
+                trimmed_record = SeqIO.SeqRecord(Seq(trimmed_sequence), id=original_name, description="")
+                trimmed_records.append(trimmed_record)
+
+            # Specify the path for the new FASTA file
+            output_fasta_path = "trimmed_sequences.fasta"
+
+            # Write the SeqRecord objects to the new FASTA file
+            with open(output_fasta_path, "w") as output_fasta:
+                SeqIO.write(trimmed_records, output_fasta, "fasta")
+            exit()
+
             run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
             run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
             filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict) # also writes in tmp_family_sequences_path
