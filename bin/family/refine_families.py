@@ -32,19 +32,21 @@ def define_globals():
         "tmp_folder"                        : "tmp",
         "seed_msa_folder"                   : "seed_msa",
         "align_msa_folder"                  : "msa",
+        "reformatted_msa_folder"            : "reformatted_msa",
         "hmm_folder"                        : "hmm",
         "domtblout_folder"                  : "domtblout",
         "evalue_threshold"                  : 0.001,
         "length_threshold"                  : 0.8
     })
 
-    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder]:
+    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, reformatted_msa_folder, hmm_folder, domtblout_folder]:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
     globals().update({
         "tmp_family_sequences_path"    : os.path.join(tmp_folder, 'family_sequences.fa'),
         "tmp_seed_msa_path"            : os.path.join(tmp_folder, 'seed_msa.fa'),
+        "tmp_ms_msa_path"              : os.path.join(tmp_folder, 'seed_msa.ms'),
         "tmp_align_msa_path"           : os.path.join(tmp_folder, 'align_msa.fa'),
         "tmp_hmm_path"                 : os.path.join(tmp_folder, 'model.hmm'),
         "tmp_domtblout_path"           : os.path.join(tmp_folder, 'domtblout.txt'),
@@ -192,10 +194,10 @@ def trim_seed_msa(tmp_seed_msa_path, occupancy_threshold=0.5):
 
     return original_sequence_names
 
-def run_hmmbuild(msa_file, output_hmm):
+def run_hmmbuild(msa_file, output_hmm, extra_args):
     start_time = time.time()                    
 
-    hmmbuild_command = ["hmmbuild", "--amino", "--informat", "afa", output_hmm, msa_file]
+    hmmbuild_command = ["hmmbuild"] + extra_args + [output_hmm, msa_file]
     subprocess.run(hmmbuild_command, stdout=subprocess.DEVNULL)
     
     with open(log_file, 'a') as file:
@@ -434,42 +436,53 @@ def main():
 
             with open(log_file, 'a') as file:
                 if (exit_flag):
-                    file.write("Exiting family...: ")
+                    file.write("Exiting-3 loops.\n")
                 file.write(str(family_iteration) + "\n")
             
             run_msa(tmp_family_sequences_path, tmp_seed_msa_path, len(family_members))
             original_sequence_names = trim_seed_msa(tmp_seed_msa_path)
-            run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
-            run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
-            recruited_sequence_names = extract_sequence_names_from_domtblout(tmp_domtblout_path)
-            filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
-            if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
-                discard_flag = True
+
+            if not exit_flag: # main strategy branch
+                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["--amino", "--informat", "afa"])
+                run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
+                recruited_sequence_names = extract_sequence_names_from_domtblout(tmp_domtblout_path)
+                filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
+                if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
+                    discard_flag = True
+                    break
+                run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
+                new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
+                if not new_recruited_sequences:
+                    exit_flag = True
+                    with open(log_file, 'a') as file:
+                        file.write("Exiting-no new sequences recruited.\n")
+
+            if exit_flag: # exit strategy branch
+                with open(log_file, 'a') as file:
+                    file.write("Exiting branch strategy:\n")
+                
+                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["-O", tmp_ms_msa_path])
+                run_hmmbuild(tmp_ms_msa_path, tmp_hmm_path, ["--hand", tmp_ms_msa_path])
+                run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
+                filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
+                if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
+                    discard_flag = True
+                    break
+
+                membership_percentage = check_seed_membership(original_sequence_names, filtered_seq_names)
+                if (membership_percentage < 0.9):
+                    discard_flag = True
+                    with open(log_file, 'a') as file:
+                        file.write(f"Discard-Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+                    break
+                elif (membership_percentage < 1):
+                    with open(log_file, 'a') as file:
+                        file.write(f"Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+                
+                run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
                 break
 
-            membership_percentage = check_seed_membership(original_sequence_names, filtered_seq_names) # TODO only on exiting turn
-            if (membership_percentage < 0.9):
-                discard_flag = True
-                with open(log_file, 'a') as file:
-                    file.write(f"Discard-Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
-                break
-            elif (membership_percentage < 1):
-                with open(log_file, 'a') as file:
-                    file.write(f"Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
-            
-            run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
-            new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
-            if not new_recruited_sequences:
-                exit_flag = True
-            if (exit_flag):
-                # TODO on exiting strategy here
-                # hmmbuild2
-                # hmmsearch
-                # filter_recruited without length
-                # check_seed_membership
-                # hmmalign
-                break
-
+            # main strategy branch continue
             total_checked_sequences.extend(recruited_sequence_names)
             total_checked_sequences = list(set(total_checked_sequences))
             run_esl_weight(tmp_align_msa_path, tmp_esl_weight_path)
