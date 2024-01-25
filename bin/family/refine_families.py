@@ -4,6 +4,7 @@ import pickle
 import subprocess
 import shutil
 import pandas as pd
+import numpy as np
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
@@ -44,6 +45,7 @@ def define_globals():
     globals().update({
         "tmp_family_sequences_path"    : os.path.join(tmp_folder, 'family_sequences.fa'),
         "tmp_seed_msa_path"            : os.path.join(tmp_folder, 'seed_msa.fa'),
+        "tmp_ms_msa_path"              : os.path.join(tmp_folder, 'seed_msa.ms'),
         "tmp_align_msa_path"           : os.path.join(tmp_folder, 'align_msa.fa'),
         "tmp_hmm_path"                 : os.path.join(tmp_folder, 'model.hmm'),
         "tmp_domtblout_path"           : os.path.join(tmp_folder, 'domtblout.txt'),
@@ -144,10 +146,57 @@ def run_msa(input_fasta, output_msa, family_size):
         file.write("run_msa: ")
         file.write(str(time.time() - start_time) + "\n")
 
-def run_hmmbuild(msa_file, output_hmm):
+def read_fasta_to_matrix(file_path):
+    records = list(SeqIO.parse(file_path, "fasta"))
+    max_length = max(len(record.seq) for record in records)
+    matrix = np.zeros((len(records), max_length), dtype=np.dtype('U1'))
+    original_names = []
+
+    for i, record in enumerate(records):
+        original_names.append(record.id)
+        matrix[i, :len(record.seq)] = list(str(record.seq))
+
+    return matrix, original_names
+
+def calculate_trim_positions(sequence_matrix, occupancy_threshold):
+    numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
+    num_rows = numeric_matrix.shape[0]
+    column_sums = np.sum(numeric_matrix, axis=0)
+    column_sums_percentage = column_sums / num_rows
+    start_position = np.argmax(column_sums_percentage > occupancy_threshold)
+    end_position = len(column_sums_percentage) - np.argmax(column_sums_percentage[::-1] > occupancy_threshold) - 1
+
+    return start_position, end_position
+
+def write_trimmed_sequences(sequence_matrix_trimmed, original_sequence_names, tmp_seed_msa_path):
+    trimmed_records = []
+    for i, sequence in enumerate(sequence_matrix_trimmed):
+        trimmed_sequence = ''.join(map(str, sequence))
+        original_name = original_sequence_names[i]
+        trimmed_record = SeqIO.SeqRecord(Seq(trimmed_sequence), id=original_name, description="")
+        trimmed_records.append(trimmed_record)
+
+    with open(tmp_seed_msa_path, "w") as output_fasta:
+        SeqIO.write(trimmed_records, output_fasta, "fasta")
+        
+def trim_seed_msa(tmp_seed_msa_path, occupancy_threshold=0.5):
+    start_time = time.time()
+
+    sequence_matrix, original_sequence_names = read_fasta_to_matrix(tmp_seed_msa_path)
+    start_position, end_position = calculate_trim_positions(sequence_matrix, occupancy_threshold)
+    sequence_matrix_trimmed = sequence_matrix[:, start_position:end_position+1]
+    write_trimmed_sequences(sequence_matrix_trimmed, original_sequence_names, tmp_seed_msa_path)
+    
+    with open(log_file, 'a') as file:
+        file.write("trim_seed_msa: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    return original_sequence_names
+
+def run_hmmbuild(msa_file, output_hmm, extra_args):
     start_time = time.time()                    
 
-    hmmbuild_command = ["hmmbuild", "--amino", "--informat", "afa", output_hmm, msa_file]
+    hmmbuild_command = ["hmmbuild"] + extra_args + [output_hmm, msa_file]
     subprocess.run(hmmbuild_command, stdout=subprocess.DEVNULL)
     
     with open(log_file, 'a') as file:
@@ -164,6 +213,19 @@ def run_hmmsearch(hmm_file, fasta_file, output_recruitment):
         file.write("run_hmmsearch: ")
         file.write(str(time.time() - start_time) + "\n")
 
+def extract_sequence_names_from_domtblout(domtblout_path):
+    sequence_names = []
+
+    with open(domtblout_path, 'r') as file:
+        for line in file:
+            if line.startswith('#') or line.strip() == '':
+                continue
+            columns = line.split()
+            sequence_name = columns[0]
+            sequence_names.append(sequence_name)
+
+    return sequence_names
+
 def mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict):
     masked_name = f"{sequence_name}/{env_from}_{env_to}"
 
@@ -175,7 +237,7 @@ def mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict):
 
     return masked_name
 
-def filter_recruited(recruitment_file, evalue_threshold, length_threshold, mgnifams_fasta_dict):
+def filter_recruited(recruitment_file, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag):
     start_time = time.time()
 
     os.remove(tmp_family_sequences_path)
@@ -189,21 +251,34 @@ def filter_recruited(recruitment_file, evalue_threshold, length_threshold, mgnif
                 env_from = int(columns[19])
                 env_to = int(columns[20])
                 env_length = env_to - env_from + 1
-                if evalue < evalue_threshold and env_length >= length_threshold * qlen:
-                    sequence_name = columns[0]
-                    tlen = float(columns[2])
-                    if (env_length < tlen):
-                        sequence_name = mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict)
-                    else:
-                        write_fasta_sequences([mgnifams_fasta_dict[sequence_name]], tmp_family_sequences_path, "a")
+                if evalue < evalue_threshold:
+                    if (exit_flag or env_length >= length_threshold * qlen): # only evalue filter when exiting, taking in shorter sequences
+                        sequence_name = columns[0]
+                        tlen = float(columns[2])
+                        if (env_length < tlen):
+                            sequence_name = mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict)
+                        else:
+                            write_fasta_sequences([mgnifams_fasta_dict[sequence_name]], tmp_family_sequences_path, "a")
 
-                    filtered_sequences.append(sequence_name)
+                        filtered_sequences.append(sequence_name)
     
     with open(log_file, 'a') as file:
         file.write("filter_recruited: ")
         file.write(str(time.time() - start_time) + "\n")
 
     return filtered_sequences
+
+def check_seed_membership(original_sequence_names, filtered_seq_names):
+    def extract_first_part(sequence_name):
+        return sequence_name.split('/')[0]
+
+    original_first_parts = set(map(extract_first_part, original_sequence_names))
+    filtered_first_parts = set(map(extract_first_part, filtered_seq_names))
+    common_first_parts = original_first_parts & filtered_first_parts
+    common_count = len(common_first_parts)
+    percentage_membership = common_count / len(original_sequence_names)
+
+    return percentage_membership
 
 def run_hmmalign(input_file, hmm_file, output_file):
     start_time = time.time()
@@ -360,25 +435,54 @@ def main():
 
             with open(log_file, 'a') as file:
                 if (exit_flag):
-                    file.write("Exiting family...: ")
+                    file.write("Exiting-3 loops.\n")
                 file.write(str(family_iteration) + "\n")
             
             run_msa(tmp_family_sequences_path, tmp_seed_msa_path, len(family_members))
-            run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path)
-            run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
-            filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict) # also writes in tmp_family_sequences_path
-            if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
-                discard_flag = True
-                break
-            run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
+            original_sequence_names = trim_seed_msa(tmp_seed_msa_path)
 
-            recruited_sequences = set(filtered_seq_names) - set(total_checked_sequences)
-            if not recruited_sequences:
-                exit_flag = True
-            if (exit_flag):
+            if not exit_flag: # main strategy branch
+                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["--amino", "--informat", "afa"])
+                run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
+                recruited_sequence_names = extract_sequence_names_from_domtblout(tmp_domtblout_path)
+                filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
+                if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
+                    discard_flag = True
+                    break
+                run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
+                new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
+                if not new_recruited_sequences:
+                    exit_flag = True
+                    with open(log_file, 'a') as file:
+                        file.write("Exiting-no new sequences recruited.\n")
+
+            if exit_flag: # exit strategy branch
+                with open(log_file, 'a') as file:
+                    file.write("Exiting branch strategy:\n")
+                
+                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["-O", tmp_ms_msa_path])
+                run_hmmbuild(tmp_ms_msa_path, tmp_hmm_path, ["--hand", tmp_ms_msa_path])
+                run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
+                filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
+                if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
+                    discard_flag = True
+                    break
+
+                membership_percentage = check_seed_membership(original_sequence_names, filtered_seq_names)
+                if (membership_percentage < 0.9):
+                    discard_flag = True
+                    with open(log_file, 'a') as file:
+                        file.write(f"Discard-Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+                    break
+                elif (membership_percentage < 1):
+                    with open(log_file, 'a') as file:
+                        file.write(f"Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+                
+                run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
                 break
 
-            total_checked_sequences.extend(filtered_seq_names)
+            # main strategy branch continue
+            total_checked_sequences.extend(recruited_sequence_names)
             total_checked_sequences = list(set(total_checked_sequences))
             run_esl_weight(tmp_align_msa_path, tmp_esl_weight_path)
             family_members = filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path) # also writes in tmp_family_sequences_path
