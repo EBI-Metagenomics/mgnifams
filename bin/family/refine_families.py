@@ -252,16 +252,16 @@ def filter_recruited(recruitment_file, evalue_threshold, length_threshold, mgnif
                 env_from = int(columns[19])
                 env_to = int(columns[20])
                 env_length = env_to - env_from + 1
-                if evalue < evalue_threshold and env_length >= length_threshold * qlen:
-                    # TODO if evalue < evalue_threshold and (not exit_flag or (exit_flag and env_length >= length_threshold * qlen)):
-                    sequence_name = columns[0]
-                    tlen = float(columns[2])
-                    if (env_length < tlen):
-                        sequence_name = mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict)
-                    else:
-                        write_fasta_sequences([mgnifams_fasta_dict[sequence_name]], tmp_family_sequences_path, "a")
+                if evalue < evalue_threshold:
+                    if (exit_flag or env_length >= length_threshold * qlen): # only evalue filter when exiting, taking in shorter sequences
+                        sequence_name = columns[0]
+                        tlen = float(columns[2])
+                        if (env_length < tlen):
+                            sequence_name = mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict)
+                        else:
+                            write_fasta_sequences([mgnifams_fasta_dict[sequence_name]], tmp_family_sequences_path, "a")
 
-                    filtered_sequences.append(sequence_name)
+                        filtered_sequences.append(sequence_name)
     
     with open(log_file, 'a') as file:
         file.write("filter_recruited: ")
