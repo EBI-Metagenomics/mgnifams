@@ -32,14 +32,13 @@ def define_globals():
         "tmp_folder"                        : "tmp",
         "seed_msa_folder"                   : "seed_msa",
         "align_msa_folder"                  : "msa",
-        "reformatted_msa_folder"            : "reformatted_msa",
         "hmm_folder"                        : "hmm",
         "domtblout_folder"                  : "domtblout",
         "evalue_threshold"                  : 0.001,
         "length_threshold"                  : 0.8
     })
 
-    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, reformatted_msa_folder, hmm_folder, domtblout_folder]:
+    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder]:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
