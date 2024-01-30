@@ -8,10 +8,11 @@ workflow GENERATE_FAMILIES {
     clusters_tsv
     refined_families_tsv
     mgnifams_fasta
+    discarded_clusters
 
     main:
     clusters_pkl = CREATE_CLUSTERS_PKL(clusters_tsv).pkl
-    refined_families = REFINE_FAMILIES(clusters_pkl, refined_families_tsv, mgnifams_fasta, params.minimum_members, params.iteration)
+    refined_families = REFINE_FAMILIES(clusters_pkl, refined_families_tsv, mgnifams_fasta, discarded_clusters, params.minimum_members, params.iteration)
 
     emit:
     tsv = refined_families.tsv

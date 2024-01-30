@@ -12,16 +12,17 @@ from Bio import AlignIO
 import time # benchmarking
 
 def parse_args():
-    if not (len(sys.argv) == 6):
-        print("Usage: python3 refine_families.py [Clusters bookkeeping df pkl file] [MGnifams FASTA file] [Number of minimum family members to check] [Last mgnifam number]")
+    if not (len(sys.argv) == 7):
+        print("Usage: python3 refine_families.py [Clusters bookkeeping df pkl file] [MGnifams FASTA file] [Discarded clusters file] [Number of minimum family members to check] [Last mgnifam number]")
         sys.exit(1)
 
     globals().update({
         "arg_clusters_bookkeeping_df_pkl_file" : sys.argv[1], 
         "arg_refined_families_tsv_file"        : sys.argv[2],
         "arg_mgnifams_dict_fasta_file"         : sys.argv[3],
-        "arg_minimum_family_members"           : int(sys.argv[4]),
-        "arg_iteration"                        : int(sys.argv[5])
+        "arg_discarded_clusters_file"          : sys.argv[4],
+        "arg_minimum_family_members"           : int(sys.argv[5]),
+        "arg_iteration"                        : int(sys.argv[6])
     })   
 
 def define_globals():
@@ -29,6 +30,7 @@ def define_globals():
         "log_file"                          : "log.txt",
         "updated_refined_families_tsv_file" : "updated_refined_families.tsv",
         "updated_mgnifams_dict_fasta_file"  : "updated_mgnifams_dict.fa",
+        "updated_discarded_clusters_file"   : "updated_discarded_clusters.txt",
         "tmp_folder"                        : "tmp",
         "seed_msa_folder"                   : "seed_msa",
         "align_msa_folder"                  : "msa",
@@ -54,11 +56,16 @@ def define_globals():
         "tmp_sequences_to_remove_path" : os.path.join(tmp_folder, 'sequences_to_remove.txt')
     })
 
-def copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file, arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file):
+def copy_updated_input_files(
+    arg_refined_families_tsv_file, updated_refined_families_tsv_file,
+    arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file, 
+    arg_discarded_clusters_file, updated_discarded_clusters_file):
+
     start_time = time.time()
 
     shutil.copy(arg_refined_families_tsv_file, updated_refined_families_tsv_file)
     shutil.copy(arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file)
+    shutil.copy(arg_discarded_clusters_file, updated_discarded_clusters_file)
 
     with open(log_file, 'w') as file:
         file.write("copy_updated_input_files: ")
@@ -87,6 +94,21 @@ def exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_
 
     with open(log_file, 'a') as file:
         file.write("exclude_existing_families: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    return clusters_bookkeeping_df
+
+def exclude_discarded_clusters(clusters_bookkeeping_df, arg_discarded_clusters_file, log_file):
+    start_time = time.time()
+
+    if os.path.getsize(arg_discarded_clusters_file) > 0:
+        discarded_clusters_df = pd.read_csv(arg_discarded_clusters_file, header=None, dtype=str)
+        clusters_to_remove = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(discarded_clusters_df[0])].index.unique().tolist()
+        # Modify the DataFrame in place
+        clusters_bookkeeping_df.drop(index=clusters_to_remove, inplace=True)
+
+    with open(log_file, 'a') as file:
+        file.write("exclude_discarded_clusters: ")
         file.write(str(time.time() - start_time) + "\n")
 
     return clusters_bookkeeping_df
@@ -409,9 +431,10 @@ def main():
     parse_args()
     define_globals()
 
-    copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file, arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file)
+    copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file, arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file, arg_discarded_clusters_file, updated_discarded_clusters_file)
     clusters_bookkeeping_df = load_clusters_bookkeeping_df(arg_clusters_bookkeeping_df_pkl_file)
     clusters_bookkeeping_df = exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_file) # restarting mechanism
+    clusters_bookkeeping_df = exclude_discarded_clusters(clusters_bookkeeping_df, arg_discarded_clusters_file, log_file) # restarting mechanism
     mgnifams_fasta_dict = create_mgnifams_fasta_dict(arg_mgnifams_dict_fasta_file)
     iteration = arg_iteration
     while True:
@@ -494,6 +517,8 @@ def main():
 
             iteration -= 1
             unique_reps = [largest_family_rep]
+            with open(updated_discarded_clusters_file, 'a') as outfile:
+                outfile.write(unique_reps[0] + "\n")
         else: # successfully
             append_family_file(updated_refined_families_tsv_file, iteration, filtered_seq_names)
             move_produced_models(iteration, len(filtered_seq_names))

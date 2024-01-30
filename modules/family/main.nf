@@ -25,21 +25,23 @@ process REFINE_FAMILIES {
     path(clusters_pkl)
     path(families_tsv)
     path(fasta)
+    path(discarded_clusters)
     val(minimum_members)
     val(iteration)
 
     output:
-    path("updated_refined_families.tsv"), emit: tsv
-    path("updated_mgnifams_dict.fa")    , emit: fa
-    path("seed_msa/*")                  , emit: seed_msa
-    path("msa/*")                       , emit: msa
-    path("hmm/*")                       , emit: hmm
-    path("domtblout/*")                 , emit: domtblout
-    path("log.txt")                     , emit: log
+    path("updated_refined_families.tsv")  , emit: tsv
+    path("updated_mgnifams_dict.fa")      , emit: fa
+    path("updated_discarded_clusters.txt"), emit: discarded
+    path("seed_msa/*")                    , emit: seed_msa
+    path("msa/*")                         , emit: msa
+    path("hmm/*")                         , emit: hmm
+    path("domtblout/*")                   , emit: domtblout
+    path("log.txt")                       , emit: log
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${fasta} ${minimum_members} ${iteration}
+    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${minimum_members} ${iteration}
     """
 }
 
