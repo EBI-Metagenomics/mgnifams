@@ -1,6 +1,6 @@
-# mgnifams
+# MGnifams
 
-Execute these workflows in the following order:
+The end-to-end pipeline is hard to execute at once, due to the family generation step which is heavy and clunky. Execute these workflows in the following order instead:
 
 1. **preprocess_input**
 
@@ -8,9 +8,9 @@ Starting from */nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgs
 this workflow unzips the file (bzip -dk) and then removes the header,
 so it can be split into text chunks to process in parallel in the next workflow.
 
-Run with: **nextflow run workflows/preprocess_input/main.nf -c subworkflows/preprocess_input/nextflow.config -dsl2 -profile slurm -with-tower -resume**
+Run with: **nextflow run workflows/preprocess_input/main.nf -c workflows/preprocess_input/nextflow.config -dsl2 -profile slurm -with-tower -resume**
 
-2. **initiate proteins**
+2. **initiate_proteins**
 
 There are two different path options for the same input file for this workflow.
 One is */nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_2/sequence_explorer_protein_no_header.csv*
@@ -20,4 +20,90 @@ and the other is the output of the preprocess_input workflow
 The workflow then splits the input CSV into file chunks of 50M rows/sequences and slices out the already known pfams,
 keeping sequences >= 50 amino acids in a fasta file (mgnifams_input.fa).
 
-Run with: **nextflow run workflows/initiate_proteins/main.nf -c subworkflows/initiate_proteins/nextflow.config -dsl2 -profile slurm -with-tower -resume**
+Run with: **nextflow run workflows/initiate_proteins/main.nf -c workflows/initiate_proteins/nextflow.config -dsl2 -profile slurm -with-tower -resume**
+
+3. **execute_clustering**
+
+For execute_clustering, we are using the latest version (15) of mmseqs tools. createdb and linclust updated in nf-core, but in MGnifams we will use ‘compressed 0’ arg instead. For createtsv we are using are own script.
+
+linclust parameters:
+sequence identity = 0.5
+coverage = 0.9, both
+
+Run with: **nextflow run workflows/execute_clustering/main.nf -c workflows/execute_clustering/nextflow.config -dsl2 -profile slurm -with-tower -resume**
+
+4. **generate_families**
+
+This is the main algorithm for the generation of MGnifams. This step is better run with LSF because we don't need to specify a time limit.
+The create_families subworkflow calls the refine_families.py to iteratively recruit sequences starting from the largest family towards the smallest (minimum_members threshold 50).
+
+**Restart strategy**
+
+To continue from where the last family finished on the server execution, the files named **updated_mgnifams_dict.fa**, **updated_refined_families.tsv** and **updated_discarded_clusters.txt** must be manually copied/moved from the work folder to **/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/input/families**. After removing or renaming (for backup) the three old files there, the three new ones must be renamed to **mgnifams_dict.fa**, **refined_families.tsv** and **discarded_clusters.txt** respectively. Also, make sure that the **“iteration”** parameter in nextflow.config in the generate_families subworkflow is set to the numeric value of the last properly checked family (e.g. if last generated family is mgnifam111, set the iteration param to 111). Add -resume to nextflow run.
+
+Run with: **nextflow run workflows/generate_families/main.nf -c workflows/generate_families/nextflow.config -dsl2 -profile lsf -with-tower -resume**
+
+5. **annotate_models**
+
+Results from the previous step must be manually moved to:
+
+/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/
+in batches (all families hard to finish successfully). Only using **seed_msa** folder in this step.
+
+Example from within the work folder:
+
+cp msa/* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/msa/
+
+cp domtblout/* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/domtblout/
+
+cp seed_msa/* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/seed_msa/
+
+cp hmm/* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/hmm/
+
+cp updated_* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/input/families/
+
+-E evalue cutoff for output does not work properly. This is why we are filtering with our own code to report results.
+
+Run with: **nextflow run workflows/annotate_models/main.nf -c workflows/annotate_models/nextflow.config -dsl2 -profile slurm -with-tower -resume**
+
+6. **reformat_msa**
+
+Reformating output hmmalign Stockholm MSAs in simple fas format to be able to visualize/download with MSAViewer on the MGnifams site.
+
+Results from the previous step must have been manually moved to:
+/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/
+in batches (all families hard to finish successfully). Only using the **msa** folder in this step.
+
+Run with: **nextflow run workflows/reformat_msa/main.nf -c workflows/reformat_msa/nextflow.config -dsl2 -profile slurm -with-tower -resume**
+
+7. **predict_annotate_structures**
+
+Producing, PDB, CIF and CFZ files in the predict step.
+
+foldseek results filtered by e-value 0.001: -e 0.001 (default not working, need to state).
+
+No additional filtering carried out.
+
+Command to extract high-quality pLDDT candidates from ESMFold log results:
+grep -E 'pLDDT [7-9][0-9]\.|pLDDT 100' pdb2_scores.txt | awk -F' |, ' '{print $11, $15, $16}'
+
+# Post workflow
+
+**Exporting database CSVs**
+
+After all subworkflows have finished executing run:
+
+**python export_mgnifams_csv.py <mgnifams_out_dir>**
+
+to generate ready to import data tables
+
+# End-to-end pipeline
+
+This is mainly used locally for testing. Chains all aforementioned modules.
+
+**nextflow run main.nf -dsl2 -c nextflow_main.config -profile local -resume**
+
+**nextflow run main.nf -dsl2 -c nextflow_main.config -profile slurm -resume -N vangelis@ebi.ac.uk**
+
+# Anti-bus factor measures
+Currently, extra documentation can be found in my google doc: https://docs.google.com/document/d/1eeglnQb9M-D0iK9AFbTypLYvvKHeUg6XtzmlKN874k4/edit
