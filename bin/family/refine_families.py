@@ -505,8 +505,7 @@ def main():
                 break
 
             # main strategy branch continue
-            total_checked_sequences.extend(recruited_sequence_names)
-            total_checked_sequences = list(set(total_checked_sequences))
+            total_checked_sequences += list(new_recruited_sequences)
             run_esl_weight(tmp_align_msa_path, tmp_esl_weight_path)
             family_members = filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path) # also writes in tmp_family_sequences_path
 
