@@ -36,11 +36,12 @@ def define_globals():
         "align_msa_folder"                  : "msa",
         "hmm_folder"                        : "hmm",
         "domtblout_folder"                  : "domtblout",
+        "rf_folder"                         : "rf",
         "evalue_threshold"                  : 0.001,
         "length_threshold"                  : 0.8
     })
 
-    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder]:
+    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder, rf_folder]:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
@@ -53,7 +54,8 @@ def define_globals():
         "tmp_domtblout_path"           : os.path.join(tmp_folder, 'domtblout.txt'),
         "tmp_intermediate_esl_path"    : os.path.join(tmp_folder, 'intermediate_esl.fa'),
         "tmp_esl_weight_path"          : os.path.join(tmp_folder, 'esl_weight.fa'),
-        "tmp_sequences_to_remove_path" : os.path.join(tmp_folder, 'sequences_to_remove.txt')
+        "tmp_sequences_to_remove_path" : os.path.join(tmp_folder, 'sequences_to_remove.txt'),
+        "tmp_rf_path"                  : os.path.join(tmp_folder, 'rf.txt')
     })
 
 def copy_updated_input_files(
@@ -341,6 +343,20 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
         file.write("run_esl_weight: ")
         file.write(str(time.time() - start_time) + "\n")
 
+def extract_RF(stockholm_msa, output_path):
+    with open(stockholm_msa, 'r') as file:
+        # Extract lines starting with "#=GC RF"
+        relevant_lines = [line.strip() for line in file if line.startswith("#=GC RF")]
+
+    # Keep only 'x's and '.'
+    cleaned_lines = [''.join(filter(lambda c: c == 'x' or c == '.', line)) for line in relevant_lines]
+
+    # Combine lines into a single sequence
+    combined_sequence = ''.join(cleaned_lines)
+
+    with open(output_path, 'w') as output_file:
+        output_file.write(combined_sequence)
+        
 def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
     # Step 1: Read identifiers from tmp_esl_weight_path using AlignIO
     identifiers = set()
@@ -374,6 +390,7 @@ def move_produced_models(iteration, size):
     shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'mgnfam{iteration}_{size}.fa'))
     shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'mgnfam{iteration}_{size}.hmm'))
     shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'mgnfam{iteration}_{size}.domtblout'))
+    shutil.move(tmp_rf_path, os.path.join(rf_folder, f'mgnfam{iteration}_{size}.txt'))
 
 def get_final_family_original_names(filtered_seq_names):
     family_members = {name.split('/')[0] for name in filtered_seq_names}
@@ -485,6 +502,7 @@ def main():
                 
                 run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["-O", tmp_ms_msa_path])
                 run_hmmbuild(tmp_ms_msa_path, tmp_hmm_path, ["--hand", tmp_ms_msa_path])
+                extract_RF(tmp_ms_msa_path, tmp_rf_path)
                 run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
                 filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
