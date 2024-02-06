@@ -331,6 +331,8 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
         number_of_remaining_sequences = len(get_sequences_from_stockholm(output_file))
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
+        if (number_of_remaining_sequences > 20000):
+            return False
         if (number_of_remaining_sequences <= 2000):
             break
         else:
@@ -342,6 +344,8 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
     with open(log_file, 'a') as file:
         file.write("run_esl_weight: ")
         file.write(str(time.time() - start_time) + "\n")
+
+    return True
 
 def extract_RF(stockholm_msa, output_path):
     with open(stockholm_msa, 'r') as file:
@@ -524,7 +528,12 @@ def main():
 
             # main strategy branch continue
             total_checked_sequences += list(new_recruited_sequences)
-            run_esl_weight(tmp_align_msa_path, tmp_esl_weight_path)
+            esl_ok = run_esl_weight(tmp_align_msa_path, tmp_esl_weight_path)
+            if not esl_ok:
+                discard_flag = True
+                with open(log_file, 'a') as file:
+                    file.write(f"Discard-Warning: mgnifam{iteration} too many sequences for esl.\n")
+                break
             family_members = filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path) # also writes in tmp_family_sequences_path
 
         # Exiting family loop
