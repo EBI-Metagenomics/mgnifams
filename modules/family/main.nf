@@ -37,6 +37,7 @@ process REFINE_FAMILIES {
     path("msa/*")                         , emit: msa
     path("hmm/*")                         , emit: hmm
     path("domtblout/*")                   , emit: domtblout
+    path("rf/*")                          , emit: rf
     path("log.txt")                       , emit: log
 
     script:
