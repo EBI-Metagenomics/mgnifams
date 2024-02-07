@@ -11,8 +11,8 @@ process HHSUITE_REFORMAT {
     val(outformat)
 
     output:
-    tuple val(meta), path("reformatted"), emit: fa
-    path "versions.yml"                 , emit: versions
+    tuple val(meta), path("${meta.id}"), emit: fa
+    path "versions.yml"                , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -21,7 +21,7 @@ process HHSUITE_REFORMAT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mkdir -p reformatted
+    mkdir -p ${prefix}
 
     for file in ${fa}/*; do
         name=\$(basename \$file .fa)
@@ -31,7 +31,7 @@ process HHSUITE_REFORMAT {
             ${informat} \\
             ${outformat} \\
             \$file \\
-            reformatted/\$name.${outformat}
+            ${prefix}/\$name.${outformat}
     done
     
     cat <<-END_VERSIONS > versions.yml
@@ -44,9 +44,9 @@ process HHSUITE_REFORMAT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mkdir -p reformatted
+    mkdir -p ${prefix}
 
-    touch reformatted/${prefix}.${outformat}
+    touch ${prefix}/${prefix}.${outformat}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

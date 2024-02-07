@@ -33,8 +33,8 @@ process REFINE_FAMILIES {
     path("updated_refined_families.tsv")  , emit: tsv
     path("updated_mgnifams_dict.fa")      , emit: fa
     path("updated_discarded_clusters.txt"), emit: discarded
-    path("seed_msa/*")                    , emit: seed_msa
-    path("msa/*")                         , emit: msa
+    path("seed_msa_sto/*")                , emit: seed_msa_sto
+    path("msa_sto/*")                     , emit: msa_sto
     path("hmm/*")                         , emit: hmm
     path("domtblout/*")                   , emit: domtblout
     path("rf/*")                          , emit: rf

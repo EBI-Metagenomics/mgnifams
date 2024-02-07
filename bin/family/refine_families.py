@@ -32,8 +32,8 @@ def define_globals():
         "updated_mgnifams_dict_fasta_file"  : "updated_mgnifams_dict.fa",
         "updated_discarded_clusters_file"   : "updated_discarded_clusters.txt",
         "tmp_folder"                        : "tmp",
-        "seed_msa_folder"                   : "seed_msa",
-        "align_msa_folder"                  : "msa",
+        "seed_msa_folder"                   : "seed_msa_sto",
+        "align_msa_folder"                  : "msa_sto",
         "hmm_folder"                        : "hmm",
         "domtblout_folder"                  : "domtblout",
         "rf_folder"                         : "rf",
@@ -48,7 +48,6 @@ def define_globals():
     globals().update({
         "tmp_family_sequences_path"    : os.path.join(tmp_folder, 'family_sequences.fa'),
         "tmp_seed_msa_path"            : os.path.join(tmp_folder, 'seed_msa.fa'),
-        "tmp_ms_msa_path"              : os.path.join(tmp_folder, 'seed_msa.ms'),
         "tmp_align_msa_path"           : os.path.join(tmp_folder, 'align_msa.fa'),
         "tmp_hmm_path"                 : os.path.join(tmp_folder, 'model.hmm'),
         "tmp_domtblout_path"           : os.path.join(tmp_folder, 'domtblout.txt'),
@@ -504,9 +503,9 @@ def main():
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
                 
-                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["-O", tmp_ms_msa_path])
-                run_hmmbuild(tmp_ms_msa_path, tmp_hmm_path, ["--hand", tmp_ms_msa_path])
-                extract_RF(tmp_ms_msa_path, tmp_rf_path)
+                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["-O", tmp_seed_msa_path])
+                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["--hand", tmp_seed_msa_path])
+                extract_RF(tmp_seed_msa_path, tmp_rf_path)
                 run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
                 filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
