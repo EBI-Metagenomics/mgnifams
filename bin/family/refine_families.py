@@ -323,10 +323,14 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
     start_time = time.time()
 
     shutil.copy(input_file, tmp_intermediate_esl_path)
+    with open(log_file, 'a') as file:
+        file.write("Files moved to tmp_intermediate_esl_path ")
 
     while True:
         esl_weight_command = ["esl-weight", "--amino", "-f", "--idf", str(threshold), "-o", output_file, tmp_intermediate_esl_path]
         subprocess.run(esl_weight_command, stdout=subprocess.DEVNULL)
+        with open(log_file, 'a') as file:
+            file.write("and esl_weight_command subprocess finished.\n")
         number_of_remaining_sequences = len(get_sequences_from_stockholm(output_file))
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
@@ -494,6 +498,8 @@ def main():
                     break
                 run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
                 new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
+                with open(log_file, 'a') as file:
+                    file.write("new_recruited_sequences calculated.\n")
                 if not new_recruited_sequences:
                     exit_flag = True
                     with open(log_file, 'a') as file:
@@ -527,6 +533,8 @@ def main():
 
             # main strategy branch continue
             total_checked_sequences += list(new_recruited_sequences)
+            with open(log_file, 'a') as file:
+                file.write("total_checked_sequences calculated and starting run_esl_weight\n")
             esl_ok = run_esl_weight(tmp_align_msa_path, tmp_esl_weight_path)
             if not esl_ok:
                 discard_flag = True
