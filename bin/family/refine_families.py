@@ -48,6 +48,7 @@ def define_globals():
     globals().update({
         "tmp_family_sequences_path"    : os.path.join(tmp_folder, 'family_sequences.fa'),
         "tmp_seed_msa_path"            : os.path.join(tmp_folder, 'seed_msa.fa'),
+        "tmp_seed_msa_sto_path"        : os.path.join(tmp_folder, 'seed_msa_sto.fa'),
         "tmp_align_msa_path"           : os.path.join(tmp_folder, 'align_msa.fa'),
         "tmp_hmm_path"                 : os.path.join(tmp_folder, 'model.hmm'),
         "tmp_domtblout_path"           : os.path.join(tmp_folder, 'domtblout.txt'),
@@ -324,13 +325,13 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
 
     shutil.copy(input_file, tmp_intermediate_esl_path)
     with open(log_file, 'a') as file:
-        file.write("Files moved to tmp_intermediate_esl_path ")
+        file.write("Files moved to tmp_intermediate_esl_path; ")
 
     while True:
         esl_weight_command = ["esl-weight", "--amino", "-f", "--idf", str(threshold), "-o", output_file, tmp_intermediate_esl_path]
         subprocess.run(esl_weight_command, stdout=subprocess.DEVNULL)
         with open(log_file, 'a') as file:
-            file.write("and esl_weight_command subprocess finished.\n")
+            file.write("esl_weight_command subprocess finished.\n")
         number_of_remaining_sequences = len(get_sequences_from_stockholm(output_file))
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
@@ -339,7 +340,7 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
         else:
             threshold -= 0.1
             with open(log_file, 'a') as file:
-                file.write("Rerunning run_esl_weight: ")
+                file.write("Rerunning run_esl_weight; ")
             shutil.copy(output_file, tmp_intermediate_esl_path)
 
     with open(log_file, 'a') as file:
@@ -389,7 +390,7 @@ def append_family_file(output_file, iteration, family_members):
         file.write(f"E: mgnifam{iteration}, s: {len(family_members)}\n")
 
 def move_produced_models(iteration, size):
-    shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder, f'mgnfam{iteration}_{size}.fa'))
+    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'mgnfam{iteration}_{size}.fa'))
     shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'mgnfam{iteration}_{size}.fa'))
     shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'mgnfam{iteration}_{size}.hmm'))
     shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'mgnfam{iteration}_{size}.domtblout'))
@@ -517,11 +518,25 @@ def main():
                 if is_file_empty(tmp_seed_msa_path): # TODO remove after tests
                     with open(log_file, 'a') as file:
                         file.write("EMPTY MSA BEFORE DOUBLE HMMBUILD.\n")
-                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["-O", tmp_seed_msa_path])
-                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["--hand"])
+                    exit()
+                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["-O", tmp_seed_msa_sto_path])
+                if is_file_empty(tmp_seed_msa_sto_path):
+                    with open(log_file, 'a') as file:
+                        file.write("EMPTY STO MSA IN BETWEEN DOUBLE HMMBUILD.\n")
+                    exit()
+                if is_file_empty(tmp_seed_msa_path):
+                    with open(log_file, 'a') as file:
+                        file.write("EMPTY MSA IN BETWEEN DOUBLE HMMBUILD.\n")
+                    exit()
+                run_hmmbuild(tmp_seed_msa_sto_path, tmp_hmm_path, ["--hand"])
+                if is_file_empty(tmp_seed_msa_sto_path):
+                    with open(log_file, 'a') as file:
+                        file.write("EMPTY STO MSA AFTER DOUBLE HMMBUILD.\n")
+                    exit()
                 if is_file_empty(tmp_seed_msa_path):
                     with open(log_file, 'a') as file:
                         file.write("EMPTY MSA AFTER DOUBLE HMMBUILD.\n")
+                    exit()
                 extract_RF(tmp_seed_msa_path, tmp_rf_path)
                 run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
                 filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
