@@ -447,6 +447,9 @@ def remove_tmp_files(folder_path):
         if os.path.isfile(item_path):
             os.remove(item_path)
 
+def is_file_empty(file_path): # TODO remove, helper function
+    return os.path.exists(file_path) and os.stat(file_path).st_size == 0
+
 def main():
     parse_args()
     define_globals()
@@ -511,8 +514,14 @@ def main():
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
                 
+                if is_file_empty(tmp_seed_msa_path): # TODO remove after tests
+                    with open(log_file, 'a') as file:
+                        file.write("EMPTY MSA BEFORE DOUBLE HMMBUILD.\n")
                 run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["-O", tmp_seed_msa_path])
-                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["--hand", tmp_seed_msa_path])
+                run_hmmbuild(tmp_seed_msa_path, tmp_hmm_path, ["--hand"])
+                if is_file_empty(tmp_seed_msa_path):
+                    with open(log_file, 'a') as file:
+                        file.write("EMPTY MSA AFTER DOUBLE HMMBUILD.\n")
                 extract_RF(tmp_seed_msa_path, tmp_rf_path)
                 run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
                 filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
