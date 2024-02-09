@@ -537,7 +537,7 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write("EMPTY MSA AFTER DOUBLE HMMBUILD.\n")
                     exit()
-                extract_RF(tmp_seed_msa_path, tmp_rf_path)
+                extract_RF(tmp_seed_msa_sto_path, tmp_rf_path)
                 run_hmmsearch(tmp_hmm_path, updated_mgnifams_dict_fasta_file, tmp_domtblout_path)
                 filtered_seq_names = filter_recruited(tmp_domtblout_path, evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
