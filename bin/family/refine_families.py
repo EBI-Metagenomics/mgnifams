@@ -493,10 +493,11 @@ def main():
                     discard_flag = True
                     break
                 run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
-                if (len(get_sequences_from_stockholm(tmp_align_msa_path)) > 50000):
+                length_seqs_for_esl = len(get_sequences_from_stockholm(tmp_align_msa_path))
+                if (length_seqs_for_esl > 50000):
                     discard_flag = True
                     with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: mgnifam{iteration} too many sequences for esl.\n")
+                        file.write(f"Discard-Warning: mgnifam{iteration} too many sequences for esl ({length_seqs_for_esl}).\n")
                     break
                 new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
                 with open(log_file, 'a') as file:
