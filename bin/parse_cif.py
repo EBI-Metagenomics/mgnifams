@@ -39,9 +39,15 @@ def process_pdb(pdb_file, output_file):
             if parts[0] != "ATOM":
                 continue
 
-            new_asym_id = parts[4]
             new_comp_id = parts[3]
-            new_seq_id = parts[5]
+            if (len(parts) == 12): # A 100
+                new_asym_id  = parts[4]
+                new_seq_id   = parts[5]
+                metric_value = float(parts[10])
+            else: # 1000 or more ATOMs, A1000
+                new_asym_id  = parts[4][0]
+                new_seq_id   = parts[4][1:]
+                metric_value = float(parts[9])
 
             if asym_id is not None and (new_asym_id != asym_id or new_comp_id != comp_id or new_seq_id != seq_id):
                 # Write previous residue's data
@@ -50,7 +56,7 @@ def process_pdb(pdb_file, output_file):
                 metric_values = []
 
             asym_id, comp_id, seq_id = new_asym_id, new_comp_id, new_seq_id
-            metric_values.append(float(parts[10]))
+            metric_values.append(metric_value)
 
         # Write last residue's data
         if metric_values:
