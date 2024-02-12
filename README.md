@@ -43,12 +43,12 @@ To continue from where the last family finished on the server execution, the fil
 
 Run with: **nextflow run workflows/generate_families/main.nf -c workflows/generate_families/nextflow.config -dsl2 -profile lsf -with-tower -resume**
 
-5. **annotate_models**
+5. **reformat_msa**
 
 Results from the previous step must be manually moved to:
 
 /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/
-in batches (all families hard to finish successfully). Only using **seed_msa** folder in this step.
+in batches (all families hard to finish successfully).
 
 Example from within the work folder:
 
@@ -62,19 +62,19 @@ cp hmm/* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/fa
 
 cp updated_* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/input/families/
 
+Reformating output **seed_msa_sto** and hmmalign **msa_sto** Stockholm MSAs in simple fas format to be able to annotate models and visualize/download with MSAViewer on the MGnifams site.
+
+Run with: **nextflow run workflows/reformat_msa/main.nf -c workflows/reformat_msa/nextflow.config -dsl2 -profile slurm -with-tower -resume**
+
+6. **annotate_models**
+
+Only using **seed_msa** folder in this step.
+
+Annotating hmm models with HHblits against HH Pfams.
+
 -E evalue cutoff for output does not work properly. This is why we are filtering with our own code to report results.
 
 Run with: **nextflow run workflows/annotate_models/main.nf -c workflows/annotate_models/nextflow.config -dsl2 -profile slurm -with-tower -resume**
-
-6. **reformat_msa**
-
-Reformating output hmmalign Stockholm MSAs in simple fas format to be able to visualize/download with MSAViewer on the MGnifams site.
-
-Results from the previous step must have been manually moved to:
-/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/
-in batches (all families hard to finish successfully). Only using the **msa** folder in this step.
-
-Run with: **nextflow run workflows/reformat_msa/main.nf -c workflows/reformat_msa/nextflow.config -dsl2 -profile slurm -with-tower -resume**
 
 7. **predict_annotate_structures**
 

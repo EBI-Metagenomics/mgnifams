@@ -25,10 +25,10 @@ workflow PREDICT_STRUCTURES {
         .set { input }
     pdb_ch = ESMFOLD(input, params.compute_mode).pdb
     cif_ch = PARSE_CIF(pdb_ch).cif
-    fcz_ch = FOLDCOMP_COMPRESS(pdb_ch).fcz
+    // fcz_ch = FOLDCOMP_COMPRESS(pdb_ch).fcz
 
     emit:
     pdb_ch
     cif_ch
-    fcz_ch
+    // fcz_ch
 }
