@@ -13,7 +13,7 @@ process HHSUITE_HHBLITS {
     val(db_name)
 
     output:
-    tuple val(meta), path("${meta.id}"), emit: hhr
+    tuple val(meta), path("${meta.id}_hhr"), emit: hhr
     path "versions.yml"                , emit: versions
 
     when:
@@ -23,7 +23,7 @@ process HHSUITE_HHBLITS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mkdir -p ${prefix}
+    mkdir -p ${prefix}_hhr
 
     for a3m_file in ${a3m_folder}/*; do
         name=\$(basename \$a3m_file .a3m)
@@ -32,7 +32,7 @@ process HHSUITE_HHBLITS {
             -cpu $task.cpus \\
             -i \$a3m_file \\
             -d ${hmm_db}/${db_name} \\
-            -o ${prefix}/\$name.hhr
+            -o ${prefix}_hhr/\$name.hhr
     done
 
     cat <<-END_VERSIONS > versions.yml
@@ -45,9 +45,9 @@ process HHSUITE_HHBLITS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mkdir -p ${prefix}
+    mkdir -p ${prefix}_hhr
 
-    touch ${prefix}/${prefix}.hhr
+    touch ${prefix}_hhr/${prefix}.hhr
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

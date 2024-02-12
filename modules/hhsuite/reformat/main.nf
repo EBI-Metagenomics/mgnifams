@@ -24,7 +24,7 @@ process HHSUITE_REFORMAT {
     mkdir -p ${prefix}
 
     for file in ${fa}/*; do
-        name=\$(basename \$file .fa)
+        name=\$(basename \$file .${informat})
 
         ${moduleDir}/templates/reformat.pl \\
             $args \\

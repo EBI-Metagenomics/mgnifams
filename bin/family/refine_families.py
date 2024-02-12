@@ -48,8 +48,8 @@ def define_globals():
     globals().update({
         "tmp_family_sequences_path"    : os.path.join(tmp_folder, 'family_sequences.fa'),
         "tmp_seed_msa_path"            : os.path.join(tmp_folder, 'seed_msa.fa'),
-        "tmp_seed_msa_sto_path"        : os.path.join(tmp_folder, 'seed_msa_sto.fa'),
-        "tmp_align_msa_path"           : os.path.join(tmp_folder, 'align_msa.fa'),
+        "tmp_seed_msa_sto_path"        : os.path.join(tmp_folder, 'seed_msa_sto.sto'),
+        "tmp_align_msa_path"           : os.path.join(tmp_folder, 'align_msa.sto'),
         "tmp_hmm_path"                 : os.path.join(tmp_folder, 'model.hmm'),
         "tmp_domtblout_path"           : os.path.join(tmp_folder, 'domtblout.txt'),
         "tmp_intermediate_esl_path"    : os.path.join(tmp_folder, 'intermediate_esl.fa'),
@@ -390,8 +390,8 @@ def append_family_file(output_file, iteration, family_members):
         file.write(f"E: mgnifam{iteration}, s: {len(family_members)}\n")
 
 def move_produced_models(iteration, size):
-    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'mgnfam{iteration}_{size}.fa'))
-    shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'mgnfam{iteration}_{size}.fa'))
+    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'mgnfam{iteration}_{size}.sto'))
+    shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'mgnfam{iteration}_{size}.sto'))
     shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'mgnfam{iteration}_{size}.hmm'))
     shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'mgnfam{iteration}_{size}.domtblout'))
     shutil.move(tmp_rf_path, os.path.join(rf_folder, f'mgnfam{iteration}_{size}.txt'))
