@@ -340,7 +340,7 @@ def run_esl_weight(input_file, output_file, threshold=0.8):
         else:
             threshold -= 0.1
             with open(log_file, 'a') as file:
-                file.write("Rerunning run_esl_weight; ")
+                file.write("Rerunning esl_weight; ")
             shutil.copy(output_file, tmp_intermediate_esl_path)
 
     with open(log_file, 'a') as file:
