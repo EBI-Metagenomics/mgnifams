@@ -4,6 +4,8 @@ import pandas as pd
 def filter_blastp_results(blastp_results_df):
     blastp_results_df["evalue"] = pd.to_numeric(blastp_results_df["evalue"], errors='coerce') # Convert 'evalue' column to numeric
     filtered_df = blastp_results_df[blastp_results_df["evalue"] <= 1e-7] # Filter rows with evalue <= 1e-7
+    filtered_df = filtered_df.sort_values(by='evalue', ascending=True)  # Sort by ascending evalue
+    filtered_df = filtered_df.drop_duplicates(subset='qseqid', keep='first')  # Keep only unique-top rows based on qseqid
     return filtered_df
 
 def match_clusters(filtered_blastp_df, clusters_df):
@@ -27,7 +29,7 @@ if __name__ == "__main__":
 
     # Filter blastp results based on evalue
     filtered_blastp_df = filter_blastp_results(blastp_results_df)
-
+    
     # Read clusters file into a dataframe
     clusters_df = pd.read_csv(clusters_file, sep='\t', header=None)
     clusters_df.columns = ["Representative", "Member"]
