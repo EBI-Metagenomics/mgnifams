@@ -23,10 +23,15 @@ input:
       type: file
       description: Input fasta file containing query sequences
       pattern: "*.{fa,fasta,fa.gz,fasta.gz}"
+  - meta2:
+      type: map
+      description: |
+        Groovy Map containing db information
+        e.g. [ id:'test2', single_end:false ]
   - db:
       type: file
       description: File of the indexed DIAMOND database
-      pattern: "*.{dmnd}"
+      pattern: "*.dmnd"
   - out_ext:
       type: string
       description: |
@@ -39,8 +44,8 @@ input:
       type: string
       description: |
         Optional space separated list of DIAMOND tabular BLAST output keywords
-        used for in conjunction with the 'txt' out_ext option (--outfmt 6). See
-        DIAMOND documnetation for more information.
+        used for in conjunction with the 'txt' out_ext option (--outfmt 6). Options:
+        qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
 output:
   - meta:
       type: map
@@ -82,7 +87,6 @@ output:
 authors:
   - "@spficklin"
   - "@jfy133"
-  - "@vagkaratzas"
 maintainers:
   - "@spficklin"
   - "@jfy133"
