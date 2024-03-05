@@ -1,4 +1,5 @@
 process MATCH_CLUSTERS {
+    publishDir "${params.outdir}/khalifams", mode: "copy"
     label "venv"
 
     input:

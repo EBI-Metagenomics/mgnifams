@@ -17,11 +17,11 @@ def parse_args():
         sys.exit(1)
 
     globals().update({
-        "arg_clusters_bookkeeping_df_pkl_file" : sys.argv[1], 
-        "arg_refined_families_tsv_file"        : sys.argv[2],
-        "arg_mgnifams_dict_fasta_file"         : sys.argv[3],
-        "arg_discarded_clusters_file"          : sys.argv[4],
-        "arg_minimum_family_members"           : int(sys.argv[5]),
+        "arg_matched_cluster_reps_file"        : sys.argv[1],
+        "arg_clusters_bookkeeping_df_pkl_file" : sys.argv[2], 
+        "arg_refined_families_tsv_file"        : sys.argv[3],
+        "arg_mgnifams_dict_fasta_file"         : sys.argv[4],
+        "arg_discarded_clusters_file"          : sys.argv[5],
         "arg_iteration"                        : int(sys.argv[6])
     })   
 
@@ -58,6 +58,10 @@ def define_globals():
         "tmp_rf_path"                  : os.path.join(tmp_folder, 'rf.txt')
     })
 
+def read_matched_cluster_reps(arg_matched_cluster_reps_file):
+    matched_cluster_reps = np.loadtxt(arg_matched_cluster_reps_file, delimiter=',', usecols=(2,), dtype=str, skiprows=1)
+    return matched_cluster_reps
+        
 def copy_updated_input_files(
     arg_refined_families_tsv_file, updated_refined_families_tsv_file,
     arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file, 
@@ -126,24 +130,25 @@ def create_mgnifams_fasta_dict(arg_mgnifams_dict_fasta_file):
 
     return mgnifams_fasta_dict
 
-def get_next_largest_family(clusters_bookkeeping_df):
+def get_next_family(matched_cluster_reps, clusters_bookkeeping_df):
     start_time = time.time()
     
-    if clusters_bookkeeping_df.empty:
-        return None, None
+    if clusters_bookkeeping_df.empty or matched_cluster_reps.size == 0:
+        return None, None, None
 
-    largest_family_rep = clusters_bookkeeping_df['size'].idxmax()
-    largest_family_members = clusters_bookkeeping_df.loc[largest_family_rep, 'member']
-    # Ensure that largest_family_members is a list
-    if not isinstance(largest_family_members, list):
-        largest_family_members = [largest_family_members] if isinstance(largest_family_members, str) else largest_family_members.tolist()
+    next_family_rep = matched_cluster_reps[0]
+    matched_cluster_reps = matched_cluster_reps[1:]
+    next_family_members = clusters_bookkeeping_df.loc[next_family_rep, 'member']
+    # Ensure that next_family_members is a list
+    if not isinstance(next_family_members, list):
+        next_family_members = [next_family_members] if isinstance(next_family_members, str) else next_family_members.tolist()
 
     with open(log_file, 'a') as file:
         file.write("\nget_next_largest_family: ")
         file.write(str(time.time() - start_time) + "\n")
-        file.write(f"S: {largest_family_rep}, s: {len(largest_family_members)}\n")
+        file.write(f"S: {next_family_rep}, s: {len(next_family_members)}\n")
 
-    return largest_family_rep, largest_family_members
+    return next_family_rep, next_family_members, matched_cluster_reps
 
 def write_fasta_sequences(sequences, file_path, mode):
     with open(file_path, mode) as output_handle:
@@ -390,11 +395,11 @@ def append_family_file(output_file, iteration, family_members):
         file.write(f"E: mgnifam{iteration}, s: {len(family_members)}\n")
 
 def move_produced_models(iteration, size):
-    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'mgnfam{iteration}_{size}.sto'))
-    shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'mgnfam{iteration}_{size}.sto'))
-    shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'mgnfam{iteration}_{size}.hmm'))
-    shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'mgnfam{iteration}_{size}.domtblout'))
-    shutil.move(tmp_rf_path, os.path.join(rf_folder, f'mgnfam{iteration}_{size}.txt'))
+    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'khalifam{iteration}_{size}.sto'))
+    shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'khalifam{iteration}_{size}.sto'))
+    shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'khalifam{iteration}_{size}.hmm'))
+    shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'khalifam{iteration}_{size}.domtblout'))
+    shutil.move(tmp_rf_path, os.path.join(rf_folder, f'khalifam{iteration}_{size}.txt'))
 
 def get_final_family_original_names(filtered_seq_names):
     family_members = {name.split('/')[0] for name in filtered_seq_names}
@@ -452,6 +457,7 @@ def main():
     parse_args()
     define_globals()
 
+    matched_cluster_reps = read_matched_cluster_reps(arg_matched_cluster_reps_file)
     copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file, arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file, arg_discarded_clusters_file, updated_discarded_clusters_file)
     clusters_bookkeeping_df = load_clusters_bookkeeping_df(arg_clusters_bookkeeping_df_pkl_file)
     clusters_bookkeeping_df = exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_file) # restarting mechanism
@@ -460,8 +466,8 @@ def main():
     iteration = arg_iteration
     while True:
         iteration += 1
-        largest_family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
-        if not family_members or len(family_members) < arg_minimum_family_members:
+        next_family_rep, family_members, matched_cluster_reps = get_next_family(matched_cluster_reps, clusters_bookkeeping_df)
+        if not family_members:
             with open(log_file, 'a') as file:
                 file.write("Exiting all...")
             break
@@ -543,10 +549,10 @@ def main():
         # Exiting family loop
         if (discard_flag): # unsuccessfully
             with open(log_file, 'a') as file:
-                file.write("Discarding cluster " + str(largest_family_rep) + "\n")
+                file.write("Discarding cluster " + str(next_family_rep) + "\n")
 
             iteration -= 1
-            unique_reps = [largest_family_rep]
+            unique_reps = [next_family_rep]
             with open(updated_discarded_clusters_file, 'a') as outfile:
                 outfile.write(unique_reps[0] + "\n")
         else: # successfully

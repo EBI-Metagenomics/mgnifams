@@ -22,11 +22,11 @@ process REFINE_FAMILIES {
     conda "${moduleDir}/environment.yml"
     
     input:
+    path(anti_defence_proteins)
     path(clusters_pkl)
     path(families_tsv)
     path(fasta)
     path(discarded_clusters)
-    val(minimum_members)
     val(iteration)
 
     output:
@@ -42,7 +42,7 @@ process REFINE_FAMILIES {
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${minimum_members} ${iteration}
+    python3 ${params.scriptDir}/family/refine_families.py ${anti_defence_proteins} ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${iteration}
     """
 }
 
