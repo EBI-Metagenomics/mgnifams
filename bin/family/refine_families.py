@@ -60,6 +60,7 @@ def define_globals():
 
 def read_matched_cluster_reps(arg_matched_cluster_reps_file):
     matched_cluster_reps = np.loadtxt(arg_matched_cluster_reps_file, delimiter=',', usecols=(2,), dtype=str, skiprows=1)
+    matched_cluster_reps = np.array(list(set(matched_cluster_reps))) # some anti-defence proteins have same cluster rep match, need unique here
     return matched_cluster_reps
         
 def copy_updated_input_files(
