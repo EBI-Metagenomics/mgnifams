@@ -105,11 +105,12 @@ def exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_
 
     return clusters_bookkeeping_df
 
-def exclude_discarded_clusters(clusters_bookkeeping_df, arg_discarded_clusters_file, log_file):
+def exclude_discarded_clusters(matched_cluster_reps, clusters_bookkeeping_df, arg_discarded_clusters_file, log_file):
     start_time = time.time()
-
+    
     if os.path.getsize(arg_discarded_clusters_file) > 0:
         discarded_clusters_df = pd.read_csv(arg_discarded_clusters_file, header=None, dtype=str)
+        matched_cluster_reps = np.setdiff1d(matched_cluster_reps, discarded_clusters_df.iloc[:, 0].values)
         clusters_to_remove = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(discarded_clusters_df[0])].index.unique().tolist()
         # Modify the DataFrame in place
         clusters_bookkeeping_df.drop(index=clusters_to_remove, inplace=True)
@@ -118,7 +119,7 @@ def exclude_discarded_clusters(clusters_bookkeeping_df, arg_discarded_clusters_f
         file.write("exclude_discarded_clusters: ")
         file.write(str(time.time() - start_time) + "\n")
 
-    return clusters_bookkeeping_df
+    return matched_cluster_reps, clusters_bookkeeping_df
 
 def create_mgnifams_fasta_dict(arg_mgnifams_dict_fasta_file):
     start_time = time.time()
@@ -477,7 +478,7 @@ def main():
     copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file, arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file, arg_discarded_clusters_file, updated_discarded_clusters_file)
     clusters_bookkeeping_df = load_clusters_bookkeeping_df(arg_clusters_bookkeeping_df_pkl_file)
     clusters_bookkeeping_df = exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_file) # restarting mechanism
-    clusters_bookkeeping_df = exclude_discarded_clusters(clusters_bookkeeping_df, arg_discarded_clusters_file, log_file) # restarting mechanism
+    matched_cluster_reps, clusters_bookkeeping_df = exclude_discarded_clusters(matched_cluster_reps, clusters_bookkeeping_df, arg_discarded_clusters_file, log_file) # restarting mechanism
     mgnifams_fasta_dict = create_mgnifams_fasta_dict(arg_mgnifams_dict_fasta_file)
     iteration = arg_iteration
     while True:
