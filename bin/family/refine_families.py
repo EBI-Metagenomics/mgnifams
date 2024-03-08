@@ -137,9 +137,24 @@ def get_next_family(matched_cluster_reps, clusters_bookkeeping_df):
     if clusters_bookkeeping_df.empty or matched_cluster_reps.size == 0:
         return None, None, None
 
-    next_family_rep = matched_cluster_reps[0]
-    matched_cluster_reps = matched_cluster_reps[1:]
-    next_family_members = clusters_bookkeeping_df.loc[next_family_rep, 'member']
+    while True:
+        try:
+            next_family_rep = matched_cluster_reps[0]
+            matched_cluster_reps = matched_cluster_reps[1:]
+            next_family_members = clusters_bookkeeping_df.loc[next_family_rep, 'member']
+            break  # Break the loop if the above line executes without error
+        except KeyError:
+            # Handle the KeyError (key does not exist in DataFrame)
+            with open(log_file, 'a') as file:
+                file.write(f"\n{next_family_rep} already checked. Getting next...\n")
+            # Here, you might want to do something like skipping to the next iteration
+            if not matched_cluster_reps:
+                # Break the loop if matched_cluster_reps is empty
+                return None, None, None
+            else:
+                # Move to the next item in matched_cluster_reps
+                continue
+
     # Ensure that next_family_members is a list
     if not isinstance(next_family_members, list):
         next_family_members = [next_family_members] if isinstance(next_family_members, str) else next_family_members.tolist()
