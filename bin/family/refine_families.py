@@ -89,12 +89,13 @@ def load_clusters_bookkeeping_df(arg_clusters_bookkeeping_df_pkl_file):
 
     return clusters_bookkeeping_df
 
-def exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_file):
+def exclude_existing_families(matched_cluster_reps, clusters_bookkeeping_df, arg_refined_families_tsv_file):
     start_time = time.time()
 
     if os.path.getsize(arg_refined_families_tsv_file) > 0:
         refined_families_df = pd.read_csv(arg_refined_families_tsv_file, delimiter='\t', header=None, dtype=str)
         members_to_remove = refined_families_df.iloc[:, 1].apply(lambda x: x.split('/')[0]).unique().tolist()
+        matched_cluster_reps = np.setdiff1d(matched_cluster_reps, members_to_remove)
         clusters_to_remove = clusters_bookkeeping_df[clusters_bookkeeping_df['member'].isin(members_to_remove)].index.unique().tolist()
         # Modify the DataFrame in place
         clusters_bookkeeping_df.drop(index=clusters_to_remove, inplace=True)
@@ -103,7 +104,7 @@ def exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_
         file.write("exclude_existing_families: ")
         file.write(str(time.time() - start_time) + "\n")
 
-    return clusters_bookkeeping_df
+    return matched_cluster_reps, clusters_bookkeeping_df
 
 def exclude_discarded_clusters(matched_cluster_reps, clusters_bookkeeping_df, arg_discarded_clusters_file, log_file):
     start_time = time.time()
@@ -477,7 +478,7 @@ def main():
     matched_cluster_reps = read_matched_cluster_reps(arg_matched_cluster_reps_file)
     copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file, arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file, arg_discarded_clusters_file, updated_discarded_clusters_file)
     clusters_bookkeeping_df = load_clusters_bookkeeping_df(arg_clusters_bookkeeping_df_pkl_file)
-    clusters_bookkeeping_df = exclude_existing_families(clusters_bookkeeping_df, arg_refined_families_tsv_file) # restarting mechanism
+    matched_cluster_reps, clusters_bookkeeping_df = exclude_existing_families(matched_cluster_reps, clusters_bookkeeping_df, arg_refined_families_tsv_file) # restarting mechanism
     matched_cluster_reps, clusters_bookkeeping_df = exclude_discarded_clusters(matched_cluster_reps, clusters_bookkeeping_df, arg_discarded_clusters_file, log_file) # restarting mechanism
     mgnifams_fasta_dict = create_mgnifams_fasta_dict(arg_mgnifams_dict_fasta_file)
     iteration = arg_iteration
