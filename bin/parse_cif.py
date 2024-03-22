@@ -35,29 +35,26 @@ def process_pdb(pdb_file, output_file):
         for line in lines:
             if line.startswith("TER"):
                 break
-            parts = line.split()
-            if parts[0] != "ATOM":
+            # Example line inside quotes:'ATOM      1  N   MET A   1     -15.115  15.723 -29.946  1.00 40.77           N  '#
+            #        Counting characters:'0         1         2         3         4         5         6         7         '#
+            #                           :'01234567890123456789012345678901234567890123456789012345678901234567890123456789'#
+            if line[0:4] != "ATOM":
                 continue
 
-            new_comp_id = parts[3]
-            if (len(parts) == 12): # A 100
-                new_asym_id  = parts[4]
-                new_seq_id   = parts[5]
-                metric_value = float(parts[10])
-            else: # 1000 or more ATOMs, A1000
-                new_asym_id  = parts[4][0]
-                new_seq_id   = parts[4][1:]
-                metric_value = float(parts[9])
-
+            new_comp_id  = line[17:20].strip()
+            new_asym_id  = line[20:22].strip()
+            new_seq_id   = line[22:26].strip()
+            metric_value = float(line[60:66].strip())
+            
             if asym_id is not None and (new_asym_id != asym_id or new_comp_id != comp_id or new_seq_id != seq_id):
                 # Write previous residue's data
                 mean_metric_value = np.mean(metric_values)
                 f.write(f"{asym_id} {comp_id} {seq_id} 2 {mean_metric_value:.2f} 1 1\n")
                 metric_values = []
-
+            
             asym_id, comp_id, seq_id = new_asym_id, new_comp_id, new_seq_id
             metric_values.append(metric_value)
-
+            
         # Write last residue's data
         if metric_values:
             mean_metric_value = np.mean(metric_values)
