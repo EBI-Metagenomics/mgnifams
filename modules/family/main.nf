@@ -46,35 +46,19 @@ process REFINE_FAMILIES {
     """
 }
 
-process FILTER_FAMILIES {
-    input:
-    path clust_tsv
-    val threshold
-
-    output:
-    path "filtered_clusters.tsv", emit: filtered_clusters
-
-    script:
-    """
-    ${params.scriptDir}/filter_families.sh ${clust_tsv} ${threshold} filtered_clusters.tsv
-    """
-}
-
-process PARSE_FAMILIES {
-    publishDir "${params.outdir}/families/", mode: "copy"
+process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     label "venv"
 
     input:
-    path fasta
-    path clust_tsv
+    path msa
+    path ids
+    val mode
 
     output:
-    path "rep_names.txt", emit: reps_ids
-    path "reps.fa"      , emit: reps_fasta
-    path "families/*"   , emit: families_folder
+    path "family_reps.fasta"
 
     script:
     """
-    python3 ${params.scriptDir}/parse_families.py ${fasta} ${clust_tsv}
+    python3 ${params.scriptDir}/extract_first_stockholm_sequences.py ${msa} ${ids} ${mode} family_reps.fasta
     """
 }

@@ -1,4 +1,4 @@
-process EXPORT_PROTEINS_CSV {
+process EXPORT_PROTEINS_CSV { // TODO maybe also execute this afterwards, along with EXPORT_MGNIFAMS_CSV
     publishDir "${params.outdir}/tables", mode: "copy"
     label "venv"
 

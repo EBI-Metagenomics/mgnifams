@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-include { EXTRACT_FIRST_STOCKHOLM_SEQUENCES } from "$launchDir/modules/general.nf"
+include { EXTRACT_FIRST_STOCKHOLM_SEQUENCES } from "$launchDir/modules/family/main.nf"
 include { ESMFOLD                           } from "$launchDir/modules/esmfold/main.nf"
 include { PARSE_CIF                         } from "$launchDir/modules/esmfold/parse_cif.nf"
 include { FOLDCOMP_COMPRESS                 } from "$launchDir/modules/foldcomp/compress/main.nf"
