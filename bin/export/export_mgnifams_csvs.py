@@ -5,8 +5,8 @@ import csv
 from Bio import SeqIO
 
 def initiate_output_csvs(mgnifams_out_dir, output_dir):
-    mgnifam_headers          = ['id', 'size', 'protein_rep', 'mask', 'cif_file', 'msa_file', 'hmm_file']
-    mgnifam_proteins_headers = ['mgnifam_id', 'protein', 'mask']
+    mgnifam_headers          = ['id', 'family_size', 'protein_rep', 'rep_region', 'converged', 'cif_file', 'seed_msa_file', 'msa_file', 'hmm_file', 'biomes_file', 'domain_architecture_file']
+    mgnifam_proteins_headers = ['mgnifam_id', 'protein', 'region']
     mgnifam_pfams_headers    = ['mgnifam_id', 'rank', 'pfam_id', 'pfam_hit', 'query_hmm_range', 'template_hmm_range', 'e_value']
     mgnifam_folds_headers    = ['mgnifam_id', 'target_structure', 'aligned_length', 'query_start', 'query_end', 'target_start', 'target_end', 'e_value']
 
@@ -29,7 +29,7 @@ def initiate_output_csvs(mgnifams_out_dir, output_dir):
         writer.writerow(mgnifam_folds_headers)
 
 def get_number_of_families(mgnifams_out_dir):
-    msa_directory = os.path.join(mgnifams_out_dir, 'families', 'msa')
+    msa_directory = os.path.join(mgnifams_out_dir, 'families', 'msa_sto')
     msa_files = glob.glob(os.path.join(msa_directory, '*'))
     num_mgnifams = len(msa_files)
     return num_mgnifams
@@ -43,52 +43,55 @@ def parse_cif(mgnifam_id, mgnifams_out_dir):
     first_split = filename_no_ext.split('-')
     first_split_first_part = first_split[0]
     first_split_second_part = first_split[1]
-    size = first_split_first_part.split('_')[1]
+    family_size = first_split_first_part.split('_')[1]
     protein_parts = first_split_second_part.split('_')
     protein_rep = protein_parts[0]
     if (len(protein_parts) == 1):
-        mask = "-"
+        region = "-"
     elif (len(protein_parts) == 3):
-        mask = f"{protein_parts[1]}-{protein_parts[2]}"
+        region = f"{protein_parts[1]}-{protein_parts[2]}"
     elif (len(protein_parts) == 5):
-        mask = f"{int(protein_parts[1]) + int(protein_parts[3]) - 1}-{int(protein_parts[1]) + int(protein_parts[4]) - 1}"
+        region = f"{int(protein_parts[1]) + int(protein_parts[3]) - 1}-{int(protein_parts[1]) + int(protein_parts[4]) - 1}"
 
-    return size, protein_rep, mask, cif_filename
+    return family_size, protein_rep, region, cif_filename
 
 def write_mgnifam(i, mgnifams_out_dir, output_dir):
     mgnifam_id = f"mgnfam{i}"
-    size, protein_rep, mask, cif_file = parse_cif(mgnifam_id, mgnifams_out_dir)
-    msa_file = f"{mgnifam_id}_{size}.fa"
-    hmm_file = f"{mgnifam_id}_{size}.hmm"
+    family_size, protein_rep, region, cif_file = parse_cif(mgnifam_id, mgnifams_out_dir)
+    converged = False
+    seed_msa_file = f"{mgnifam_id}_{family_size}.fa"
+    msa_file = seed_msa_file
+    hmm_file = f"{mgnifam_id}_{family_size}.hmm"
+    biomes_file = f"{mgnifam_id}_b_counts.csv"
+    domain_architecture_file = f"{mgnifam_id}_domains.json"
     
     mgnifam_csv_path = os.path.join(output_dir, 'mgnifam.csv')
     with open(mgnifam_csv_path, 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([mgnifam_id, size, protein_rep, mask, cif_file, msa_file, hmm_file]) 
+        writer.writerow([mgnifam_id, family_size, protein_rep, region, converged,
+            cif_file, seed_msa_file, msa_file, hmm_file, biomes_file, domain_architecture_file]) 
 
-        # TODO write file paths here
-
-def parse_protein_mask(protein_id):
+def parse_protein_region(protein_id):
     number_of_underscores = protein_id.count('_')
     if (number_of_underscores == 0):
         protein = protein_id
-        mask    = "-"
+        region  = "-"
     elif (number_of_underscores == 1):
         parts   = protein_id.split('/')
         protein = parts[0]
-        mask    = parts[1].replace("_", "-")
+        region  = parts[1].replace("_", "-")
     elif (number_of_underscores == 2):
         parts   = protein_id.split('_')
         protein = parts[0]
-        mask    = f"{parts[1]}-{parts[2]}"
+        region  = f"{parts[1]}-{parts[2]}"
     elif (number_of_underscores == 3):
-        parts      = protein_id.split('_')
-        protein    = parts[0]
-        start      = int(parts[1])
-        mask_parts = protein_id.split('/')[1].split('_')
-        mask       = f"{start + int(mask_parts[0]) - 1}-{start + int(mask_parts[1]) - 1}"
+        parts        = protein_id.split('_')
+        protein      = parts[0]
+        start        = int(parts[1])
+        region_parts = protein_id.split('/')[1].split('_')
+        region       = f"{start + int(region_parts[0]) - 1}-{start + int(region_parts[1]) - 1}"
 
-    return protein, mask
+    return protein, region
 
 def write_mgnifam_proteins(mgnifams_out_dir, output_dir):
     refined_families_file = os.path.join(mgnifams_out_dir, 'families', 'updated_refined_families.tsv')
@@ -98,9 +101,9 @@ def write_mgnifam_proteins(mgnifams_out_dir, output_dir):
         writer = csv.writer(csv_file)
 
         for line in file:
-            mgnifam_id, protein_mask = line.strip().split('\t')
-            protein, mask = parse_protein_mask(protein_mask)
-            writer.writerow([mgnifam_id, protein, mask])
+            mgnifam_id, protein_region = line.strip().split('\t')
+            protein, region = parse_protein_region(protein_region)
+            writer.writerow([mgnifam_id, protein, region])
 
 def write_mgnifam_pfams(mgnifams_out_dir, output_dir):
     pfam_hits_directory = os.path.join(mgnifams_out_dir, 'hh', 'hits')

@@ -23,6 +23,7 @@ CREATE TABLE mgnifam_pfams (
     id SERIAL PRIMARY KEY,
     mgnifam_id INT REFERENCES mgnifam(id),
     rank INT,
+    pfam_id VARCHAR(8),
     pfam_hit TEXT,
     query_hmm_range TEXT,
     template_hmm_range TEXT,
