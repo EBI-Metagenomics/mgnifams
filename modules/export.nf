@@ -21,6 +21,7 @@ process EXPORT_MGNIFAMS_CSV {
     path out_dir
 
     output:
+    path "tables/mgnifam.csv"
     path "tables/mgnifam_proteins.csv"
     path "tables/mgnifam_pfams.csv"
     path "tables/mgnifam_folds.csv"

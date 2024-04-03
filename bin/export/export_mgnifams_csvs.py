@@ -66,6 +66,8 @@ def write_mgnifam(i, mgnifams_out_dir, output_dir):
         writer = csv.writer(file)
         writer.writerow([mgnifam_id, size, protein_rep, mask, cif_file, msa_file, hmm_file]) 
 
+        # TODO write file paths here
+
 def parse_protein_mask(protein_id):
     number_of_underscores = protein_id.count('_')
     if (number_of_underscores == 0):

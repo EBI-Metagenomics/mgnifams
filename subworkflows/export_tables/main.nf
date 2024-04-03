@@ -10,6 +10,5 @@ workflow EXPORT_TABLES {
 
     main:
     EXPORT_PROTEINS_CSV(mgnifams_input_path)
-    print(mgnifams_output_dir)
     EXPORT_MGNIFAMS_CSV(mgnifams_output_dir)
 }
