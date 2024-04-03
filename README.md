@@ -93,7 +93,7 @@ grep -E 'pLDDT [7-9][0-9]\.|pLDDT 100' pdb2_scores.txt | awk -F' |, ' '{print $1
 
 After all subworkflows have finished executing run:
 
-**python export_mgnifams_csv.py <mgnifams_out_dir>**
+**python bin/export/export_mgnifams_csv.py <mgnifams_out_dir>**
 
 to generate ready to import data tables
 

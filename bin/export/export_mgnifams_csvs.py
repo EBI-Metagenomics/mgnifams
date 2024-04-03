@@ -135,9 +135,9 @@ def write_mgnifam_pfams(mgnifams_out_dir, output_dir):
 def write_mgnifam_folds(mgnifams_out_dir, output_dir):
     foldseek_directory = os.path.join(mgnifams_out_dir, 'foldseek')
     foldseek_files = glob.glob(os.path.join(foldseek_directory, '*'))
-
     mgnifam_folds_csv_path = os.path.join(output_dir, 'mgnifam_folds.csv')
 
+    annotation = {}
     for filepath in foldseek_files:
         filename = os.path.basename(filepath)
         if filename.startswith(('alphafold_', 'esm_', 'pdb_')):
@@ -173,7 +173,7 @@ def main():
         sys.exit(1)
 
     mgnifams_out_dir = sys.argv[1]
-    output_dir       = os.path.join(mgnifams_out_dir, "tables")
+    output_dir       = "tables"
     os.makedirs(output_dir, exist_ok=True)
 
     initiate_output_csvs(mgnifams_out_dir, output_dir)
