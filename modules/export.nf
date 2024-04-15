@@ -1,18 +1,3 @@
-process EXPORT_PROTEINS_CSV {
-    publishDir "${params.outdir}/tables", mode: "copy"
-    label "venv"
-
-    input:
-    path fasta
-
-    output:
-    path "proteins.csv"
-
-    """
-    python3 ${params.scriptDir}/export/export_proteins_csv.py ${fasta} proteins.csv
-    """
-}
-
 process EXPORT_MGNIFAMS_CSV {
     publishDir "${params.outdir}", mode: "copy"
     label "venv"
@@ -27,6 +12,6 @@ process EXPORT_MGNIFAMS_CSV {
     path "tables/mgnifam_folds.csv"
 
     """
-    python3 ${params.scriptDir}/export/export_mgnifams_csvs.py ${out_dir}
+    python3 ${params.scriptDir}/export_mgnifams_csvs.py ${out_dir}
     """
 }
