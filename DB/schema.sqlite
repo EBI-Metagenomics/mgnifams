@@ -1,0 +1,43 @@
+CREATE TABLE mgnifam (
+    id INTEGER PRIMARY KEY,
+    family_size INTEGER,
+    protein_rep INTEGER,
+    rep_region TEXT,
+    converged BOOLEAN,
+    cif_file TEXT,
+    seed_msa_file TEXT,
+    msa_file TEXT,
+    hmm_file TEXT,
+    biomes_file TEXT,
+    domain_architecture_file TEXT
+);
+
+CREATE TABLE mgnifam_proteins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mgnifam_id INTEGER REFERENCES mgnifam(id),
+    protein INTEGER,
+    region TEXT
+);
+
+CREATE TABLE mgnifam_pfams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mgnifam_id INTEGER REFERENCES mgnifam(id),
+    rank INTEGER,
+    pfam_id VARCHAR(8),
+    pfam_hit TEXT,
+    query_hmm_range TEXT,
+    template_hmm_range TEXT,
+    e_value REAL
+);
+
+CREATE TABLE mgnifam_folds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mgnifam_id INTEGER REFERENCES mgnifam(id),
+    target_structure TEXT,
+    aligned_length INTEGER,
+    query_start INTEGER,
+    query_end INTEGER,
+    target_start INTEGER,
+    target_end INTEGER,
+    e_value REAL
+);
