@@ -68,7 +68,7 @@ def write_mgnifam(i, mgnifams_out_dir, output_dir):
     mgnifam_csv_path = os.path.join(output_dir, 'mgnifam.csv')
     with open(mgnifam_csv_path, 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([mgnifam_id, family_size, protein_rep, region, converged,
+        writer.writerow([i, family_size, protein_rep, region, converged,
             cif_file, seed_msa_file, msa_file, hmm_file, biomes_file, domain_architecture_file]) 
 
 def parse_protein_region(protein_id):
@@ -102,6 +102,7 @@ def write_mgnifam_proteins(mgnifams_out_dir, output_dir):
 
         for line in file:
             mgnifam_id, protein_region = line.strip().split('\t')
+            mgnifam_id = mgnifam_id.replace("mgnifam", "")
             protein, region = parse_protein_region(protein_region)
             writer.writerow([mgnifam_id, protein, region])
 
@@ -115,6 +116,7 @@ def write_mgnifam_pfams(mgnifams_out_dir, output_dir):
         with open(file_path, 'r') as file:
             hits_data = []
             mgnifam_id = os.path.basename(file_path).split('_')[0]
+            mgnifam_id = mgnifam_id.replace("mgnfam", "")
 
             for line in file:
                 name = line[4:34].strip()
@@ -151,6 +153,7 @@ def write_mgnifam_folds(mgnifams_out_dir, output_dir):
                 for file_line in f:
                     parts = file_line.strip().split('\t')
                     mgnifam_id = parts[0].split('-')[0].split('_')[0]
+                    mgnifam_id = mgnifam_id.replace("mgnfam", "")
                     target_structure_identifier = parts[1]
 
                     annotation = {
