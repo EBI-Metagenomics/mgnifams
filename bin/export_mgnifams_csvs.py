@@ -5,7 +5,7 @@ import csv
 from Bio import SeqIO
 
 def initiate_output_csvs(mgnifams_out_dir, output_dir):
-    mgnifam_headers          = ['id', 'family_size', 'protein_rep', 'rep_region', 'converged', 'cif_file', 'seed_msa_file', 'msa_file', 'hmm_file', 'biomes_file', 'domain_architecture_file']
+    mgnifam_headers          = ['id', 'family_size', 'protein_rep', 'rep_region', 'converged', 'cif_file', 'seed_msa_file', 'msa_file', 'hmm_file', 'rf_file', 'biomes_file', 'domain_architecture_file']
     mgnifam_proteins_headers = ['mgnifam_id', 'protein', 'region']
     mgnifam_pfams_headers    = ['mgnifam_id', 'rank', 'pfam_id', 'pfam_hit', 'query_hmm_range', 'template_hmm_range', 'e_value']
     mgnifam_folds_headers    = ['mgnifam_id', 'target_structure', 'aligned_length', 'query_start', 'query_end', 'target_start', 'target_end', 'e_value']
@@ -62,6 +62,7 @@ def write_mgnifam(i, mgnifams_out_dir, output_dir):
     seed_msa_file = f"{mgnifam_id}_{family_size}.fa"
     msa_file = seed_msa_file
     hmm_file = f"{mgnifam_id}_{family_size}.hmm"
+    rf_file = f"{mgnifam_id}_{family_size}.txt"
     biomes_file = f"{mgnifam_id}_b_counts.csv"
     domain_architecture_file = f"{mgnifam_id}_domains.json"
     
@@ -69,7 +70,7 @@ def write_mgnifam(i, mgnifams_out_dir, output_dir):
     with open(mgnifam_csv_path, 'a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([i, family_size, protein_rep, region, converged,
-            cif_file, seed_msa_file, msa_file, hmm_file, biomes_file, domain_architecture_file]) 
+            cif_file, seed_msa_file, msa_file, hmm_file, rf_file, biomes_file, domain_architecture_file]) 
 
 def parse_protein_region(protein_id):
     number_of_underscores = protein_id.count('_')
