@@ -8,6 +8,7 @@ CREATE TABLE mgnifam (
     seed_msa_file TEXT,
     msa_file TEXT,
     hmm_file TEXT,
+    rf_file TEXT,
     biomes_file TEXT,
     domain_architecture_file TEXT
 );
