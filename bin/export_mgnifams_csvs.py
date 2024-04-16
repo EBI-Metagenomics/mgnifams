@@ -59,7 +59,7 @@ def write_mgnifam(i, mgnifams_out_dir, output_dir):
     mgnifam_id = f"mgnfam{i}"
     family_size, protein_rep, region, cif_file = parse_cif(mgnifam_id, mgnifams_out_dir)
     converged = False
-    seed_msa_file = f"{mgnifam_id}_{family_size}.fa"
+    seed_msa_file = f"{mgnifam_id}_{family_size}.fas"
     msa_file = seed_msa_file
     hmm_file = f"{mgnifam_id}_{family_size}.hmm"
     rf_file = f"{mgnifam_id}_{family_size}.txt"
