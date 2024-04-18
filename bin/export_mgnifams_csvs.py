@@ -2,7 +2,6 @@ import sys
 import os
 import glob
 import csv
-from Bio import SeqIO
 
 def initiate_output_csvs(mgnifams_out_dir, output_dir):
     mgnifam_headers          = ['id', 'family_size', 'protein_rep', 'rep_region', 'converged', 'cif_file', 'seed_msa_file', 'msa_file', 'hmm_file', 'rf_file', 'biomes_file', 'domain_architecture_file']
@@ -34,6 +33,12 @@ def get_number_of_families(mgnifams_out_dir):
     num_mgnifams = len(msa_files)
     return num_mgnifams
 
+def get_converged_families(mgnifams_out_dir):
+    with open(os.path.join(mgnifams_out_dir, 'families', 'updated_converged_families.txt'), 'r') as file:
+        converged_families = {line.strip() for line in file}
+
+        return converged_families
+
 def parse_cif(mgnifam_id, mgnifams_out_dir):
     cif_directory = os.path.join(mgnifams_out_dir, 'cif')
     cif_files = glob.glob(os.path.join(cif_directory, '**', mgnifam_id + '_*'), recursive=True)
@@ -55,10 +60,13 @@ def parse_cif(mgnifam_id, mgnifams_out_dir):
 
     return family_size, protein_rep, region, cif_filename
 
-def write_mgnifam(i, mgnifams_out_dir, output_dir):
+def is_converged(fam, converged_families):
+    return fam in converged_families
+
+def write_mgnifam(i, mgnifams_out_dir, output_dir, converged_families):
     mgnifam_id = f"mgnfam{i}"
     family_size, protein_rep, region, cif_file = parse_cif(mgnifam_id, mgnifams_out_dir)
-    converged = False
+    converged = is_converged(f"mgnifam{i}", converged_families)
     seed_msa_file = f"{mgnifam_id}_{family_size}.fas"
     msa_file = seed_msa_file
     hmm_file = f"{mgnifam_id}_{family_size}.hmm"
@@ -187,8 +195,10 @@ def main():
 
     initiate_output_csvs(mgnifams_out_dir, output_dir)
     num_mgnifams = get_number_of_families(mgnifams_out_dir)
+    converged_families = get_converged_families(mgnifams_out_dir)
+
     for i in range(1, num_mgnifams + 1):
-        write_mgnifam(i, mgnifams_out_dir, output_dir)
+        write_mgnifam(i, mgnifams_out_dir, output_dir, converged_families)
         
     write_mgnifam_proteins(mgnifams_out_dir, output_dir)
     write_mgnifam_pfams(mgnifams_out_dir, output_dir)
