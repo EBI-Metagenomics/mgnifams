@@ -26,6 +26,7 @@ process REFINE_FAMILIES {
     path(families_tsv)
     path(fasta)
     path(discarded_clusters)
+    path(converged_families)
     val(minimum_members)
     val(iteration)
 
@@ -38,11 +39,12 @@ process REFINE_FAMILIES {
     path("hmm/*")                         , emit: hmm
     path("domtblout/*")                   , emit: domtblout
     path("rf/*")                          , emit: rf
+    path("updated_converged_families.txt"), emit: converged
     path("log.txt")                       , emit: log
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${minimum_members} ${iteration}
+    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${converged_families} ${minimum_members} ${iteration}
     """
 }
 
