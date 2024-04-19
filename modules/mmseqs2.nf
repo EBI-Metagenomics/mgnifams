@@ -24,31 +24,6 @@ process CREATETSV {
     """
 }
 
-process CONVERT2FASTA {
-    publishDir "${params.outdir}/mmseqs", mode: "copy"
-
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mmseqs2:15.6f452--pl5321h6a68c12_0':
-        'biocontainers/mmseqs2:15.6f452--pl5321h6a68c12_0' }"
-
-    input:
-    path mmseqs_DB
-    path mmseqs_clu
-
-    output:
-    path "${cluName}_rep.fasta"
-
-    script:
-    dbName = "${mmseqs_DB[0]}"
-    cluName = "${mmseqs_clu.baseName[0]}"
-
-    """
-    mmseqs createsubdb ${cluName} ${dbName} ${cluName}_rep > /dev/null 2>&1
-    mmseqs createsubdb ${cluName} ${dbName}_h ${cluName}_rep_h > /dev/null 2>&1
-    mmseqs convert2fasta ${cluName}_rep ${cluName}_rep.fasta > /dev/null 2>&1
-    """
-}
-
 process CLUSTERUPDATE {
     publishDir "${params.outdir}/mmseqs", mode: "copy"
     

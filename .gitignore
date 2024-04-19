@@ -7,3 +7,4 @@ trace*
 timeline*
 venv/
 temp/
+mgnifams.sqlite3

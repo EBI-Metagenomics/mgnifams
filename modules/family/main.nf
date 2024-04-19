@@ -27,6 +27,7 @@ process REFINE_FAMILIES {
     path(families_tsv)
     path(fasta)
     path(discarded_clusters)
+    path(converged_families)
     val(iteration)
 
     output:
@@ -38,43 +39,28 @@ process REFINE_FAMILIES {
     path("hmm/*")                         , emit: hmm
     path("domtblout/*")                   , emit: domtblout
     path("rf/*")                          , emit: rf
+    path("updated_converged_families.txt"), emit: converged
     path("log.txt")                       , emit: log
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${anti_defence_proteins} ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${iteration}
+    python3 ${params.scriptDir}/family/refine_families.py ${anti_defence_proteins} ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${converged_families} ${iteration}
     """
 }
 
-process FILTER_FAMILIES {
-    input:
-    path clust_tsv
-    val threshold
-
-    output:
-    path "filtered_clusters.tsv", emit: filtered_clusters
-
-    script:
-    """
-    ${params.scriptDir}/filter_families.sh ${clust_tsv} ${threshold} filtered_clusters.tsv
-    """
-}
-
-process PARSE_FAMILIES {
-    publishDir "${params.outdir}/families/", mode: "copy"
+process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     label "venv"
 
     input:
-    path fasta
-    path clust_tsv
+    path msa
+    path ids
+    val mode
 
     output:
-    path "rep_names.txt", emit: reps_ids
-    path "reps.fa"      , emit: reps_fasta
-    path "families/*"   , emit: families_folder
+    path "family_reps.fasta"
 
     script:
     """
-    python3 ${params.scriptDir}/parse_families.py ${fasta} ${clust_tsv}
+    python3 ${params.scriptDir}/extract_first_stockholm_sequences.py ${msa} ${ids} ${mode} family_reps.fasta
     """
 }

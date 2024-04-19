@@ -1,6 +1,5 @@
 import sys
 import os
-import pickle
 import subprocess
 import shutil
 import pandas as pd
@@ -12,17 +11,18 @@ from Bio import AlignIO
 import time # benchmarking
 
 def parse_args():
-    if not (len(sys.argv) == 7):
+    if not (len(sys.argv) == 8):
         print("Usage: python3 refine_families.py [Clusters bookkeeping df pkl file] [MGnifams FASTA file] [Discarded clusters file] [Number of minimum family members to check] [Last mgnifam number]")
         sys.exit(1)
 
     globals().update({
-        "arg_matched_cluster_reps_file"        : sys.argv[1],
-        "arg_clusters_bookkeeping_df_pkl_file" : sys.argv[2], 
-        "arg_refined_families_tsv_file"        : sys.argv[3],
-        "arg_mgnifams_dict_fasta_file"         : sys.argv[4],
-        "arg_discarded_clusters_file"          : sys.argv[5],
-        "arg_iteration"                        : int(sys.argv[6])
+        "arg_clusters_bookkeeping_df_pkl_file" : sys.argv[1], 
+        "arg_refined_families_tsv_file"        : sys.argv[2],
+        "arg_mgnifams_dict_fasta_file"         : sys.argv[3],
+        "arg_discarded_clusters_file"          : sys.argv[4],
+        "arg_converged_families_file"          : sys.argv[5],
+        "arg_minimum_family_members"           : int(sys.argv[6]),
+        "arg_iteration"                        : int(sys.argv[7])
     })   
 
 def define_globals():
@@ -31,6 +31,7 @@ def define_globals():
         "updated_refined_families_tsv_file" : "updated_refined_families.tsv",
         "updated_mgnifams_dict_fasta_file"  : "updated_mgnifams_dict.fa",
         "updated_discarded_clusters_file"   : "updated_discarded_clusters.txt",
+        "updated_converged_families_file"   : "updated_converged_families.txt",
         "tmp_folder"                        : "tmp",
         "seed_msa_folder"                   : "seed_msa_sto",
         "align_msa_folder"                  : "msa_sto",
@@ -66,13 +67,15 @@ def read_matched_cluster_reps(arg_matched_cluster_reps_file):
 def copy_updated_input_files(
     arg_refined_families_tsv_file, updated_refined_families_tsv_file,
     arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file, 
-    arg_discarded_clusters_file, updated_discarded_clusters_file):
+    arg_discarded_clusters_file, updated_discarded_clusters_file,
+    arg_converged_families_file, updated_converged_families_file):
 
     start_time = time.time()
 
     shutil.copy(arg_refined_families_tsv_file, updated_refined_families_tsv_file)
     shutil.copy(arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file)
     shutil.copy(arg_discarded_clusters_file, updated_discarded_clusters_file)
+    shutil.copy(arg_converged_families_file, updated_converged_families_file)
 
     with open(log_file, 'w') as file:
         file.write("copy_updated_input_files: ")
@@ -475,8 +478,10 @@ def main():
     parse_args()
     define_globals()
 
-    matched_cluster_reps = read_matched_cluster_reps(arg_matched_cluster_reps_file)
-    copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file, arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file, arg_discarded_clusters_file, updated_discarded_clusters_file)
+    copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file,
+        arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file,
+        arg_discarded_clusters_file, updated_discarded_clusters_file,
+        arg_converged_families_file, updated_converged_families_file)
     clusters_bookkeeping_df = load_clusters_bookkeeping_df(arg_clusters_bookkeeping_df_pkl_file)
     matched_cluster_reps, clusters_bookkeeping_df = exclude_existing_families(matched_cluster_reps, clusters_bookkeeping_df, arg_refined_families_tsv_file) # restarting mechanism
     matched_cluster_reps, clusters_bookkeeping_df = exclude_discarded_clusters(matched_cluster_reps, clusters_bookkeeping_df, arg_discarded_clusters_file, log_file) # restarting mechanism
@@ -530,7 +535,9 @@ def main():
                 if not new_recruited_sequences:
                     exit_flag = True
                     with open(log_file, 'a') as file:
-                        file.write("Exiting-no new sequences recruited.\n")
+                        file.write("Exiting-CONVERGED: no new sequences recruited.\n")
+                    with open(updated_converged_families_file, 'a') as file:
+                        file.write(f"mgnifam{iteration}\n")
 
             if exit_flag: # exit strategy branch
                 with open(log_file, 'a') as file:
