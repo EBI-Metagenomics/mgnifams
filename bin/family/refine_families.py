@@ -12,7 +12,7 @@ import time # benchmarking
 
 def parse_args():
     if not (len(sys.argv) == 8):
-        print("Usage: python3 refine_families.py [Clusters bookkeeping df pkl file] [MGnifams FASTA file] [Discarded clusters file] [Number of minimum family members to check] [Last mgnifam number]")
+        print("Usage: python3 refine_families.py [Clusters bookkeeping df pkl file] [MGnifams FASTA file] [Discarded clusters file] [Number of minimum family members to check] [Last khalifam number]")
         sys.exit(1)
 
     globals().update({
@@ -32,6 +32,7 @@ def define_globals():
         "updated_mgnifams_dict_fasta_file"  : "updated_mgnifams_dict.fa",
         "updated_discarded_clusters_file"   : "updated_discarded_clusters.txt",
         "updated_converged_families_file"   : "updated_converged_families.txt",
+        "name_mapping_file"                 : "name_mapping.csv",
         "tmp_folder"                        : "tmp",
         "seed_msa_folder"                   : "seed_msa_sto",
         "align_msa_folder"                  : "msa_sto",
@@ -60,9 +61,14 @@ def define_globals():
     })
 
 def read_matched_cluster_reps(arg_matched_cluster_reps_file):
-    matched_cluster_reps = np.loadtxt(arg_matched_cluster_reps_file, delimiter=',', usecols=(2,), dtype=str, skiprows=1)
-    matched_cluster_reps = np.array(list(set(matched_cluster_reps))) # some anti-defence proteins have same cluster rep match, need unique here
-    return matched_cluster_reps
+    data = np.loadtxt(arg_matched_cluster_reps_file, delimiter=',', dtype=str, skiprows=1)
+    cluster_rep_to_protein = {}
+    for row in data:
+        protein_name = row[0]
+        cluster_rep_id = row[2]
+        cluster_rep_to_protein[cluster_rep_id] = protein_name
+    matched_cluster_reps = np.array(list(set(data[:, 2]))) # Extract unique cluster rep IDs
+    return matched_cluster_reps, cluster_rep_to_protein
         
 def copy_updated_input_files(
     arg_refined_families_tsv_file, updated_refined_families_tsv_file,
@@ -407,13 +413,17 @@ def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
 
     return kept_identifiers
 
+def append_name_mapping_file(name_mapping_file, iteration, next_family_rep, cluster_rep_to_protein):
+    with open(name_mapping_file, 'a') as file:
+        file.writelines(f"khalifam{iteration},{next_family_rep},{cluster_rep_to_protein.get(next_family_rep)}\n")
+
 def append_family_file(output_file, iteration, family_members):
-    lines = [f"mgnifam{iteration}\t{member}\n" for member in family_members]
+    lines = [f"khalifam{iteration}\t{member}\n" for member in family_members]
     with open(output_file, 'a') as file:
         file.writelines(lines)
 
     with open(log_file, 'a') as file:
-        file.write(f"E: mgnifam{iteration}, s: {len(family_members)}\n")
+        file.write(f"E: khalifam{iteration}, s: {len(family_members)}\n")
 
 def move_produced_models(iteration, size):
     shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'khalifam{iteration}_{size}.sto'))
@@ -478,7 +488,8 @@ def main():
     parse_args()
     define_globals()
 
-    matched_cluster_reps = read_matched_cluster_reps(arg_matched_cluster_reps_file)
+    matched_cluster_reps, cluster_rep_to_protein = read_matched_cluster_reps(arg_matched_cluster_reps_file)
+    # cluster_rep_to_protein.get("4580621011") # TODO
     copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file,
         arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file,
         arg_discarded_clusters_file, updated_discarded_clusters_file,
@@ -528,7 +539,7 @@ def main():
                 if (length_seqs_for_esl > 70000):
                     discard_flag = True
                     with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: mgnifam{iteration} too many sequences for esl ({length_seqs_for_esl}).\n")
+                        file.write(f"Discard-Warning: khalifam{iteration} too many sequences for esl ({length_seqs_for_esl}).\n")
                     break
                 new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
                 with open(log_file, 'a') as file:
@@ -538,7 +549,7 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write("Exiting-CONVERGED: no new sequences recruited.\n")
                     with open(updated_converged_families_file, 'a') as file:
-                        file.write(f"mgnifam{iteration}\n")
+                        file.write(f"khalifam{iteration}\n")
 
             if exit_flag: # exit strategy branch
                 with open(log_file, 'a') as file:
@@ -556,11 +567,11 @@ def main():
                 if (membership_percentage < 0.9):
                     discard_flag = True
                     with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+                        file.write(f"Discard-Warning: khalifam{iteration} seed percentage in MSA is {membership_percentage}\n")
                     break
                 elif (membership_percentage < 1):
                     with open(log_file, 'a') as file:
-                        file.write(f"Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+                        file.write(f"Warning: khalifam{iteration} seed percentage in MSA is {membership_percentage}\n")
                 
                 run_hmmalign(tmp_family_sequences_path, tmp_hmm_path, tmp_align_msa_path)
                 break
@@ -582,6 +593,7 @@ def main():
             with open(updated_discarded_clusters_file, 'a') as outfile:
                 outfile.write(unique_reps[0] + "\n")
         else: # successfully
+            append_name_mapping_file(name_mapping_file, iteration, next_family_rep, cluster_rep_to_protein)
             append_family_file(updated_refined_families_tsv_file, iteration, filtered_seq_names)
             move_produced_models(iteration, len(filtered_seq_names))
             family_original_names = get_final_family_original_names(filtered_seq_names)

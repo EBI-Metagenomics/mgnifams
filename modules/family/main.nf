@@ -40,6 +40,7 @@ process REFINE_FAMILIES {
     path("domtblout/*")                   , emit: domtblout
     path("rf/*")                          , emit: rf
     path("updated_converged_families.txt"), emit: converged
+    path("name_mapping.csv")              , emit: csv
     path("log.txt")                       , emit: log
 
     script:
