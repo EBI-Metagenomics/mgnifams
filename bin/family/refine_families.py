@@ -16,12 +16,12 @@ def parse_args():
         sys.exit(1)
 
     globals().update({
-        "arg_clusters_bookkeeping_df_pkl_file" : sys.argv[1], 
-        "arg_refined_families_tsv_file"        : sys.argv[2],
-        "arg_mgnifams_dict_fasta_file"         : sys.argv[3],
-        "arg_discarded_clusters_file"          : sys.argv[4],
-        "arg_converged_families_file"          : sys.argv[5],
-        "arg_minimum_family_members"           : int(sys.argv[6]),
+        "arg_matched_cluster_reps_file"        : sys.argv[1],
+        "arg_clusters_bookkeeping_df_pkl_file" : sys.argv[2], 
+        "arg_refined_families_tsv_file"        : sys.argv[3],
+        "arg_mgnifams_dict_fasta_file"         : sys.argv[4],
+        "arg_discarded_clusters_file"          : sys.argv[5],
+        "arg_converged_families_file"          : sys.argv[6],
         "arg_iteration"                        : int(sys.argv[7])
     })   
 
@@ -478,6 +478,7 @@ def main():
     parse_args()
     define_globals()
 
+    matched_cluster_reps = read_matched_cluster_reps(arg_matched_cluster_reps_file)
     copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file,
         arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file,
         arg_discarded_clusters_file, updated_discarded_clusters_file,
