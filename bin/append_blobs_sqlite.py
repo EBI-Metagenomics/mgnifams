@@ -40,8 +40,8 @@ def construct_file_path(base_dir, col_iter, file_column):
         2: "families/msa",
         3: "families/hmm",
         4: "families/rf",
-        5: "biome_sunburst/result",
-        6: "pfams/translated"
+        5: "biome_sunburst",
+        6: "pfams"
     }
     
     directory = file_directory.get(col_iter)

@@ -8,3 +8,5 @@ timeline*
 venv/
 temp/
 mgnifams.sqlite3
+db_config.ini
+tmp/
