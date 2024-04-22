@@ -235,6 +235,11 @@ def translate_pfams(cursor, json_id_dir, out_dir):
     files = os.listdir(json_id_dir)
     for file_name in files:
         print(file_name)
+        output_filename = os.path.join(out_dir, file_name)
+        if os.path.exists(output_filename):
+            print(f"Skipping {file_name} as it already exists in {out_dir}")
+            continue
+
         full_path = os.path.join(json_id_dir, file_name)
         with open(full_path, 'r') as file:
             json_data = json.load(file)
@@ -249,7 +254,6 @@ def translate_pfams(cursor, json_id_dir, out_dir):
                         domain['link'] = f'http://mgnifams-demo.mgnify.org/details/?id={construct_name(domain["name"])}'
                     domain['font_color'] = decide_font_color(domain['color'])
 
-            output_filename = os.path.join(out_dir, file_name)
             write_out_final_json(top_10_architecture_containers, output_filename)
 
 if __name__ == "__main__":
