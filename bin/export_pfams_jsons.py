@@ -142,7 +142,7 @@ def construct_pfams_json(edge_list_file, mgyp_p_dir, json_id_dir):
     files = os.listdir(mgyp_p_dir)
     for file_name in files:
         print(file_name)
-        family_name = file_name.split("_")[0]
+        family_name = file_name.split(".")[0]
         subset_clusters_df = get_edgelist_family_subset(clusters_df, family_name)
         file_path = os.path.join(mgyp_p_dir, file_name)
         family_domain_architectures = []
