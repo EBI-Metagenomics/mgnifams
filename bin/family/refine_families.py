@@ -155,19 +155,23 @@ def get_next_family(matched_cluster_reps, clusters_bookkeeping_df):
         try:
             next_family_rep = matched_cluster_reps[0]
             matched_cluster_reps = matched_cluster_reps[1:]
-            next_family_members = clusters_bookkeeping_df.loc[next_family_rep, 'member']
+            next_family_members = clusters_bookkeeping_df.loc[next_family_rep, 'member'] # throws KeyError
             break  # Break the loop if the above line executes without error
         except KeyError:
             # Handle the KeyError (key does not exist in DataFrame)
             with open(log_file, 'a') as file:
-                file.write(f"\n{next_family_rep} already checked. Getting next...\n")
+                file.write(f"\n{next_family_rep} already checked.\n")
             # Here, you might want to do something like skipping to the next iteration
-            if not matched_cluster_reps:
-                # Break the loop if matched_cluster_reps is empty
-                return None, None, None
-            else:
+            if matched_cluster_reps.size > 0:
+                with open(log_file, 'a') as file:
+                    file.write(f"Getting next...\n")
                 # Move to the next item in matched_cluster_reps
                 continue
+            else:
+                with open(log_file, 'a') as file:
+                    file.write(f"Last one, breaking...\n")
+                # Break the loop if matched_cluster_reps is empty
+                return None, None, None                
 
     # Ensure that next_family_members is a list
     if not isinstance(next_family_members, list):
@@ -492,7 +496,6 @@ def main():
     define_globals()
 
     matched_cluster_reps, cluster_rep_to_protein = read_matched_cluster_reps(arg_matched_cluster_reps_file)
-    # cluster_rep_to_protein.get("4580621011") # TODO
     copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file,
         arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file,
         arg_discarded_clusters_file, updated_discarded_clusters_file,
