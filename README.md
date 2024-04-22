@@ -97,6 +97,25 @@ After all subworkflows have finished executing run:
 
 to generate ready to import data tables
 
+**Exporting biome and pfam data for site**
+
+The next two scripts query the protein PGSQL db (plp) to gather and parse information regarding the family underlying protein biomes and pfams.
+
+A db_config.ini file with secrets must be passed in the scripts.
+
+```
+[database]
+dbname = ***
+user = ***
+password = ***
+host = ***
+port = ***
+```
+
+**python3 bin/export_biomes_csvs.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0**
+
+
+
 # End-to-end pipeline
 
 This is mainly used locally for testing. Chains all aforementioned modules.
