@@ -100,6 +100,7 @@ to generate ready to import data tables
 **Exporting biome and pfam data for site**
 
 The next two scripts query the protein PGSQL db (plp) to gather and parse information regarding the family underlying protein biomes and pfams.
+The generated data are used to build biome sunburst, and domain architecture plots respectively on the mgnifams-site.
 
 A db_config.ini file with secrets must be passed in the scripts.
 
@@ -114,7 +115,7 @@ port = ***
 
 **python3 bin/export_biomes_csvs.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0**
 
-
+**python3 bin/export_pfams_jsons.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0**
 
 # End-to-end pipeline
 
