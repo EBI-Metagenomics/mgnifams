@@ -3,5 +3,5 @@
 include { GENERATE_FAMILIES } from "$launchDir/subworkflows/generate_families/main.nf"
 
 workflow {
-    GENERATE_FAMILIES( params.matched_anti_defence_proteins, params.clusters_tsv, params.refined_families_tsv, params.mgnifams_dict_fasta_path, params.discarded_clusters_txt, params.converged_families_txt )
+    GENERATE_FAMILIES( params.matched_anti_defence_proteins, params.clusters_tsv, params.refined_families_tsv, params.mgnifams_dict_fasta_path, params.discarded_clusters_txt, params.converged_families_txt, params.name_mapping_csv )
 }

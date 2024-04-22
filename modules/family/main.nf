@@ -28,6 +28,7 @@ process REFINE_FAMILIES {
     path(fasta)
     path(discarded_clusters)
     path(converged_families)
+    path(name_mapping)
     val(iteration)
 
     output:
@@ -40,12 +41,12 @@ process REFINE_FAMILIES {
     path("domtblout/*")                   , emit: domtblout
     path("rf/*")                          , emit: rf
     path("updated_converged_families.txt"), emit: converged
-    path("name_mapping.csv")              , emit: csv
+    path("updated_name_mapping.csv")      , emit: csv
     path("log.txt")                       , emit: log
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${anti_defence_proteins} ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${converged_families} ${iteration}
+    python3 ${params.scriptDir}/family/refine_families.py ${anti_defence_proteins} ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${converged_families} ${name_mapping} ${iteration}
     """
 }
 

@@ -11,10 +11,11 @@ workflow GENERATE_FAMILIES {
     mgnifams_fasta
     discarded_clusters
     converged_families
+    name_mapping
 
     main:
     clusters_pkl = CREATE_CLUSTERS_PKL(clusters_tsv).pkl
-    refined_families = REFINE_FAMILIES(matched_anti_defence_proteins, clusters_pkl, refined_families_tsv, mgnifams_fasta, discarded_clusters, converged_families, params.iteration)
+    refined_families = REFINE_FAMILIES(matched_anti_defence_proteins, clusters_pkl, refined_families_tsv, mgnifams_fasta, discarded_clusters, converged_families, name_mapping, params.iteration)
 
     emit:
     tsv          = refined_families.tsv

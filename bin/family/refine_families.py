@@ -11,8 +11,8 @@ from Bio import AlignIO
 import time # benchmarking
 
 def parse_args():
-    if not (len(sys.argv) == 8):
-        print("Usage: python3 refine_families.py [Clusters bookkeeping df pkl file] [MGnifams FASTA file] [Discarded clusters file] [Number of minimum family members to check] [Last khalifam number]")
+    if not (len(sys.argv) == 9):
+        print("Incorrect number of args")
         sys.exit(1)
 
     globals().update({
@@ -22,7 +22,8 @@ def parse_args():
         "arg_mgnifams_dict_fasta_file"         : sys.argv[4],
         "arg_discarded_clusters_file"          : sys.argv[5],
         "arg_converged_families_file"          : sys.argv[6],
-        "arg_iteration"                        : int(sys.argv[7])
+        "arg_name_mapping_file"                : sys.argv[7],
+        "arg_iteration"                        : int(sys.argv[8])
     })   
 
 def define_globals():
@@ -32,7 +33,7 @@ def define_globals():
         "updated_mgnifams_dict_fasta_file"  : "updated_mgnifams_dict.fa",
         "updated_discarded_clusters_file"   : "updated_discarded_clusters.txt",
         "updated_converged_families_file"   : "updated_converged_families.txt",
-        "name_mapping_file"                 : "name_mapping.csv",
+        "updated_name_mapping_file"         : "updated_name_mapping.csv",
         "tmp_folder"                        : "tmp",
         "seed_msa_folder"                   : "seed_msa_sto",
         "align_msa_folder"                  : "msa_sto",
@@ -74,7 +75,8 @@ def copy_updated_input_files(
     arg_refined_families_tsv_file, updated_refined_families_tsv_file,
     arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file, 
     arg_discarded_clusters_file, updated_discarded_clusters_file,
-    arg_converged_families_file, updated_converged_families_file):
+    arg_converged_families_file, updated_converged_families_file,
+    arg_name_mapping_file, updated_name_mapping_file):
 
     start_time = time.time()
 
@@ -82,6 +84,7 @@ def copy_updated_input_files(
     shutil.copy(arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file)
     shutil.copy(arg_discarded_clusters_file, updated_discarded_clusters_file)
     shutil.copy(arg_converged_families_file, updated_converged_families_file)
+    shutil.copy(arg_name_mapping_file, updated_name_mapping_file)
 
     with open(log_file, 'w') as file:
         file.write("copy_updated_input_files: ")
@@ -413,8 +416,8 @@ def filter_out_redundant(tmp_family_sequences_path, tmp_esl_weight_path):
 
     return kept_identifiers
 
-def append_name_mapping_file(name_mapping_file, iteration, next_family_rep, cluster_rep_to_protein):
-    with open(name_mapping_file, 'a') as file:
+def append_name_mapping_file(updated_name_mapping_file, iteration, next_family_rep, cluster_rep_to_protein):
+    with open(updated_name_mapping_file, 'a') as file:
         file.writelines(f"khalifam{iteration},{next_family_rep},{cluster_rep_to_protein.get(next_family_rep)}\n")
 
 def append_family_file(output_file, iteration, family_members):
@@ -493,7 +496,8 @@ def main():
     copy_updated_input_files(arg_refined_families_tsv_file, updated_refined_families_tsv_file,
         arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file,
         arg_discarded_clusters_file, updated_discarded_clusters_file,
-        arg_converged_families_file, updated_converged_families_file)
+        arg_converged_families_file, updated_converged_families_file,
+        arg_name_mapping_file, updated_name_mapping_file)
     clusters_bookkeeping_df = load_clusters_bookkeeping_df(arg_clusters_bookkeeping_df_pkl_file)
     matched_cluster_reps, clusters_bookkeeping_df = exclude_existing_families(matched_cluster_reps, clusters_bookkeeping_df, arg_refined_families_tsv_file) # restarting mechanism
     matched_cluster_reps, clusters_bookkeeping_df = exclude_discarded_clusters(matched_cluster_reps, clusters_bookkeeping_df, arg_discarded_clusters_file, log_file) # restarting mechanism
@@ -593,7 +597,7 @@ def main():
             with open(updated_discarded_clusters_file, 'a') as outfile:
                 outfile.write(unique_reps[0] + "\n")
         else: # successfully
-            append_name_mapping_file(name_mapping_file, iteration, next_family_rep, cluster_rep_to_protein)
+            append_name_mapping_file(updated_name_mapping_file, iteration, next_family_rep, cluster_rep_to_protein)
             append_family_file(updated_refined_families_tsv_file, iteration, filtered_seq_names)
             move_produced_models(iteration, len(filtered_seq_names))
             family_original_names = get_final_family_original_names(filtered_seq_names)
