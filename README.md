@@ -97,7 +97,7 @@ After all subworkflows have finished executing run:
 
 to generate ready to import data tables
 
-**Exporting biome and pfam data for site**
+**Querying biome and pfam data for site**
 
 The next two scripts query the protein PGSQL db (plp) to gather and parse information regarding the family underlying protein biomes and pfams.
 The generated data are used to build biome sunburst, and domain architecture plots respectively on the mgnifams-site.
@@ -113,9 +113,15 @@ host = ***
 port = ***
 ```
 
-**python3 bin/export_biomes_csvs.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0**
+**python3 bin/post-processing/query_biome_csvs.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0**
 
-**python3 bin/export_pfams_jsons.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0**
+**python3 bin/post-processing/query_pfam_jsons.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0**
+
+**Translating seed_msa and msa proteins to MGYPS**
+
+**python bin/post-processing/translate_msa_mgyps.py /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/seed_msa**
+
+**python bin/post-processing/translate_msa_mgyps.py /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/msa**
 
 # End-to-end pipeline
 

@@ -261,7 +261,7 @@ if __name__ == "__main__":
     parser.add_argument("config_file", help="Path to the configuration file for the database secrets")
     parser.add_argument("edge_list_file", help="Path to the edge list file with two columns")
     parser.add_argument("above_family_id", help="Threshold for family id, to not recalculate same ones")
-    # python3 bin/export_pfams_jsons.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0
+    # python3 bin/post-processing/query_pfam_jsons.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0
     args = parser.parse_args()
 
     pfams_dir = "tmp/pfams"
