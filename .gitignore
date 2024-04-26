@@ -7,6 +7,6 @@ trace*
 timeline*
 venv/
 temp/
-mgnifams.sqlite3
+khalifams.sqlite3
 db_config.ini
 tmp/

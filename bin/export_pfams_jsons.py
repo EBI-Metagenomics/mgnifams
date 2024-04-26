@@ -172,6 +172,7 @@ def subset_json(json_items, threshold = 10):
     return json_items['architecture_containers'][:threshold]
 
 def execute_pfam_translation_query(cursor, pfam_id):
+    print(pfam_id)
     sql_query = f"SELECT name FROM sequence_explorer_pfam WHERE id = '{pfam_id}'"
     cursor.execute(sql_query)
     result = cursor.fetchall()
@@ -278,10 +279,10 @@ if __name__ == "__main__":
     conn = psycopg2.connect(**db_params)
     cursor = conn.cursor()
 
-    print("query_sequence_explorer_protein")
-    query_sequence_explorer_protein(cursor, args.edge_list_file, args.above_family_id, mgyp_p_dir)
-    print("construct_pfams_json")
-    construct_pfams_json(args.edge_list_file, mgyp_p_dir, json_id_dir)
+    # print("query_sequence_explorer_protein")
+    # query_sequence_explorer_protein(cursor, args.edge_list_file, args.above_family_id, mgyp_p_dir)
+    # print("construct_pfams_json")
+    # construct_pfams_json(args.edge_list_file, mgyp_p_dir, json_id_dir)
     print("translate_pfams")
     translate_pfams(cursor, json_id_dir, out_dir)
 
