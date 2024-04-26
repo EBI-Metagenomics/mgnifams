@@ -233,7 +233,7 @@ def run_hmmbuild(msa_file, output_hmm, extra_args):
 def run_hmmsearch(hmm_file, fasta_file, output_recruitment):
     start_time = time.time()
 
-    hmmsearch_command = ["hmmsearch", "--domtblout", output_recruitment, hmm_file, fasta_file]
+    hmmsearch_command = ["hmmsearch", "--domtblout", "-Z", output_recruitment, hmm_file, fasta_file]    
     subprocess.run(hmmsearch_command, stdout=subprocess.DEVNULL)
 
     with open(log_file, 'a') as file:

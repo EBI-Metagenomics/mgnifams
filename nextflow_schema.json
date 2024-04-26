@@ -56,7 +56,7 @@
           "properties": {
               "min_slice_length": {
                   "type": "integer",
-                  "default": 50,
+                  "default": 100,
                   "description": "initiate_proteins"
               },
               "input_csv_chunk_size": {
