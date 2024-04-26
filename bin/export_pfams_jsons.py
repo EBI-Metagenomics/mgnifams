@@ -279,10 +279,10 @@ if __name__ == "__main__":
     conn = psycopg2.connect(**db_params)
     cursor = conn.cursor()
 
-    # print("query_sequence_explorer_protein")
-    # query_sequence_explorer_protein(cursor, args.edge_list_file, args.above_family_id, mgyp_p_dir)
-    # print("construct_pfams_json")
-    # construct_pfams_json(args.edge_list_file, mgyp_p_dir, json_id_dir)
+    print("query_sequence_explorer_protein")
+    query_sequence_explorer_protein(cursor, args.edge_list_file, args.above_family_id, mgyp_p_dir)
+    print("construct_pfams_json")
+    construct_pfams_json(args.edge_list_file, mgyp_p_dir, json_id_dir)
     print("translate_pfams")
     translate_pfams(cursor, json_id_dir, out_dir)
 

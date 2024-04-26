@@ -35,13 +35,8 @@ def test_connection(conn): # test
 def construct_file_path(base_dir, col_iter, file_column):
     # Mapping file columns to their respective directories
     file_directory = {
-        0: "cif",
-        1: "families/seed_msa",
-        2: "families/msa",
-        3: "families/hmm",
-        4: "families/rf",
-        5: "biome_sunburst",
-        6: "pfams"
+        0: "families/seed_msa",
+        1: "families/msa"
     }
     
     directory = file_directory.get(col_iter)
@@ -49,13 +44,8 @@ def construct_file_path(base_dir, col_iter, file_column):
 
 def get_blob_column(col_iter):
     blob_col_name = {
-        0: "cif_blob",
-        1: "seed_msa_blob",
-        2: "msa_blob",
-        3: "hmm_blob",
-        4: "rf_blob",
-        5: "biomes_blob",
-        6: "domain_architecture_blob"
+        0: "seed_msa_blob",
+        1: "msa_blob"
     }
     
     return blob_col_name.get(col_iter)
@@ -75,7 +65,7 @@ def update_blob_column(conn, column_name, blob_data, row_id):
 
 def import_files(conn, base_dir):
     cursor = conn.cursor()
-    cursor.execute("SELECT id, cif_file, seed_msa_file, msa_file, hmm_file, rf_file, biomes_file, domain_architecture_file FROM mgnifam")
+    cursor.execute("SELECT id, seed_msa_file, msa_file FROM mgnifam")
     
     for row in cursor.fetchall():
         row_id = row[0]
@@ -88,12 +78,13 @@ def import_files(conn, base_dir):
                 blob_data = read_file(file_path)
                 update_blob_column(conn, blob_column, blob_data, row_id)
         
+# python bin/append_blobs_sqlite.py 
 
 # Connect to the SQLite database
-conn = sqlite3.connect('/home/vangelis/Desktop/Projects/mgnifams/DB/mgnifams.sqlite3')
+conn = sqlite3.connect('/home/vangelis/Desktop/Projects/khalifams/mgnifams/DB/khalifams.sqlite3')
 # test_connection(conn)
 
-base_dir = '/home/vangelis/Desktop/Projects/mgnifams-site-data_backup'
+base_dir = '/home/vangelis/Desktop/Projects/khalifams-site-data_backup'
 
 import_files(conn, base_dir)
 
