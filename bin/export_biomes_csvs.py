@@ -49,7 +49,7 @@ def parse_col2(col2):
     return col2
 
 def is_above_family_id(fam_name, above_family_id):
-    fam_id = fam_name.replace("mgnifam", "")
+    fam_id = fam_name.replace("khalifam", "")
     fam_id = float(fam_id)
 
     if fam_id > int(above_family_id):
@@ -114,7 +114,7 @@ def query_sequence_explorer_biome(cursor, counts_dir, out_dir):
         df = pd.read_csv(file_path)
         biome_names = []
         parent_names = []
-        file_name = file_name.replace("mgnifam", "mgnfam")
+        # file_name = file_name.replace("mgnifam", "mgnfam")
         print(file_name)
         with open(os.path.join(out_dir, file_name), 'w') as out_file:
             out_file.write("ids,labels,parents,counts\n")
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     parser.add_argument("config_file", help="Path to the configuration file for the database secrets")
     parser.add_argument("edge_list_file", help="Path to the edge list file with two columns")
     parser.add_argument("above_family_id", help="Threshold for family id, to not recalculate same ones")
-    # python3 bin/export_biomes_csvs.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0
+    # python3 bin/export_biomes_csvs.py bin/db_config.ini /home/vangelis/Desktop/Projects/khalifams-site-data_backup/families/updated_refined_families.tsv 0
     args = parser.parse_args()
 
     biomes_dir = "tmp/biomes"

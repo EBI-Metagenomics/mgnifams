@@ -41,7 +41,7 @@ def execute_query(cursor, query_items, mgyp_p_dir):
                 file.write(f"{mgyp}\t{metadata['p']}\n")
 
 def is_above_family_id(fam_name, above_family_id):
-    fam_id = fam_name.replace("mgnifam", "")
+    fam_id = fam_name.replace("khalifam", "")
     fam_id = float(fam_id)
 
     if fam_id > int(above_family_id):
@@ -68,7 +68,7 @@ def query_sequence_explorer_protein(cursor, edge_list_file, above_family_id, mgy
         if query_items:
             execute_query(cursor, query_items, mgyp_p_dir)
 
-def calculate_mgnifams_start(protein_id):
+def calculate_khalifams_start(protein_id):
     number_of_underscores = protein_id.count('_')
     if (number_of_underscores == 0): # 250671917
         start = 1
@@ -87,7 +87,7 @@ def calculate_mgnifams_start(protein_id):
 def get_edgelist_family_subset(clusters_df, family_name):
     subset_clusters_df = clusters_df[clusters_df['family_name'] == family_name].copy()
     subset_clusters_df['mgyp'] = subset_clusters_df['protein_name'].apply(extract_mgyp)
-    subset_clusters_df['mgnifams_start'] = subset_clusters_df['protein_name'].apply(calculate_mgnifams_start)
+    subset_clusters_df['khalifams_start'] = subset_clusters_df['protein_name'].apply(calculate_khalifams_start)
     return subset_clusters_df
 
 def construct_domain_architecture(mgyp, pfams, matched_rows):
@@ -100,7 +100,7 @@ def construct_domain_architecture(mgyp, pfams, matched_rows):
 
     for index, row in matched_rows.iterrows():
         fam_names.append(row['family_name'])
-        start_points.append(int(row['mgnifams_start']))
+        start_points.append(int(row['khalifams_start']))
 
     # Sort both arrays based on start_points
     sorted_data = sorted(zip(start_points, fam_names))
@@ -164,7 +164,7 @@ def construct_pfams_json(edge_list_file, mgyp_p_dir, json_id_dir):
                 counter += 1
 
         element_counts = pd.Series(family_domain_architectures).value_counts()
-        family_name = family_name.replace("mgnifam", "mgnfam")
+        # family_name = family_name.replace("mgnifam", "mgnfam")
         output_filename = os.path.join(json_id_dir, f"{family_name}_domains.json")
         write_out_json(element_counts, output_filename)
 
@@ -222,9 +222,8 @@ def decide_font_color(hex_color):
     else:
         return 'white'
 
-def construct_name(mgnifam_id):
-    name = mgnifam_id.replace('mgnifam', 'MGYF')
-    number_str = name[4:]
+def construct_name(khalifam_id):
+    number_str = khalifam_id[8:] # bypassing khalifam
     number = int(number_str)
     formatted_number = '{:010d}'.format(number)
     final_name = 'MGYF' + formatted_number
@@ -246,22 +245,22 @@ def translate_pfams(cursor, json_id_dir, out_dir):
             top_10_architecture_containers = subset_json(json_data, 10)
             for architecture_container in top_10_architecture_containers:
                 for domain in architecture_container['domains']:
-                    if 'mgnifam' not in domain['name']:
+                    if 'khalifam' not in domain['name']:
                         domain['link'] = f'https://www.ebi.ac.uk/interpro/entry/pfam/{domain["name"]}/domain_architecture/'
                         domain['name'] = execute_pfam_translation_query(cursor, domain['name'])[0][0]
                         domain['color'] = string_to_hex_color(domain['name'])
                     else:
-                        domain['link'] = f'http://mgnifams-demo.mgnify.org/details/?id={construct_name(domain["name"])}'
+                        domain['link'] = f'http://khalifams-demo.mgnify.org/details/?id={construct_name(domain["name"])}'
                     domain['font_color'] = decide_font_color(domain['color'])
 
             write_out_final_json(top_10_architecture_containers, output_filename)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Query the PostgreSQL database and create pfam + mgnifam domain architecture JSON files.")
+    parser = argparse.ArgumentParser(description="Query the PostgreSQL database and create pfam + khalifam domain architecture JSON files.")
     parser.add_argument("config_file", help="Path to the configuration file for the database secrets")
     parser.add_argument("edge_list_file", help="Path to the edge list file with two columns")
     parser.add_argument("above_family_id", help="Threshold for family id, to not recalculate same ones")
-    # python3 bin/export_pfams_jsons.py bin/db_config.ini /home/vangelis/Desktop/Projects/mgnifams-site-data_backup/families/updated_refined_families.tsv 0
+    # python3 bin/export_pfams_jsons.py bin/db_config.ini /home/vangelis/Desktop/Projects/khalifams-site-data_backup/families/updated_refined_families.tsv 0
     args = parser.parse_args()
 
     pfams_dir = "tmp/pfams"
