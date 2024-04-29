@@ -28,7 +28,7 @@ def initiate_output_csvs(mgnifams_out_dir, output_dir):
         writer.writerow(mgnifam_folds_headers)
 
 def get_number_of_families(mgnifams_out_dir):
-    msa_directory = os.path.join(mgnifams_out_dir, 'families', 'msa_sto')
+    msa_directory = os.path.join(mgnifams_out_dir, 'families', 'seed_msa')
     msa_files = glob.glob(os.path.join(msa_directory, '*'))
     num_mgnifams = len(msa_files)
     return num_mgnifams
