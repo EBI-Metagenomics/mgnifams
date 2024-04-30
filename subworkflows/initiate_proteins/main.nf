@@ -1,14 +1,14 @@
 #!/usr/bin/env nextflow
 
-include { FILTER_UNANNOTATED_SLICES } from "$launchDir/modules/initiate.nf"
-include { PUBLISH_INPUT_FASTA       } from "$launchDir/modules/initiate.nf"
+include { FILTER_UNANNOTATED_SLICES } from "${params.moduleDir}/initiate.nf"
+include { PUBLISH_INPUT_FASTA       } from "${params.moduleDir}/initiate.nf"
 
 workflow INITIATE_PROTEINS {
     take:
-    mgy90_file
+    sequence_explorer_protein_no_header_ch
 
     main:
-    mgy90_file
+    sequence_explorer_protein_no_header_ch
         .splitText(file:true, by: params.input_csv_chunk_size)
         .set { mgy90_chunks_ch }
     fasta = FILTER_UNANNOTATED_SLICES(mgy90_chunks_ch, params.min_slice_length)
