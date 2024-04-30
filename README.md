@@ -4,11 +4,15 @@ The end-to-end pipeline is hard to execute at once, due to the family generation
 
 1. **preprocess_input**
 
-Starting from */nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_2/sequence_explorer_protein.csv.bz2*
-this workflow unzips the file (bzip -dk) and then removes the header,
-so it can be split into text chunks to process in parallel in the next workflow.
+The starting point of this workflow is the latest version of the sequence_explorer_protein file. This is the result CSV file of the flatfile parsing pipeline that produces the mgnify proteins db content (plp). It can be in .csv.gz, .csv.bz2 or uncompressed file format (.csv) and contains data headers. The latest file version (v4) can be found at /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv and contains 717,738,164 (~718M) proteins.
 
-Run with: **nextflow run workflows/preprocess_input/main.nf -c workflows/preprocess_input/nextflow.config -dsl2 -profile slurm -with-tower -resume**
+Depending on the extension of the file, pass arguments --compress_mode 'gz' and --sequence_explorer_protein_path /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv.gz
+
+The workflow decompresses the file (if compressed) and then removes the header. Run this workflow from the main mgnifams directory with the command:
+
+**nextflow run workflows/preprocess_input/main.nf -c nextflow_workflows.config -c workflows/preprocess_input/nextflow.config -dsl2 -profile slurm**
+
+To save storage space, we don’t store this intermediate file, but instead need to pass the resulting workDir result path in the next workflow (initiate_proteins). Example: /hps/nobackup/rdf/metagenomics/service-team/users/vangelis/work_mgnifams/7c/a25c89b1269d58b2cdfbab35cd58dc/sequence_explorer_protein_no_header.csv
 
 2. **initiate_proteins**
 
