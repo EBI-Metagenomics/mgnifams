@@ -3,7 +3,7 @@
 include { validateParameters; paramsHelp; paramsSummaryLog } from 'plugin/nf-validation'
 
 if (params.help) {
-    log.info paramsHelp("nextflow run main.nf -dsl2 -c nextflow_main.config -profile slurm --mgy90_path sequence_explorer_protein.csv.bz2")
+    log.info paramsHelp("nextflow run main.nf -dsl2 -c nextflow_end-to-end.config -profile slurm --sequence_explorer_protein_path sequence_explorer_protein.csv.bz2")
     exit 0
 }
 validateParameters()
@@ -19,7 +19,7 @@ include { ANNOTATE_STRUCTURES } from "$launchDir/subworkflows/annotate_structure
 
 workflow {
     Channel
-        .fromPath(params.mgy90_path)
+        .fromPath(params.sequence_explorer_protein_path)
         .set { mgy90_file_bz2 }
 
     preprocessed_mgy90_file = PREPROCESS_INPUT( mgy90_file_bz2 ).preprocessed_mgy90_file

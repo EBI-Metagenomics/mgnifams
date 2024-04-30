@@ -1,5 +1,5 @@
 process CREATETSV {
-    publishDir "${params.outdir}/mmseqs", mode: "copy"
+    publishDir "${params.outDir}/mmseqs", mode: "copy"
     
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mmseqs2:15.6f452--pl5321h6a68c12_0':
@@ -25,7 +25,7 @@ process CREATETSV {
 }
 
 process CLUSTERUPDATE {
-    publishDir "${params.outdir}/mmseqs", mode: "copy"
+    publishDir "${params.outDir}/mmseqs", mode: "copy"
     
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mmseqs2:15.6f452--pl5321h6a68c12_0':

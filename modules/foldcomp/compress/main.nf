@@ -1,7 +1,7 @@
 process FOLDCOMP_COMPRESS {
     tag "$meta.id"
     label 'process_low'
-    publishDir "${params.outdir}/pdb_compressed", mode: "copy"
+    publishDir "${params.outDir}/pdb_compressed", mode: "copy"
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

@@ -19,11 +19,11 @@
                   "type": "string",
                   "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/input"
               },
-              "outdir": {
+              "outDir": {
                   "type": "string",
                   "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output"
               },
-              "mgy90_path": {
+              "sequence_explorer_protein_path": {
                   "type": "string",
                   "default": "/nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_2/sequence_explorer_protein.csv.bz2",
                   "description": "The pipeline main input data."
@@ -42,8 +42,8 @@
           "required": [
               "scriptDir",
               "dataDir",
-              "outdir",
-              "mgy90_path",
+              "outDir",
+              "sequence_explorer_protein_path",
               "empty_file",
               "esm_conda_path"
           ]

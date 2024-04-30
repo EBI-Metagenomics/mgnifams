@@ -1,7 +1,7 @@
 process FOLDSEEK_EASYSEARCH {
     tag "$meta.id"
     label 'process_medium'
-    publishDir "${params.outdir}/foldseek", mode: "copy"
+    publishDir "${params.outDir}/foldseek", mode: "copy"
 
     // conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

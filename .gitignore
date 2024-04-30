@@ -2,6 +2,7 @@
 .nextflow.log*
 work/
 data/
+data_old/
 report*
 trace*
 timeline*

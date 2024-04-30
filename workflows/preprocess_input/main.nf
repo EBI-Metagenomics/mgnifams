@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 
-include { PREPROCESS_INPUT } from "$launchDir/subworkflows/preprocess_input/main.nf"
+include { PREPROCESS_INPUT } from "${projectDir}/../../subworkflows/preprocess_input/main.nf"
 
 workflow {
     Channel
-        .fromPath(params.mgy90_path)
-        .set { mgy90_file_bz2 }
+        .fromPath(params.sequence_explorer_protein_path)
+        .set { sequence_explorer_protein_ch }
 
-    PREPROCESS_INPUT(mgy90_file_bz2)
+    PREPROCESS_INPUT(sequence_explorer_protein_ch, params.compress_mode)
 }

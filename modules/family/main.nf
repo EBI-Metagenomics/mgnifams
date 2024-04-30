@@ -1,5 +1,5 @@
 process CREATE_CLUSTERS_PKL {
-    publishDir "${params.outdir}/input/", mode: "copy"
+    publishDir "${params.outDir}/input/", mode: "copy"
     
     conda "${moduleDir}/environment.yml"
     
@@ -17,7 +17,7 @@ process CREATE_CLUSTERS_PKL {
 }
 
 process REFINE_FAMILIES {
-    publishDir "${params.outdir}/families/", mode: "copy"
+    publishDir "${params.outDir}/families/", mode: "copy"
     
     conda "${moduleDir}/environment.yml"
     

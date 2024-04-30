@@ -15,7 +15,7 @@ process FILTER_UNANNOTATED_SLICES {
 }
 
 process PUBLISH_INPUT_FASTA {
-    publishDir "${params.outdir}/input", mode: "copy"
+    publishDir "${params.outDir}/input", mode: "copy"
 
     input:
     path fasta

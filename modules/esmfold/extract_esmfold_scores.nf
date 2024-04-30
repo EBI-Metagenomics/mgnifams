@@ -1,6 +1,6 @@
 process EXTRACT_ESMFOLD_SCORES {
     label "venv"
-    publishDir "${params.outdir}/pdb", mode: "copy"
+    publishDir "${params.outDir}/pdb", mode: "copy"
 
     input:
     tuple val(meta), path(scores)

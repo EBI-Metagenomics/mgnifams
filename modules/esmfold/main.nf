@@ -2,7 +2,7 @@ process ESMFOLD {
     tag "$meta.id"
     label 'process_high'
     label 'gpu'
-    publishDir "${params.outdir}/pdb", mode: "copy"
+    publishDir "${params.outDir}/pdb", mode: "copy"
 
     conda params.esm_conda_path
 

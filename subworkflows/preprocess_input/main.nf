@@ -1,16 +1,22 @@
 #!/usr/bin/env nextflow
 
-include { UNZIP_BZ2     } from "$launchDir/modules/general.nf"
-include { REMOVE_HEADER } from "$launchDir/modules/general.nf"
+include { DECOMPRESS_GZ  } from "${projectDir}/../../modules/preprocess.nf"
+include { DECOMPRESS_BZ2 } from "${projectDir}/../../modules/preprocess.nf"
+include { REMOVE_HEADER  } from "${projectDir}/../../modules/preprocess.nf"
 
 workflow PREPROCESS_INPUT {
     take:
-    mgy90_file_bz2
+    sequence_explorer_protein_ch
+    compress_mode
     
     main:
-    mgy90_file_with_header = UNZIP_BZ2(mgy90_file_bz2)    
-    preprocessed_mgy90_file = REMOVE_HEADER(mgy90_file_with_header)
+    if (compress_mode == 'gz') {
+        sequence_explorer_protein_ch = DECOMPRESS_GZ(sequence_explorer_protein_ch)
+    } else if (compress_mode == 'bz2') {
+        sequence_explorer_protein_ch = DECOMPRESS_BZ2(sequence_explorer_protein_ch)
+    }
+    preprocessed_sequence_explorer_protein_ch = REMOVE_HEADER(sequence_explorer_protein_ch)
 
     emit:
-    preprocessed_mgy90_file
+    preprocessed_sequence_explorer_protein_ch
 }
