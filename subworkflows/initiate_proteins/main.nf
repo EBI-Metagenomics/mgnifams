@@ -10,11 +10,11 @@ workflow INITIATE_PROTEINS {
     main:
     sequence_explorer_protein_no_header_ch
         .splitText(file:true, by: params.input_csv_chunk_size)
-        .set { mgy90_chunks_ch }
-    fasta = FILTER_UNANNOTATED_SLICES(mgy90_chunks_ch, params.min_slice_length)
-    out_fasta = fasta.collectFile(name: "mgnifams_input.fa")
-    PUBLISH_INPUT_FASTA(out_fasta)
+        .set { sequence_chunk_ch }
+    fasta_chunk_ch = FILTER_UNANNOTATED_SLICES(sequence_chunk_ch, params.min_sequence_length)
+    fasta_ch = fasta_chunk_ch.collectFile(name: "mgnifams_input.fa")
+    PUBLISH_INPUT_FASTA(fasta_ch)
 
     emit:
-    out_fasta
+    fasta_ch
 }

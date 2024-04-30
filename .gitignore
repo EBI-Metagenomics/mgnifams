@@ -1,7 +1,7 @@
 .nextflow/
 .nextflow.log*
 work/
-data/
+output/
 data_old/
 report*
 trace*
