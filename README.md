@@ -4,7 +4,7 @@ The end-to-end pipeline is hard to execute at once, due to the family generation
 
 1. **preprocess_input**
 
-The starting point of this workflow is the latest version of the sequence_explorer_protein file. This is the result CSV file of the flatfile parsing pipeline that produces the mgnify proteins db content (plp). It can be in .csv.gz, .csv.bz2 or uncompressed file format (.csv) and contains data headers. The latest file version (v4) can be found at /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv and contains 717,738,164 (~718M) proteins.
+The starting point of this workflow is the latest version of the sequence_explorer_protein file. This is the result CSV file of the flatfile parsing pipeline that produces the mgnify proteins db content (plp -MGnify90v2024_03). It can be in .csv.gz, .csv.bz2 or uncompressed file format (.csv) and contains data headers. The latest file version (v4) can be found at /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv and contains 717,738,164 (~718M) proteins.
 
 Depending on the extension of the file, pass arguments --compress_mode 'gz' and --sequence_explorer_protein_path /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv.gz
 
@@ -16,15 +16,20 @@ To save storage space, we don’t store this intermediate file, but instead need
 
 2. **initiate_proteins**
 
-There are two different path options for the same input file for this workflow.
-One is */nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_2/sequence_explorer_protein_no_header.csv*
-which has been preprocessed manually (pbzip2 -dk and then removed header)
-and the other is the output of the preprocess_input workflow 
-*sequence_explorer_protein_no_header.csv* found the respective work directory (update link in config). 
-The workflow then splits the input CSV into file chunks of 50M rows/sequences and slices out the already known pfams,
-keeping sequences >= 50 amino acids in a fasta file (mgnifams_input.fa).
+After the initial input file has been optionally decompressed and had it’s header removed, we pass it to the initiate_proteins workflow. The output file of preprocess_input workflow must be passed in the initiate_proteins workflow nextflow.config.
+The initiate_proteins subworkflow then in parallel chunks of 50M (default value) proteins:
 
-Run with: **nextflow run workflows/initiate_proteins/main.nf -c workflows/initiate_proteins/nextflow.config -dsl2 -profile slurm -with-tower -resume**
+(i) Slices off MGnify sequence regions with known pfam annotations
+
+(ii) Keeps sliced sequences with AA >= min_sequence_length (default: 100)
+
+(iii) Concatenates and exports results in output/mgnifams_input.fa which will then be clustered on the next step
+
+This is done through a python script named bin/filter_unannotated_slices_fasta.py. For the latest version and a chunking value of 50M, there are 15 parallel chunks, and each finishes in ~20'.
+
+Run with:
+
+**nextflow run workflows/initiate_proteins/main.nf -c nextflow_workflows.config -dsl2 -profile slurm**
 
 3. **execute_clustering**
 

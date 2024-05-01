@@ -13,16 +13,3 @@ process FILTER_UNANNOTATED_SLICES {
     python3 ${params.scriptDir}/filter_unannotated_slices_fasta.py ${sequence_chunk} ${sequence_chunk.baseName}.fa ${min_sequence_length}
     """
 }
-
-process PUBLISH_INPUT_FASTA {
-    input:
-    path fasta
-
-    output:
-    path "${fasta}"
-
-    script:
-    """
-    echo 'MGnifams input fasta published.'
-    """
-}
