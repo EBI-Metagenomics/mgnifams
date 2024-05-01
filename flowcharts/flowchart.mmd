@@ -22,7 +22,7 @@ flowchart TD
     p14[EXECUTE_CLUSTERING:MMSEQS_LINCLUST]
     style p14 fill:#f5c158
     p15(( ))
-    p16[EXECUTE_CLUSTERING:CREATETSV]
+    p16[EXECUTE_CLUSTERING:EXPORT_CLUSTERS_TSV]
     style p16 fill:#f5c158
     p17([map])
     p18[GENERATE_FAMILIES:CREATE_CLUSTERS_PKL]
@@ -100,7 +100,7 @@ flowchart TD
     p11 --> p12
     p12 -->|mmseqs_db| p14
     p12 --> p13
-    p14 -->|mmseqs_families| p16
+    p14 -->|linclust_clusters| p16
     p14 --> p15
     p12 -->|mmseqs_db| p16
     p16 --> p17

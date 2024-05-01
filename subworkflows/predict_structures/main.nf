@@ -4,7 +4,6 @@ include { EXTRACT_FIRST_STOCKHOLM_SEQUENCES } from "$launchDir/modules/family/ma
 include { ESMFOLD                           } from "$launchDir/modules/esmfold/main.nf"
 include { EXTRACT_ESMFOLD_SCORES            } from "$launchDir/modules/esmfold/extract_esmfold_scores.nf"
 include { PARSE_CIF                         } from "$launchDir/modules/esmfold/parse_cif.nf"
-// include { FOLDCOMP_COMPRESS                 } from "$launchDir/modules/foldcomp/compress/main.nf" // TODO revisit for structures storage strategy
 
 workflow PREDICT_STRUCTURES {
     take:
@@ -28,10 +27,8 @@ workflow PREDICT_STRUCTURES {
     pdb_ch = esmfold_result.pdb
     EXTRACT_ESMFOLD_SCORES(esmfold_result.scores)
     cif_ch = PARSE_CIF(pdb_ch).cif
-    // fcz_ch = FOLDCOMP_COMPRESS(pdb_ch).fcz
 
     emit:
     pdb_ch
     cif_ch
-    // fcz_ch
 }

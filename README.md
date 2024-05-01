@@ -33,7 +33,7 @@ Run with:
 
 3. **execute_clustering**
 
-For execute_clustering, we are using the latest version (15) of mmseqs tools. createdb and linclust updated in nf-core, but in MGnifams we will use ‘compressed 0’ arg instead. For createtsv we are using are own script.
+For execute_clustering, we are using the latest version (15) of mmseqs tools. createdb and linclust updated in nf-core, but in MGnifams we will use ‘compressed 0’ arg instead. For EXPORT_CLUSTERS_TSV we are using are own script.
 
 linclust parameters:
 sequence identity = 0.5

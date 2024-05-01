@@ -3,7 +3,7 @@
 include { HHSUITE_REFORMAT  } from "${launchDir}/modules/hhsuite/reformat/main.nf"
 include { HHSUITE_HHBLITS   } from "${launchDir}/modules/hhsuite/hhblits/main.nf"
 include { HHSUITE_HHSEARCH  } from "${launchDir}/modules/hhsuite/hhsearch/main.nf"
-include { FILTER_HH_RESULTS } from "${launchDir}/modules/hhsuite/filter.nf"
+include { FILTER_HH_RESULTS } from "${launchDir}/modules/hhsuite/filter_hh_results.nf"
 
 workflow ANNOTATE_MODELS {
     take:
