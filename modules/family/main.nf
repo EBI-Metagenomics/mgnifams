@@ -1,5 +1,5 @@
 process CREATE_CLUSTERS_PKL {
-    publishDir "${params.outDir}/input/", mode: "copy"
+    publishDir "${params.outDir}/families/", mode: "copy"
     
     conda "${moduleDir}/environment.yml"
     
@@ -8,7 +8,7 @@ process CREATE_CLUSTERS_PKL {
 
     output:
     path("clusters_bookkeeping_df.pkl"), emit: pkl
-    path("log.txt")                    , emit: log
+    path("pkl_log.txt")                , emit: pkl_log
 
     script:
     """
@@ -24,27 +24,27 @@ process REFINE_FAMILIES {
     input:
     path(clusters_pkl)
     path(families_tsv)
-    path(fasta)
+    path(mgnifams_fasta)
     path(discarded_clusters)
     path(converged_families)
     val(minimum_members)
     val(iteration)
 
     output:
-    path("updated_refined_families.tsv")  , emit: tsv
-    path("updated_mgnifams_dict.fa")      , emit: fa
-    path("updated_discarded_clusters.txt"), emit: discarded
     path("seed_msa_sto/*")                , emit: seed_msa_sto
     path("msa_sto/*")                     , emit: msa_sto
     path("hmm/*")                         , emit: hmm
-    path("domtblout/*")                   , emit: domtblout
     path("rf/*")                          , emit: rf
+    path("domtblout/*")                   , emit: domtblout
+    path("updated_refined_families.tsv")  , emit: tsv
+    path("updated_mgnifams_dict.fa")      , emit: fa
+    path("updated_discarded_clusters.txt"), emit: discarded
     path("updated_converged_families.txt"), emit: converged
     path("log.txt")                       , emit: log
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${fasta} ${discarded_clusters} ${converged_families} ${minimum_members} ${iteration}
+    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${mgnifams_fasta} ${discarded_clusters} ${converged_families} ${minimum_members} ${iteration}
     """
 }
 

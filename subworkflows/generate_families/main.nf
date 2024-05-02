@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-include { CREATE_CLUSTERS_PKL } from "${launchDir}/modules/family/main.nf"
-include { REFINE_FAMILIES     } from "${launchDir}/modules/family/main.nf"
+include { CREATE_CLUSTERS_PKL } from "${params.moduleDir}/family/main.nf"
+include { REFINE_FAMILIES     } from "${params.moduleDir}/family/main.nf"
 
 workflow GENERATE_FAMILIES {
     take:
@@ -12,7 +12,7 @@ workflow GENERATE_FAMILIES {
     converged_families
 
     main:
-    clusters_pkl = CREATE_CLUSTERS_PKL(clusters_tsv).pkl
+    clusters_pkl     = CREATE_CLUSTERS_PKL(clusters_tsv).pkl
     refined_families = REFINE_FAMILIES(clusters_pkl, refined_families_tsv, mgnifams_fasta, discarded_clusters, converged_families, params.minimum_members, params.iteration)
 
     emit:

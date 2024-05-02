@@ -1,27 +1,25 @@
 import sys
-import pickle
 import pandas as pd
-
-import time # benchmarking, TODO remove
+import time
 
 def parse_args():
+    global linclust_input_file
+
     if not (len(sys.argv) == 2):
         print("Usage: python3 create_clusters_bookkeeping_df.py [Linclust TSV file]")
         sys.exit(1)
-
-    globals().update({
-        "linclust_input_file" : sys.argv[1]
-    })    
+    
+    linclust_input_file = sys.argv[1]  
 
 def define_globals():
-    globals().update({
-        "log_file"                         : "log.txt",
-        "clusters_bookkeeping_df_pkl_file" : "clusters_bookkeeping_df.pkl"
-    })
+    global log_file, clusters_bookkeeping_df_pkl_file
+
+    log_file                         = "pkl_log.txt"
+    clusters_bookkeeping_df_pkl_file = "clusters_bookkeeping_df.pkl"
     
 def create_clusters_bookkeeping_df():
     start_time = time.time()
-
+    
     with open(log_file, 'w') as file:
         file.write("Starting creation of bookkeeping pkl file.\n")
 
@@ -52,7 +50,7 @@ def main():
     parse_args()
     define_globals()
 
-    clusters_bookkeeping_df = create_clusters_bookkeeping_df()
+    create_clusters_bookkeeping_df()
 
 if __name__ == "__main__":
     main()
