@@ -9,10 +9,18 @@ process CREATE_CLUSTERS_PKL {
     output:
     path("clusters_bookkeeping_df.pkl"), emit: pkl
     path("pkl_log.txt")                , emit: pkl_log
+    path("refined_families.tsv")       , emit: refined_families
+    path("discarded_clusters.txt")     , emit: discarded_clusters
+    path("converged_families.txt")     , emit: converged_families
+    path("family_sizes.tsv")           , emit: family_sizes
 
     script:
     """
     python3 ${params.scriptDir}/family/create_clusters_bookkeeping_df.py ${clusters_tsv}
+    touch refined_families.tsv
+    touch discarded_clusters.txt
+    touch converged_families.txt
+    touch family_sizes.tsv
     """
 }
 
@@ -27,6 +35,7 @@ process REFINE_FAMILIES {
     path(mgnifams_fasta)
     path(discarded_clusters)
     path(converged_families)
+    path(family_sizes)
     val(minimum_members)
     val(iteration)
 
@@ -37,14 +46,15 @@ process REFINE_FAMILIES {
     path("rf/*")                          , emit: rf
     path("domtblout/*")                   , emit: domtblout
     path("updated_refined_families.tsv")  , emit: tsv
-    path("updated_mgnifams_dict.fa")      , emit: fa
+    path("updated_mgnifams_input.fa")     , emit: fa
     path("updated_discarded_clusters.txt"), emit: discarded
     path("updated_converged_families.txt"), emit: converged
+    path("updated_family_sizes.tsv")      , emit: sizes
     path("log.txt")                       , emit: log
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${mgnifams_fasta} ${discarded_clusters} ${converged_families} ${minimum_members} ${iteration}
+    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${mgnifams_fasta} ${discarded_clusters} ${converged_families} ${family_sizes} ${minimum_members} ${iteration}
     """
 }
 

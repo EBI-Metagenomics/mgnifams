@@ -12,41 +12,43 @@ import time
 
 def parse_args():
     global arg_clusters_bookkeeping_df_pkl_file, arg_refined_families_tsv_file, \
-        arg_mgnifams_dict_fasta_file, arg_discarded_clusters_file, \
-        arg_converged_families_file, arg_minimum_family_members, \
-        arg_iteration
+        arg_mgnifams_input_fasta_file, arg_discarded_clusters_file, \
+        arg_converged_families_file, arg_family_sizes_file, \
+        arg_minimum_family_members, arg_iteration
         
-    if not (len(sys.argv) == 8):
-        print("Usage: python3 refine_families.py [Clusters bookkeeping df pkl file] [MGnifams FASTA file] [Discarded clusters file] [Number of minimum family members to check] [Last mgnifam number]")
+    if not (len(sys.argv) == 9):
+        print("Incorrect number of args.")
         sys.exit(1)
 
     arg_clusters_bookkeeping_df_pkl_file = sys.argv[1]
     arg_refined_families_tsv_file        = sys.argv[2]
-    arg_mgnifams_dict_fasta_file         = sys.argv[3]
+    arg_mgnifams_input_fasta_file        = sys.argv[3]
     arg_discarded_clusters_file          = sys.argv[4]
     arg_converged_families_file          = sys.argv[5]
-    arg_minimum_family_members           = int(sys.argv[6])
-    arg_iteration                        = int(sys.argv[7])
+    arg_family_sizes_file                = sys.argv[6]
+    arg_minimum_family_members           = int(sys.argv[7])
+    arg_iteration                        = int(sys.argv[8])
 
 def define_globals():
     global log_file, updated_refined_families_tsv_file, \
-        updated_mgnifams_dict_fasta_file, updated_discarded_clusters_file, \
-        updated_converged_families_file, tmp_folder, \
-        seed_msa_folder, align_msa_folder, \
-        hmm_folder, domtblout_folder, \
-        rf_folder, evalue_threshold, \
-        length_threshold, tmp_family_sequences_path, \
-        tmp_seed_msa_path, tmp_seed_msa_sto_path, \
-        tmp_align_msa_path, tmp_hmm_path, \
-        tmp_domtblout_path, tmp_intermediate_esl_path, \
-        tmp_esl_weight_path, tmp_sequences_to_remove_path, \
-        tmp_rf_path
+        updated_mgnifams_input_fasta_file, updated_discarded_clusters_file, \
+        updated_converged_families_file, updated_family_sizes_file, \
+        tmp_folder, seed_msa_folder, \
+        align_msa_folder, hmm_folder, \
+        domtblout_folder, rf_folder, \
+        evalue_threshold, length_threshold, \
+        tmp_family_sequences_path, tmp_seed_msa_path, \
+        tmp_seed_msa_sto_path, tmp_align_msa_path, \
+        tmp_hmm_path, tmp_domtblout_path, \
+        tmp_intermediate_esl_path, tmp_esl_weight_path, \
+        tmp_sequences_to_remove_path, tmp_rf_path
 
     log_file                          = "log.txt"
     updated_refined_families_tsv_file = "updated_refined_families.tsv"
-    updated_mgnifams_dict_fasta_file  = "updated_mgnifams_dict.fa"
+    updated_mgnifams_input_fasta_file = "updated_mgnifams_input.fa"
     updated_discarded_clusters_file   = "updated_discarded_clusters.txt"
     updated_converged_families_file   = "updated_converged_families.txt"
+    updated_family_sizes_file         = "updated_family_sizes.tsv"
     tmp_folder                        = "tmp"
     seed_msa_folder                   = "seed_msa_sto"
     align_msa_folder                  = "msa_sto"
@@ -76,9 +78,10 @@ def copy_updated_input_files():
     start_time = time.time()
 
     shutil.copy(arg_refined_families_tsv_file, updated_refined_families_tsv_file)
-    shutil.copy(arg_mgnifams_dict_fasta_file, updated_mgnifams_dict_fasta_file)
+    shutil.copy(arg_mgnifams_input_fasta_file, updated_mgnifams_input_fasta_file)
     shutil.copy(arg_discarded_clusters_file, updated_discarded_clusters_file)
     shutil.copy(arg_converged_families_file, updated_converged_families_file)
+    shutil.copy(arg_family_sizes_file, updated_family_sizes_file)
 
     with open(log_file, 'w') as file:
         file.write("copy_updated_input_files: ")
@@ -129,7 +132,7 @@ def exclude_discarded_clusters(clusters_bookkeeping_df):
 def create_mgnifams_fasta_dict():
     start_time = time.time()
 
-    mgnifams_fasta_dict = {record.id: record for record in SeqIO.parse(arg_mgnifams_dict_fasta_file, "fasta")}
+    mgnifams_fasta_dict = {record.id: record for record in SeqIO.parse(arg_mgnifams_input_fasta_file, "fasta")}
 
     with open(log_file, 'a') as file:
         file.write("create_mgnifams_fasta_dict: ")
@@ -241,7 +244,7 @@ def run_hmmbuild(msa_file, extra_args):
 def run_hmmsearch():
     start_time = time.time()
     
-    hmmsearch_command = ["hmmsearch", "--domtblout", tmp_domtblout_path, tmp_hmm_path, updated_mgnifams_dict_fasta_file]    
+    hmmsearch_command = ["hmmsearch", "--domtblout", tmp_domtblout_path, tmp_hmm_path, updated_mgnifams_input_fasta_file]    
     subprocess.run(hmmsearch_command, stdout=subprocess.DEVNULL)
 
     with open(log_file, 'a') as file:
@@ -400,7 +403,7 @@ def append_family_file(iteration, family_members):
     with open(log_file, 'a') as file:
         file.write(f"E: mgnifam{iteration}, s: {len(family_members)}\n")
 
-def move_produced_models(iteration, size):
+def move_produced_models(iteration):
     shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'{iteration}.sto'))
     shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'{iteration}.sto'))
     shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'{iteration}.hmm'))
@@ -445,7 +448,7 @@ def update_mgnifams_fasta_dict(mgnifams_fasta_dict, sequences_to_remove):
     for seq in sequences_to_remove_set:
         mgnifams_fasta_dict.pop(seq, None)
 
-    write_fasta_sequences(mgnifams_fasta_dict.values(), updated_mgnifams_dict_fasta_file, "w")
+    write_fasta_sequences(mgnifams_fasta_dict.values(), updated_mgnifams_input_fasta_file, "w")
 
     with open(log_file, 'a') as file:
         file.write("update_mgnifams_fasta_dict: ")
@@ -564,7 +567,9 @@ def main():
                 outfile.write(unique_reps[0] + "\n")
         else: # successfully
             append_family_file(iteration, filtered_seq_names)
-            move_produced_models(iteration, len(filtered_seq_names))
+            move_produced_models(iteration)
+            with open(updated_family_sizes_file, 'a') as outfile:
+                outfile.write(f"{iteration}\t{len(filtered_seq_names)}\n")
             family_original_names = get_final_family_original_names(filtered_seq_names)
             unique_reps = get_cluster_reps(clusters_bookkeeping_df, family_original_names)
 
