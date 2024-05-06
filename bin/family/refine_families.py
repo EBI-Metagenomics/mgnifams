@@ -401,7 +401,7 @@ def append_family_file(iteration, family_members):
         file.writelines(lines)
 
     with open(log_file, 'a') as file:
-        file.write(f"E: mgnifam{iteration}, s: {len(family_members)}\n")
+        file.write(f"E: {iteration}, s: {len(family_members)}\n")
 
 def move_produced_models(iteration):
     shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'{iteration}.sto'))
@@ -512,7 +512,7 @@ def main():
                 if (length_seqs_for_esl > 70000):
                     discard_flag = True
                     with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: mgnifam{iteration} too many sequences for esl ({length_seqs_for_esl}).\n")
+                        file.write(f"Discard-Warning: {iteration} too many sequences for esl ({length_seqs_for_esl}).\n")
                     break
                 new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
                 with open(log_file, 'a') as file:
@@ -522,7 +522,7 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write("Exiting-CONVERGED: no new sequences recruited.\n")
                     with open(updated_converged_families_file, 'a') as file:
-                        file.write(f"mgnifam{iteration}\n")
+                        file.write(f"{iteration}\n")
 
             if exit_flag: # exit strategy branch
                 with open(log_file, 'a') as file:
@@ -540,11 +540,11 @@ def main():
                 if (membership_percentage < 0.9):
                     discard_flag = True
                     with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+                        file.write(f"Discard-Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                     break
                 elif (membership_percentage < 1):
                     with open(log_file, 'a') as file:
-                        file.write(f"Warning: mgnifam{iteration} seed percentage in MSA is {membership_percentage}\n")
+                        file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
                 run_hmmalign()
                 break
