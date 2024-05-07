@@ -8,19 +8,16 @@ include { FILTER_HH_RESULTS } from "${params.moduleDir}/hhsuite/filter_hh_result
 workflow ANNOTATE_MODELS {
     take:
     fasta_ch
-    mode
+    hh_mode
     
     main:
     a2m_fasta_ch = HHSUITE_REFORMAT(fasta_ch, "fas", "a3m").fa
-    if (mode == "hhblits") {
-        hhr_ch = HHSUITE_HHBLITS(a2m_fasta_ch, params.hhdb_folder_path, "pfam").hhr
-    } else if (mode == "hhsearch") {
-        hhr_ch = HHSUITE_HHSEARCH(a2m_fasta_ch, params.hhdb_folder_path, "pfam").hhr
+    if (hh_mode == "hhblits") {
+        hhr_ch = HHSUITE_HHBLITS(a2m_fasta_ch, params.hhdb_folder_path, params.db_name).hhr
+    } else if (hh_mode == "hhsearch") {
+        hhr_ch = HHSUITE_HHSEARCH(a2m_fasta_ch, params.hhdb_folder_path, params.db_name).hhr
     } else {
-        throw new Exception("Invalid mode value. Should be 'hhblits' or 'hhsearch'.")
+        throw new Exception("Invalid hh_mode value. Should be 'hhblits' or 'hhsearch'.")
     }
-    results = FILTER_HH_RESULTS(hhr_ch)
-
-    emit:
-    unannotated = results.unannotated
+    FILTER_HH_RESULTS(hhr_ch)
 }
