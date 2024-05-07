@@ -36,6 +36,7 @@ process REFINE_FAMILIES {
     path(discarded_clusters)
     path(converged_families)
     path(family_sizes)
+    val(starting_num_sequences)
     val(minimum_members)
     val(iteration)
 
@@ -54,7 +55,7 @@ process REFINE_FAMILIES {
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${mgnifams_fasta} ${discarded_clusters} ${converged_families} ${family_sizes} ${minimum_members} ${iteration}
+    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${mgnifams_fasta} ${discarded_clusters} ${converged_families} ${family_sizes} ${starting_num_sequences} ${minimum_members} ${iteration}
     """
 }
 

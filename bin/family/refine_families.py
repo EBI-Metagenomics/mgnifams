@@ -14,9 +14,10 @@ def parse_args():
     global arg_clusters_bookkeeping_df_pkl_file, arg_refined_families_tsv_file, \
         arg_mgnifams_input_fasta_file, arg_discarded_clusters_file, \
         arg_converged_families_file, arg_family_sizes_file, \
-        arg_minimum_family_members, arg_iteration
+        arg_starting_num_sequences, arg_minimum_family_members, \
+        arg_iteration
         
-    if not (len(sys.argv) == 9):
+    if not (len(sys.argv) == 10):
         print("Incorrect number of args.")
         sys.exit(1)
 
@@ -26,8 +27,9 @@ def parse_args():
     arg_discarded_clusters_file          = sys.argv[4]
     arg_converged_families_file          = sys.argv[5]
     arg_family_sizes_file                = sys.argv[6]
-    arg_minimum_family_members           = int(sys.argv[7])
-    arg_iteration                        = int(sys.argv[8])
+    arg_starting_num_sequences           = sys.argv[7]
+    arg_minimum_family_members           = int(sys.argv[8])
+    arg_iteration                        = int(sys.argv[9])
 
 def define_globals():
     global log_file, updated_refined_families_tsv_file, \
@@ -244,7 +246,7 @@ def run_hmmbuild(msa_file, extra_args):
 def run_hmmsearch():
     start_time = time.time()
     
-    hmmsearch_command = ["hmmsearch", "--domtblout", tmp_domtblout_path, tmp_hmm_path, updated_mgnifams_input_fasta_file]    
+    hmmsearch_command = ["hmmsearch", "-Z", arg_starting_num_sequences, "--domtblout", tmp_domtblout_path, tmp_hmm_path, updated_mgnifams_input_fasta_file]
     subprocess.run(hmmsearch_command, stdout=subprocess.DEVNULL)
 
     with open(log_file, 'a') as file:
