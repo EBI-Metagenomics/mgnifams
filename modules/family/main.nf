@@ -63,15 +63,13 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     label "venv"
 
     input:
-    path msa
-    path ids
-    val mode
+    path msa_sto
 
     output:
     path "family_reps.fasta"
 
     script:
     """
-    python3 ${params.scriptDir}/extract_first_stockholm_sequences.py ${msa} ${ids} ${mode} family_reps.fasta
+    python3 ${params.scriptDir}/extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta
     """
 }

@@ -1,15 +1,11 @@
 #!/usr/bin/env nextflow
 
-include { PREDICT_STRUCTURES } from "${launchDir}/subworkflows/predict_structures/main.nf"
+include { PREDICT_STRUCTURES } from "${projectDir}/../../subworkflows/predict_structures/main.nf"
 
 workflow {
     Channel
-        .fromPath(params.msa_path) 
-        .set { msa }
-        
-    Channel
-        .fromPath(params.wp1_unannotated_ids_path) 
-        .set { wp1_unannotated_ids }
+        .fromPath(params.msa_sto_path) 
+        .set { msa_sto_ch }
 
-    PREDICT_STRUCTURES(msa, wp1_unannotated_ids, "all")
+    PREDICT_STRUCTURES(msa_sto_ch)
 }

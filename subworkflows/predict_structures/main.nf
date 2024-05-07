@@ -7,12 +7,10 @@ include { PARSE_CIF                         } from "$launchDir/modules/esmfold/p
 
 workflow PREDICT_STRUCTURES {
     take:
-    msa
-    unannotated_ids
-    mode
+    msa_ch
     
     main:
-    family_reps_fasta = EXTRACT_FIRST_STOCKHOLM_SEQUENCES(msa, unannotated_ids, mode)
+    family_reps_fasta = EXTRACT_FIRST_STOCKHOLM_SEQUENCES(msa_ch)
 
     pdb_fasta_chunks_ch = family_reps_fasta.splitFasta( by: params.pdb_chunk_size, file: true )
     pdb_fasta_chunks_ch
