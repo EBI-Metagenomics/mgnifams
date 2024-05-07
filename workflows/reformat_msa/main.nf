@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-include { REFORMAT_MSA as REFORMAT_SEED_MSA    } from "$launchDir/subworkflows/reformat_msa/main.nf"
-include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA} from "$launchDir/subworkflows/reformat_msa/main.nf"
+include { REFORMAT_MSA as REFORMAT_SEED_MSA     } from "${projectDir}/../../subworkflows/reformat_msa/main.nf"
+include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA } from "${projectDir}/../../subworkflows/reformat_msa/main.nf"
 
 workflow {
     Channel
