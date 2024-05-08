@@ -14,13 +14,13 @@ CREATE TABLE mgnifam (
     rf_file TEXT,
     biomes_file TEXT,
     domain_architecture_file TEXT,
-    cif_blob BLOB DEFAULT NULL,
-    seed_msa_blob BLOB DEFAULT NULL,
-    msa_blob BLOB DEFAULT NULL,
-    hmm_blob BLOB DEFAULT NULL,
-    rf_blob BLOB DEFAULT NULL,
-    biomes_blob BLOB DEFAULT NULL,
-    domain_architecture_blob BLOB DEFAULT NULL
+    cif_blob BYTEA DEFAULT NULL,
+    seed_msa_blob BYTEA DEFAULT NULL,
+    msa_blob BYTEA DEFAULT NULL,
+    hmm_blob BYTEA DEFAULT NULL,
+    rf_blob BYTEA DEFAULT NULL,
+    biomes_blob BYTEA DEFAULT NULL,
+    domain_architecture_blob BYTEA DEFAULT NULL
 );
 
 CREATE TABLE mgnifam_proteins (
