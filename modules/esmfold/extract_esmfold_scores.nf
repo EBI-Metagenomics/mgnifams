@@ -1,6 +1,5 @@
 process EXTRACT_ESMFOLD_SCORES {
     label "venv"
-    publishDir "${params.outDir}/pdb", mode: "copy"
 
     input:
     tuple val(meta), path(scores)
@@ -12,7 +11,6 @@ process EXTRACT_ESMFOLD_SCORES {
     script:
     """
     csv_file="${meta.id}_scores.csv"
-    echo "name,length,pLDDT,pTM" > "\$csv_file"
     grep -E 'pLDDT' ${meta.id}_scores.txt | awk -F' |, ' '{print \$11 "," \$14 "," \$16 "," \$18}' >>  "\$csv_file"
 
     txt_file="${meta.id}_high_quality_structures.txt"
