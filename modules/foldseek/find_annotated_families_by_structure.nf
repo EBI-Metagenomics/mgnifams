@@ -1,15 +1,15 @@
 process FIND_ANNOTATED_FAMILIES_BY_STRUCTURE {
-    publishDir "${params.outDir}/foldseek", mode: "copy"
+    publishDir "${params.outDir}/structures/foldseek", mode: "copy"
     label "general"
 
     input:
     path(m8s)
 
     output:
-    path("annotated.txt"), optional: true, emit: annotated
+    path("annotated_structures.txt"), optional: true, emit: annotated_structures
 
     script:
     """
-    awk '{print \$1}' ${m8s} | cut -d'-' -f 1 | sort | uniq > annotated.txt
+    awk '{print \$1}' ${m8s} | cut -d'-' -f 1 | sort | uniq > annotated_structures.txt
     """
 }

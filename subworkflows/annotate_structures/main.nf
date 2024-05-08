@@ -31,12 +31,6 @@ workflow ANNOTATE_STRUCTURES {
         .concat(alphafold_aln)
         .concat(esm_aln)
         .map { it[1] }
-        .collectFile(name: 'foldseek_results.m8')
-    annotated =  FIND_ANNOTATED_FAMILIES_BY_STRUCTURE(result_files).annotated
-
-    emit:
-    pdb_aln
-    alphafold_aln
-    esm_aln
-    annotated
+        .collectFile(name: 'foldseek_hits.tsv', storeDir: params.outDir + "/structures/foldseek")
+    FIND_ANNOTATED_FAMILIES_BY_STRUCTURE(result_files)
 }
