@@ -24,14 +24,6 @@ def parse_protein_region(protein_id):
 
     return protein, region
 
-def format_protein_name(raw_name):
-    """
-    Formats the protein name by appending zeros in front to make it 12 characters,
-    and then adds 'MGYP' as a prefix.
-    """
-    formatted_name = raw_name.zfill(12)  # Append zeros to make it 12 characters
-    return "MGYP" + formatted_name
-
 def process_file(file_path, output_fasta):
     basename = os.path.basename(file_path).split('.')[0]
 
@@ -41,7 +33,10 @@ def process_file(file_path, output_fasta):
     sequence_id, region = parse_protein_region(first_record.id)
 
     with open(output_fasta, 'a') as out_f:
-        out_f.write(f">{basename}-{format_protein_name(sequence_id)}_{region}\n{sequence}\n")
+        if (region != "-"):
+            out_f.write(f">{basename}-{sequence_id}_{region}\n{sequence}\n")
+        else:
+            out_f.write(f">{basename}-{sequence_id}\n{sequence}\n")
 
 def main(input_msa_folder, output_fasta):
     for file in os.listdir(input_msa_folder):

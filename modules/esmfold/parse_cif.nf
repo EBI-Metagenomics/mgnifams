@@ -12,7 +12,6 @@ process PARSE_CIF {
     """    
     for file in ${pdb_folder}/*; do
         name=\$(basename \$file .pdb)
-        name=\${name%%-*}
         python3 ${params.scriptDir}/parse_cif.py \$file \$name.cif
     done
     """

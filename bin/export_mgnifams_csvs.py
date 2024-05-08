@@ -2,9 +2,11 @@ import sys
 import os
 import glob
 import csv
+import pandas as pd
 
 def initiate_output_csvs(mgnifams_out_dir, output_dir):
-    mgnifam_headers          = ['id', 'family_size', 'protein_rep', 'rep_region', 'converged', 'cif_file', 'seed_msa_file', 'msa_file', 'hmm_file', 'rf_file', 'biomes_file', 'domain_architecture_file']
+    mgnifam_headers = ['id', 'family_size', 'protein_rep', 'rep_region', 'rep_length', 'plddt', 'ptm', 'converged', \
+        'cif_file', 'seed_msa_file', 'msa_file', 'hmm_file', 'rf_file', 'biomes_file', 'domain_architecture_file']
     mgnifam_proteins_headers = ['mgnifam_id', 'protein', 'region']
     mgnifam_pfams_headers    = ['mgnifam_id', 'rank', 'pfam_id', 'pfam_hit', 'query_hmm_range', 'template_hmm_range', 'e_value']
     mgnifam_folds_headers    = ['mgnifam_id', 'target_structure', 'aligned_length', 'query_start', 'query_end', 'target_start', 'target_end', 'e_value']
@@ -27,11 +29,10 @@ def initiate_output_csvs(mgnifams_out_dir, output_dir):
         writer = csv.writer(file)
         writer.writerow(mgnifam_folds_headers)
 
-def get_number_of_families(mgnifams_out_dir):
-    msa_directory = os.path.join(mgnifams_out_dir, 'families', 'seed_msa')
-    msa_files = glob.glob(os.path.join(msa_directory, '*'))
-    num_mgnifams = len(msa_files)
-    return num_mgnifams
+def read_family_sizes(mgnifams_out_dir):
+    column_names = ['family', 'size']
+    family_sizes_df = pd.read_csv(os.path.join(mgnifams_out_dir, "families/updated_family_sizes.tsv"), delimiter='\t', header=None, names=column_names)
+    return family_sizes_df
 
 def get_converged_families(mgnifams_out_dir):
     with open(os.path.join(mgnifams_out_dir, 'families', 'updated_converged_families.txt'), 'r') as file:
@@ -39,7 +40,7 @@ def get_converged_families(mgnifams_out_dir):
 
         return converged_families
 
-def parse_cif(mgnifam_id, mgnifams_out_dir):
+def parse_cif(mgnifam_id, mgnifams_out_dir): # TODO update with new format
     cif_directory = os.path.join(mgnifams_out_dir, 'cif')
     cif_files = glob.glob(os.path.join(cif_directory, '**', mgnifam_id + '_*'), recursive=True)
     cif_filename = os.path.basename(cif_files[0]) if cif_files else None
@@ -63,16 +64,16 @@ def parse_cif(mgnifam_id, mgnifams_out_dir):
 def is_converged(fam, converged_families):
     return fam in converged_families
 
-def write_mgnifam(i, mgnifams_out_dir, output_dir, converged_families):
-    mgnifam_id = f"mgnfam{i}"
-    family_size, protein_rep, region, cif_file = parse_cif(mgnifam_id, mgnifams_out_dir)
-    converged = is_converged(f"mgnifam{i}", converged_families)
-    seed_msa_file = f"{mgnifam_id}_{family_size}.fas"
+def write_mgnifam(i, mgnifams_out_dir, output_dir, family_sizes_df, converged_families):
+    family_size = family_sizes_df[family_sizes_df['family'] == i]
+    protein_rep, region, cif_file = parse_cif(i, mgnifams_out_dir) # TODO update from other files instead of filename
+    converged = is_converged(i, converged_families)
+    seed_msa_file = f"{i}.fas"
     msa_file = seed_msa_file
-    hmm_file = f"{mgnifam_id}_{family_size}.hmm"
-    rf_file = f"{mgnifam_id}_{family_size}.txt"
-    biomes_file = f"{mgnifam_id}_b_counts.csv"
-    domain_architecture_file = f"{mgnifam_id}_domains.json"
+    hmm_file = f"{i}.hmm"
+    rf_file = f"{i}.txt"
+    biomes_file = f"{i}_b_counts.csv"
+    domain_architecture_file = f"{i}_domains.json"
     
     mgnifam_csv_path = os.path.join(output_dir, 'mgnifam.csv')
     with open(mgnifam_csv_path, 'a', newline='') as file:
@@ -186,7 +187,7 @@ def write_mgnifam_folds(mgnifams_out_dir, output_dir):
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python export_mgnifams_csv.py <mgnifams_out_dir>")
+        print("Usage: python bin/export_mgnifams_csvs.py <mgnifams_out_dir>")
         sys.exit(1)
 
     mgnifams_out_dir = sys.argv[1]
@@ -194,15 +195,15 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     initiate_output_csvs(mgnifams_out_dir, output_dir)
-    num_mgnifams = get_number_of_families(mgnifams_out_dir)
+    family_sizes_df = read_family_sizes(mgnifams_out_dir)
     converged_families = get_converged_families(mgnifams_out_dir)
 
-    for i in range(1, num_mgnifams + 1):
-        write_mgnifam(i, mgnifams_out_dir, output_dir, converged_families)
+    for i in range(1, len(family_sizes_df) + 1):
+        write_mgnifam(i, mgnifams_out_dir, output_dir, family_sizes_df, converged_families)
         
-    write_mgnifam_proteins(mgnifams_out_dir, output_dir)
-    write_mgnifam_pfams(mgnifams_out_dir, output_dir)
-    write_mgnifam_folds(mgnifams_out_dir, output_dir)
+    # write_mgnifam_proteins(mgnifams_out_dir, output_dir)
+    # write_mgnifam_pfams(mgnifams_out_dir, output_dir)
+    # write_mgnifam_folds(mgnifams_out_dir, output_dir)
 
 if __name__ == "__main__":
     main()
