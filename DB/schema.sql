@@ -3,6 +3,9 @@ CREATE TABLE mgnifam (
     family_size INT,
     protein_rep INT,
     rep_region TEXT,
+    rep_length INT,
+    plddt FLOAT,
+    ptm FLOAT,
     converged BOOLEAN,
     cif_file TEXT,
     seed_msa_file TEXT,
@@ -10,7 +13,14 @@ CREATE TABLE mgnifam (
     hmm_file TEXT,
     rf_file TEXT,
     biomes_file TEXT,
-    domain_architecture_file TEXT
+    domain_architecture_file TEXT,
+    cif_blob BLOB DEFAULT NULL,
+    seed_msa_blob BLOB DEFAULT NULL,
+    msa_blob BLOB DEFAULT NULL,
+    hmm_blob BLOB DEFAULT NULL,
+    rf_blob BLOB DEFAULT NULL,
+    biomes_blob BLOB DEFAULT NULL,
+    domain_architecture_blob BLOB DEFAULT NULL
 );
 
 CREATE TABLE mgnifam_proteins (

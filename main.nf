@@ -9,13 +9,13 @@ if (params.help) {
 validateParameters()
 log.info paramsSummaryLog(workflow)
 
-include { PREPROCESS_INPUT    } from "$launchDir/subworkflows/preprocess_input/main.nf"
-include { INITIATE_PROTEINS   } from "$launchDir/subworkflows/initiate_proteins/main.nf"
-include { EXECUTE_CLUSTERING  } from "$launchDir/subworkflows/execute_clustering/main.nf"
-include { GENERATE_FAMILIES   } from "$launchDir/subworkflows/generate_families/main.nf"
-include { ANNOTATE_MODELS     } from "$launchDir/subworkflows/annotate_models/main.nf"
-include { PREDICT_STRUCTURES  } from "$launchDir/subworkflows/predict_structures/main.nf"
-include { ANNOTATE_STRUCTURES } from "$launchDir/subworkflows/annotate_structures/main.nf"
+include { PREPROCESS_INPUT    } from "${projectDir}/subworkflows/preprocess_input/main.nf"
+include { INITIATE_PROTEINS   } from "${projectDir}/subworkflows/initiate_proteins/main.nf"
+include { EXECUTE_CLUSTERING  } from "${projectDir}/subworkflows/execute_clustering/main.nf"
+include { GENERATE_FAMILIES   } from "${projectDir}/subworkflows/generate_families/main.nf"
+include { ANNOTATE_MODELS     } from "${projectDir}/subworkflows/annotate_models/main.nf"
+include { PREDICT_STRUCTURES  } from "${projectDir}/subworkflows/predict_structures/main.nf"
+include { ANNOTATE_STRUCTURES } from "${projectDir}/subworkflows/annotate_structures/main.nf"
 
 workflow {
     Channel

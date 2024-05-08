@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
-include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_PDB        } from "${projectDir}/foldseek/easysearch/main.nf"
-include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_ALPHAFOLDB } from "${projectDir}/foldseek/easysearch/main.nf"
-include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_ESM        } from "${projectDir}/foldseek/easysearch/main.nf"
-include { FIND_ANNOTATED_FAMILIES_BY_STRUCTURE                  } from "${projectDir}/foldseek/find_annotated_families_by_structure.nf"
+include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_PDB        } from "${params.moduleDir}/foldseek/easysearch/main.nf"
+include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_ALPHAFOLDB } from "${params.moduleDir}/foldseek/easysearch/main.nf"
+include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_ESM        } from "${params.moduleDir}/foldseek/easysearch/main.nf"
+include { FIND_ANNOTATED_FAMILIES_BY_STRUCTURE                  } from "${params.moduleDir}/foldseek/find_annotated_families_by_structure.nf"
 
 workflow ANNOTATE_STRUCTURES {
     take:
