@@ -29,10 +29,10 @@ def initiate_output_csvs(mgnifams_out_dir, output_dir):
         writer = csv.writer(file)
         writer.writerow(mgnifam_folds_headers)
 
-def read_family_sizes(mgnifams_out_dir):
-    column_names = ['family', 'size']
-    family_sizes_df = pd.read_csv(os.path.join(mgnifams_out_dir, "families/updated_family_sizes.tsv"), delimiter='\t', header=None, names=column_names)
-    return family_sizes_df
+def read_family_metadata(mgnifams_out_dir):
+    column_names = ['family', 'size', 'protein_rep', 'region']
+    family_metadata_df = pd.read_csv(os.path.join(mgnifams_out_dir, "families/updated_family_metadata.csv"), header=None, names=column_names)
+    return family_metadata_df
 
 def read_structure_scores(mgnifams_out_dir):
     column_names = ['family', 'rep_length', 'plddt', 'ptm']
@@ -45,36 +45,20 @@ def get_converged_families(mgnifams_out_dir):
 
         return converged_families
 
-def parse_cif(mgnifam_id, mgnifams_out_dir): # TODO protein reps and regions from new soon to be generated table from family generation
-    cif_directory = os.path.join(mgnifams_out_dir, 'structures/cif')
-    cif_filenames = os.listdir(cif_directory)
-    cif_filename = next(filename for filename in cif_filenames if filename.startswith(mgnifam_id + '-'))
-    
-    filename_no_ext = cif_filename.split('.')[0]
-    first_split = filename_no_ext.split('-')
-    first_split_second_part = first_split[1]
-    protein_parts = first_split_second_part.split('_')
-    protein_rep = protein_parts[0]
-    region = "-"
-    if (len(first_split) == 3):
-        region = f"{protein_parts[1]}-{first_split[2]}"
-
-    return protein_rep, region, cif_filename
-
 def is_converged(fam, converged_families):
     return fam in converged_families
 
-def write_mgnifam(i, mgnifams_out_dir, output_dir, family_sizes_df, structure_scores_df, converged_families):
-    family_size = family_sizes_df[family_sizes_df['family'] == i][['size']].values[0][0]
-    protein_rep, region, cif_file = parse_cif(str(i), mgnifams_out_dir)
+def write_mgnifam(i, mgnifams_out_dir, output_dir, family_metadata_df, structure_scores_df, converged_families):
+    family_size, protein_rep, region = family_metadata_df[family_metadata_df['family'] == i][['size', 'protein_rep', 'region']].values[0]
     rep_length, plddt, ptm = structure_scores_df[structure_scores_df['family'] == i][['rep_length', 'plddt', 'ptm']].values[0]
     converged = is_converged(i, converged_families)
     
-    seed_msa_file = f"{i}.fas"
-    msa_file = seed_msa_file
-    hmm_file = f"{i}.hmm"
-    rf_file = f"{i}.txt"
-    biomes_file = f"{i}.csv"
+    cif_file                 = f"{i}.cif"
+    seed_msa_file            = f"{i}.fas"
+    msa_file                 = f"{i}.fas"
+    hmm_file                 = f"{i}.hmm"
+    rf_file                  = f"{i}.txt"
+    biomes_file              = f"{i}.csv"
     domain_architecture_file = f"{i}.json"
     
     mgnifam_csv_path = os.path.join(output_dir, 'mgnifam.csv')
@@ -187,16 +171,16 @@ def main():
         sys.exit(1)
 
     mgnifams_out_dir = sys.argv[1]
-    output_dir       = "tables"
+    output_dir       = os.path.join(mgnifams_out_dir, 'tables')
     os.makedirs(output_dir, exist_ok=True)
 
     initiate_output_csvs(mgnifams_out_dir, output_dir)
-    family_sizes_df     = read_family_sizes(mgnifams_out_dir)
+    family_metadata_df  = read_family_metadata(mgnifams_out_dir)
     structure_scores_df = read_structure_scores(mgnifams_out_dir)
-    converged_families = get_converged_families(mgnifams_out_dir)
+    converged_families  = get_converged_families(mgnifams_out_dir)
 
-    for i in range(1, len(family_sizes_df) + 1):
-        write_mgnifam(i, mgnifams_out_dir, output_dir, family_sizes_df, structure_scores_df, converged_families)
+    for i in range(1, len(family_metadata_df) + 1):
+        write_mgnifam(i, mgnifams_out_dir, output_dir, family_metadata_df, structure_scores_df, converged_families)
         
     write_mgnifam_proteins(mgnifams_out_dir, output_dir)
     write_mgnifam_pfams(mgnifams_out_dir, output_dir)

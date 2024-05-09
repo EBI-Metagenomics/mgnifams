@@ -10,13 +10,13 @@ workflow GENERATE_FAMILIES {
     mgnifams_fasta
     discarded_clusters
     converged_families
-    family_sizes
+    family_metadata
     starting_num_sequences
     iteration
 
     main:
     clusters_pkl     = CREATE_CLUSTERS_PKL(clusters_tsv).pkl
-    refined_families = REFINE_FAMILIES(clusters_pkl, refined_families_tsv, mgnifams_fasta, discarded_clusters, converged_families, family_sizes, \
+    refined_families = REFINE_FAMILIES(clusters_pkl, refined_families_tsv, mgnifams_fasta, discarded_clusters, converged_families, family_metadata, \
         starting_num_sequences, params.minimum_members, iteration)
 
     emit:

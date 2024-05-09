@@ -13,7 +13,7 @@ import time
 def parse_args():
     global arg_clusters_bookkeeping_df_pkl_file, arg_refined_families_tsv_file, \
         arg_mgnifams_input_fasta_file, arg_discarded_clusters_file, \
-        arg_converged_families_file, arg_family_sizes_file, \
+        arg_converged_families_file, arg_family_metadata_file, \
         arg_starting_num_sequences, arg_minimum_family_members, \
         arg_iteration
         
@@ -26,7 +26,7 @@ def parse_args():
     arg_mgnifams_input_fasta_file        = sys.argv[3]
     arg_discarded_clusters_file          = sys.argv[4]
     arg_converged_families_file          = sys.argv[5]
-    arg_family_sizes_file                = sys.argv[6]
+    arg_family_metadata_file             = sys.argv[6]
     arg_starting_num_sequences           = sys.argv[7]
     arg_minimum_family_members           = int(sys.argv[8])
     arg_iteration                        = int(sys.argv[9])
@@ -34,7 +34,7 @@ def parse_args():
 def define_globals():
     global log_file, updated_refined_families_tsv_file, \
         updated_mgnifams_input_fasta_file, updated_discarded_clusters_file, \
-        updated_converged_families_file, updated_family_sizes_file, \
+        updated_converged_families_file, updated_family_metadata_file, \
         tmp_folder, seed_msa_folder, \
         align_msa_folder, hmm_folder, \
         domtblout_folder, rf_folder, \
@@ -50,7 +50,7 @@ def define_globals():
     updated_mgnifams_input_fasta_file = "updated_mgnifams_input.fa"
     updated_discarded_clusters_file   = "updated_discarded_clusters.txt"
     updated_converged_families_file   = "updated_converged_families.txt"
-    updated_family_sizes_file         = "updated_family_sizes.tsv"
+    updated_family_metadata_file      = "updated_family_metadata.csv"
     tmp_folder                        = "tmp"
     seed_msa_folder                   = "seed_msa_sto"
     align_msa_folder                  = "msa_sto"
@@ -83,7 +83,7 @@ def copy_updated_input_files():
     shutil.copy(arg_mgnifams_input_fasta_file, updated_mgnifams_input_fasta_file)
     shutil.copy(arg_discarded_clusters_file, updated_discarded_clusters_file)
     shutil.copy(arg_converged_families_file, updated_converged_families_file)
-    shutil.copy(arg_family_sizes_file, updated_family_sizes_file)
+    shutil.copy(arg_family_metadata_file, updated_family_metadata_file)
 
     with open(log_file, 'w') as file:
         file.write("copy_updated_input_files: ")
@@ -405,6 +405,39 @@ def append_family_file(iteration, family_members):
     with open(log_file, 'a') as file:
         file.write(f"E: {iteration}, s: {len(family_members)}\n")
 
+def parse_protein_region(protein_id):
+    number_of_underscores = protein_id.count('_')
+    if (number_of_underscores == 0):
+        protein_rep = protein_id
+        region      = "-"
+    elif (number_of_underscores == 1):
+        parts       = protein_id.split('/')
+        protein_rep = parts[0]
+        region      = parts[1].replace("_", "-")
+    elif (number_of_underscores == 2):
+        parts       = protein_id.split('_')
+        protein_rep = parts[0]
+        region      = f"{parts[1]}-{parts[2]}"
+    elif (number_of_underscores == 3):
+        parts        = protein_id.split('_')
+        protein_rep  = parts[0]
+        start        = int(parts[1])
+        region_parts = protein_id.split('/')[1].split('_')
+        region       = f"{start + int(region_parts[0]) - 1}-{start + int(region_parts[1]) - 1}"
+
+    return protein_rep, region
+
+def extract_first_stockholm_sequence():
+    alignment = AlignIO.read(tmp_align_msa_path, "stockholm")
+    first_record = alignment[0]
+    protein_rep, region = parse_protein_region(first_record.id)
+    return len(alignment), protein_rep, region 
+
+def append_family_metadata(iteration):
+    family_size, protein_rep, region = extract_first_stockholm_sequence()
+    with open(updated_family_metadata_file, 'a') as file:
+        file.writelines(f"{iteration},{family_size},{protein_rep},{region}\n")
+
 def move_produced_models(iteration):
     shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'{iteration}.sto'))
     shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'{iteration}.sto'))
@@ -569,9 +602,9 @@ def main():
                 outfile.write(unique_reps[0] + "\n")
         else: # successfully
             append_family_file(iteration, filtered_seq_names)
+            append_family_metadata(iteration)
             move_produced_models(iteration)
-            with open(updated_family_sizes_file, 'a') as outfile:
-                outfile.write(f"{iteration}\t{len(filtered_seq_names)}\n")
+            # prepare sequences to remove
             family_original_names = get_final_family_original_names(filtered_seq_names)
             unique_reps = get_cluster_reps(clusters_bookkeeping_df, family_original_names)
 

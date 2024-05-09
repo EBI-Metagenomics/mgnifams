@@ -12,7 +12,7 @@ process CREATE_CLUSTERS_PKL {
     path("refined_families.tsv")       , emit: refined_families
     path("discarded_clusters.txt")     , emit: discarded_clusters
     path("converged_families.txt")     , emit: converged_families
-    path("family_sizes.tsv")           , emit: family_sizes
+    path("family_metadata.csv")        , emit: family_metadata
 
     script:
     """
@@ -20,7 +20,7 @@ process CREATE_CLUSTERS_PKL {
     touch refined_families.tsv
     touch discarded_clusters.txt
     touch converged_families.txt
-    touch family_sizes.tsv
+    touch family_metadata.csv
     """
 }
 
@@ -50,7 +50,7 @@ process REFINE_FAMILIES {
     path("updated_mgnifams_input.fa")     , emit: fa
     path("updated_discarded_clusters.txt"), emit: discarded
     path("updated_converged_families.txt"), emit: converged
-    path("updated_family_sizes.tsv")      , emit: sizes
+    path("updated_family_metadata.csv")   , emit: metadata
     path("log.txt")                       , emit: log
 
     script:
