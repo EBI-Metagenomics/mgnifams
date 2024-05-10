@@ -1,5 +1,6 @@
 import argparse
 import configparser
+import os
 import psycopg2
 
 def read_config(db_config_file):
@@ -17,7 +18,7 @@ def extract_sequence_id(sequence_id_with_region):
     return sequence_id_with_region
 
 def write_out(family_id, rows):
-    output_csv = f"query_results/{family_id}.csv"
+    output_csv = f"{output_dir}/{family_id}.csv"
     with open(output_csv, 'w') as file:
         for row in rows:
             metadata = row[1]
@@ -66,6 +67,11 @@ if __name__ == "__main__":
     conn      = psycopg2.connect(**db_params)
     cursor    = conn.cursor()
 
+    global output_dir
+    output_dir = "query_results"
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+        
     query_sequence_explorer_protein(cursor, args.family_proteins_file)
 
     cursor.close()
