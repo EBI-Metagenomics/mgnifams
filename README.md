@@ -10,7 +10,7 @@ Depending on the extension of the file, pass arguments --compress_mode 'gz' and 
 
 The workflow decompresses the file (if compressed) and then removes the header. Run this workflow from the main mgnifams directory with the command:
 
-**nextflow run workflows/preprocess_input/main.nf -c nextflow_workflows.config -c workflows/preprocess_input/nextflow.config -profile slurm**
+**nextflow run workflows/preprocess_input/main.nf -profile slurm**
 
 To save storage space, we don’t store this intermediate file, but instead need to pass the resulting workDir result path in the next workflow (initiate_proteins). Example: /hps/nobackup/rdf/metagenomics/service-team/users/vangelis/work_mgnifams/7c/a25c89b1269d58b2cdfbab35cd58dc/sequence_explorer_protein_no_header.csv
 
@@ -29,7 +29,7 @@ This is done through a python script named bin/filter_unannotated_slices_fasta.p
 
 Run with:
 
-**nextflow run workflows/initiate_proteins/main.nf -c nextflow_workflows.config -profile slurm**
+**nextflow run workflows/initiate_proteins/main.nf -profile slurm**
 
 3. **execute_clustering**
 
@@ -43,7 +43,7 @@ The result file can be found in output/mmseqs/linclust_clusters.tsv
 
 Run with:
 
-**nextflow run workflows/execute_clustering/main.nf -c nextflow_workflows.config -profile slurm**
+**nextflow run workflows/execute_clustering/main.nf -profile slurm**
 
 4. **generate_families**
 
