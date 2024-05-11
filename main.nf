@@ -3,7 +3,7 @@
 include { validateParameters; paramsHelp; paramsSummaryLog } from 'plugin/nf-validation'
 
 if (params.help) {
-    log.info paramsHelp("nextflow run main.nf -dsl2 -c nextflow_end-to-end.config -profile slurm --sequence_explorer_protein_path sequence_explorer_protein.csv.bz2")
+    log.info paramsHelp("nextflow run main.nf -dsl2 -c conf/end-to-end.config -profile slurm --sequence_explorer_protein_path sequence_explorer_protein.csv.bz2")
     exit 0
 }
 validateParameters()

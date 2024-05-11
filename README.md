@@ -140,9 +140,9 @@ port = ***
 
 This is mainly used locally for testing. Chains all aforementioned modules.
 
-**nextflow run main.nf -c nextflow_end-to-end.config -profile local -resume**
+**nextflow run main.nf -c conf/end-to-end.config -profile local -resume**
 
-**nextflow run main.nf -c nextflow_end-to-end.config -profile slurm -resume -N vangelis@ebi.ac.uk**
+**nextflow run main.nf -c conf/end-to-end.config -profile slurm -resume -N vangelis@ebi.ac.uk**
 
 # Anti-bus factor measures
 Currently, extra documentation can be found in my google doc: https://docs.google.com/document/d/1eeglnQb9M-D0iK9AFbTypLYvvKHeUg6XtzmlKN874k4/edit
