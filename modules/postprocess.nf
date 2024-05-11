@@ -8,6 +8,7 @@ process QUERY_MGNPROTEIN_DB {
 
     output:
     path "query_results"
+    path "biome_mapping.tsv"
 
     """
     python3 ${params.scriptDir}/post-processing/query_mgnprotein_db.py ${config_file} ${family_proteins_file}

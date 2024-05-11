@@ -56,6 +56,16 @@ def query_sequence_explorer_protein(cursor, family_proteins_file):
         if query_sequences:
             execute_query(cursor, previous_family_id, query_sequences)
 
+def query_sequence_explorer_biome(cursor):
+    sql_query = "SELECT id, name FROM sequence_explorer_biome"
+    cursor.execute(sql_query)
+    rows = cursor.fetchall()
+
+    output_tsv = "biome_mapping.tsv"
+    with open(output_tsv, 'w') as file:
+        for row in rows:
+            file.write(f"{row[0]}\t{row[1]}\n")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Query the PostgreSQL database MGnifams proteins data.")
     parser.add_argument("db_config_file",       help="Path to the configuration file for the database secrets")
@@ -73,6 +83,7 @@ if __name__ == "__main__":
         os.mkdir(output_dir)
         
     query_sequence_explorer_protein(cursor, args.family_proteins_file)
+    query_sequence_explorer_biome(cursor)
 
     cursor.close()
     conn.close()
