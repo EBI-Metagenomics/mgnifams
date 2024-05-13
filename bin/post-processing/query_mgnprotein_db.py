@@ -18,14 +18,14 @@ def extract_sequence_id(sequence_id_with_region):
     return sequence_id_with_region
 
 def write_out(family_id, rows):
-    output_csv = f"{output_dir}/{family_id}.csv"
-    with open(output_csv, 'w') as file:
+    output_tsv = f"{output_dir}/{family_id}.tsv"
+    with open(output_tsv, 'w') as file:
         for row in rows:
             mgyp = row[0]
             metadata = row[1]
             meta_b = metadata.get('b', 'null')
             meta_p = metadata.get('p', 'null')
-            file.write(f"{mgyp},{meta_b},{meta_p}\n")
+            file.write(f"{mgyp}\t{meta_b}\t{meta_p}\n")
 
 def execute_query(cursor, family_id, query_sequences):
     unique_query_sequences = list(set(query_sequences))
