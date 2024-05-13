@@ -82,6 +82,9 @@ if __name__ == "__main__":
     biome_mapping_df = pd.read_csv(biome_mapping_path, sep='\t', header=None, names=['id', 'name'])
 
     query_results_files = os.listdir(query_results_dir)
+
+    outdir = "biome_results"
+    os.makedirs(outdir, exist_ok=True)
     for tsv in query_results_files:
         file_path = os.path.join(query_results_dir, tsv)
         counts_df = count_per_family(file_path)
@@ -89,5 +92,5 @@ if __name__ == "__main__":
         parent_counts_df = calculate_parent_counts(counts_df)
 
         basename = os.path.splitext(os.path.basename(tsv))[0]
-        out_file = basename + '.csv'
+        out_file = os.path.join(outdir, f"{basename}.csv")
         write_out(parent_counts_df, out_file)

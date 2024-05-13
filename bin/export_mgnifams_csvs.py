@@ -171,7 +171,7 @@ def main():
         sys.exit(1)
 
     mgnifams_out_dir = sys.argv[1]
-    output_dir       = os.path.join(mgnifams_out_dir, 'tables')
+    output_dir       = 'tables'
     os.makedirs(output_dir, exist_ok=True)
 
     initiate_output_csvs(mgnifams_out_dir, output_dir)

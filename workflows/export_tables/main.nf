@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-include { EXPORT_TABLES } from "${projectDir}/../../subworkflows/export_tables/main.nf"
+include { EXPORT_MGNIFAMS_CSV } from "${params.moduleDir}/export.nf"
 
 workflow {
-    EXPORT_TABLES(params.mgnifams_output_dir)
+    EXPORT_MGNIFAMS_CSV(params.mgnifams_output_dir)
 }
