@@ -9,6 +9,7 @@ process QUERY_MGNPROTEIN_DB {
     output:
     path "query_results"
     path "biome_mapping.tsv"
+    path "pfam_mapping.tsv"
 
     """
     python3 ${params.scriptDir}/post-processing/query_mgnprotein_db.py ${config_file} ${family_proteins_file}
@@ -36,11 +37,12 @@ process PARSE_DOMAINS {
 
     input:
     path query_results
+    path refined_families
 
     output:
     path "domain_results"
 
     """
-    python3 ${params.scriptDir}/post-processing/parse_domains.py ${query_results}
+    python3 ${params.scriptDir}/post-processing/parse_domains.py ${query_results} ${refined_families}
     """
 }
