@@ -1,5 +1,5 @@
 process QUERY_MGNPROTEIN_DB {
-    publishDir "${params.outDir}/post-processing", mode: "copy"
+    publishDir "${params.outDir}", mode: "copy"
     label "venv"
 
     input:
@@ -7,9 +7,7 @@ process QUERY_MGNPROTEIN_DB {
     path family_proteins_file
 
     output:
-    path "query_results"
-    path "biome_mapping.tsv"
-    path "pfam_mapping.tsv"
+    path "post-processing"
 
     """
     python3 ${params.scriptDir}/post-processing/query_mgnprotein_db.py ${config_file} ${family_proteins_file}

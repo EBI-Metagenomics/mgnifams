@@ -62,7 +62,7 @@ def query_sequence_explorer_biome(cursor):
     cursor.execute(sql_query)
     rows = cursor.fetchall()
 
-    output_tsv = "biome_mapping.tsv"
+    output_tsv = "post-processing/biome_mapping.tsv"
     with open(output_tsv, 'w') as file:
         for row in rows:
             file.write(f"{row[0]}\t{row[1]}\n")
@@ -72,7 +72,7 @@ def query_sequence_explorer_pfam(cursor):
     cursor.execute(sql_query)
     rows = cursor.fetchall()
 
-    output_tsv = "pfam_mapping.tsv"
+    output_tsv = "post-processing/pfam_mapping.tsv"
     with open(output_tsv, 'w') as file:
         for row in rows:
             file.write(f"{row[0]}\t{row[1]}\n")
@@ -88,8 +88,10 @@ if __name__ == "__main__":
     conn      = psycopg2.connect(**db_params)
     cursor    = conn.cursor()
 
+    if not os.path.exists("post-processing"):
+        os.mkdir("post-processing")
     global output_dir
-    output_dir = "query_results"
+    output_dir = "post-processing/query_results"
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
         

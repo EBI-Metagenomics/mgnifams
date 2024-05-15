@@ -1,0 +1,25 @@
+flowchart TB
+    subgraph " "
+    v0["Channel.fromPath"]
+    v1["out_dir"]
+    v4["config_file"]
+    v8["refined_families"]
+    end
+    v2([EXPORT_MGNIFAMS_CSV])
+    subgraph " "
+    v3[" "]
+    v7[" "]
+    v10[" "]
+    end
+    v5([QUERY_MGNPROTEIN_DB])
+    v6([PARSE_BIOMES])
+    v9([PARSE_DOMAINS])
+    v0 --> v5
+    v1 --> v2
+    v2 --> v3
+    v4 --> v5
+    v5 --> v6
+    v5 --> v9
+    v6 --> v7
+    v8 --> v9
+    v9 --> v10
