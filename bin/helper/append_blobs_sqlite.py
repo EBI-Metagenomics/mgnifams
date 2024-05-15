@@ -1,25 +1,3 @@
-# Manually add the _blob columns first in sql:
-# ALTER TABLE mgnifam
-# ADD COLUMN cif_blob BLOB;
-
-# ALTER TABLE mgnifam
-# ADD COLUMN seed_msa_blob BLOB;
-
-# ALTER TABLE mgnifam
-# ADD COLUMN msa_blob BLOB;
-
-# ALTER TABLE mgnifam
-# ADD COLUMN hmm_blob BLOB;
-
-# ALTER TABLE mgnifam
-# ADD COLUMN rf_blob BLOB;
-
-# ALTER TABLE mgnifam
-# ADD COLUMN biomes_blob BLOB;
-
-# ALTER TABLE mgnifam
-# ADD COLUMN domain_architecture_blob BLOB;
-
 import sqlite3
 import os
 
@@ -35,13 +13,13 @@ def test_connection(conn): # test
 def construct_file_path(base_dir, col_iter, file_column):
     # Mapping file columns to their respective directories
     file_directory = {
-        0: "cif",
+        0: "structures/cif",
         1: "families/seed_msa",
         2: "families/msa",
         3: "families/hmm",
         4: "families/rf",
-        5: "biome_sunburst",
-        6: "pfams"
+        5: "post-processing/biome_results",
+        6: "post-processing/domain_results"
     }
     
     directory = file_directory.get(col_iter)
@@ -93,7 +71,7 @@ def import_files(conn, base_dir):
 conn = sqlite3.connect('/home/vangelis/Desktop/Projects/mgnifams/DB/mgnifams.sqlite3')
 # test_connection(conn)
 
-base_dir = '/home/vangelis/Desktop/Projects/mgnifams-site-data_backup'
+base_dir ='/home/vangelis/Desktop/Projects/mgnifams/output'  # '/home/vangelis/Desktop/Projects/mgnifams-site-data_backup'
 
 import_files(conn, base_dir)
 
