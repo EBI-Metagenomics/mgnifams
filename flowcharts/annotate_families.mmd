@@ -1,0 +1,113 @@
+flowchart TB
+    subgraph " "
+    v0["Channel.fromPath"]
+    v2["Channel.fromPath"]
+    v4["informat"]
+    v5["outformat"]
+    v9["informat"]
+    v10["outformat"]
+    v15["informat"]
+    v16["outformat"]
+    v19["hmm_db"]
+    v20["db_name"]
+    v29["compute_mode"]
+    v45[" "]
+    v48[" "]
+    v51[" "]
+    end
+    subgraph REFORMAT_SEED_MSA
+    v6([HHSUITE_REFORMAT])
+    v8([TRANSLATE_MSA_MGYPS])
+    v1(( ))
+    end
+    subgraph " "
+    v7[" "]
+    v12[" "]
+    v14["fa_ch"]
+    v18[" "]
+    v22[" "]
+    v24[" "]
+    v25[" "]
+    v31[" "]
+    v33[" "]
+    v36[" "]
+    v38[" "]
+    v47[" "]
+    v50[" "]
+    v53[" "]
+    v59[" "]
+    end
+    subgraph REFORMAT_HMMALIGN_MSA
+    v11([HHSUITE_REFORMAT])
+    v13([TRANSLATE_MSA_MGYPS])
+    v3(( ))
+    end
+    subgraph ANNOTATE_MODELS
+    v17([HHSUITE_REFORMAT])
+    v21([HHSUITE_HHBLITS])
+    v23([FILTER_HH_RESULTS])
+    end
+    subgraph PREDICT_STRUCTURES
+    v26([EXTRACT_FIRST_STOCKHOLM_SEQUENCES])
+    v30([ESMFOLD])
+    v32([EXTRACT_ESMFOLD_SCORES])
+    v37([PARSE_CIF])
+    v27(( ))
+    v34(( ))
+    end
+    subgraph ANNOTATE_STRUCTURES
+    v46([FOLDSEEK_EASYSEARCH_PDB])
+    v49([FOLDSEEK_EASYSEARCH_ALPHAFOLDB])
+    v52([FOLDSEEK_EASYSEARCH_ESM])
+    v58([FIND_ANNOTATED_FAMILIES_BY_STRUCTURE])
+    v54(( ))
+    end
+    v0 --> v1
+    v2 --> v3
+    v4 --> v6
+    v5 --> v6
+    v1 --> v6
+    v6 --> v8
+    v6 --> v7
+    v8 --> v17
+    v9 --> v11
+    v10 --> v11
+    v3 --> v11
+    v11 --> v13
+    v11 --> v12
+    v13 --> v14
+    v15 --> v17
+    v16 --> v17
+    v17 --> v21
+    v17 --> v18
+    v19 --> v21
+    v20 --> v21
+    v21 --> v23
+    v21 --> v22
+    v23 --> v25
+    v23 --> v24
+    v3 --> v26
+    v26 --> v27
+    v29 --> v30
+    v27 --> v30
+    v30 --> v37
+    v30 --> v32
+    v30 --> v31
+    v30 --> v46
+    v30 --> v49
+    v30 --> v52
+    v32 --> v33
+    v32 --> v34
+    v34 --> v36
+    v37 --> v38
+    v45 --> v46
+    v46 --> v47
+    v46 --> v54
+    v48 --> v49
+    v49 --> v50
+    v49 --> v54
+    v51 --> v52
+    v52 --> v53
+    v52 --> v54
+    v54 --> v58
+    v58 --> v59

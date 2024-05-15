@@ -63,7 +63,7 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     label "venv"
 
     input:
-    path msa_sto
+    tuple val(meta), path(msa_sto)
 
     output:
     path "family_reps.fasta"

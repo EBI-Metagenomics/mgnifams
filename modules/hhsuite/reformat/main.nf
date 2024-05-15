@@ -10,7 +10,7 @@ process HHSUITE_REFORMAT {
     val(outformat)
 
     output:
-    tuple val(meta), path("${meta.id}"), emit: fa
+    tuple val(meta), path("${meta.id}_tmp"), emit: fa
     path "versions.yml"                , emit: versions
 
     when:
@@ -18,7 +18,7 @@ process HHSUITE_REFORMAT {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}_tmp"
     """
     mkdir -p ${prefix}
 

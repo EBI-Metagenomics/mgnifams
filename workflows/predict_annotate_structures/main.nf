@@ -6,6 +6,9 @@ include { ANNOTATE_STRUCTURES } from "${projectDir}/../../subworkflows/annotate_
 workflow {
     Channel
         .fromPath(params.msa_sto_path) 
+        .map { filepath ->
+            return [ [id:"msa_sto"], file(filepath) ]
+        }
         .set { msa_sto_ch }
 
     pdb_ch = PREDICT_STRUCTURES(msa_sto_ch).pdb_ch

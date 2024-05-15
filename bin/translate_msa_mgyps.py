@@ -32,7 +32,6 @@ def format_protein_name(raw_name):
     return "MGYP" + formatted_name
 
 def process_file(input_file, output_file):
-    print(input_file)
     with open(input_file, 'r') as f_in, open(output_file, 'w') as f_out:
         for line in f_in:
             if line.startswith('>'):
@@ -43,16 +42,16 @@ def process_file(input_file, output_file):
             else:
                 f_out.write(line)
 
-    os.replace(output_file, input_file)
-
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python bin/post-processing/translate_msa_mgyps.py input_folder") # msa or seed_msa paths
+    if len(sys.argv) != 3:
+        print("Usage: python bin/post-processing/translate_msa_mgyps.py input_folder output_folder") # msa or seed_msa paths
     else:
-        input_folder = sys.argv[1]
+        input_folder  = sys.argv[1]
+        output_folder = sys.argv[2]
+        os.makedirs(output_folder, exist_ok=True)
 
         for file_name in os.listdir(input_folder):
             if file_name.endswith(".fas"):
-                input_file = os.path.join(input_folder, file_name)
-                output_file = "temp_out.fas"
+                input_file  = os.path.join(input_folder, file_name)
+                output_file = os.path.join(output_folder, file_name)
                 process_file(input_file, output_file)
