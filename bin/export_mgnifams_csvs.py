@@ -46,7 +46,7 @@ def get_converged_families(mgnifams_out_dir):
         return converged_families
 
 def is_converged(fam, converged_families):
-    return fam in converged_families
+    return str(fam) in converged_families
 
 def write_mgnifam(i, mgnifams_out_dir, output_dir, family_metadata_df, structure_scores_df, converged_families):
     family_size, protein_rep, region = family_metadata_df[family_metadata_df['family'] == i][['size', 'protein_rep', 'region']].values[0]
