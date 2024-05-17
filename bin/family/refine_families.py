@@ -509,6 +509,9 @@ def main():
     iteration = arg_iteration
     while True:
         iteration += 1
+        if (iteration == 101): # TODO remove this limiting/exiting condition
+            exit()
+
         largest_family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
         if not family_members or len(family_members) < arg_minimum_family_members:
             with open(log_file, 'a') as file:
