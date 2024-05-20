@@ -18,6 +18,10 @@ include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA } from "${projectDir}/subworkflo
 include { ANNOTATE_MODELS                       } from "${projectDir}/subworkflows/annotate_models/main.nf"
 include { PREDICT_STRUCTURES                    } from "${projectDir}/subworkflows/predict_structures/main.nf"
 include { ANNOTATE_STRUCTURES                   } from "${projectDir}/subworkflows/annotate_structures/main.nf"
+include { EXPORT_MGNIFAMS_CSV                   } from "${params.moduleDir}/export.nf"
+include { QUERY_MGNPROTEIN_DB                   } from "${params.moduleDir}/postprocess.nf"
+include { PARSE_BIOMES                          } from "${params.moduleDir}/postprocess.nf"
+include { PARSE_DOMAINS                         } from "${params.moduleDir}/postprocess.nf"
 
 workflow {
     preprocessed_sequence_explorer_protein_ch = PREPROCESS_INPUT(params.sequence_explorer_protein_path, params.compress_mode).preprocessed_sequence_explorer_protein_ch
@@ -46,7 +50,11 @@ workflow {
     fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
     REFORMAT_HMMALIGN_MSA( hmmalign_msa_ch )
     ANNOTATE_MODELS( fa_seed_msa_ch, params.hh_mode )
-
     pdb_ch = PREDICT_STRUCTURES(hmmalign_msa_ch).pdb_ch
     ANNOTATE_STRUCTURES(pdb_ch)
+
+    EXPORT_MGNIFAMS_CSV(params.outDir)
+    query_res = QUERY_MGNPROTEIN_DB(params.db_config_file, generated_families.tsv)
+    PARSE_BIOMES(query_res)
+    PARSE_DOMAINS(query_res, generated_families.tsv)
 }
