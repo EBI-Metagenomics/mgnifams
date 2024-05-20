@@ -3,7 +3,7 @@
 include { validateParameters; paramsHelp; paramsSummaryLog } from 'plugin/nf-validation'
 
 if (params.help) {
-    log.info paramsHelp("nextflow run main.nf -dsl2 -c conf/end-to-end.config -profile slurm --sequence_explorer_protein_path sequence_explorer_protein.csv.bz2")
+    log.info paramsHelp("nextflow run main.nf -c conf/end-to-end.config -profile slurm")
     exit 0
 }
 validateParameters()
@@ -12,36 +12,40 @@ log.info paramsSummaryLog(workflow)
 include { PREPROCESS_INPUT    } from "${projectDir}/subworkflows/preprocess_input/main.nf"
 include { INITIATE_PROTEINS   } from "${projectDir}/subworkflows/initiate_proteins/main.nf"
 include { EXECUTE_CLUSTERING  } from "${projectDir}/subworkflows/execute_clustering/main.nf"
-include { GENERATE_FAMILIES   } from "${projectDir}/subworkflows/generate_families/main.nf"
-include { ANNOTATE_MODELS     } from "${projectDir}/subworkflows/annotate_models/main.nf"
-include { PREDICT_STRUCTURES  } from "${projectDir}/subworkflows/predict_structures/main.nf"
-include { ANNOTATE_STRUCTURES } from "${projectDir}/subworkflows/annotate_structures/main.nf"
+// include { GENERATE_FAMILIES   } from "${projectDir}/subworkflows/generate_families/main.nf"
+// include { ANNOTATE_MODELS     } from "${projectDir}/subworkflows/annotate_models/main.nf"
+// include { PREDICT_STRUCTURES  } from "${projectDir}/subworkflows/predict_structures/main.nf"
+// include { ANNOTATE_STRUCTURES } from "${projectDir}/subworkflows/annotate_structures/main.nf"
 
 workflow {
-    Channel
-        .fromPath(params.sequence_explorer_protein_path)
-        .set { mgy90_file_bz2 }
+    preprocessed_sequence_explorer_protein_ch = PREPROCESS_INPUT(params.sequence_explorer_protein_path, params.compress_mode).preprocessed_sequence_explorer_protein_ch
+    fasta_ch = INITIATE_PROTEINS( preprocessed_sequence_explorer_protein_ch ).fasta_ch
+    EXECUTE_CLUSTERING( fasta_ch )
 
-    preprocessed_mgy90_file = PREPROCESS_INPUT( mgy90_file_bz2 ).preprocessed_mgy90_file
-    out_fasta               = INITIATE_PROTEINS( preprocessed_mgy90_file ).out_fasta
-    families_tsv            = EXECUTE_CLUSTERING( out_fasta ).families_tsv.map { meta, families_tsv -> families_tsv }
-    generated_families      = GENERATE_FAMILIES( families_tsv, params.empty_file, out_fasta )
-    generated_families.seed_msa
-        .map { files ->
-            String filePath = files[0]
-            int lastIndex = filePath.lastIndexOf('/')
-            String seed_msa_dir = filePath.substring(0, lastIndex + 1)
-            return [ [id:"annotated_models"], file(seed_msa_dir) ]
-        }
-        .set { seed_msa_dir }
-    unannotated = ANNOTATE_MODELS( seed_msa_dir, params.hhdb_folder_path, "hhblits" )
-    generated_families.msa
-        .map { files ->
-            String filePath = files[0]
-            int lastIndex = filePath.lastIndexOf('/')
-            String msa_dir = filePath.substring(0, lastIndex + 1)
-        }
-        .set { msa_dir }
-    pdb_ch = PREDICT_STRUCTURES( msa_dir, unannotated, "all" ).pdb_ch
-    ANNOTATE_STRUCTURES( pdb_ch )
+    // Channel
+    //     .fromPath(params.sequence_explorer_protein_path)
+    //     .set { mgy90_file_bz2 }
+
+    // preprocessed_mgy90_file = PREPROCESS_INPUT( mgy90_file_bz2 ).preprocessed_mgy90_file
+    // out_fasta               = INITIATE_PROTEINS( preprocessed_mgy90_file ).out_fasta
+    // families_tsv            = EXECUTE_CLUSTERING( out_fasta ).families_tsv.map { meta, families_tsv -> families_tsv }
+    // generated_families      = GENERATE_FAMILIES( families_tsv, params.empty_file, out_fasta )
+    // generated_families.seed_msa
+    //     .map { files ->
+    //         String filePath = files[0]
+    //         int lastIndex = filePath.lastIndexOf('/')
+    //         String seed_msa_dir = filePath.substring(0, lastIndex + 1)
+    //         return [ [id:"annotated_models"], file(seed_msa_dir) ]
+    //     }
+    //     .set { seed_msa_dir }
+    // unannotated = ANNOTATE_MODELS( seed_msa_dir, params.hhdb_folder_path, "hhblits" )
+    // generated_families.msa
+    //     .map { files ->
+    //         String filePath = files[0]
+    //         int lastIndex = filePath.lastIndexOf('/')
+    //         String msa_dir = filePath.substring(0, lastIndex + 1)
+    //     }
+    //     .set { msa_dir }
+    // pdb_ch = PREDICT_STRUCTURES( msa_dir, unannotated, "all" ).pdb_ch
+    // ANNOTATE_STRUCTURES( pdb_ch )
 }

@@ -24,11 +24,6 @@
                   "default": "/nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_2/sequence_explorer_protein.csv.bz2",
                   "description": "The pipeline main input data."
               },
-              "empty_file": {
-                  "type": "string",
-                  "default": "/nfs/production/rdf/metagenomics/users/vangelis/empty.txt",
-                  "description": "Used to start family generation from scratch."
-              },
               "esm_conda_path": {
                   "type": "string",
                   "description": "predict_structures",
@@ -39,7 +34,6 @@
               "scriptDir",
               "outDir",
               "sequence_explorer_protein_path",
-              "empty_file",
               "esm_conda_path"
           ]
       },
@@ -49,7 +43,7 @@
           "description": "Input values for modules",
           "default": "",
           "properties": {
-              "min_slice_length": {
+              "min_sequence_length": {
                   "type": "integer",
                   "default": 100,
                   "description": "initiate_proteins"
@@ -81,7 +75,7 @@
               }
           },
           "required": [
-              "min_slice_length",
+              "min_sequence_length",
               "input_csv_chunk_size",
               "minimum_members",
               "pdb_chunk_size",
