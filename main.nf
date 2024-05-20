@@ -12,7 +12,7 @@ log.info paramsSummaryLog(workflow)
 include { PREPROCESS_INPUT    } from "${projectDir}/subworkflows/preprocess_input/main.nf"
 include { INITIATE_PROTEINS   } from "${projectDir}/subworkflows/initiate_proteins/main.nf"
 include { EXECUTE_CLUSTERING  } from "${projectDir}/subworkflows/execute_clustering/main.nf"
-// include { GENERATE_FAMILIES   } from "${projectDir}/subworkflows/generate_families/main.nf"
+include { GENERATE_FAMILIES   } from "${projectDir}/subworkflows/generate_all_families/main.nf"
 // include { ANNOTATE_MODELS     } from "${projectDir}/subworkflows/annotate_models/main.nf"
 // include { PREDICT_STRUCTURES  } from "${projectDir}/subworkflows/predict_structures/main.nf"
 // include { ANNOTATE_STRUCTURES } from "${projectDir}/subworkflows/annotate_structures/main.nf"
@@ -20,7 +20,8 @@ include { EXECUTE_CLUSTERING  } from "${projectDir}/subworkflows/execute_cluster
 workflow {
     preprocessed_sequence_explorer_protein_ch = PREPROCESS_INPUT(params.sequence_explorer_protein_path, params.compress_mode).preprocessed_sequence_explorer_protein_ch
     fasta_ch = INITIATE_PROTEINS( preprocessed_sequence_explorer_protein_ch ).fasta_ch
-    EXECUTE_CLUSTERING( fasta_ch )
+    clusters_tsv = EXECUTE_CLUSTERING( fasta_ch ).clusters_tsv.map { meta, filepath -> filepath }
+    GENERATE_FAMILIES(clusters_tsv, fasta_ch)
 
     // Channel
     //     .fromPath(params.sequence_explorer_protein_path)
