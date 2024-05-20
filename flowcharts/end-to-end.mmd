@@ -1,157 +1,176 @@
-flowchart TD
-    p0((Channel.fromPath))
-    p1[PREPROCESS_INPUT:DECOMPRESS_BZ2]
-    style p1 fill:#eae3b3
-    p2[PREPROCESS_INPUT:REMOVE_HEADER]
-    style p2 fill:#eae3b3
-    p3([splitText])
-    p4(( ))
-    p5[INITIATE_PROTEINS:FILTER_UNANNOTATED_SLICES]
-    style p5 fill:#dcacfa
-    p6([collectFile])
-    p7[INITIATE_PROTEINS:PUBLISH_INPUT_FASTA]
-    style p7 fill:#dcacfa
-    p8(( ))
-    p9[INITIATE_PROTEINS:EXPORT_PROTEINS_CSV]
-    style p9 fill:#dcacfa
-    p10(( ))
-    p11([map])
-    p12[EXECUTE_CLUSTERING:MMSEQS_CREATEDB]
-    style p12 fill:#f5c158
-    p13(( ))
-    p14[EXECUTE_CLUSTERING:MMSEQS_LINCLUST]
-    style p14 fill:#f5c158
-    p15(( ))
-    p16[EXECUTE_CLUSTERING:EXPORT_CLUSTERS_TSV]
-    style p16 fill:#f5c158
-    p17([map])
-    p18[GENERATE_FAMILIES:CREATE_CLUSTERS_PKL]
-    style p18 fill:#ff8585
-    p19(( ))
-    p20(( ))
-    p21(( ))
-    p22(( ))
-    p23[GENERATE_FAMILIES:REFINE_FAMILIES]
-    style p23 fill:#ff8585
-    p24(( ))
-    p25(( ))
-    p26(( ))
-    p27(( ))
-    p28(( ))
-    p29([map])
-    p30(( ))
-    p31(( ))
-    p32[ANNOTATE_MODELS:HHSUITE_REFORMAT]
-    style p32 fill:#9cccff
-    p33(( ))
-    p34(( ))
-    p35(( ))
-    p36[ANNOTATE_MODELS:HHSUITE_HHBLITS]
-    style p36 fill:#9cccff
-    p37(( ))
-    p38[ANNOTATE_MODELS:FILTER_HH_RESULTS]
-    style p38 fill:#9cccff
-    p39(( ))
-    p40([map])
-    p41(( ))
-    p42[PREDICT_STRUCTURES:EXTRACT_FIRST_STOCKHOLM_SEQUENCES]
-    style p42 fill:#fff947
-    p43([splitFasta])
-    p44([map])
-    p45(( ))
-    p46(( ))
-    p47[PREDICT_STRUCTURES:ESMFOLD]
-    style p47 fill:#fff947
-    p48(( ))
-    p49(( ))
-    p50[PREDICT_STRUCTURES:PARSE_CIF]
-    style p50 fill:#fff947
-    p51(( ))
-    p52[PREDICT_STRUCTURES:FOLDCOMP_COMPRESS]
-    style p52 fill:#fff947
-    p53(( ))
-    p54(( ))
-    p55((Channel.empty))
-    p56(( ))
-    p57((Channel.empty))
-    p58((Channel.empty))
-    p59(( ))
-    p60[ANNOTATE_STRUCTURES:FOLDSEEK_EASYSEARCH_PDB]
-    style p60 fill:#91fbff
-    p61(( ))
-    p62([concat])
-    p63([concat])
-    p64([map])
-    p65([collectFile])
-    p66[ANNOTATE_STRUCTURES:FIND_ANNOTATED_FAMILIES_BY_STRUCTURE]
-    style p66 fill:#91fbff
-    p67(( ))
-    p0 -->|mgy90_file_bz2| p1
-    p1 --> p2
-    p2 -->|mgy90_file| p3
-    p3 -->|mgy90_chunks_ch| p5
-    p4 -->|min_slice_length| p5
-    p5 --> p6
-    p6 -->|mgnifams_fasta| p7
-    p7 --> p8
-    p6 -->|mgnifams_fasta| p9
-    p9 --> p10
-    p6 -->|mgnifams_fasta| p11
-    p11 --> p12
-    p12 -->|mmseqs_db| p14
-    p12 --> p13
-    p14 -->|linclust_clusters| p16
-    p14 --> p15
-    p12 -->|mmseqs_db| p16
-    p16 --> p17
-    p17 -->|clusters_tsv| p18
-    p18 -->|clusters_pkl| p23
-    p18 --> p19
-    p20 -->|families_tsv| p23
-    p6 -->|mgnifams_fasta| p23
-    p21 -->|minimum_members| p23
-    p22 -->|iteration| p23
-    p23 -->|tsv| p28
-    p23 --> p27
-    p23 -->|seed_msa| p29
-    p23 -->|msa| p40
-    p23 -->|hmm| p26
-    p23 -->|domtblout| p25
-    p23 --> p24
-    p29 -->|fasta_ch| p32
-    p30 -->|informat| p32
-    p31 -->|outformat| p32
-    p32 -->|a2m_fasta_ch| p36
-    p32 --> p33
-    p34 -->|hmm_db| p36
-    p35 -->|db_name| p36
-    p36 -->|hhr_ch| p38
-    p36 --> p37
-    p38 --> p39
-    p38 -->|unannotated_ids| p42
-    p40 -->|msa| p42
-    p41 -->|mode| p42
-    p42 --> p43
-    p43 -->|pdb_fasta_chunks_ch| p44
-    p44 -->|input| p45
-    p45 --> p47
-    p46 -->|compute_mode| p47
-    p47 -->|pdb_ch| p50
-    p47 --> p49
-    p47 --> p48
-    p50 -->|cif_ch| p51
-    p47 -->|pdb_ch| p52
-    p52 -->|fcz_ch| p54
-    p52 --> p53
-    p55 -->|pdb_aln| p56
-    p57 -->|alphafold_aln| p62
-    p58 -->|esm_aln| p63
-    p47 -->|pdb_ch| p60
-    p59 --> p60
-    p60 -->|pdb_aln| p62
-    p60 --> p61
-    p62 --> p63
-    p63 --> p64
-    p64 --> p65
-    p65 -->|result_files| p66
-    p66 -->|annotated| p67
+flowchart TB
+    subgraph " "
+    v0["csv_file"]
+    v3["min_sequence_length"]
+    v15["starting_num_sequences"]
+    v16["minimum_members"]
+    v17["iteration"]
+    v29["informat"]
+    v30["outformat"]
+    v34["informat"]
+    v35["outformat"]
+    v40["informat"]
+    v41["outformat"]
+    v44["hmm_db"]
+    v45["db_name"]
+    v54["compute_mode"]
+    v68[" "]
+    v77["out_dir"]
+    v80["config_file"]
+    end
+    subgraph PREPROCESS_INPUT
+    v1([REMOVE_HEADER])
+    v2(( ))
+    end
+    subgraph INITIATE_PROTEINS
+    v4([FILTER_UNANNOTATED_SLICES])
+    v5(( ))
+    end
+    subgraph EXECUTE_CLUSTERING
+    v7([MMSEQS_CREATEDB])
+    v9([MMSEQS_LINCLUST])
+    v11([EXPORT_CLUSTERS_TSV])
+    v12(( ))
+    end
+    subgraph " "
+    v8[" "]
+    v10[" "]
+    v14[" "]
+    v19[" "]
+    v20[" "]
+    v21[" "]
+    v22[" "]
+    v23[" "]
+    v24["domtblout"]
+    v25[" "]
+    v26["hmm"]
+    v32[" "]
+    v37[" "]
+    v39["fa_ch"]
+    v43[" "]
+    v47[" "]
+    v49[" "]
+    v50[" "]
+    v56[" "]
+    v58[" "]
+    v61[" "]
+    v63[" "]
+    v70[" "]
+    v76[" "]
+    v79[" "]
+    v83[" "]
+    v85[" "]
+    end
+    subgraph GENERATE_FAMILIES
+    v13([CREATE_CLUSTERS_PKL])
+    v18([REFINE_FAMILIES])
+    v27(( ))
+    v28(( ))
+    end
+    subgraph REFORMAT_SEED_MSA
+    v31([HHSUITE_REFORMAT])
+    v33([TRANSLATE_MSA_MGYPS])
+    end
+    subgraph REFORMAT_HMMALIGN_MSA
+    v36([HHSUITE_REFORMAT])
+    v38([TRANSLATE_MSA_MGYPS])
+    end
+    subgraph ANNOTATE_MODELS
+    v42([HHSUITE_REFORMAT])
+    v46([HHSUITE_HHBLITS])
+    v48([FILTER_HH_RESULTS])
+    end
+    subgraph PREDICT_STRUCTURES
+    v51([EXTRACT_FIRST_STOCKHOLM_SEQUENCES])
+    v55([ESMFOLD])
+    v57([EXTRACT_ESMFOLD_SCORES])
+    v62([PARSE_CIF])
+    v52(( ))
+    v59(( ))
+    end
+    subgraph ANNOTATE_STRUCTURES
+    v69([FOLDSEEK_EASYSEARCH_PDB])
+    v75([FIND_ANNOTATED_FAMILIES_BY_STRUCTURE])
+    v71(( ))
+    end
+    v78([EXPORT_MGNIFAMS_CSV])
+    v81([QUERY_MGNPROTEIN_DB])
+    v82([PARSE_BIOMES])
+    v84([PARSE_DOMAINS])
+    v0 --> v1
+    v1 --> v2
+    v3 --> v4
+    v2 --> v4
+    v4 --> v5
+    v5 --> v7
+    v7 --> v9
+    v7 --> v8
+    v7 --> v11
+    v9 --> v11
+    v9 --> v10
+    v11 --> v12
+    v12 --> v13
+    v13 --> v18
+    v13 --> v14
+    v15 --> v18
+    v16 --> v18
+    v17 --> v18
+    v5 --> v18
+    v18 --> v26
+    v18 --> v25
+    v18 --> v24
+    v18 --> v81
+    v18 --> v23
+    v18 --> v22
+    v18 --> v21
+    v18 --> v20
+    v18 --> v19
+    v18 --> v84
+    v18 --> v27
+    v18 --> v28
+    v29 --> v31
+    v30 --> v31
+    v27 --> v31
+    v31 --> v33
+    v31 --> v32
+    v33 --> v42
+    v34 --> v36
+    v35 --> v36
+    v28 --> v36
+    v36 --> v38
+    v36 --> v37
+    v38 --> v39
+    v40 --> v42
+    v41 --> v42
+    v42 --> v46
+    v42 --> v43
+    v44 --> v46
+    v45 --> v46
+    v46 --> v48
+    v46 --> v47
+    v48 --> v50
+    v48 --> v49
+    v28 --> v51
+    v51 --> v52
+    v54 --> v55
+    v52 --> v55
+    v55 --> v62
+    v55 --> v57
+    v55 --> v56
+    v55 --> v69
+    v57 --> v58
+    v57 --> v59
+    v59 --> v61
+    v62 --> v63
+    v68 --> v69
+    v69 --> v70
+    v69 --> v71
+    v71 --> v75
+    v75 --> v76
+    v77 --> v78
+    v78 --> v79
+    v80 --> v81
+    v81 --> v82
+    v81 --> v84
+    v82 --> v83
+    v84 --> v85
