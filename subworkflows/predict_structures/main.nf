@@ -24,7 +24,7 @@ workflow PREDICT_STRUCTURES {
     pdb_ch = esmfold_result.pdb
     scores_ch = EXTRACT_ESMFOLD_SCORES(esmfold_result.scores).csv.map { meta, filepath -> filepath }
     scores_ch.collectFile(name: "pdb_scores.csv", storeDir: params.outDir + "/structures")
-    PARSE_CIF(pdb_ch).cif
+    PARSE_CIF(pdb_ch)
 
     emit:
     pdb_ch
