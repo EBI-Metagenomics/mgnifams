@@ -5,18 +5,16 @@ flowchart TB
     v15["starting_num_sequences"]
     v16["minimum_members"]
     v17["iteration"]
-    v29["informat"]
-    v30["outformat"]
-    v34["informat"]
-    v35["outformat"]
-    v40["informat"]
-    v41["outformat"]
-    v44["hmm_db"]
-    v45["db_name"]
-    v54["compute_mode"]
-    v68[" "]
-    v77["out_dir"]
-    v80["config_file"]
+    v30["informat"]
+    v31["outformat"]
+    v35["informat"]
+    v36["outformat"]
+    v41["informat"]
+    v42["outformat"]
+    v45["hmm_db"]
+    v46["db_name"]
+    v55["compute_mode"]
+    v69[" "]
     end
     subgraph PREPROCESS_INPUT
     v1([REMOVE_HEADER])
@@ -41,62 +39,56 @@ flowchart TB
     v21[" "]
     v22[" "]
     v23[" "]
-    v24["domtblout"]
-    v25[" "]
-    v26["hmm"]
-    v32[" "]
-    v37[" "]
-    v39["fa_ch"]
-    v43[" "]
-    v47[" "]
-    v49[" "]
+    v24["tsv"]
+    v25["domtblout"]
+    v26[" "]
+    v27["hmm"]
+    v33[" "]
+    v38[" "]
+    v40["fa_ch"]
+    v44[" "]
+    v48[" "]
     v50[" "]
-    v56[" "]
-    v58[" "]
-    v61[" "]
-    v63[" "]
-    v70[" "]
-    v76[" "]
-    v79[" "]
-    v83[" "]
-    v85[" "]
+    v51[" "]
+    v57[" "]
+    v59[" "]
+    v62[" "]
+    v64[" "]
+    v71[" "]
+    v77[" "]
     end
     subgraph GENERATE_FAMILIES
     v13([CREATE_CLUSTERS_PKL])
     v18([REFINE_FAMILIES])
-    v27(( ))
     v28(( ))
+    v29(( ))
     end
     subgraph REFORMAT_SEED_MSA
-    v31([HHSUITE_REFORMAT])
-    v33([TRANSLATE_MSA_MGYPS])
+    v32([HHSUITE_REFORMAT])
+    v34([TRANSLATE_MSA_MGYPS])
     end
     subgraph REFORMAT_HMMALIGN_MSA
-    v36([HHSUITE_REFORMAT])
-    v38([TRANSLATE_MSA_MGYPS])
+    v37([HHSUITE_REFORMAT])
+    v39([TRANSLATE_MSA_MGYPS])
     end
     subgraph ANNOTATE_MODELS
-    v42([HHSUITE_REFORMAT])
-    v46([HHSUITE_HHBLITS])
-    v48([FILTER_HH_RESULTS])
+    v43([HHSUITE_REFORMAT])
+    v47([HHSUITE_HHBLITS])
+    v49([FILTER_HH_RESULTS])
     end
     subgraph PREDICT_STRUCTURES
-    v51([EXTRACT_FIRST_STOCKHOLM_SEQUENCES])
-    v55([ESMFOLD])
-    v57([EXTRACT_ESMFOLD_SCORES])
-    v62([PARSE_CIF])
-    v52(( ))
-    v59(( ))
+    v52([EXTRACT_FIRST_STOCKHOLM_SEQUENCES])
+    v56([ESMFOLD])
+    v58([EXTRACT_ESMFOLD_SCORES])
+    v63([PARSE_CIF])
+    v53(( ))
+    v60(( ))
     end
     subgraph ANNOTATE_STRUCTURES
-    v69([FOLDSEEK_EASYSEARCH_PDB])
-    v75([FIND_ANNOTATED_FAMILIES_BY_STRUCTURE])
-    v71(( ))
+    v70([FOLDSEEK_EASYSEARCH_PDB])
+    v76([FIND_ANNOTATED_FAMILIES_BY_STRUCTURE])
+    v72(( ))
     end
-    v78([EXPORT_MGNIFAMS_CSV])
-    v81([QUERY_MGNPROTEIN_DB])
-    v82([PARSE_BIOMES])
-    v84([PARSE_DOMAINS])
     v0 --> v1
     v1 --> v2
     v3 --> v4
@@ -116,61 +108,53 @@ flowchart TB
     v16 --> v18
     v17 --> v18
     v5 --> v18
+    v18 --> v27
     v18 --> v26
     v18 --> v25
     v18 --> v24
-    v18 --> v81
     v18 --> v23
     v18 --> v22
     v18 --> v21
     v18 --> v20
     v18 --> v19
-    v18 --> v84
-    v18 --> v27
     v18 --> v28
-    v29 --> v31
-    v30 --> v31
-    v27 --> v31
-    v31 --> v33
+    v18 --> v29
+    v30 --> v32
     v31 --> v32
-    v33 --> v42
-    v34 --> v36
-    v35 --> v36
-    v28 --> v36
-    v36 --> v38
+    v28 --> v32
+    v32 --> v34
+    v32 --> v33
+    v34 --> v43
+    v35 --> v37
     v36 --> v37
-    v38 --> v39
-    v40 --> v42
-    v41 --> v42
-    v42 --> v46
+    v29 --> v37
+    v37 --> v39
+    v37 --> v38
+    v39 --> v40
+    v41 --> v43
     v42 --> v43
-    v44 --> v46
-    v45 --> v46
-    v46 --> v48
+    v43 --> v47
+    v43 --> v44
+    v45 --> v47
     v46 --> v47
-    v48 --> v50
-    v48 --> v49
-    v28 --> v51
-    v51 --> v52
-    v54 --> v55
-    v52 --> v55
-    v55 --> v62
-    v55 --> v57
+    v47 --> v49
+    v47 --> v48
+    v49 --> v51
+    v49 --> v50
+    v29 --> v52
+    v52 --> v53
     v55 --> v56
-    v55 --> v69
-    v57 --> v58
-    v57 --> v59
-    v59 --> v61
-    v62 --> v63
-    v68 --> v69
+    v53 --> v56
+    v56 --> v63
+    v56 --> v58
+    v56 --> v57
+    v56 --> v70
+    v58 --> v59
+    v58 --> v60
+    v60 --> v62
+    v63 --> v64
     v69 --> v70
-    v69 --> v71
-    v71 --> v75
-    v75 --> v76
-    v77 --> v78
-    v78 --> v79
-    v80 --> v81
-    v81 --> v82
-    v81 --> v84
-    v82 --> v83
-    v84 --> v85
+    v70 --> v71
+    v70 --> v72
+    v72 --> v76
+    v76 --> v77
