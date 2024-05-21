@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-include { validateParameters; paramsHelp; paramsSummaryLog } from 'plugin/nf-validation'
+include { validateParameters; paramsHelp; paramsSummaryLog } from 'plugin/nf-schema'
 
 if (params.help) {
     log.info paramsHelp("nextflow run main.nf -c conf/end-to-end.config -profile slurm")

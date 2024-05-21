@@ -1,135 +1,162 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
-  "title": ". pipeline parameters",
-  "description": "",
-  "type": "object",
-  "definitions": {
-      "input_output_options": {
-          "title": "input_output_options",
-          "type": "object",
-          "description": "Define where the pipeline should find input data and save output data.",
-          "default": "",
-          "properties": {
-              "scriptDir": {
-                  "type": "string",
-                  "default": "bin/"
-              },
-              "outDir": {
-                  "type": "string",
-                  "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output"
-              },
-              "sequence_explorer_protein_path": {
-                  "type": "string",
-                  "default": "/nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_2/sequence_explorer_protein.csv.bz2",
-                  "description": "The pipeline main input data."
-              },
-              "esm_conda_path": {
-                  "type": "string",
-                  "description": "predict_structures",
-                  "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/miniconda3/envs/esmfold_gpu"
-              }
-          },
-          "required": [
-              "scriptDir",
-              "outDir",
-              "sequence_explorer_protein_path",
-              "esm_conda_path"
-          ]
-      },
-      "module_parameters": {
-          "title": "module_parameters",
-          "type": "object",
-          "description": "Input values for modules",
-          "default": "",
-          "properties": {
-              "min_sequence_length": {
-                  "type": "integer",
-                  "default": 100,
-                  "description": "initiate_proteins"
-              },
-              "input_csv_chunk_size": {
-                  "type": "integer",
-                  "default": 50000000,
-                  "description": "initiate_proteins"
-              },
-              "minimum_members": {
-                  "type": "integer",
-                  "default": 50,
-                  "description": "generate_families"
-              },
-              "iteration": {
-                  "type": "integer",
-                  "default": 0,
-                  "description": "generate_families"
-              },
-              "pdb_chunk_size": {
-                  "type": "integer",
-                  "description": "predict_structures",
-                  "default": 50
-              },
-              "compute_mode": {
-                  "type": "string",
-                  "description": "predict_structures",
-                  "default": "gpu"
-              }
-          },
-          "required": [
-              "min_sequence_length",
-              "input_csv_chunk_size",
-              "minimum_members",
-              "pdb_chunk_size",
-              "compute_mode"
-          ]
-      },
-      "reference_databases": {
-          "title": "reference_databases",
-          "type": "object",
-          "description": "Paths to downloaded databases used by the pipeline.",
-          "default": "",
-          "properties": {
-              "hhdb_folder_path": {
-                  "type": "string",
-                  "description": "annotate_models",
-                  "default": "/hps/nobackup/rdf/metagenomics/service-team/ref-dbs/hh/pfamA_35.0"
-              },
-              "foldseek_db_path": {
-                  "type": "string",
-                  "description": "annotate_structures",
-                  "default": "/hps/nobackup/rdf/metagenomics/service-team/ref-dbs/foldseek/8-ef4e960"
-              }
-          },
-          "required": [
-              "hhdb_folder_path",
-              "foldseek_db_path"
-          ]
-      },
-      "generic_options": {
-          "title": "generic_options",
-          "type": "object",
-          "description": "General",
-          "default": "",
-          "properties": {
-              "help": {
-                  "type": "boolean",
-                  "hidden": true,
-                  "description": "Display help text."
-              }
-          }
-      }
-  },
-  "allOf": [
-      {
-          "$ref": "#/definitions/input_output_options"
-      },
-      {
-          "$ref": "#/definitions/module_parameters"
-      },
-      {
-          "$ref": "#/definitions/reference_databases"
-      },
-      {
-          "$ref": "#/definitions/generic_options"
-      }
-  ]
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
+    "title": ". pipeline parameters",
+    "description": "",
+    "type": "object",
+    "defs": {
+        "input_output_options": {
+            "title": "input_output_options",
+            "type": "object",
+            "description": "Define where the pipeline should find input data and save output data.",
+            "default": "",
+            "properties": {
+                "scriptDir": {
+                    "type": "string",
+                    "default": "bin/"
+                },
+                "moduleDir": {
+                    "type": "string"
+                },
+                "outDir": {
+                    "type": "string",
+                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output"
+                },
+                "sequence_explorer_protein_path": {
+                    "type": "string",
+                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_2/sequence_explorer_protein.csv.bz2",
+                    "description": "The pipeline main input data."
+                },
+                "esm_conda_path": {
+                    "type": "string",
+                    "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/miniconda3/envs/esmfold_gpu",
+                    "description": "predict_structures"
+                },
+                "db_config_file": {
+                    "type": "string",
+                    "description": "db_config.ini with db connection secrets"
+                }
+            },
+            "required": [
+                "scriptDir",
+                "moduleDir",
+                "outDir",
+                "sequence_explorer_protein_path",
+                "esm_conda_path"
+            ]
+        },
+        "module_parameters": {
+            "title": "module_parameters",
+            "type": "object",
+            "description": "Input values for modules",
+            "default": "",
+            "properties": {
+                "compress_mode": {
+                    "type": "string",
+                    "default": "none",
+                    "description": "compression mode of starting CSV input"
+                },
+                "starting_num_sequences": {
+                    "type": "integer",
+                    "description": "used for estimating -Z for hmmsearch, TODO remove/auto"
+                },
+                "min_sequence_length": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "initiate_proteins"
+                },
+                "input_csv_chunk_size": {
+                    "type": "integer",
+                    "default": 50000000,
+                    "description": "initiate_proteins"
+                },
+                "minimum_members": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "generate_families"
+                },
+                "iteration": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "generate_families"
+                },
+                "db_name": {
+                    "type": "string",
+                    "default": "pfam",
+                    "description": "db used in hhblits/hhsearch"
+                },
+                "hh_mode": {
+                    "type": "string",
+                    "default": "hhblits",
+                    "description": "hhblits (fast) or hhsearch (sensitive)"
+                },
+                "pdb_chunk_size": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "predict_structures"
+                },
+                "compute_mode": {
+                    "type": "string",
+                    "default": "gpu",
+                    "description": "predict_structures"
+                }
+            },
+            "required": [
+                "min_sequence_length",
+                "input_csv_chunk_size",
+                "minimum_members",
+                "pdb_chunk_size",
+                "compute_mode"
+            ]
+        },
+        "reference_databases": {
+            "title": "reference_databases",
+            "type": "object",
+            "description": "Paths to downloaded databases used by the pipeline.",
+            "default": "",
+            "properties": {
+                "hhdb_folder_path": {
+                    "type": "string",
+                    "description": "annotate_models",
+                    "default": "/hps/nobackup/rdf/metagenomics/service-team/ref-dbs/hh/pfamA_35.0"
+                },
+                "foldseek_db_path": {
+                    "type": "string",
+                    "description": "annotate_structures",
+                    "default": "/hps/nobackup/rdf/metagenomics/service-team/ref-dbs/foldseek/8-ef4e960"
+                }
+            },
+            "required": [
+                "hhdb_folder_path",
+                "foldseek_db_path"
+            ]
+        },
+        "generic_options": {
+            "title": "generic_options",
+            "type": "object",
+            "description": "General",
+            "default": "",
+            "properties": {
+                "help": {
+                    "type": "boolean",
+                    "hidden": true,
+                    "description": "Display help text."
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/defs/input_output_options"
+        },
+        {
+            "$ref": "#/defs/module_parameters"
+        },
+        {
+            "$ref": "#/defs/reference_databases"
+        },
+        {
+            "$ref": "#/defs/generic_options"
+        }
+    ]
 }
