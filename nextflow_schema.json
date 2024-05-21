@@ -31,10 +31,6 @@
                     "type": "string",
                     "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/miniconda3/envs/esmfold_gpu",
                     "description": "predict_structures"
-                },
-                "db_config_file": {
-                    "type": "string",
-                    "description": "db_config.ini with db connection secrets"
                 }
             },
             "required": [
@@ -102,9 +98,12 @@
                 }
             },
             "required": [
+                "compress_mode",
                 "min_sequence_length",
                 "input_csv_chunk_size",
                 "minimum_members",
+                "db_name",
+                "hh_mode",
                 "pdb_chunk_size",
                 "compute_mode"
             ]
