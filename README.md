@@ -1,106 +1,46 @@
 # MGnifams
 
-The end-to-end pipeline is hard to execute at once, due to the family generation step which is heavy and clunky. Execute these workflows in the following order instead:
+Starting from MGnify proteins, MGnifams aims to generate microbial sequence families to expand the currently known protein family space and to investigate potential novel functionalities.
 
-1. **preprocess_input**
+## Nextflow pipeline
 
-The starting point of this workflow is the latest version of the sequence_explorer_protein file. This is the result CSV file of the flatfile parsing pipeline that produces the mgnify proteins db content (plp -MGnify90v2024_03). It can be in .csv.gz, .csv.bz2 or uncompressed file format (.csv) and contains data headers. The latest file version (v4) can be found at /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv and contains 717,738,164 (~718M) proteins.
+slurm:  
+nextflow run main.nf -c conf/end-to-end.config -profile slurm -with-tower  
+local:  
+nextflow run main.nf -c conf/end-to-end.config -profile local
 
-Depending on the extension of the file, pass arguments --compress_mode 'gz' and --sequence_explorer_protein_path /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv.gz
+![alt text](images/end-to-end.jpg)
 
-The workflow decompresses the file (if compressed) and then removes the header. Run this workflow from the main mgnifams directory with the command:
+The end-to-end MGnifams pipeline chains the subworkflows of three thematically different workflows; setup_clusters, generate_families and annotate_families. Running the whole end-to-end pipeline in one step is not realistic with the current number of input sequences, due to the lengthy execution of the generate_families subworkflow. This would find use for estimated input sets of 1-10M sequences instead of 700M. After the pipeline finishes, the export_data workflow must be executed to produce all necessary CSV files to be then imported in an sqlite database (mgnifams.sqlite3). Following, the bin/helper/append_blobs_sqlite.py must be run, to append all blob file items to the db. Then, the db must be copied to either the mgnifams-site repo for local testing, or directly to ifs (/nfs/public/rw/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
-**nextflow run workflows/preprocess_input/main.nf -profile slurm**
+A more realistic scenario is breaking the MGnifams pipeline into four main workflows (each consisting of its respective same-coloured subworkflows below) and executing them one after the other as shown below:
 
-To save storage space, we don’t store this intermediate file, but instead need to pass the resulting workDir result path in the next workflow (initiate_proteins). Example: /hps/nobackup/rdf/metagenomics/service-team/users/vangelis/work_mgnifams/7c/a25c89b1269d58b2cdfbab35cd58dc/sequence_explorer_protein_no_header.csv
+![alt text](images/workflows.png)
 
-2. **initiate_proteins**
+After the export_data produces all necessary output tables, do the following:  
+* import CSVs into sqlite db  
+* append blobs to db  
+* copy db to site/ifs  
+* host online with k8s  
 
-After the initial input file has been optionally decompressed and had it’s header removed, we pass it to the initiate_proteins workflow. The output file of preprocess_input workflow must be passed in the initiate_proteins workflow nextflow.config.
-The initiate_proteins subworkflow then in parallel chunks of 50M (default value) proteins:
+### 1. setup_clusters
+slurm:  
+nextflow run workflows/setup_clusters/main.nf -profile slurm -with-tower  
+or local:  
+nextflow run workflows/setup_clusters/main.nf -profile local  
 
-(i) Slices off MGnify sequence regions with known pfam annotations
+This is the first workflow to be executed before the main family generation. It consists of three subworkflows; preprocess_input, initiate_proteins and execute_clustering. In a nutshell, this workflow converts the initial input (see below) into family-generation-ready input.
 
-(ii) Keeps sliced sequences with AA >= min_sequence_length (default: 100)
+The initial input for this pipeline is the output file of the protein-landing-page data generation pipeline, sequence_explorer_protein.csv (e.g., /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv). In case this file is compressed, there are two different decompression modes available; gz and bz2. Set the --compress_mode parameter accordingly. Then, the known pfam domains are sliced off from proteins and we filter the remaining proteins to be above a given length threshold with the min_sequence_length parameter (e.g., >=100 AA). 
 
-(iii) Concatenates and exports results in output/mgnifams_input.fa which will then be clustered on the next step
 
-This is done through a python script named bin/filter_unannotated_slices_fasta.py. For the latest version and a chunking value of 50M, there are 15 parallel chunks, and each finishes in ~20'.
+### 2. generate_families
 
-Run with:
+### 3. annotate_families
 
-**nextflow run workflows/initiate_proteins/main.nf -profile slurm**
+### 4. export_dta
 
-3. **execute_clustering**
-
-The next workflow is execute_clustering. Here we are using modules from the mmseqs2 suite, with the latest image version (15).
-
-MMSEQS_CREATEDB and MMSEQS_LINCLUST modules were taken from nf-core, with a minor alteration in the config where we use the 'compressed 0' arg instead. For EXPORT_CLUSTERS_TSV we are using are own module to produce the 2-column clusters TSV output.
-
-linclust parameters: sequence identity = 0.5, coverage = 0.9, both
-
-The result file can be found in output/mmseqs/linclust_clusters.tsv
-
-Run with:
-
-**nextflow run workflows/execute_clustering/main.nf -profile slurm**
-
-4. **generate_families**
-
-This is the main algorithm for the generation of MGnifams. This step is better run with LSF because we don't need to specify a time limit.
-The create_families subworkflow calls the refine_families.py to iteratively recruit sequences starting from the largest family towards the smallest (minimum_members threshold 50).
-
-**Restart strategy**
-
-To continue from where the last family finished on the server execution, the files named **updated_mgnifams_input.fa**, **updated_refined_families.tsv** and **updated_discarded_clusters.txt** must be manually copied/moved from the work folder to **/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/input/families**. After removing or renaming (for backup) the three old files there, the three new ones must be renamed to **mgnifams_input.fa**, **refined_families.tsv** and **discarded_clusters.txt** respectively. Also, make sure that the **“iteration”** parameter in nextflow.config in the generate_families subworkflow is set to the numeric value of the last properly checked family (e.g. if last generated family is mgnifam111, set the iteration param to 111). Add -resume to nextflow run.
-
-Run with: **nextflow run workflows/generate_families/main.nf -c workflows/generate_families/nextflow.config -profile slurm -with-tower -resume**
-
-5. **reformat_msa**
-
-Results from the previous step must be manually moved to:
-
-/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/
-in batches (all families hard to finish successfully).
-
-Example from within the work folder:
-
-cp msa/* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/msa/
-
-cp domtblout/* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/domtblout/
-
-cp seed_msa/* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/seed_msa/
-
-cp hmm/* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/families/hmm/
-
-cp updated_* /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output/input/families/
-
-Reformating output **seed_msa_sto** and hmmalign **msa_sto** Stockholm MSAs in simple fas format to be able to annotate models and visualize/download with MSAViewer on the MGnifams site.
-
-Run with: **nextflow run workflows/reformat_msa/main.nf -c workflows/reformat_msa/nextflow.config -profile slurm -with-tower -resume**
-
-6. **annotate_models**
-
-Only using **seed_msa** folder in this step.
-
-Annotating hmm models with HHblits against HH Pfams.
-
--E evalue cutoff for output does not work properly. This is why we are filtering with our own code to report results.
-
-Run with: **nextflow run workflows/annotate_models/main.nf -c workflows/annotate_models/nextflow.config -profile slurm -with-tower -resume**
-
-7. **predict_annotate_structures**
-
-Producing, PDB, CIF and CFZ files in the predict step.
-
-foldseek results filtered by e-value 0.001: -e 0.001 (default not working, need to state).
-
-No additional filtering carried out.
-
-Command to extract high-quality pLDDT candidates from ESMFold log results:
-grep -E 'pLDDT [7-9][0-9]\.|pLDDT 100' pdb2_scores.txt | awk -F' |, ' '{print $11, $15, $16}'
-
-# Post workflow
+### Post workflows
 
 **Exporting database CSVs**
 
@@ -144,5 +84,5 @@ This is mainly used locally for testing. Chains all aforementioned modules.
 
 **nextflow run main.nf -c conf/end-to-end.config -profile slurm -resume -N vangelis@ebi.ac.uk**
 
-# Anti-bus factor measures
+# Anti bus-factor 1 measures
 Currently, extra documentation can be found in my google doc: https://docs.google.com/document/d/1eeglnQb9M-D0iK9AFbTypLYvvKHeUg6XtzmlKN874k4/edit
