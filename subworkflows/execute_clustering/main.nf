@@ -11,8 +11,9 @@ workflow EXECUTE_CLUSTERING {
     main:
     mmseqs_db       = MMSEQS_CREATEDB( mgnifams_input_fasta.map { fasta -> [ [ id:'mmseqs_db' ], fasta ] } ).db
     mmseqs_clusters = MMSEQS_LINCLUST(mmseqs_db).db_cluster
-    clusters_tsv    = EXPORT_CLUSTERS_TSV(mmseqs_db, mmseqs_clusters)
+    clusters        = EXPORT_CLUSTERS_TSV(mmseqs_db, mmseqs_clusters)
     
     emit:
-    clusters_tsv
+    clusters_tsv  = clusters.tsv
+    num_sequences = clusters.num_sequences
 }

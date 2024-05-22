@@ -11,6 +11,7 @@ process EXPORT_CLUSTERS_TSV {
 
     output:
     tuple val(meta2), path("${mmseqs_clu}.tsv"), emit: tsv
+    env num_sequences                          , emit: num_sequences
 
     script:
     """
@@ -20,6 +21,8 @@ process EXPORT_CLUSTERS_TSV {
         ${mmseqs_DB}/${mmseqs_DB} \\
         ${mmseqs_clu}/${mmseqs_clu} \\
         ${mmseqs_clu}.tsv \\
-        --threads ${task.cpus} \\
+        --threads ${task.cpus}
+    
+    num_sequences=\$(wc -l < "${mmseqs_clu}.tsv")
     """
 }

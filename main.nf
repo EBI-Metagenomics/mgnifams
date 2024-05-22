@@ -22,8 +22,10 @@ include { ANNOTATE_STRUCTURES                   } from "${projectDir}/subworkflo
 workflow {
     preprocessed_sequence_explorer_protein_ch = PREPROCESS_INPUT(params.sequence_explorer_protein_path, params.compress_mode).preprocessed_sequence_explorer_protein_ch
     fasta_ch                                  = INITIATE_PROTEINS( preprocessed_sequence_explorer_protein_ch ).fasta_ch
-    clusters_tsv                              = EXECUTE_CLUSTERING( fasta_ch ).clusters_tsv.map { meta, filepath -> filepath }
-    generated_families                        = GENERATE_FAMILIES(clusters_tsv, fasta_ch)
+    clusters                                  = EXECUTE_CLUSTERING( fasta_ch )
+    clusters_tsv                              = clusters.clusters_tsv.map { meta, filepath -> filepath }
+    starting_num_sequences                    = clusters.num_sequences
+    generated_families                        = GENERATE_FAMILIES(clusters_tsv, fasta_ch, starting_num_sequences)
 
     generated_families.seed_msa_sto
         .map { files ->

@@ -52,10 +52,6 @@
                     "default": "none",
                     "description": "compression mode of starting CSV input"
                 },
-                "starting_num_sequences": {
-                    "type": "integer",
-                    "description": "used for estimating -Z for hmmsearch, TODO remove/auto"
-                },
                 "min_sequence_length": {
                     "type": "integer",
                     "default": 100,
