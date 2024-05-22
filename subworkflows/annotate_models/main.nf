@@ -8,13 +8,12 @@ include { FILTER_HH_RESULTS } from "${params.moduleDir}/hhsuite/filter_hh_result
 workflow ANNOTATE_MODELS {
     take:
     fasta_ch
-    hh_mode
     
     main:
     a2m_fasta_ch = HHSUITE_REFORMAT(fasta_ch, "fas", "a3m").fa
-    if (hh_mode == "hhblits") {
+    if (params.hh_mode == "hhblits") {
         hhr_ch = HHSUITE_HHBLITS(a2m_fasta_ch, params.hhdb_folder_path, params.db_name).hhr
-    } else if (hh_mode == "hhsearch") {
+    } else if (params.hh_mode == "hhsearch") {
         hhr_ch = HHSUITE_HHSEARCH(a2m_fasta_ch, params.hhdb_folder_path, params.db_name).hhr
     } else {
         throw new Exception("Invalid hh_mode value. Should be 'hhblits' or 'hhsearch'.")

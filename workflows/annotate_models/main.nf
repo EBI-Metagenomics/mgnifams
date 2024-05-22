@@ -10,5 +10,5 @@ workflow {
         }
         .set { seed_msa_ch }
     
-    ANNOTATE_MODELS( seed_msa_ch, params.hh_mode )
+    ANNOTATE_MODELS( seed_msa_ch )
 }
