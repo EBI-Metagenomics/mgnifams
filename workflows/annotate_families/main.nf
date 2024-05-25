@@ -23,7 +23,7 @@ workflow {
     
     fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
     REFORMAT_HMMALIGN_MSA( hmmalign_msa_ch )
-    ANNOTATE_MODELS( fa_seed_msa_ch, params.hh_mode )
+    ANNOTATE_MODELS( fa_seed_msa_ch )
 
     pdb_ch = PREDICT_STRUCTURES(hmmalign_msa_ch).pdb_ch
     ANNOTATE_STRUCTURES(pdb_ch)
