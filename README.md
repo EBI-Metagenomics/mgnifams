@@ -70,9 +70,9 @@ Files and folders in the output/structures folder must be manually renamed to no
 ### 4. export_data
 
 slurm:  
-nextflow run workflows/export_tables/main.nf -profile slurm -with-tower -resume  
+nextflow run workflows/export_data/main.nf -profile slurm -with-tower -resume  
 local:  
-nextflow run workflows/export_tables/main.nf -profile local  
+nextflow run workflows/export_data/main.nf -profile local  
 
 The final workflow, export_data, creates all the CSV tables and BLOB files with all required data and metadata for the MGnifams database. This consists of two different execution units; the first one is parsing files from the output folder of the pipeline into the mgnifam tables and the second one is querying the MGnify Proteins database (PGSQL) for additional post-processing information regarding underlying biomes and domain architectures of families. The result CSV tables include; mgnifam.csv, mgnifam_proteins.csv, mgnifam_folds.csv and mgnifam_pfams.csv. The result post-processing files include two id-to-name mapping files (biomes and pfams from MGnify Proteins database), the query results for each family’s proteins for metadata against the MGnify Proteins database and finally the respective biome and domain results that are going to be appended as BLOBs in the mgnifams database, along with other families generated from previous workflows (MSAs, HMM, CIF, etc.).
 
