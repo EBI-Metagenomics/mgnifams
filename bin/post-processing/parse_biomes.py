@@ -7,10 +7,11 @@ def parse_meta_b(meta_b_df):
     counts = {}
 
     for index, row in meta_b_df.iterrows():
-        row_nums = re.sub(r'[\[\]]', '', row['biomes']).split(',')
-        for i in range(0, len(row_nums), 2):
-            biome_id = int(row_nums[i])
-            counts[biome_id] = counts.get(biome_id, 0) + 1
+        if (isinstance(row['biomes'], str)): # avoiding unexpected nan values
+            row_nums = re.sub(r'[\[\]]', '', row['biomes']).split(',')
+            for i in range(0, len(row_nums), 2):
+                biome_id = int(row_nums[i])
+                counts[biome_id] = counts.get(biome_id, 0) + 1
 
     return counts
 
