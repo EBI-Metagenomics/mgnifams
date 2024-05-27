@@ -54,10 +54,17 @@ nextflow run workflows/annotate_families/main.nf -profile slurm -with-tower -res
 local:  
 nextflow run workflows/annotate_families/main.nf -profile local  
 
-This workflow is responsible for pulling both model and structural annotations for MGnifams. The first subworkflow, reformat_msa, is used to reformat the MSA files to be usable for the downstream subworkflows. Then, distant Pfam annotations are searched through hhsuite/hhblits for the model through the annotate_models subworkflow. In parallel, the predict_structures subworkflow predicts the family representative structures (first sequence of full msa) and then through the annotate_structures subworkflow tries to identify structural homologs by using foldseek against the PDB, AlphaFolDB and ESM databases. In some cases, some very long sequences can’t receive sufficient GPU virtual memory on the cluster to predict their structures. These will show in the pdb*_scores.txt file as:  
+This workflow is responsible for pulling both model and structural annotations for MGnifams. The first subworkflow, reformat_msa, is used to reformat the MSA files to be usable for the downstream subworkflows. Then, distant Pfam annotations are searched through hhsuite/hhblits for the model through the annotate_models subworkflow. In parallel, the predict_structures subworkflow predicts the family representative structures (first sequence of full msa) and then through the annotate_structures subworkflow tries to identify structural homologs by using foldseek against the PDB, AlphaFolDB and ESM databases.  
+In some cases, some very long sequences can’t receive sufficient GPU virtual memory on the cluster to predict their structures. These will show in the pdb*_scores.txt file as:  
 `24/05/25 22:16:10 | INFO | root | Failed (CUDA out of memory) on sequence 80 of length 1180.`  
-These msa_sto files must be manually copied to a folder output/families/msa_sto_long and then the predict_annotate_structures workflow must be executed with the cpu mode on:  
-nextflow run workflows/predict_annotate_structures/main.nf --compute_mode 'cpu' -profile slurm -with-tower -resume  
+These msa_sto files must be manually copied to a folder output/families/msa_sto_long and manually change ESMFOLD’s configuration to mem: 300.0GB and time: 4h. Also remove the:
+```
+withLabel: gpu {  
+  clusterOptions = { "--gres=gpu:1" }  
+}
+```
+from the main configuration so the job won’t be send in the gpu queue. Then the predict_annotate_structures workflow must be executed with the cpu mode on:  
+nextflow run workflows/predict_annotate_structures/main.nf --compute_mode 'cpu' -profile slurm -with-tower -resume
 Files and folders in the output/structures folder must be manually renamed to not be overwritten. Then the files can be combined.
 
 ### 4. export_data
