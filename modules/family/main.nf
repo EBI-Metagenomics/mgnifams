@@ -88,7 +88,7 @@ process REFINE_FAMILIES_PARALLEL {
 }
 
 process CHUNK_CLUSTERS {
-    label "venv"
+    label "general"
 
     input:
     path(clusters)
