@@ -3,7 +3,7 @@
 include { CREATE_CLUSTERS_PKL } from "${params.moduleDir}/family/main.nf"
 include { REFINE_FAMILIES     } from "${params.moduleDir}/family/main.nf"
 
-workflow GENERATE_FAMILIES {
+workflow GENERATE_FAMILIES_ALL {
     take:
     clusters_tsv
     mgnifams_fasta

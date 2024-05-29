@@ -12,7 +12,7 @@ log.info paramsSummaryLog(workflow)
 include { PREPROCESS_INPUT                      } from "${projectDir}/subworkflows/preprocess_input/main.nf"
 include { INITIATE_PROTEINS                     } from "${projectDir}/subworkflows/initiate_proteins/main.nf"
 include { EXECUTE_CLUSTERING                    } from "${projectDir}/subworkflows/execute_clustering/main.nf"
-include { GENERATE_FAMILIES                     } from "${projectDir}/subworkflows/generate_all_families/main.nf"
+include { GENERATE_FAMILIES_ALL                 } from "${projectDir}/subworkflows/generate_families_all/main.nf"
 include { REFORMAT_MSA as REFORMAT_SEED_MSA     } from "${projectDir}/subworkflows/reformat_msa/main.nf"
 include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA } from "${projectDir}/subworkflows/reformat_msa/main.nf"
 include { ANNOTATE_MODELS                       } from "${projectDir}/subworkflows/annotate_models/main.nf"
@@ -25,7 +25,7 @@ workflow {
     clusters                                  = EXECUTE_CLUSTERING( fasta_ch )
     clusters_tsv                              = clusters.clusters_tsv.map { meta, filepath -> filepath }
     starting_num_sequences                    = clusters.num_sequences
-    generated_families                        = GENERATE_FAMILIES(clusters_tsv, fasta_ch, starting_num_sequences)
+    generated_families                        = GENERATE_FAMILIES_ALL(clusters_tsv, fasta_ch, starting_num_sequences)
 
     generated_families.seed_msa_sto
         .map { files ->

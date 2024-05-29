@@ -59,6 +59,52 @@ process REFINE_FAMILIES {
     """
 }
 
+process REFINE_FAMILIES_PARALLEL {
+    publishDir "${params.outDir}/families/", mode: "copy"
+    
+    conda "${moduleDir}/environment.yml"
+    
+    input:
+    path(clusters_chunk)
+    path(mgnifams_fasta)
+
+    output:
+    path("seed_msa_sto/*")                , emit: seed_msa_sto
+    path("msa_sto/*")                     , emit: msa_sto
+    path("hmm/*")                         , emit: hmm
+    path("rf/*")                          , emit: rf
+    path("domtblout/*")                   , emit: domtblout
+    path("updated_refined_families.tsv")  , emit: tsv
+    path("updated_mgnifams_input.fa")     , emit: fa
+    path("updated_discarded_clusters.txt"), emit: discarded
+    path("updated_converged_families.txt"), emit: converged
+    path("updated_family_metadata.csv")   , emit: metadata
+    path("log.txt")                       , emit: log
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/refine_families_parallel.py ${clusters_chunk} ${mgnifams_fasta}
+    """
+}
+
+process CHUNK_CLUSTERS {
+    label "venv"
+
+    input:
+    path(clusters)
+    path(checked_clusters)
+    val(minimum_members)
+    val(num_cluster_chunks)
+
+    output:
+    path("cluster_chunks/*"), emit: chunks
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/chunk_clusters.py ${clusters} ${checked_clusters} ${minimum_members} ${num_cluster_chunks}
+    """
+}
+
 process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     label "venv"
 
