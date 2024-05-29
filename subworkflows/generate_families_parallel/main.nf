@@ -10,9 +10,9 @@ workflow GENERATE_FAMILIES_PARALLEL {
     mgnifams_fasta
 
     main:
-    CHUNK_CLUSTERS(clusters_tsv, checked_clusters, params.minimum_members, params.num_cluster_chunks)
-
-    // refined_families = REFINE_FAMILIES_PARALLEL(... mgnifams_fasta ...)
+    clusters_chunks  = CHUNK_CLUSTERS(clusters_tsv, checked_clusters, params.minimum_members, params.num_cluster_chunks)
+    
+    // refined_families =  REFINE_FAMILIES_PARALLEL(clusters_chunks.flatten(), mgnifams_fasta)
 
     // emit:
     // tsv          = refined_families.tsv

@@ -11,25 +11,14 @@ from Bio import AlignIO
 import time
 
 def parse_args():
-    global arg_clusters_bookkeeping_df_pkl_file, arg_refined_families_tsv_file, \
-        arg_mgnifams_input_fasta_file, arg_discarded_clusters_file, \
-        arg_converged_families_file, arg_family_metadata_file, \
-        arg_starting_num_sequences, arg_minimum_family_members, \
-        arg_iteration
+    global arg_clusters_chunk, arg_mgnifams_fasta
         
-    if not (len(sys.argv) == 10):
+    if not (len(sys.argv) == 3):
         print("Incorrect number of args.")
         sys.exit(1)
 
-    arg_clusters_bookkeeping_df_pkl_file = sys.argv[1]
-    arg_refined_families_tsv_file        = sys.argv[2]
-    arg_mgnifams_input_fasta_file        = sys.argv[3]
-    arg_discarded_clusters_file          = sys.argv[4]
-    arg_converged_families_file          = sys.argv[5]
-    arg_family_metadata_file             = sys.argv[6]
-    arg_starting_num_sequences           = sys.argv[7]
-    arg_minimum_family_members           = int(sys.argv[8])
-    arg_iteration                        = int(sys.argv[9])
+    arg_clusters_chunk = sys.argv[1]
+    arg_mgnifams_fasta = sys.argv[2]
 
 def define_globals():
     global log_file, updated_refined_families_tsv_file, \
@@ -499,123 +488,123 @@ def remove_tmp_files():
 
 def main():
     parse_args()
-    define_globals()
+    # define_globals()
 
-    copy_updated_input_files()
-    clusters_bookkeeping_df = load_clusters_bookkeeping_df()
-    clusters_bookkeeping_df = exclude_existing_families(clusters_bookkeeping_df) # restarting mechanism
-    clusters_bookkeeping_df = exclude_discarded_clusters(clusters_bookkeeping_df) # restarting mechanism
-    mgnifams_fasta_dict = create_mgnifams_fasta_dict()
-    iteration = arg_iteration
-    while True:
-        iteration += 1
-        if (iteration == 101): # TODO remove this limiting/exiting condition
-            exit()
+    # copy_updated_input_files()
+    # clusters_bookkeeping_df = load_clusters_bookkeeping_df()
+    # clusters_bookkeeping_df = exclude_existing_families(clusters_bookkeeping_df) # restarting mechanism
+    # clusters_bookkeeping_df = exclude_discarded_clusters(clusters_bookkeeping_df) # restarting mechanism
+    # mgnifams_fasta_dict = create_mgnifams_fasta_dict()
+    # iteration = arg_iteration
+    # while True:
+    #     iteration += 1
+    #     if (iteration == 101): # TODO remove this limiting/exiting condition
+    #         exit()
 
-        largest_family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
-        if not family_members or len(family_members) < arg_minimum_family_members:
-            with open(log_file, 'a') as file:
-                file.write("Exiting all...")
-            break
+    #     largest_family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
+    #     if not family_members or len(family_members) < arg_minimum_family_members:
+    #         with open(log_file, 'a') as file:
+    #             file.write("Exiting all...")
+    #         break
         
-        write_family_fasta_file(family_members, mgnifams_fasta_dict)
-        total_checked_sequences = family_members
-        discard_flag = False
-        exit_flag = False
-        family_iteration = 0
-        filtered_seq_names = []
-        while True:
-            family_iteration += 1
-            if (family_iteration > 3):
-                exit_flag = True
+    #     write_family_fasta_file(family_members, mgnifams_fasta_dict)
+    #     total_checked_sequences = family_members
+    #     discard_flag = False
+    #     exit_flag = False
+    #     family_iteration = 0
+    #     filtered_seq_names = []
+    #     while True:
+    #         family_iteration += 1
+    #         if (family_iteration > 3):
+    #             exit_flag = True
 
-            with open(log_file, 'a') as file:
-                if (exit_flag):
-                    file.write("Exiting-3 loops.\n")
-                file.write(str(family_iteration) + "\n")
+    #         with open(log_file, 'a') as file:
+    #             if (exit_flag):
+    #                 file.write("Exiting-3 loops.\n")
+    #             file.write(str(family_iteration) + "\n")
             
-            run_msa(len(family_members))
-            original_sequence_names = trim_seed_msa()
+    #         run_msa(len(family_members))
+    #         original_sequence_names = trim_seed_msa()
 
-            if not exit_flag: # main strategy branch
-                run_hmmbuild(tmp_seed_msa_path, ["--amino", "--informat", "afa"])
-                run_hmmsearch()
-                recruited_sequence_names = extract_sequence_names_from_domtblout()
-                filtered_seq_names = filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
-                if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
-                    discard_flag = True
-                    break
-                run_hmmalign()
-                length_seqs_for_esl = len(get_sequences_from_stockholm(tmp_align_msa_path))
-                if (length_seqs_for_esl > 70000):
-                    discard_flag = True
-                    with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: {iteration} too many sequences for esl ({length_seqs_for_esl}).\n")
-                    break
-                new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
-                with open(log_file, 'a') as file:
-                    file.write("new_recruited_sequences calculated.\n")
-                if not new_recruited_sequences:
-                    exit_flag = True
-                    with open(log_file, 'a') as file:
-                        file.write("Exiting-CONVERGED: no new sequences recruited.\n")
-                    with open(updated_converged_families_file, 'a') as file:
-                        file.write(f"{iteration}\n")
+    #         if not exit_flag: # main strategy branch
+    #             run_hmmbuild(tmp_seed_msa_path, ["--amino", "--informat", "afa"])
+    #             run_hmmsearch()
+    #             recruited_sequence_names = extract_sequence_names_from_domtblout()
+    #             filtered_seq_names = filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
+    #             if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
+    #                 discard_flag = True
+    #                 break
+    #             run_hmmalign()
+    #             length_seqs_for_esl = len(get_sequences_from_stockholm(tmp_align_msa_path))
+    #             if (length_seqs_for_esl > 70000):
+    #                 discard_flag = True
+    #                 with open(log_file, 'a') as file:
+    #                     file.write(f"Discard-Warning: {iteration} too many sequences for esl ({length_seqs_for_esl}).\n")
+    #                 break
+    #             new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
+    #             with open(log_file, 'a') as file:
+    #                 file.write("new_recruited_sequences calculated.\n")
+    #             if not new_recruited_sequences:
+    #                 exit_flag = True
+    #                 with open(log_file, 'a') as file:
+    #                     file.write("Exiting-CONVERGED: no new sequences recruited.\n")
+    #                 with open(updated_converged_families_file, 'a') as file:
+    #                     file.write(f"{iteration}\n")
 
-            if exit_flag: # exit strategy branch
-                with open(log_file, 'a') as file:
-                    file.write("Exiting branch strategy:\n")
-                run_hmmbuild(tmp_seed_msa_path, ["-O", tmp_seed_msa_sto_path])
-                run_hmmbuild(tmp_seed_msa_sto_path, ["--hand"])
-                extract_RF()
-                run_hmmsearch()
-                filtered_seq_names = filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
-                if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
-                    discard_flag = True
-                    break
+    #         if exit_flag: # exit strategy branch
+    #             with open(log_file, 'a') as file:
+    #                 file.write("Exiting branch strategy:\n")
+    #             run_hmmbuild(tmp_seed_msa_path, ["-O", tmp_seed_msa_sto_path])
+    #             run_hmmbuild(tmp_seed_msa_sto_path, ["--hand"])
+    #             extract_RF()
+    #             run_hmmsearch()
+    #             filtered_seq_names = filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
+    #             if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
+    #                 discard_flag = True
+    #                 break
 
-                membership_percentage = check_seed_membership(original_sequence_names, filtered_seq_names)
-                if (membership_percentage < 0.9):
-                    discard_flag = True
-                    with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
-                    break
-                elif (membership_percentage < 1):
-                    with open(log_file, 'a') as file:
-                        file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
+    #             membership_percentage = check_seed_membership(original_sequence_names, filtered_seq_names)
+    #             if (membership_percentage < 0.9):
+    #                 discard_flag = True
+    #                 with open(log_file, 'a') as file:
+    #                     file.write(f"Discard-Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
+    #                 break
+    #             elif (membership_percentage < 1):
+    #                 with open(log_file, 'a') as file:
+    #                     file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                run_hmmalign()
-                break
+    #             run_hmmalign()
+    #             break
 
-            # main strategy branch continue
-            total_checked_sequences += list(new_recruited_sequences)
-            with open(log_file, 'a') as file:
-                file.write("total_checked_sequences calculated and starting run_esl_weight\n")
-            run_esl_weight()
-            family_members = filter_out_redundant() # also writes in tmp_family_sequences_path
+    #         # main strategy branch continue
+    #         total_checked_sequences += list(new_recruited_sequences)
+    #         with open(log_file, 'a') as file:
+    #             file.write("total_checked_sequences calculated and starting run_esl_weight\n")
+    #         run_esl_weight()
+    #         family_members = filter_out_redundant() # also writes in tmp_family_sequences_path
 
-        # Exiting family loop
-        if (discard_flag): # unsuccessfully
-            with open(log_file, 'a') as file:
-                file.write("Discarding cluster " + str(largest_family_rep) + "\n")
+    #     # Exiting family loop
+    #     if (discard_flag): # unsuccessfully
+    #         with open(log_file, 'a') as file:
+    #             file.write("Discarding cluster " + str(largest_family_rep) + "\n")
 
-            iteration -= 1
-            unique_reps = [largest_family_rep]
-            with open(updated_discarded_clusters_file, 'a') as outfile:
-                outfile.write(unique_reps[0] + "\n")
-        else: # successfully
-            append_family_file(iteration, filtered_seq_names)
-            append_family_metadata(iteration)
-            move_produced_models(iteration)
-            # prepare sequences to remove
-            family_original_names = get_final_family_original_names(filtered_seq_names)
-            unique_reps = get_cluster_reps(clusters_bookkeeping_df, family_original_names)
+    #         iteration -= 1
+    #         unique_reps = [largest_family_rep]
+    #         with open(updated_discarded_clusters_file, 'a') as outfile:
+    #             outfile.write(unique_reps[0] + "\n")
+    #     else: # successfully
+    #         append_family_file(iteration, filtered_seq_names)
+    #         append_family_metadata(iteration)
+    #         move_produced_models(iteration)
+    #         # prepare sequences to remove
+    #         family_original_names = get_final_family_original_names(filtered_seq_names)
+    #         unique_reps = get_cluster_reps(clusters_bookkeeping_df, family_original_names)
 
-        clusters_bookkeeping_df, sequences_to_remove = update_clusters_bookkeeping_df(clusters_bookkeeping_df, unique_reps)
-        mgnifams_fasta_dict = update_mgnifams_fasta_dict(mgnifams_fasta_dict, sequences_to_remove)
-        remove_tmp_files()
+    #     clusters_bookkeeping_df, sequences_to_remove = update_clusters_bookkeeping_df(clusters_bookkeeping_df, unique_reps)
+    #     mgnifams_fasta_dict = update_mgnifams_fasta_dict(mgnifams_fasta_dict, sequences_to_remove)
+    #     remove_tmp_files()
 
-    # End of all families
+    # # End of all families
 
 if __name__ == "__main__":
     main()
