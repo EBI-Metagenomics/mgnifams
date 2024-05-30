@@ -61,7 +61,6 @@ process REFINE_FAMILIES {
 
 process REFINE_FAMILIES_PARALLEL {
     publishDir "${params.outDir}/families/", mode: "copy"
-    
     conda "${moduleDir}/environment.yml"
     
     input:
@@ -88,7 +87,7 @@ process REFINE_FAMILIES_PARALLEL {
 }
 
 process CHUNK_CLUSTERS {
-    label "general"
+    conda "${moduleDir}/environment.yml"
 
     input:
     path(clusters)
