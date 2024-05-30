@@ -62,24 +62,23 @@ process REFINE_FAMILIES {
 process REFINE_FAMILIES_PARALLEL {
     publishDir "${params.outDir}/families/", mode: "copy"
     
-    // conda "${moduleDir}/environment.yml"
+    conda "${moduleDir}/environment.yml"
     
     input:
     path(clusters_chunk)
     path(mgnifams_fasta)
 
-    // output:
-    // path("seed_msa_sto/*")                , emit: seed_msa_sto
-    // path("msa_sto/*")                     , emit: msa_sto
-    // path("hmm/*")                         , emit: hmm
-    // path("rf/*")                          , emit: rf
-    // path("domtblout/*")                   , emit: domtblout
-    // path("updated_refined_families.tsv")  , emit: tsv
-    // path("updated_mgnifams_input.fa")     , emit: fa
-    // path("updated_discarded_clusters.txt"), emit: discarded
-    // path("updated_converged_families.txt"), emit: converged
-    // path("updated_family_metadata.csv")   , emit: metadata
-    // path("log.txt")                       , emit: log
+    output:
+    path("seed_msa_sto/*")                , emit: seed_msa_sto
+    path("msa_sto/*")                     , emit: msa_sto
+    path("hmm/*")                         , emit: hmm
+    path("rf/*")                          , emit: rf
+    path("domtblout/*")                   , emit: domtblout
+    path("updated_refined_families.tsv")  , emit: tsv
+    path("updated_discarded_clusters.txt"), emit: discarded
+    path("updated_converged_families.txt"), emit: converged
+    path("updated_family_metadata.csv")   , emit: metadata
+    path("log.txt")                       , emit: log
 
     script:
     """
