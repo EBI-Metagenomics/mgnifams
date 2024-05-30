@@ -4,6 +4,7 @@ import subprocess
 import shutil
 import pandas as pd
 import numpy as np
+import re
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
@@ -19,11 +20,16 @@ def parse_args():
 
     arg_clusters_chunk            = sys.argv[1]
     arg_mgnifams_input_fasta_file = sys.argv[2]
-    # TODO add chunk id to concat with the iteration e.g., 1_1, 1_2, etc.
 
-def define_globals():
-    global log_file, updated_refined_families_tsv_file, updated_discarded_clusters_file, \
-        updated_converged_families_file, updated_family_metadata_file, \
+def extract_chunk_number(filename):
+    match = re.search(r'_(\d+)\.', filename)
+    if match:
+        return int(match.group(1))
+    return None
+
+def define_globals(chunk_num):
+    global log_file, refined_families_tsv_file, discarded_clusters_file, \
+        converged_families_file, family_metadata_file, \
         tmp_folder, seed_msa_folder, \
         align_msa_folder, hmm_folder, \
         domtblout_folder, rf_folder, \
@@ -34,42 +40,50 @@ def define_globals():
         tmp_intermediate_esl_path, tmp_esl_weight_path, \
         tmp_sequences_to_remove_path, tmp_rf_path
 
-    log_file                          = "log.txt"
-    updated_refined_families_tsv_file = "updated_refined_families.tsv"
-    updated_discarded_clusters_file   = "updated_discarded_clusters.txt"
-    updated_converged_families_file   = "updated_converged_families.txt"
-    updated_family_metadata_file      = "updated_family_metadata.csv"
-    tmp_folder                        = "tmp"
-    seed_msa_folder                   = "seed_msa_sto"
-    align_msa_folder                  = "msa_sto"
-    hmm_folder                        = "hmm"
-    domtblout_folder                  = "domtblout"
-    rf_folder                         = "rf"
-    evalue_threshold                  = 0.001
-    length_threshold                  = 0.8
+    logs_folder               = "logs"
+    refined_families_folder   = "refined_families"
+    discarded_clusters_folder = "discarded_clusters"
+    converged_families_folder = "converged_families"
+    family_metadata_folder    = "family_metadata"
+    tmp_folder                = "tmp"
+    seed_msa_folder           = "seed_msa_sto"
+    align_msa_folder          = "msa_sto"
+    hmm_folder                = "hmm"
+    domtblout_folder          = "domtblout"
+    rf_folder                 = "rf"
+    evalue_threshold          = 0.001
+    length_threshold          = 0.8
 
-    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder, rf_folder]:
+    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder, rf_folder, \
+        logs_folder, refined_families_folder, discarded_clusters_folder, converged_families_folder, family_metadata_folder
+    ]:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-        tmp_family_sequences_path    = os.path.join(tmp_folder, 'family_sequences.fa')
-        tmp_seed_msa_path            = os.path.join(tmp_folder, 'seed_msa.fa')
-        tmp_seed_msa_sto_path        = os.path.join(tmp_folder, 'seed_msa_sto.sto')
-        tmp_align_msa_path           = os.path.join(tmp_folder, 'align_msa.sto')
-        tmp_hmm_path                 = os.path.join(tmp_folder, 'model.hmm')
-        tmp_domtblout_path           = os.path.join(tmp_folder, 'domtblout.txt')
-        tmp_intermediate_esl_path    = os.path.join(tmp_folder, 'intermediate_esl.fa')
-        tmp_esl_weight_path          = os.path.join(tmp_folder, 'esl_weight.fa')
-        tmp_sequences_to_remove_path = os.path.join(tmp_folder, 'sequences_to_remove.txt')
-        tmp_rf_path                  = os.path.join(tmp_folder, 'rf.txt')
+    tmp_family_sequences_path    = os.path.join(tmp_folder, 'family_sequences.fa')
+    tmp_seed_msa_path            = os.path.join(tmp_folder, 'seed_msa.fa')
+    tmp_seed_msa_sto_path        = os.path.join(tmp_folder, 'seed_msa_sto.sto')
+    tmp_align_msa_path           = os.path.join(tmp_folder, 'align_msa.sto')
+    tmp_hmm_path                 = os.path.join(tmp_folder, 'model.hmm')
+    tmp_domtblout_path           = os.path.join(tmp_folder, 'domtblout.txt')
+    tmp_intermediate_esl_path    = os.path.join(tmp_folder, 'intermediate_esl.fa')
+    tmp_esl_weight_path          = os.path.join(tmp_folder, 'esl_weight.fa')
+    tmp_sequences_to_remove_path = os.path.join(tmp_folder, 'sequences_to_remove.txt')
+    tmp_rf_path                  = os.path.join(tmp_folder, 'rf.txt')
+
+    log_file                  = os.path.join(logs_folder,               f'{chunk_num}.txt')
+    refined_families_tsv_file = os.path.join(refined_families_folder,   f'{chunk_num}.tsv')
+    discarded_clusters_file   = os.path.join(discarded_clusters_folder, f'{chunk_num}.txt')
+    converged_families_file   = os.path.join(converged_families_folder, f'{chunk_num}.txt')
+    family_metadata_file      = os.path.join(family_metadata_folder,    f'{chunk_num}.csv')
 
 def create_empty_output_files():
     start_time = time.time()
 
-    open(updated_refined_families_tsv_file, 'w').close()
-    open(updated_discarded_clusters_file, 'w').close()
-    open(updated_converged_families_file, 'w').close()
-    open(updated_family_metadata_file, 'w').close()
+    open(refined_families_tsv_file, 'w').close()
+    open(discarded_clusters_file, 'w').close()
+    open(converged_families_file, 'w').close()
+    open(family_metadata_file, 'w').close()
 
     with open(log_file, 'w') as file:
         file.write("create_empty_output_files: ")
@@ -355,7 +369,7 @@ def filter_out_redundant():
 
 def append_family_file(iteration, family_members):
     lines = [f"{iteration}\t{member}\n" for member in family_members]
-    with open(updated_refined_families_tsv_file, 'a') as file:
+    with open(refined_families_tsv_file, 'a') as file:
         file.writelines(lines)
 
     with open(log_file, 'a') as file:
@@ -391,15 +405,15 @@ def extract_first_stockholm_sequence():
 
 def append_family_metadata(iteration):
     family_size, protein_rep, region = extract_first_stockholm_sequence()
-    with open(updated_family_metadata_file, 'a') as file:
+    with open(family_metadata_file, 'a') as file:
         file.writelines(f"{iteration},{family_size},{protein_rep},{region}\n")
 
-def move_produced_models(iteration):
-    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder, f'{iteration}.sto'))
-    shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'{iteration}.sto'))
-    shutil.move(tmp_hmm_path, os.path.join(hmm_folder, f'{iteration}.hmm'))
-    shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'{iteration}.domtblout'))
-    shutil.move(tmp_rf_path, os.path.join(rf_folder, f'{iteration}.txt'))
+def move_produced_models(iteration, chunk_num):
+    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder,  f'{chunk_num}_{iteration}.sto'))
+    shutil.move(tmp_align_msa_path,    os.path.join(align_msa_folder, f'{chunk_num}_{iteration}.sto'))
+    shutil.move(tmp_hmm_path,          os.path.join(hmm_folder,       f'{chunk_num}_{iteration}.hmm'))
+    shutil.move(tmp_domtblout_path,    os.path.join(domtblout_folder, f'{chunk_num}_{iteration}.domtblout'))
+    shutil.move(tmp_rf_path,           os.path.join(rf_folder,        f'{chunk_num}_{iteration}.txt'))
 
 def get_final_family_original_names(filtered_seq_names):
     family_members = {name.split('/')[0] for name in filtered_seq_names}
@@ -432,7 +446,8 @@ def remove_tmp_files():
 
 def main():
     parse_args()
-    define_globals()
+    chunk_num = extract_chunk_number(arg_clusters_chunk)
+    define_globals(chunk_num)
 
     create_empty_output_files()
     clusters_df = load_clusters_df()
@@ -487,7 +502,7 @@ def main():
                     exit_flag = True
                     with open(log_file, 'a') as file:
                         file.write("Exiting-CONVERGED: no new sequences recruited.\n")
-                    with open(updated_converged_families_file, 'a') as file:
+                    with open(converged_families_file, 'a') as file:
                         file.write(f"{iteration}\n")
 
             if exit_flag: # exit strategy branch
@@ -529,12 +544,12 @@ def main():
 
             iteration -= 1
             unique_reps = [next_family_rep]
-            with open(updated_discarded_clusters_file, 'a') as outfile:
+            with open(discarded_clusters_file, 'a') as outfile:
                 outfile.write(unique_reps[0] + "\n")
         else: # successfully
             append_family_file(iteration, filtered_seq_names)
             append_family_metadata(iteration)
-            move_produced_models(iteration)
+            move_produced_models(iteration, chunk_num)
             # prepare sequences to remove
             family_original_names = get_final_family_original_names(filtered_seq_names)
             unique_reps = get_cluster_reps(clusters_df, family_original_names)

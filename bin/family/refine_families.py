@@ -64,16 +64,16 @@ def define_globals():
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-        tmp_family_sequences_path    = os.path.join(tmp_folder, 'family_sequences.fa')
-        tmp_seed_msa_path            = os.path.join(tmp_folder, 'seed_msa.fa')
-        tmp_seed_msa_sto_path        = os.path.join(tmp_folder, 'seed_msa_sto.sto')
-        tmp_align_msa_path           = os.path.join(tmp_folder, 'align_msa.sto')
-        tmp_hmm_path                 = os.path.join(tmp_folder, 'model.hmm')
-        tmp_domtblout_path           = os.path.join(tmp_folder, 'domtblout.txt')
-        tmp_intermediate_esl_path    = os.path.join(tmp_folder, 'intermediate_esl.fa')
-        tmp_esl_weight_path          = os.path.join(tmp_folder, 'esl_weight.fa')
-        tmp_sequences_to_remove_path = os.path.join(tmp_folder, 'sequences_to_remove.txt')
-        tmp_rf_path                  = os.path.join(tmp_folder, 'rf.txt')
+    tmp_family_sequences_path    = os.path.join(tmp_folder, 'family_sequences.fa')
+    tmp_seed_msa_path            = os.path.join(tmp_folder, 'seed_msa.fa')
+    tmp_seed_msa_sto_path        = os.path.join(tmp_folder, 'seed_msa_sto.sto')
+    tmp_align_msa_path           = os.path.join(tmp_folder, 'align_msa.sto')
+    tmp_hmm_path                 = os.path.join(tmp_folder, 'model.hmm')
+    tmp_domtblout_path           = os.path.join(tmp_folder, 'domtblout.txt')
+    tmp_intermediate_esl_path    = os.path.join(tmp_folder, 'intermediate_esl.fa')
+    tmp_esl_weight_path          = os.path.join(tmp_folder, 'esl_weight.fa')
+    tmp_sequences_to_remove_path = os.path.join(tmp_folder, 'sequences_to_remove.txt')
+    tmp_rf_path                  = os.path.join(tmp_folder, 'rf.txt')
 
 def copy_updated_input_files():
 
@@ -509,9 +509,6 @@ def main():
     iteration = arg_iteration
     while True:
         iteration += 1
-        if (iteration == 101): # TODO remove this limiting/exiting condition
-            exit()
-
         largest_family_rep, family_members = get_next_largest_family(clusters_bookkeeping_df)
         if not family_members or len(family_members) < arg_minimum_family_members:
             with open(log_file, 'a') as file:
