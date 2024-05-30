@@ -28,7 +28,8 @@ def extract_chunk_number(filename):
     return None
 
 def define_globals(chunk_num):
-    global log_file, refined_families_tsv_file, discarded_clusters_file, \
+    global log_file, refined_families_tsv_file, \
+        discarded_clusters_file, successful_clusters_file, \
         converged_families_file, family_metadata_file, \
         tmp_folder, seed_msa_folder, \
         align_msa_folder, hmm_folder, \
@@ -40,22 +41,24 @@ def define_globals(chunk_num):
         tmp_intermediate_esl_path, tmp_esl_weight_path, \
         tmp_sequences_to_remove_path, tmp_rf_path
 
-    logs_folder               = "logs"
-    refined_families_folder   = "refined_families"
-    discarded_clusters_folder = "discarded_clusters"
-    converged_families_folder = "converged_families"
-    family_metadata_folder    = "family_metadata"
-    tmp_folder                = "tmp"
-    seed_msa_folder           = "seed_msa_sto"
-    align_msa_folder          = "msa_sto"
-    hmm_folder                = "hmm"
-    domtblout_folder          = "domtblout"
-    rf_folder                 = "rf"
-    evalue_threshold          = 0.001
-    length_threshold          = 0.8
+    logs_folder                = "logs"
+    refined_families_folder    = "refined_families"
+    discarded_clusters_folder  = "discarded_clusters"
+    successful_clusters_folder = "successful_clusters"
+    converged_families_folder  = "converged_families"
+    family_metadata_folder     = "family_metadata"
+    tmp_folder                 = "tmp"
+    seed_msa_folder            = "seed_msa_sto"
+    align_msa_folder           = "msa_sto"
+    hmm_folder                 = "hmm"
+    domtblout_folder           = "domtblout"
+    rf_folder                  = "rf"
+    evalue_threshold           = 0.001
+    length_threshold           = 0.8
 
     for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder, rf_folder, \
-        logs_folder, refined_families_folder, discarded_clusters_folder, converged_families_folder, family_metadata_folder
+        logs_folder, refined_families_folder, discarded_clusters_folder, \
+        successful_clusters_folder, converged_families_folder, family_metadata_folder
     ]:
         if not os.path.exists(folder):
             os.makedirs(folder)
@@ -71,19 +74,21 @@ def define_globals(chunk_num):
     tmp_sequences_to_remove_path = os.path.join(tmp_folder, 'sequences_to_remove.txt')
     tmp_rf_path                  = os.path.join(tmp_folder, 'rf.txt')
 
-    log_file                  = os.path.join(logs_folder,               f'{chunk_num}.txt')
-    refined_families_tsv_file = os.path.join(refined_families_folder,   f'{chunk_num}.tsv')
-    discarded_clusters_file   = os.path.join(discarded_clusters_folder, f'{chunk_num}.txt')
-    converged_families_file   = os.path.join(converged_families_folder, f'{chunk_num}.txt')
-    family_metadata_file      = os.path.join(family_metadata_folder,    f'{chunk_num}.csv')
+    log_file                  = os.path.join(logs_folder               , f'{chunk_num}.txt')
+    refined_families_tsv_file = os.path.join(refined_families_folder   , f'{chunk_num}.tsv')
+    discarded_clusters_file   = os.path.join(discarded_clusters_folder , f'{chunk_num}.txt')
+    successful_clusters_file  = os.path.join(successful_clusters_folder, f'{chunk_num}.txt')
+    converged_families_file   = os.path.join(converged_families_folder , f'{chunk_num}.txt')
+    family_metadata_file      = os.path.join(family_metadata_folder    , f'{chunk_num}.csv')
 
 def create_empty_output_files():
     start_time = time.time()
 
     open(refined_families_tsv_file, 'w').close()
-    open(discarded_clusters_file, 'w').close()
-    open(converged_families_file, 'w').close()
-    open(family_metadata_file, 'w').close()
+    open(discarded_clusters_file  , 'w').close()
+    open(successful_clusters_file , 'w').close()
+    open(converged_families_file  , 'w').close()
+    open(family_metadata_file     , 'w').close()
 
     with open(log_file, 'w') as file:
         file.write("create_empty_output_files: ")
@@ -117,9 +122,8 @@ def get_next_family(clusters_df):
         return None, None
 
     # Select the next family, which is the first row in the DataFrame
-    next_family_rep = clusters_df.index[0]
-    next_family_members = clusters_df.loc[next_family_rep, 'member']
-
+    next_family_rep = clusters_df.iloc[0]['representative']
+    next_family_members = clusters_df.loc[clusters_df['representative'] == next_family_rep, 'member']
     # Ensure that next_family_members is a list
     if not isinstance(next_family_members, list):
         next_family_members = [next_family_members] if isinstance(next_family_members, str) else next_family_members.tolist()
@@ -128,7 +132,7 @@ def get_next_family(clusters_df):
         file.write("\nget_next_family: ")
         file.write(str(time.time() - start_time) + "\n")
         file.write(f"S: {next_family_rep}, s: {len(next_family_members)}\n")
-
+    
     return next_family_rep, next_family_members
 
 def write_fasta_sequences(sequences, file_path, mode):
@@ -545,8 +549,10 @@ def main():
             iteration -= 1
             unique_reps = [next_family_rep]
             with open(discarded_clusters_file, 'a') as outfile:
-                outfile.write(unique_reps[0] + "\n")
+                outfile.write(str(next_family_rep) + "\n")
         else: # successfully
+            with open(successful_clusters_file, 'a') as outfile:
+                outfile.write(str(next_family_rep) + "\n")
             append_family_file(iteration, filtered_seq_names)
             append_family_metadata(iteration)
             move_produced_models(iteration, chunk_num)

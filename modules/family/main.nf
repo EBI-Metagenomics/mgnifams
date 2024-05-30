@@ -69,16 +69,17 @@ process REFINE_FAMILIES_PARALLEL {
     path(mgnifams_fasta)
 
     output:
-    path("seed_msa_sto/*")      , emit: seed_msa_sto
-    path("msa_sto/*")           , emit: msa_sto
-    path("hmm/*")               , emit: hmm
-    path("rf/*")                , emit: rf
-    path("domtblout/*")         , emit: domtblout
-    path("refined_families/*")  , emit: tsv
-    path("discarded_clusters/*"), emit: discarded
-    path("converged_families/*"), emit: converged
-    path("family_metadata/*")   , emit: metadata
-    path("logs/*")              , emit: log
+    path("seed_msa_sto/*")       , emit: seed_msa_sto
+    path("msa_sto/*")            , emit: msa_sto
+    path("hmm/*")                , emit: hmm
+    path("rf/*")                 , emit: rf
+    path("domtblout/*")          , emit: domtblout
+    path("refined_families/*")   , emit: tsv
+    path("discarded_clusters/*") , emit: discarded
+    path("successful_clusters/*"), emit: successful
+    path("converged_families/*") , emit: converged
+    path("family_metadata/*")    , emit: metadata
+    path("logs/*")               , emit: log
 
     script:
     """
