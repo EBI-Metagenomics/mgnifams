@@ -3,6 +3,7 @@ import os
 import subprocess
 import shutil
 import pandas as pd
+import polars as pl
 import numpy as np
 import re
 from Bio.Seq import Seq
@@ -97,13 +98,26 @@ def create_empty_output_files():
 def load_clusters_df():
     start_time = time.time()
 
+    clusters_df_pl = pl.read_csv(arg_clusters_chunk, separator='\t', has_header=False, new_columns=["representative", "member"])
+    with open(log_file, 'a') as file:
+        file.write("load_clusters_df_pl: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    print(clusters_df_pl)
+    
+    start_time = time.time()
+
     clusters_df = pd.read_csv(arg_clusters_chunk, sep='\t', header=None, names=['representative', 'member'])
 
     with open(log_file, 'a') as file:
         file.write("load_clusters_df: ")
         file.write(str(time.time() - start_time) + "\n")
 
-    return clusters_df
+    print(clusters_df)
+
+    
+
+    return clusters_df, clusters_df_pl
 
 def create_mgnifams_fasta_dict():
     start_time = time.time()
@@ -454,7 +468,8 @@ def main():
     define_globals(chunk_num)
 
     create_empty_output_files()
-    clusters_df = load_clusters_df()
+    clusters_df, clusters_df_pl = load_clusters_df()
+    exit()
     mgnifams_fasta_dict = create_mgnifams_fasta_dict()
     iteration = 0
     while True:
