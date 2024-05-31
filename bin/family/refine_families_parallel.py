@@ -98,24 +98,18 @@ def create_empty_output_files():
 def load_clusters_df():
     start_time = time.time()
 
-    clusters_df_pl = pl.read_csv(arg_clusters_chunk, separator='\t', has_header=False, new_columns=["representative", "member"])
-    with open(log_file, 'a') as file:
-        file.write("load_clusters_df_pl: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-    print(clusters_df_pl)
-    
-    start_time = time.time()
-
     clusters_df = pd.read_csv(arg_clusters_chunk, sep='\t', header=None, names=['representative', 'member'])
 
     with open(log_file, 'a') as file:
         file.write("load_clusters_df: ")
         file.write(str(time.time() - start_time) + "\n")
 
-    print(clusters_df)
+    start_time = time.time()
 
-    
+    clusters_df_pl = pl.read_csv(arg_clusters_chunk, separator='\t', has_header=False, new_columns=["representative", "member"])
+    with open(log_file, 'a') as file:
+        file.write("load_clusters_df_pl: ")
+        file.write(str(time.time() - start_time) + "\n")
 
     return clusters_df, clusters_df_pl
 
@@ -130,20 +124,37 @@ def create_mgnifams_fasta_dict():
 
     return mgnifams_fasta_dict
 
-def get_next_family(clusters_df):
+def get_next_family(clusters_df, clusters_df_pl):
     start_time = time.time()
     if clusters_df.empty:
         return None, None
 
-    # Select the next family, which is the first row in the DataFrame
+    if clusters_df_pl.is_empty():
+        return None, None
+
+    # Select the next family rep, which is the first row in the DataFrame
     next_family_rep = clusters_df.iloc[0]['representative']
     next_family_members = clusters_df.loc[clusters_df['representative'] == next_family_rep, 'member']
     # Ensure that next_family_members is a list
     if not isinstance(next_family_members, list):
         next_family_members = [next_family_members] if isinstance(next_family_members, str) else next_family_members.tolist()
-
+    
     with open(log_file, 'a') as file:
         file.write("\nget_next_family: ")
+        file.write(str(time.time() - start_time) + "\n")
+        file.write(f"S: {next_family_rep}, s: {len(next_family_members)}\n")
+
+    start_time = time.time()
+
+    # Select the next family rep, which is the first row in the DataFrame
+    next_family_rep = clusters_df_pl[0, 'representative']
+    next_family_members = clusters_df_pl.filter(pl.col('representative') == next_family_rep).select('member')
+    # Ensure that next_family_members is a list
+    if not isinstance(next_family_members, list):
+        next_family_members = next_family_members.to_series().to_list()
+
+    with open(log_file, 'a') as file:
+        file.write("\nget_next_family_pl: ")
         file.write(str(time.time() - start_time) + "\n")
         file.write(f"S: {next_family_rep}, s: {len(next_family_members)}\n")
     
@@ -437,13 +448,25 @@ def get_final_family_original_names(filtered_seq_names):
     family_members = {name.split('/')[0] for name in filtered_seq_names}
     return family_members
 
-def get_cluster_reps(clusters_df, family_members):
+def get_cluster_reps(clusters_df, clusters_df_pl, family_members):
+    start_time = time.time()
     # Match family_members to their family representatives and keep unique
     unique_reps = clusters_df[clusters_df['member'].isin(family_members)].index.unique()
 
-    return unique_reps
+    with open(log_file, 'a') as file:
+        file.write("get_cluster_reps: ")
+        file.write(str(time.time() - start_time) + "\n")
 
-def update_clusters_df(clusters_df, unique_reps):
+    start_time = time.time()
+    unique_reps_pl = clusters_df_pl.filter(pl.col('member').is_in(family_members)).get_column('representative').unique()
+
+    with open(log_file, 'a') as file:
+        file.write("get_cluster_reps_pl: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    return unique_reps, unique_reps_pl
+
+def update_clusters_df(clusters_df, clusters_df_pl, unique_reps, unique_reps_pl):
     start_time = time.time()    
 
     # Remove all lines having these family_reps from the clusters_df
@@ -454,7 +477,16 @@ def update_clusters_df(clusters_df, unique_reps):
         file.write("update_clusters_df: ")
         file.write(str(time.time() - start_time) + "\n")
 
-    return clusters_df
+    start_time = time.time()    
+
+    # Remove all lines having these family_reps from the clusters_df
+    clusters_df_pl = clusters_df_pl.filter(~pl.col('representative').is_in(unique_reps_pl))
+
+    with open(log_file, 'a') as file:
+        file.write("update_clusters_df_pl: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+    return clusters_df, clusters_df_pl
 
 def remove_tmp_files():
     for item in os.listdir(tmp_folder):
@@ -469,12 +501,11 @@ def main():
 
     create_empty_output_files()
     clusters_df, clusters_df_pl = load_clusters_df()
-    exit()
     mgnifams_fasta_dict = create_mgnifams_fasta_dict()
     iteration = 0
     while True:
         iteration += 1
-        next_family_rep, family_members = get_next_family(clusters_df)
+        next_family_rep, family_members = get_next_family(clusters_df, clusters_df_pl)
         if not family_members:
             with open(log_file, 'a') as file:
                 file.write("Exiting all...")
@@ -573,10 +604,11 @@ def main():
             move_produced_models(iteration, chunk_num)
             # prepare sequences to remove
             family_original_names = get_final_family_original_names(filtered_seq_names)
-            unique_reps = get_cluster_reps(clusters_df, family_original_names)
-
-        clusters_df = update_clusters_df(clusters_df, unique_reps)
+            unique_reps, unique_reps_pl = get_cluster_reps(clusters_df, clusters_df_pl, family_original_names)
+            
+        clusters_df, clusters_df_pl = update_clusters_df(clusters_df, clusters_df_pl, unique_reps, unique_reps_pl)
         remove_tmp_files()
+        exit()
 
     # # End of all families
     with open(log_file, 'a') as file:
