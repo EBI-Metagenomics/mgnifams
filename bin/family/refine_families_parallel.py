@@ -424,18 +424,11 @@ def get_final_family_original_names(filtered_seq_names):
     family_members = {name.split('/')[0] for name in filtered_seq_names}
     return family_members
 
-def get_cluster_reps(clusters_df, family_members):
-    # Match family_members to their family representatives and keep unique
-    unique_reps = clusters_df[clusters_df['member'].isin(family_members)].index.unique()
-
-    return unique_reps
-
-def update_clusters_df(clusters_df, unique_reps):
+def update_clusters_df(clusters_df, family_rep):
     start_time = time.time()    
 
-    # Remove all lines having these family_reps from the clusters_df
-    indices_to_remove = clusters_df.index[clusters_df.index.isin(unique_reps)]
-    clusters_df.drop(index=indices_to_remove, inplace=True)
+    # Remove checked or discarded cluster
+    clusters_df.drop(clusters_df[clusters_df['representative'] == family_rep].index, inplace=True)
 
     with open(log_file, 'a') as file:
         file.write("update_clusters_df: ")
@@ -523,7 +516,7 @@ def main():
                     break
 
                 membership_percentage = check_seed_membership(original_sequence_names, filtered_seq_names)
-                if (membership_percentage < 0.9):
+                if (membership_percentage < 0.9): 
                     discard_flag = True
                     with open(log_file, 'a') as file:
                         file.write(f"Discard-Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
@@ -545,23 +538,19 @@ def main():
         # Exiting family loop
         if (discard_flag): # unsuccessfully
             with open(log_file, 'a') as file:
-                file.write("Discarding cluster " + str(next_family_rep) + "\n")
-
-            iteration -= 1
-            unique_reps = [next_family_rep]
+                file.write("Discarding cluster " + next_family_rep + "\n")
+            
             with open(discarded_clusters_file, 'a') as outfile:
                 outfile.write(str(next_family_rep) + "\n")
+            iteration -= 1
         else: # successfully
             with open(successful_clusters_file, 'a') as outfile:
                 outfile.write(str(next_family_rep) + "\n")
             append_family_file(iteration, filtered_seq_names)
             append_family_metadata(iteration)
             move_produced_models(iteration, chunk_num)
-            # prepare sequences to remove
-            family_original_names = get_final_family_original_names(filtered_seq_names)
-            unique_reps = get_cluster_reps(clusters_df, family_original_names)
-
-        clusters_df = update_clusters_df(clusters_df, unique_reps)
+        
+        clusters_df = update_clusters_df(clusters_df, next_family_rep)
         remove_tmp_files()
 
     # # End of all families
