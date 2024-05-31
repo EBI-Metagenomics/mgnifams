@@ -71,7 +71,6 @@ def split_and_write_chunks(df, num_chunks, out_dir):
     """
     # Get unique cluster representatives
     unique_reps = df.select("rep").unique()
-    print(unique_reps)
     # Determine the size of each chunk
     chunk_size = math.ceil(len(unique_reps) / num_chunks)
     # Split the unique cluster representatives into chunks
@@ -84,7 +83,7 @@ def split_and_write_chunks(df, num_chunks, out_dir):
         chunk_reps = unique_reps[start_idx:end_idx].to_series().to_list()
         # Filter the original DataFrame for the current chunk of cluster representatives
         chunk_df = df.filter(pl.col("rep").is_in(chunk_reps))
-        print(chunk_df)
+        
         # Write the chunk to a TSV file
         if not chunk_df.is_empty():
             chunk_df.write_csv(os.path.join(out_dir, f"linclust_clusters_{i + 1}.tsv"), separator='\t', include_header=False)
