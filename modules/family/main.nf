@@ -82,7 +82,7 @@ process REFINE_FAMILIES_PARALLEL {
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families_parallel.py ${clusters_chunk} ${mgnifams_fasta}
+    python3 ${params.scriptDir}/family/refine_families_parallel.py ${clusters_chunk} ${mgnifams_fasta} ${task.cpus}
     """
 }
 

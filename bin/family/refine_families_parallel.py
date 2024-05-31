@@ -12,14 +12,15 @@ from Bio import AlignIO
 import time
 
 def parse_args():
-    global arg_clusters_chunk, arg_mgnifams_input_fasta_file
+    global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus
         
-    if not (len(sys.argv) == 3):
+    if not (len(sys.argv) == 4):
         print("Incorrect number of args.")
         sys.exit(1)
 
     arg_clusters_chunk            = sys.argv[1]
     arg_mgnifams_input_fasta_file = sys.argv[2]
+    arg_cpus                      = sys.argv[3]
 
 def extract_chunk_number(filename):
     match = re.search(r'_(\d+)\.', filename)
@@ -210,7 +211,7 @@ def trim_seed_msa(occupancy_threshold=0.5):
 def run_hmmbuild(msa_file, extra_args):
     start_time = time.time()                    
 
-    hmmbuild_command = ["hmmbuild"] + extra_args + [tmp_hmm_path, msa_file]
+    hmmbuild_command = ["hmmbuild", "--cpu", arg_cpus] + extra_args + [tmp_hmm_path, msa_file]
     subprocess.run(hmmbuild_command, stdout=subprocess.DEVNULL)
     
     with open(log_file, 'a') as file:
@@ -220,7 +221,7 @@ def run_hmmbuild(msa_file, extra_args):
 def run_hmmsearch():
     start_time = time.time()
     
-    hmmsearch_command = ["hmmsearch", "--domtblout", tmp_domtblout_path, tmp_hmm_path, arg_mgnifams_input_fasta_file]
+    hmmsearch_command = ["hmmsearch", "--cpu", arg_cpus, "--domtblout", tmp_domtblout_path, tmp_hmm_path, arg_mgnifams_input_fasta_file]
     subprocess.run(hmmsearch_command, stdout=subprocess.DEVNULL)
 
     with open(log_file, 'a') as file:
