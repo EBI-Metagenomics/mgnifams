@@ -76,7 +76,7 @@ def count_domain_architectures(file_path, family_id, refined_families_df):
                     domain_architecture = construct_domain_architecture(pfams, matched_rows)
                     family_domain_architectures.append(domain_architecture)
             else: # no pfams
-                family_domain_architectures.append(family_id)
+                family_domain_architectures.append(str(family_id))
 
     domain_architecture_counts = pd.Series(family_domain_architectures).value_counts()
 
