@@ -59,24 +59,33 @@ def construct_domain_architecture(pfams, matched_rows):
 
     return domain_architecture
 
+def construct_solo_domain_architecture(matched_rows):
+    fam_names = []
+
+    for index, row in matched_rows.iterrows():
+        fam_names.append(str(row['family_id']))
+
+    domain_architecture = '\t'.join(map(str, fam_names))
+
+    return domain_architecture
+
 def count_domain_architectures(file_path, family_id, refined_families_df):
     refined_families_subset     = get_refined_families_subset(refined_families_df, family_id)
     family_domain_architectures = []
 
     with open(file_path, 'r') as file:
         for line in file:
-            parts = line.strip().split('\t')
+            parts        = line.strip().split('\t')
+            mgyp         = parts[0]
+            matched_rows = refined_families_subset[refined_families_subset['mgyp'] == mgyp]
 
             if len(parts) == 3: # aka pfams not empty
-                mgyp         = parts[0]
-                matched_rows = refined_families_subset[refined_families_subset['mgyp'] == mgyp]
-
-                if not matched_rows.empty:
-                    pfams               = parts[2]
-                    domain_architecture = construct_domain_architecture(pfams, matched_rows)
-                    family_domain_architectures.append(domain_architecture)
+                pfams               = parts[2]
+                domain_architecture = construct_domain_architecture(pfams, matched_rows)
             else: # no pfams
-                family_domain_architectures.append(str(family_id))
+                domain_architecture = construct_solo_domain_architecture(matched_rows)
+            
+            family_domain_architectures.append(domain_architecture)
 
     domain_architecture_counts = pd.Series(family_domain_architectures).value_counts()
 
