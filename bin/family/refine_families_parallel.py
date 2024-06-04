@@ -414,11 +414,11 @@ def append_family_metadata(iteration):
         file.writelines(f"{iteration},{family_size},{protein_rep},{region}\n")
 
 def move_produced_models(iteration, chunk_num):
-    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder,  f'{chunk_num}0{iteration}.sto'))
-    shutil.move(tmp_align_msa_path,    os.path.join(align_msa_folder, f'{chunk_num}0{iteration}.sto'))
-    shutil.move(tmp_hmm_path,          os.path.join(hmm_folder,       f'{chunk_num}0{iteration}.hmm'))
-    shutil.move(tmp_domtblout_path,    os.path.join(domtblout_folder, f'{chunk_num}0{iteration}.domtblout'))
-    shutil.move(tmp_rf_path,           os.path.join(rf_folder,        f'{chunk_num}0{iteration}.txt'))
+    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder,  f'{chunk_num}_{iteration}.sto'))
+    shutil.move(tmp_align_msa_path,    os.path.join(align_msa_folder, f'{chunk_num}_{iteration}.sto'))
+    shutil.move(tmp_hmm_path,          os.path.join(hmm_folder,       f'{chunk_num}_{iteration}.hmm'))
+    shutil.move(tmp_domtblout_path,    os.path.join(domtblout_folder, f'{chunk_num}_{iteration}.domtblout'))
+    shutil.move(tmp_rf_path,           os.path.join(rf_folder,        f'{chunk_num}_{iteration}.txt'))
 
 def get_final_family_original_names(filtered_seq_names):
     family_members = {name.split('/')[0] for name in filtered_seq_names}
