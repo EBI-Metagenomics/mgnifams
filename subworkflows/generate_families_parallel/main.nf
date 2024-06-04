@@ -14,9 +14,11 @@ workflow GENERATE_FAMILIES_PARALLEL {
     refined_families = REFINE_FAMILIES_PARALLEL(clusters_chunks.flatten(), mgnifams_fasta)
 
     emit:
-    tsv          = refined_families.tsv
     seed_msa_sto = refined_families.seed_msa_sto
     msa_sto      = refined_families.msa_sto
-    hmm          = refined_families.hmm
-    domtblout    = refined_families.domtblout
+    tsv          = refined_families.tsv
+    discarded    = refined_families.discarded
+    successful   = refined_families.successful
+    converged    = refined_families.converged
+    metadata     = refined_families.metadata
 }

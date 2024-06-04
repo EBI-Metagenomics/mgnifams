@@ -104,6 +104,21 @@ process CHUNK_CLUSTERS {
     """
 }
 
+process POOL_FAMILY_RESULTS {
+    conda "${moduleDir}/environment.yml"
+
+    input:
+    path(families_dir)
+
+    output:
+    path("${families_dir}")
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/pool_results.py ${families_dir}
+    """
+}
+
 process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     label "venv"
 
