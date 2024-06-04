@@ -219,7 +219,7 @@ if __name__ == "__main__":
 
         domain_architecture_counts = count_domain_architectures(file_path, family_id, refined_families_df)
         architecture_json          = construct_architecture_json(domain_architecture_counts)
-        translated_top_json        = translate_architecture(architecture_json, pfam_mapping_df)
+        translated_top_json        = translate_architecture(architecture_json, pfam_mapping_df) # TODO int() here after name re-mapping
 
         out_file = os.path.join(outdir, f"{family_id}.json")
         write_out(translated_top_json, out_file)
