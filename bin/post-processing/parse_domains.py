@@ -39,7 +39,7 @@ def get_refined_families_subset(clusters_df, family_id):
 
     return refined_families_subset
 
-def construct_domain_architecture(mgyp, pfams, matched_rows):
+def construct_domain_architecture(pfams, matched_rows):
     pfams        = ast.literal_eval(pfams)
     fam_names    = []
     start_points = []
@@ -73,8 +73,10 @@ def count_domain_architectures(file_path, family_id, refined_families_df):
 
                 if not matched_rows.empty:
                     pfams               = parts[2]
-                    domain_architecture = construct_domain_architecture(mgyp, pfams, matched_rows)
+                    domain_architecture = construct_domain_architecture(pfams, matched_rows)
                     family_domain_architectures.append(domain_architecture)
+            else: # no pfams
+                family_domain_architectures.append(family_id)
 
     domain_architecture_counts = pd.Series(family_domain_architectures).value_counts()
 
@@ -204,7 +206,7 @@ if __name__ == "__main__":
     os.makedirs(outdir, exist_ok=True)
     for tsv in query_results_files:
         file_path = os.path.join(query_results_dir, tsv)
-        family_id = int(os.path.splitext(os.path.basename(file_path))[0])
+        family_id = os.path.splitext(os.path.basename(file_path))[0]
 
         domain_architecture_counts = count_domain_architectures(file_path, family_id, refined_families_df)
         architecture_json          = construct_architecture_json(domain_architecture_counts)

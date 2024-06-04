@@ -31,7 +31,7 @@ def initiate_output_csvs(mgnifams_out_dir, output_dir):
 
 def read_family_metadata(mgnifams_out_dir):
     column_names = ['family', 'size', 'protein_rep', 'region']
-    family_metadata_df = pd.read_csv(os.path.join(mgnifams_out_dir, "families/family_metadata/all.csv"), header=None, names=column_names)
+    family_metadata_df = pd.read_csv(os.path.join(mgnifams_out_dir, "families/family_metadata.csv"), header=None, names=column_names)
     return family_metadata_df
 
 def read_structure_scores(mgnifams_out_dir):
@@ -40,7 +40,7 @@ def read_structure_scores(mgnifams_out_dir):
     return structure_scores_df
 
 def get_converged_families(mgnifams_out_dir):
-    with open(os.path.join(mgnifams_out_dir, 'families', 'converged_families/all.txt'), 'r') as file:
+    with open(os.path.join(mgnifams_out_dir, 'families', 'converged_families.txt'), 'r') as file:
         converged_families = {line.strip() for line in file}
 
         return converged_families
@@ -90,7 +90,7 @@ def parse_protein_region(protein_id):
     return protein, region
 
 def write_mgnifam_proteins(mgnifams_out_dir, output_dir):
-    refined_families_file = os.path.join(mgnifams_out_dir, 'families', 'refined_families/all.tsv')
+    refined_families_file = os.path.join(mgnifams_out_dir, 'families', 'refined_families.tsv')
     mgnifam_proteins_csv_path = os.path.join(output_dir, 'mgnifam_proteins.csv')
 
     with open(refined_families_file, 'r') as file, open(mgnifam_proteins_csv_path, 'a', newline='') as csv_file:
