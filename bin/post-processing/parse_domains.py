@@ -78,7 +78,7 @@ def count_domain_architectures(file_path, family_id, refined_families_df):
             parts        = line.strip().split('\t')
             mgyp         = parts[0]
             matched_rows = refined_families_subset[refined_families_subset['mgyp'] == mgyp]
-
+            
             if len(parts) == 3: # aka pfams not empty
                 pfams               = parts[2]
                 domain_architecture = construct_domain_architecture(pfams, matched_rows)
@@ -119,7 +119,7 @@ def construct_architecture_json(domain_architecture_counts):
 
     return output_json
 
-def subset_json(json_items, threshold = 10):
+def subset_json(json_items, threshold = 15):
     return json_items['architecture_containers'][:threshold]
 
 def construct_name(mgnifam_id):
@@ -168,7 +168,7 @@ def decide_font_color(hex_color):
 
 def translate_architecture(architecture_json, pfam_mapping_df):
     translated_top_json = subset_json(architecture_json)
-
+    
     for architecture_container in translated_top_json:
         for domain in architecture_container['domains']:
             if 'PF' in domain['id']: # pfam
@@ -215,11 +215,11 @@ if __name__ == "__main__":
     os.makedirs(outdir, exist_ok=True)
     for tsv in query_results_files:
         file_path = os.path.join(query_results_dir, tsv)
-        family_id = os.path.splitext(os.path.basename(file_path))[0]
+        family_id = int(os.path.splitext(os.path.basename(file_path))[0])
 
         domain_architecture_counts = count_domain_architectures(file_path, family_id, refined_families_df)
         architecture_json          = construct_architecture_json(domain_architecture_counts)
-        translated_top_json        = translate_architecture(architecture_json, pfam_mapping_df) # TODO int() here after name re-mapping
+        translated_top_json        = translate_architecture(architecture_json, pfam_mapping_df)
 
         out_file = os.path.join(outdir, f"{family_id}.json")
         write_out(translated_top_json, out_file)

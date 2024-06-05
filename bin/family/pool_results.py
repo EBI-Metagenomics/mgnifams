@@ -91,7 +91,8 @@ def main():
     translate_directory('domtblout')
     
     json_mapping = 'family_to_id.json'
-    with open(json_mapping, 'w') as f:
+    output_file  = os.path.join(outdir, json_mapping)
+    with open(output_file, 'w') as f:
         json.dump(family_to_id, f)
 
 if __name__ == "__main__":

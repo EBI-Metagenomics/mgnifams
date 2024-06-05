@@ -113,7 +113,6 @@ process POOL_FAMILY_RESULTS {
 
     output:
     path("families_pooled")
-    path("family_to_id.json")
 
     script:
     """
