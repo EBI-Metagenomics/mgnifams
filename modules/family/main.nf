@@ -105,13 +105,15 @@ process CHUNK_CLUSTERS {
 }
 
 process POOL_FAMILY_RESULTS {
+    publishDir "${params.outDir}/", mode: "copy"
     conda "${moduleDir}/environment.yml"
 
     input:
     path(families_dir)
 
     output:
-    path("${families_dir}")
+    path("families_pooled")
+    path("family_to_id.json")
 
     script:
     """
