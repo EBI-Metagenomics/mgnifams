@@ -159,9 +159,10 @@ process REMOVE_REDUNDANT {
 
     output:
     path "non_redundant_fam_ids.txt"
+    path "similarity_edgelist.txt"
 
     script:
     """
-    python3 ${params.scriptDir}/family/remove_redundant.py ${hits} ${fam_rep_mapping} non_redundant_fam_ids.txt
+    python3 ${params.scriptDir}/family/remove_redundant.py ${hits} ${fam_rep_mapping}
     """
 }
