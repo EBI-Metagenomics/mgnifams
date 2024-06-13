@@ -131,7 +131,7 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
 
     script:
     """
-    python3 ${params.scriptDir}/extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta
+    python3 ${params.scriptDir}/family/extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta
     """
 }
 
@@ -146,6 +146,22 @@ process MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID {
 
     script:
     """
-    python3 ${params.scriptDir}/map_first_a3m_sequences_to_family_id.py ${msa_a3m} fam_rep_mapping.csv
+    python3 ${params.scriptDir}/family/map_first_a3m_sequences_to_family_id.py ${msa_a3m} fam_rep_mapping.csv
+    """
+}
+
+process REMOVE_REDUNDANT {
+    label "venv"
+
+    input:
+    tuple val(meta), path(hits)
+    path(fam_rep_mapping)
+
+    output:
+    path "non_redundant_fam_ids.txt"
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/remove_redundant.py ${hits} ${fam_rep_mapping} non_redundant_fam_ids.txt
     """
 }
