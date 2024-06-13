@@ -3,9 +3,9 @@
 include { HHSUITE_REFORMAT                     } from "${params.moduleDir}/hhsuite/reformat/main.nf"
 include { HHSUITE_BUILDHHDB                    } from "${params.moduleDir}/hhsuite/buildhhdb/main.nf"
 include { HHSUITE_HHBLITS                      } from "${params.moduleDir}/hhsuite/hhblits/main.nf"
+include { COMBINE_HH_RESULTS                   } from "${params.moduleDir}/hhsuite/combine_hh_results.nf"
 include { MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID } from "${params.moduleDir}/family/main.nf"
 include { POOL_FAMILY_RESULTS                  } from "${params.moduleDir}/family/main.nf"
-
 
 workflow REMOVE_REDUNDANCY {
     take:
@@ -27,11 +27,12 @@ workflow REMOVE_REDUNDANCY {
         }
         .set { hh_db_path_ch }
     hh_db_path_ch
-    hhr_ch = HHSUITE_HHBLITS(a3m_ch, hh_db_path_ch, db_name).hhr
+    hhr_ch     = HHSUITE_HHBLITS(a3m_ch, hh_db_path_ch, db_name).hhr
+    hhr_all_ch = COMBINE_HH_RESULTS(hhr_ch)
 
     mapping = MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID(a3m_ch)
-    
-    // // non_redundant_families_dir = REMOVE_REDUNDANT(families_dir, hh_db_ch)
+
+    // // non_redundant_families_dir = REMOVE_REDUNDANT(families_dir, hh_db_ch, mapping)
     // pooled_families = POOL_FAMILY_RESULTS(families_dir) // TODO change with non_redundant_families_dir
 
     // emit:
