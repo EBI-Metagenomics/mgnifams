@@ -4,19 +4,23 @@ import shutil
 import json
 
 def parse_args():
-    global arg_families_dir
+    global arg_families_dir, arg_non_redundant_fam_ids_file
         
-    if not (len(sys.argv) == 2):
+    if not (len(sys.argv) == 3):
         print("Incorrect number of args.")
         sys.exit(1)
 
-    arg_families_dir = sys.argv[1]
+    arg_families_dir               = sys.argv[1]
+    arg_non_redundant_fam_ids_file = sys.argv[2]
+
+def read_non_redundant_fam_ids(file_path):
+    with open(file_path, 'r') as file:
+        lines = file.read().splitlines()
+    return lines
 
 def create_mapping_dict():
-    filenames = os.listdir(os.path.join(arg_families_dir, 'rf'))
-    filenames_without_extension = [os.path.splitext(filename)[0] for filename in filenames]
-    filenames_without_extension.sort()
-    family_to_id = {filename: idx + 1 for idx, filename in enumerate(filenames_without_extension)}
+    non_redundant_fam_ids.sort()
+    family_to_id = {filename: idx + 1 for idx, filename in enumerate(non_redundant_fam_ids)}
 
     return family_to_id
     
@@ -34,11 +38,17 @@ def pool_directory(input_dir, output_filename, splitChar):
                     if value:  # Check if the line is not empty
                         if splitChar != "":
                             first_element       = value.split(splitChar)[0]
+                            fam_id              = base_filename + '_' + first_element
+                            if (fam_id not in non_redundant_fam_ids):
+                                continue
                             remaining_elements  = splitChar.join(value.split(splitChar)[1:])
-                            family_id           = str(family_to_id[base_filename + '_' + first_element])
+                            family_id           = str(family_to_id[fam_id])
                             concatenated_string = family_id + splitChar + remaining_elements
                         else: # converged_families file, only one value element
-                            concatenated_string = str(family_to_id[base_filename + '_' + value])
+                            fam_id              = base_filename + '_' + value
+                            if (fam_id not in non_redundant_fam_ids):
+                                continue
+                            concatenated_string = str(family_to_id[fam_id])
 
                         outfile.write(f"{concatenated_string}\n")
 
@@ -62,6 +72,8 @@ def translate_directory(input_dir):
     filenames = os.listdir(input_folder)
     for filename in filenames:
         basename         = os.path.splitext(filename)[0]
+        if (basename not in non_redundant_fam_ids):
+            continue
         source_path      = os.path.join(input_folder, filename)
         new_filename     = f'{family_to_id[basename]}{os.path.splitext(filename)[1]}'
         destination_path = os.path.join(output_folder, new_filename)
@@ -71,12 +83,13 @@ def translate_directory(input_dir):
 def main():
     parse_args()
 
-    global outdir, family_to_id
+    global outdir, non_redundant_fam_ids, family_to_id
 
     outdir = "families_pooled"
     os.makedirs(outdir, exist_ok=True)
 
-    family_to_id = create_mapping_dict()
+    non_redundant_fam_ids = read_non_redundant_fam_ids(arg_non_redundant_fam_ids_file)
+    family_to_id          = create_mapping_dict()
 
     pool_directory("family_metadata", "family_metadata.csv", ",")
     pool_directory("refined_families", "refined_families.tsv", "\t")

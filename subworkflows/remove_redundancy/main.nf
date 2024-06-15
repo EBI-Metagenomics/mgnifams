@@ -33,10 +33,6 @@ workflow REMOVE_REDUNDANCY {
 
     mapping = MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID(a3m_ch)
 
-    non_redundant_family_ids = REMOVE_REDUNDANT(hhr_all_ch, mapping)
-    // pooled_families = POOL_FAMILY_RESULTS(families_dir) // TODO change with non_redundant_families_dir
-
-    // emit:
-    // seed_msa_sto = pooled_families.seed_msa_sto
-    // msa_sto      = pooled_families.msa_sto
+    non_redundant_fam_ids = REMOVE_REDUNDANT(hhr_all_ch, mapping).non_redundant_fam_ids
+    pooled_families = POOL_FAMILY_RESULTS(families_dir, non_redundant_fam_ids)
 }

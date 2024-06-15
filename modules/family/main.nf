@@ -104,22 +104,6 @@ process CHUNK_CLUSTERS {
     """
 }
 
-process POOL_FAMILY_RESULTS {
-    publishDir "${params.outDir}/", mode: "copy"
-    conda "${moduleDir}/environment.yml"
-
-    input:
-    path(families_dir)
-
-    output:
-    path("families_pooled")
-
-    script:
-    """
-    python3 ${params.scriptDir}/family/pool_results.py ${families_dir}
-    """
-}
-
 process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     label "venv"
 
@@ -151,6 +135,7 @@ process MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID {
 }
 
 process REMOVE_REDUNDANT {
+    publishDir "${params.outDir}/families/", mode: "copy"
     label "venv"
 
     input:
@@ -158,11 +143,28 @@ process REMOVE_REDUNDANT {
     path(fam_rep_mapping)
 
     output:
-    path "non_redundant_fam_ids.txt"
-    path "similarity_edgelist.txt"
+    path("non_redundant_fam_ids.txt"), emit: non_redundant_fam_ids
+    path("similarity_edgelist.txt")  , emit: similarity_edgelist
 
     script:
     """
     python3 ${params.scriptDir}/family/remove_redundant.py ${hits} ${fam_rep_mapping}
+    """
+}
+
+process POOL_FAMILY_RESULTS {
+    publishDir "${params.outDir}/", mode: "copy"
+    conda "${moduleDir}/environment.yml"
+
+    input:
+    path(families_dir)
+    path(non_redundant_family_ids)
+
+    output:
+    path("families_pooled")
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/pool_results.py ${families_dir} ${non_redundant_family_ids}
     """
 }
