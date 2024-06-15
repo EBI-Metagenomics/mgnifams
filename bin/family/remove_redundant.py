@@ -45,20 +45,15 @@ def check_similarity_remove_if_redundant(hh_hits, row, \
         if (avg_prob >= redundant_threshold):
             if (avg_score1 != avg_score2): # check Score
                 if (avg_score1 > avg_score2):
-                    print(fams_to_export)
                     fams_to_export.remove(hit)
-                    print(fams_to_export)
                 else:
-                    print(2)
                     fams_to_export.remove(fam)
             else: # check Cols
                 avg_cols1  = hh_hits[(hh_hits['Fam'] == fam) & (hh_hits['Hit'] == hit)]['Cols'].mean()
                 avg_cols2  = hh_hits[(hh_hits['Fam'] == hit) & (hh_hits['Hit'] == fam)]['Cols'].mean()
                 if (avg_cols1 >= avg_cols2):
-                    print(3)
                     fams_to_export.remove(hit)
                 else:
-                    print(4)
                     fams_to_export.remove(fam)
         
     elif (avg_prob >= similarity_threshold):
@@ -81,7 +76,7 @@ def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
     fams_to_export  = hh_hits['Fam'].unique().tolist() # This must be done here, before removing self-hits (some fams might have only self-hits)
     rep_to_fam_dict = read_rep_to_fam_dict(fam_rep_mapping_file)
     hh_hits         = map_and_remove_self(hh_hits, rep_to_fam_dict)
-
+    
     i = 0
     while len(hh_hits) > i:
         row = hh_hits.iloc[i]
