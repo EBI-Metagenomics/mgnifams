@@ -42,20 +42,18 @@ def check_similarity_remove_if_redundant(hh_hits, row, \
         # keeping fam with better Score (e.g. sum all fam1 hit4), if same, more Cols(e.g. sum all fam1 hit4)
         avg_score1 = hh_hits[(hh_hits['Fam'] == fam) & (hh_hits['Hit'] == hit)]['Score'].mean()
         avg_score2 = hh_hits[(hh_hits['Fam'] == hit) & (hh_hits['Hit'] == fam)]['Score'].mean()
-        if (avg_prob >= redundant_threshold):
-            if (avg_score1 != avg_score2): # check Score
-                if (avg_score1 > avg_score2):
-                    fams_to_export.remove(hit)
-                else:
-                    fams_to_export.remove(fam)
-            else: # check Cols
-                avg_cols1  = hh_hits[(hh_hits['Fam'] == fam) & (hh_hits['Hit'] == hit)]['Cols'].mean()
-                avg_cols2  = hh_hits[(hh_hits['Fam'] == hit) & (hh_hits['Hit'] == fam)]['Cols'].mean()
-                if (avg_cols1 >= avg_cols2):
-                    fams_to_export.remove(hit)
-                else:
-                    fams_to_export.remove(fam)
-        
+        if (avg_score1 != avg_score2): # check Score
+            if (avg_score1 > avg_score2):
+                fams_to_export.remove(hit)
+            else:
+                fams_to_export.remove(fam)
+        else: # check Cols
+            avg_cols1  = hh_hits[(hh_hits['Fam'] == fam) & (hh_hits['Hit'] == hit)]['Cols'].mean()
+            avg_cols2  = hh_hits[(hh_hits['Fam'] == hit) & (hh_hits['Hit'] == fam)]['Cols'].mean()
+            if (avg_cols1 >= avg_cols2):
+                fams_to_export.remove(hit)
+            else:
+                fams_to_export.remove(fam)
     elif (avg_prob >= similarity_threshold):
         with open(similarity_edgelist_file, 'a') as f: 
             f.write(f"{fam},{hit},{avg_prob}\n")
