@@ -74,7 +74,7 @@ def write_non_redundant_fam_ids(fams_to_export):
 
 def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
     non_redundant_fam_ids_file, similarity_edgelist_file, \
-    redundant_threshold=100, similarity_threshold=50): # TODO redundant_threshold=95, testing
+    redundant_threshold=95, similarity_threshold=50):
 
     hh_hits         = read_hh_hits(hh_hits_file)
     fams_to_export  = hh_hits['Fam'].unique().tolist() # This must be done here, before removing self-hits (some fams might have only self-hits)
