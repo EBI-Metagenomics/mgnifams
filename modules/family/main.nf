@@ -59,6 +59,51 @@ process REFINE_FAMILIES {
     """
 }
 
+process REFINE_FAMILIES_PARALLEL {
+    publishDir "${params.outDir}/families/", mode: "copy"
+    conda "${moduleDir}/environment.yml"
+    
+    input:
+    path(clusters_chunk)
+    path(mgnifams_fasta)
+
+    output:
+    path("seed_msa_sto/*")       , emit: seed_msa_sto
+    path("msa_sto/*")            , emit: msa_sto
+    path("hmm/*")                , emit: hmm
+    path("rf/*")                 , emit: rf
+    path("domtblout/*")          , emit: domtblout
+    path("refined_families/*")   , emit: tsv
+    path("discarded_clusters/*") , emit: discarded
+    path("successful_clusters/*"), emit: successful
+    path("converged_families/*") , emit: converged
+    path("family_metadata/*")    , emit: metadata
+    path("logs/*")               , emit: log
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/refine_families_parallel.py ${clusters_chunk} ${mgnifams_fasta} ${task.cpus}
+    """
+}
+
+process CHUNK_CLUSTERS {
+    conda "${moduleDir}/environment.yml"
+
+    input:
+    path(clusters)
+    path(checked_clusters)
+    val(minimum_members)
+    val(num_cluster_chunks)
+
+    output:
+    path("cluster_chunks/*")
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/chunk_clusters.py ${clusters} ${checked_clusters} ${minimum_members} ${num_cluster_chunks}
+    """
+}
+
 process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     label "venv"
 
@@ -70,6 +115,56 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
 
     script:
     """
-    python3 ${params.scriptDir}/extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta
+    python3 ${params.scriptDir}/family/extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta
+    """
+}
+
+process MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID {
+    label "venv"
+
+    input:
+    tuple val(meta), path(msa_a3m)
+
+    output:
+    path "fam_rep_mapping.csv"
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/map_first_a3m_sequences_to_family_id.py ${msa_a3m} fam_rep_mapping.csv
+    """
+}
+
+process REMOVE_REDUNDANT {
+    publishDir "${params.outDir}/families/", mode: "copy"
+    label "venv"
+
+    input:
+    tuple val(meta), path(hits)
+    path(fam_rep_mapping)
+
+    output:
+    path("non_redundant_fam_ids.txt"), emit: non_redundant_fam_ids
+    path("similarity_edgelist.csv")  , emit: similarity_edgelist
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/remove_redundant.py ${hits} ${fam_rep_mapping}
+    """
+}
+
+process POOL_FAMILY_RESULTS {
+    publishDir "${params.outDir}/", mode: "copy"
+    conda "${moduleDir}/environment.yml"
+
+    input:
+    path(families_dir)
+    path(non_redundant_family_ids)
+
+    output:
+    path("families_pooled")
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/pool_results.py ${families_dir} ${non_redundant_family_ids}
     """
 }

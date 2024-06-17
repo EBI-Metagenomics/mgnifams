@@ -14,10 +14,10 @@ def construct_file_path(base_dir, col_iter, file_column):
     # Mapping file columns to their respective directories
     file_directory = {
         0: "structures/cif",
-        1: "families/seed_msa",
-        2: "families/msa",
-        3: "families/hmm",
-        4: "families/rf",
+        1: "families_pooled/seed_msa",
+        2: "families_pooled/msa",
+        3: "families_pooled/hmm",
+        4: "families_pooled/rf",
         5: "post-processing/biome_results",
         6: "post-processing/domain_results"
     }
@@ -68,10 +68,10 @@ def import_files(conn, base_dir):
         
 
 # Connect to the SQLite database
-conn = sqlite3.connect('/home/vangelis/Desktop/Projects/mgnifams/DB/mgnifams.sqlite3')
+conn = sqlite3.connect('/home/vangelis/Desktop/Projects/mgnifams/DB/mgnifams.sqlite3') # /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/output/tables/mgnifams.sqlite3
 # test_connection(conn)
 
-base_dir ='/home/vangelis/Desktop/Projects/mgnifams/output'  # '/home/vangelis/Desktop/Projects/mgnifams-site-data_backup'
+base_dir = '/home/vangelis/Desktop/Projects/mgnifams/output'  # /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/output
 
 import_files(conn, base_dir)
 
