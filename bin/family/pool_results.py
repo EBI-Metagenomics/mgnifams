@@ -2,6 +2,7 @@ import sys
 import os
 import shutil
 import json
+import pandas as pd
 
 def parse_args():
     global arg_families_dir, arg_non_redundant_fam_ids_file
@@ -79,7 +80,14 @@ def translate_directory(input_dir):
         destination_path = os.path.join(output_folder, new_filename)
         
         shutil.copy(source_path, destination_path)
-        
+
+def translate_edgelist(file_path, out_path):
+    df = pd.read_csv(file_path, header=None)
+    df.columns = ['Col1', 'Col2', 'Col3']
+    df['Col1'] = df['Col1'].map(family_to_id)
+    df['Col2'] = df['Col2'].map(family_to_id)
+    df.to_csv(out_path, index=False, header=False)
+
 def main():
     parse_args()
 
@@ -102,6 +110,8 @@ def main():
     translate_directory('msa_sto')
     translate_directory('seed_msa_sto')
     translate_directory('domtblout')
+    translate_edgelist(os.path.join(arg_families_dir, 'similarity_edgelist.csv'), \
+        os.path.join(outdir, 'similarity_edgelist.csv'))
     
     json_mapping = 'family_to_id.json'
     output_file  = os.path.join(outdir, json_mapping)

@@ -144,7 +144,7 @@ process REMOVE_REDUNDANT {
 
     output:
     path("non_redundant_fam_ids.txt"), emit: non_redundant_fam_ids
-    path("similarity_edgelist.txt")  , emit: similarity_edgelist
+    path("similarity_edgelist.csv")  , emit: similarity_edgelist
 
     script:
     """
