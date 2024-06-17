@@ -22,13 +22,15 @@ def read_rep_to_fam_dict(fam_rep_mapping_file):
 def map_and_remove_self(hh_hits, rep_to_fam_dict):
     hh_hits['Hit'] = hh_hits['Hit'].map(rep_to_fam_dict) # Do the mapping on the df
     hh_hits = hh_hits[hh_hits['Fam'] != hh_hits['Hit']]
+    return hh_hits
 
+def remove_redundant(hh_hits, fam):
+    hh_hits = hh_hits[(hh_hits['Fam'] != fam) & (hh_hits['Hit'] != fam)]
     return hh_hits
 
 def remove_pair(hh_hits, fam, hit):
     hh_hits = hh_hits[(hh_hits['Fam'] != fam) & (hh_hits['Hit'] != hit)]
     hh_hits = hh_hits[(hh_hits['Fam'] != hit) & (hh_hits['Hit'] != fam)]
-
     return hh_hits
 
 def check_similarity_remove_if_redundant(hh_hits, row, \
@@ -45,15 +47,19 @@ def check_similarity_remove_if_redundant(hh_hits, row, \
         if (avg_score1 != avg_score2): # check Score
             if (avg_score1 > avg_score2):
                 fams_to_export.remove(hit)
+                hh_hits = remove_redundant(hh_hits, hit)
             else:
                 fams_to_export.remove(fam)
+                hh_hits = remove_redundant(hh_hits, fam)
         else: # check Cols
             avg_cols1  = hh_hits[(hh_hits['Fam'] == fam) & (hh_hits['Hit'] == hit)]['Cols'].mean()
             avg_cols2  = hh_hits[(hh_hits['Fam'] == hit) & (hh_hits['Hit'] == fam)]['Cols'].mean()
             if (avg_cols1 >= avg_cols2):
                 fams_to_export.remove(hit)
+                hh_hits = remove_redundant(hh_hits, hit)
             else:
                 fams_to_export.remove(fam)
+                hh_hits = remove_redundant(hh_hits, fam)
     elif (avg_prob >= similarity_threshold):
         with open(similarity_edgelist_file, 'a') as f: 
             f.write(f"{fam},{hit},{avg_prob}\n")
