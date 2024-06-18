@@ -97,4 +97,6 @@ if __name__ == "__main__":
 
     non_redundant_fam_ids_file = "non_redundant_fam_ids.txt"
     similarity_edgelist_file   = "similarity_edgelist.csv"
+    with open("similarity_edgelist.csv", "w") as file:
+        pass # init empty
     export_non_redundant_family_ids(sys.argv[1], sys.argv[2], non_redundant_fam_ids_file, similarity_edgelist_file)

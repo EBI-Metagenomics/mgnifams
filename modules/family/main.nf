@@ -26,7 +26,6 @@ process CREATE_CLUSTERS_PKL {
 
 process REFINE_FAMILIES {
     publishDir "${params.outDir}/families/", mode: "copy"
-    
     conda "${moduleDir}/environment.yml"
     
     input:
@@ -59,8 +58,26 @@ process REFINE_FAMILIES {
     """
 }
 
+process CHUNK_CLUSTERS {
+    conda "${moduleDir}/environment.yml"
+
+    input:
+    path(clusters)
+    path(checked_clusters)
+    val(minimum_members)
+    val(num_cluster_chunks)
+
+    output:
+    path("cluster_chunks/*")
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/chunk_clusters.py ${clusters} ${checked_clusters} ${minimum_members} ${num_cluster_chunks}
+    """
+}
+
 process REFINE_FAMILIES_PARALLEL {
-    publishDir "${params.outDir}/families/", mode: "copy"
+    // publishDir "${params.outDir}/families/", mode: "copy"
     conda "${moduleDir}/environment.yml"
     
     input:
@@ -78,7 +95,7 @@ process REFINE_FAMILIES_PARALLEL {
     path("successful_clusters/*"), emit: successful
     path("converged_families/*") , emit: converged
     path("family_metadata/*")    , emit: metadata
-    path("logs/*")               , emit: log
+    path("logs/*")               , emit: logs
 
     script:
     """
@@ -86,21 +103,20 @@ process REFINE_FAMILIES_PARALLEL {
     """
 }
 
-process CHUNK_CLUSTERS {
-    conda "${moduleDir}/environment.yml"
+process MOVE_TO_DIR {
+    label "venv"
 
     input:
-    path(clusters)
-    path(checked_clusters)
-    val(minimum_members)
-    val(num_cluster_chunks)
+    path(files)
+    val(dir_name)
 
     output:
-    path("cluster_chunks/*")
+    path("${dir_name}")
 
     script:
     """
-    python3 ${params.scriptDir}/family/chunk_clusters.py ${clusters} ${checked_clusters} ${minimum_members} ${num_cluster_chunks}
+    mkdir -p ${dir_name}
+    cp -r ${files} ${dir_name}
     """
 }
 
@@ -159,12 +175,13 @@ process POOL_FAMILY_RESULTS {
     input:
     path(families_dir)
     path(non_redundant_family_ids)
+    path(similarity_edgelist)
 
     output:
-    path("families_pooled")
+    path("families")
 
     script:
     """
-    python3 ${params.scriptDir}/family/pool_results.py ${families_dir} ${non_redundant_family_ids}
+    python3 ${params.scriptDir}/family/pool_results.py ${families_dir} ${non_redundant_family_ids}  ${similarity_edgelist}
     """
 }

@@ -27,12 +27,12 @@ workflow REMOVE_REDUNDANCY {
             return folderpath
         }
         .set { hh_db_path_ch }
-    hh_db_path_ch
     hhr_ch     = HHSUITE_HHBLITS(a3m_ch, hh_db_path_ch, db_name).hhr
     hhr_all_ch = COMBINE_HH_RESULTS(hhr_ch)
 
-    mapping = MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID(a3m_ch)
-
-    non_redundant_fam_ids = REMOVE_REDUNDANT(hhr_all_ch, mapping).non_redundant_fam_ids
-    pooled_families = POOL_FAMILY_RESULTS(families_dir, non_redundant_fam_ids)
+    mapping               = MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID(a3m_ch)
+    non_redundant         = REMOVE_REDUNDANT(hhr_all_ch, mapping)
+    non_redundant_fam_ids = non_redundant.non_redundant_fam_ids
+    similarity_edgelist   = non_redundant.similarity_edgelist
+    pooled_families       = POOL_FAMILY_RESULTS(families_dir, non_redundant_fam_ids, similarity_edgelist)
 }

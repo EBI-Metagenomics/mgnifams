@@ -5,14 +5,15 @@ import json
 import pandas as pd
 
 def parse_args():
-    global arg_families_dir, arg_non_redundant_fam_ids_file
+    global arg_families_dir, arg_non_redundant_fam_ids_file, arg_similarity_edgelist
         
-    if not (len(sys.argv) == 3):
+    if not (len(sys.argv) == 4):
         print("Incorrect number of args.")
         sys.exit(1)
 
     arg_families_dir               = sys.argv[1]
     arg_non_redundant_fam_ids_file = sys.argv[2]
+    arg_similarity_edgelist        = sys.argv[3]
 
 def read_non_redundant_fam_ids(file_path):
     with open(file_path, 'r') as file:
@@ -82,6 +83,10 @@ def translate_directory(input_dir):
         shutil.copy(source_path, destination_path)
 
 def translate_edgelist(file_path, out_path):
+    if os.path.getsize(file_path) == 0:
+        shutil.copy(file_path, out_path)
+        return
+
     df = pd.read_csv(file_path, header=None)
     df.columns = ['Col1', 'Col2', 'Col3']
     df['Col1'] = df['Col1'].map(family_to_id)
@@ -93,7 +98,7 @@ def main():
 
     global outdir, non_redundant_fam_ids, family_to_id
 
-    outdir = "families_pooled"
+    outdir = "families"
     os.makedirs(outdir, exist_ok=True)
 
     non_redundant_fam_ids = read_non_redundant_fam_ids(arg_non_redundant_fam_ids_file)
@@ -110,7 +115,7 @@ def main():
     translate_directory('msa_sto')
     translate_directory('seed_msa_sto')
     translate_directory('domtblout')
-    translate_edgelist(os.path.join(arg_families_dir, 'similarity_edgelist.csv'), \
+    translate_edgelist(arg_similarity_edgelist, \
         os.path.join(outdir, 'similarity_edgelist.csv'))
     
     json_mapping = 'family_to_id.json'
