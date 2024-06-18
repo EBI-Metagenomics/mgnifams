@@ -173,15 +173,25 @@ process POOL_FAMILY_RESULTS {
     conda "${moduleDir}/environment.yml"
 
     input:
-    path(families_dir)
-    path(non_redundant_family_ids)
-    path(similarity_edgelist)
+    path seed_msa_sto_ch, stageAs: "families_prepooled/seed_msa_sto/*"
+    path msa_sto_ch     , stageAs: "families_prepooled/msa_sto/*"
+    path hmm_ch         , stageAs: "families_prepooled/hmm/*"
+    path rf_ch          , stageAs: "families_prepooled/rf/*"
+    path domtblout_ch   , stageAs: "families_prepooled/domtblout/*"
+    path tsv_ch         , stageAs: "families_prepooled/refined_families/*"
+    path discarded_ch   , stageAs: "families_prepooled/discarded_clusters/*"
+    path successful_ch  , stageAs: "families_prepooled/successful_clusters/*"
+    path converged_ch   , stageAs: "families_prepooled/converged_families/*"
+    path metadata_ch    , stageAs: "families_prepooled/family_metadata/*"
+    path logs_ch        , stageAs: "families_prepooled/logs/*"
+    path non_redundant_family_ids
+    path similarity_edgelist
 
     output:
     path("families")
 
     script:
     """
-    python3 ${params.scriptDir}/family/pool_results.py ${families_dir} ${non_redundant_family_ids}  ${similarity_edgelist}
+    python3 ${params.scriptDir}/family/pool_results.py families_prepooled ${non_redundant_family_ids}  ${similarity_edgelist}
     """
 }

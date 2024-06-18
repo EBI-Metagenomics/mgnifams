@@ -10,11 +10,21 @@ include { POOL_FAMILY_RESULTS                  } from "${params.moduleDir}/famil
 
 workflow REMOVE_REDUNDANCY {
     take:
+    seed_msa_sto_dir
     seed_msa_sto_ch
-    families_dir
+    msa_sto_ch
+    hmm_ch
+    rf_ch
+    domtblout_ch
+    tsv_ch
+    discarded_ch
+    successful_ch
+    converged_ch
+    metadata_ch
+    logs_ch
 
     main:
-    a3m_ch  = HHSUITE_REFORMAT(seed_msa_sto_ch, "sto", "a3m").fa
+    a3m_ch  = HHSUITE_REFORMAT(seed_msa_sto_dir, "sto", "a3m").fa
     db_name = a3m_ch.map { meta, folderpath ->
         path_str = folderpath.toString()
         parts = path_str.split('/')
@@ -34,5 +44,8 @@ workflow REMOVE_REDUNDANCY {
     non_redundant         = REMOVE_REDUNDANT(hhr_all_ch, mapping)
     non_redundant_fam_ids = non_redundant.non_redundant_fam_ids
     similarity_edgelist   = non_redundant.similarity_edgelist
-    pooled_families       = POOL_FAMILY_RESULTS(families_dir, non_redundant_fam_ids, similarity_edgelist)
+    pooled_families       = POOL_FAMILY_RESULTS(seed_msa_sto_ch, \
+        msa_sto_ch, hmm_ch, rf_ch, domtblout_ch, tsv_ch, \
+        discarded_ch, successful_ch, converged_ch, \
+        metadata_ch, logs_ch, non_redundant_fam_ids, similarity_edgelist)
 }
