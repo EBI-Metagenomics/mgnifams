@@ -9,6 +9,6 @@ process EXPORT_MGNIFAMS_CSV {
     path "tables"
 
     """
-    python3 ${params.scriptDir}/export_mgnifams_csvs.py ${out_dir}
+    python3 ${params.scriptDir}/export_mgnifams_csvs.py ${out_dir} families
     """
 }

@@ -6,25 +6,15 @@ include { HHSUITE_HHBLITS                      } from "${params.moduleDir}/hhsui
 include { COMBINE_HH_RESULTS                   } from "${params.moduleDir}/hhsuite/combine_hh_results.nf"
 include { MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID } from "${params.moduleDir}/family/main.nf"
 include { REMOVE_REDUNDANT                     } from "${params.moduleDir}/family/main.nf"
-include { POOL_FAMILY_RESULTS                  } from "${params.moduleDir}/family/main.nf"
+include { POOL_FAMILY_RESULTS_FROM_FOLDER      } from "${params.moduleDir}/family/main.nf"
 
 workflow REMOVE_REDUNDANCY {
     take:
-    seed_msa_sto_dir
     seed_msa_sto_ch
-    msa_sto_ch
-    hmm_ch
-    rf_ch
-    domtblout_ch
-    tsv_ch
-    discarded_ch
-    successful_ch
-    converged_ch
-    metadata_ch
-    logs_ch
+    families_dir
 
     main:
-    a3m_ch  = HHSUITE_REFORMAT(seed_msa_sto_dir, "sto", "a3m").fa
+    a3m_ch  = HHSUITE_REFORMAT(seed_msa_sto_ch, "sto", "a3m").fa
     db_name = a3m_ch.map { meta, folderpath ->
         path_str = folderpath.toString()
         parts = path_str.split('/')
@@ -44,8 +34,5 @@ workflow REMOVE_REDUNDANCY {
     non_redundant         = REMOVE_REDUNDANT(hhr_all_ch, mapping)
     non_redundant_fam_ids = non_redundant.non_redundant_fam_ids
     similarity_edgelist   = non_redundant.similarity_edgelist
-    pooled_families       = POOL_FAMILY_RESULTS(seed_msa_sto_ch, \
-        msa_sto_ch, hmm_ch, rf_ch, domtblout_ch, tsv_ch, \
-        discarded_ch, successful_ch, converged_ch, \
-        metadata_ch, logs_ch, non_redundant_fam_ids, similarity_edgelist)
+    pooled_families       = POOL_FAMILY_RESULTS_FROM_FOLDER(families_dir, non_redundant_fam_ids, similarity_edgelist)
 }
