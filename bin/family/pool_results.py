@@ -5,15 +5,17 @@ import json
 import pandas as pd
 
 def parse_args():
-    global arg_families_dir, arg_non_redundant_fam_ids_file, arg_similarity_edgelist
+    global arg_families_dir, arg_out_dir, \
+        arg_non_redundant_fam_ids_file, arg_similarity_edgelist
         
-    if not (len(sys.argv) == 4):
+    if not (len(sys.argv) == 5):
         print("Incorrect number of args.")
         sys.exit(1)
 
     arg_families_dir               = sys.argv[1]
-    arg_non_redundant_fam_ids_file = sys.argv[2]
-    arg_similarity_edgelist        = sys.argv[3]
+    arg_out_dir                    = sys.argv[2]
+    arg_non_redundant_fam_ids_file = sys.argv[3]
+    arg_similarity_edgelist        = sys.argv[4]
 
 def read_non_redundant_fam_ids(file_path):
     with open(file_path, 'r') as file:
@@ -28,7 +30,7 @@ def create_mapping_dict():
     
 def pool_directory(input_dir, output_filename, splitChar):
     path_to_folder = os.path.join(arg_families_dir, input_dir)
-    output_file    = os.path.join(outdir, output_filename)    
+    output_file    = os.path.join(arg_out_dir, output_filename)    
     
     with open(output_file, 'w') as outfile:
         for filename in os.listdir(path_to_folder):
@@ -56,7 +58,7 @@ def pool_directory(input_dir, output_filename, splitChar):
 
 def pool_clusters_directory(input_dir, output_filename):
     path_to_folder = os.path.join(arg_families_dir, input_dir)
-    output_file    = os.path.join(outdir, output_filename)
+    output_file    = os.path.join(arg_out_dir, output_filename)
     
     with open(output_file, 'w') as outfile:
         for filename in os.listdir(path_to_folder):
@@ -68,8 +70,8 @@ def pool_clusters_directory(input_dir, output_filename):
 
 def translate_directory(input_dir):
     input_folder  = os.path.join(arg_families_dir, input_dir)
-    os.makedirs(os.path.join(outdir, input_dir), exist_ok=True)
-    output_folder = os.path.join(outdir, input_dir)
+    os.makedirs(os.path.join(arg_out_dir, input_dir), exist_ok=True)
+    output_folder = os.path.join(arg_out_dir, input_dir)
 
     filenames = os.listdir(input_folder)
     for filename in filenames:
@@ -96,10 +98,9 @@ def translate_edgelist(file_path, out_path):
 def main():
     parse_args()
 
-    global outdir, non_redundant_fam_ids, family_to_id
+    global non_redundant_fam_ids, family_to_id
 
-    outdir = "families"
-    os.makedirs(outdir, exist_ok=True)
+    os.makedirs(arg_out_dir, exist_ok=True)
 
     non_redundant_fam_ids = read_non_redundant_fam_ids(arg_non_redundant_fam_ids_file)
     family_to_id          = create_mapping_dict()
@@ -116,10 +117,10 @@ def main():
     translate_directory('seed_msa_sto')
     translate_directory('domtblout')
     translate_edgelist(arg_similarity_edgelist, \
-        os.path.join(outdir, 'similarity_edgelist.csv'))
+        os.path.join(arg_out_dir, 'similarity_edgelist.csv'))
     
     json_mapping = 'family_to_id.json'
-    output_file  = os.path.join(outdir, json_mapping)
+    output_file  = os.path.join(arg_out_dir, json_mapping)
     with open(output_file, 'w') as f:
         json.dump(family_to_id, f)
 

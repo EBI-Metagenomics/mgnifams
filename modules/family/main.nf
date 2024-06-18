@@ -188,11 +188,21 @@ process POOL_FAMILY_RESULTS {
     path similarity_edgelist
 
     output:
-    path("families")
+    path("families/seed_msa_sto/*")         , emit: seed_msa_sto
+    path("families/msa_sto/*")              , emit: msa_sto
+    path("families/hmm/*")                  , emit: hmm
+    path("families/rf/*")                   , emit: rf
+    path("families/domtblout/*")            , emit: domtblout
+    path("families/refined_families.tsv")   , emit: tsv
+    path("families/discarded_clusters.txt") , emit: discarded
+    path("families/successful_clusters.txt"), emit: successful
+    path("families/converged_families.txt") , emit: converged
+    path("families/family_metadata.csv")    , emit: metadata
+    path("families/family_to_id.json")      , emit: id_mapping
 
     script:
     """
-    python3 ${params.scriptDir}/family/pool_results.py families_prepooled ${non_redundant_family_ids}  ${similarity_edgelist}
+    python3 ${params.scriptDir}/family/pool_results.py families_prepooled families ${non_redundant_family_ids} ${similarity_edgelist}
     """
 }
 
