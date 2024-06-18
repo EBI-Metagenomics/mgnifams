@@ -29,9 +29,9 @@ def initiate_output_csvs(mgnifams_out_dir, output_dir):
         writer = csv.writer(file)
         writer.writerow(mgnifam_folds_headers)
 
-def read_family_metadata(mgnifams_out_dir):
+def read_family_metadata(mgnifams_out_dir, families_dir_name):
     column_names = ['family', 'size', 'protein_rep', 'region']
-    family_metadata_df = pd.read_csv(os.path.join(mgnifams_out_dir, "families_pooled/family_metadata.csv"), header=None, names=column_names)
+    family_metadata_df = pd.read_csv(os.path.join(mgnifams_out_dir, families_dir_name, "family_metadata.csv"), header=None, names=column_names)
     return family_metadata_df
 
 def read_structure_scores(mgnifams_out_dir):
@@ -39,8 +39,8 @@ def read_structure_scores(mgnifams_out_dir):
     structure_scores_df = pd.read_csv(os.path.join(mgnifams_out_dir, "structures/pdb_scores.csv"), header=None, names=column_names)
     return structure_scores_df
 
-def get_converged_families(mgnifams_out_dir):
-    with open(os.path.join(mgnifams_out_dir, 'families_pooled', 'converged_families.txt'), 'r') as file:
+def get_converged_families(mgnifams_out_dir, families_dir_name):
+    with open(os.path.join(mgnifams_out_dir, families_dir_name, 'converged_families.txt'), 'r') as file:
         converged_families = {line.strip() for line in file}
 
         return converged_families
@@ -89,8 +89,8 @@ def parse_protein_region(protein_id):
 
     return protein, region
 
-def write_mgnifam_proteins(mgnifams_out_dir, output_dir):
-    refined_families_file = os.path.join(mgnifams_out_dir, 'families_pooled', 'refined_families.tsv')
+def write_mgnifam_proteins(mgnifams_out_dir, families_dir_name, output_dir):
+    refined_families_file = os.path.join(mgnifams_out_dir, families_dir_name, 'refined_families.tsv')
     mgnifam_proteins_csv_path = os.path.join(output_dir, 'mgnifam_proteins.csv')
 
     with open(refined_families_file, 'r') as file, open(mgnifam_proteins_csv_path, 'a', newline='') as csv_file:
@@ -166,23 +166,24 @@ def write_mgnifam_folds(mgnifams_out_dir, output_dir):
         writer.writerows(structural_annotations)
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python bin/export_mgnifams_csvs.py <mgnifams_out_dir>")
+    if len(sys.argv) != 3:
+        print("Usage: python bin/export_mgnifams_csvs.py <mgnifams_out_dir> <families_dir_name>")
         sys.exit(1)
 
-    mgnifams_out_dir = sys.argv[1]
-    output_dir       = 'tables'
+    mgnifams_out_dir  = sys.argv[1]
+    families_dir_name = sys.argv[2]
+    output_dir        = 'tables'
     os.makedirs(output_dir, exist_ok=True)
 
     initiate_output_csvs(mgnifams_out_dir, output_dir)
-    family_metadata_df  = read_family_metadata(mgnifams_out_dir)
+    family_metadata_df  = read_family_metadata(mgnifams_out_dir, families_dir_name)
     structure_scores_df = read_structure_scores(mgnifams_out_dir)
-    converged_families  = get_converged_families(mgnifams_out_dir)
+    converged_families  = get_converged_families(mgnifams_out_dir, families_dir_name)
 
     for family_id in family_metadata_df['family']:
         write_mgnifam(family_id, mgnifams_out_dir, output_dir, family_metadata_df, structure_scores_df, converged_families)
         
-    write_mgnifam_proteins(mgnifams_out_dir, output_dir)
+    write_mgnifam_proteins(mgnifams_out_dir, families_dir_name, output_dir)
     write_mgnifam_pfams(mgnifams_out_dir, output_dir)
     write_mgnifam_folds(mgnifams_out_dir, output_dir)
 
