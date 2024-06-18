@@ -195,3 +195,21 @@ process POOL_FAMILY_RESULTS {
     python3 ${params.scriptDir}/family/pool_results.py families_prepooled ${non_redundant_family_ids}  ${similarity_edgelist}
     """
 }
+
+process POOL_FAMILY_RESULTS_FROM_FOLDER {
+    publishDir "${params.outDir}/", mode: "copy"
+    conda "${moduleDir}/environment.yml"
+
+    input:
+    path(families_dir)
+    path(non_redundant_family_ids)
+    path(similarity_edgelist)
+
+    output:
+    path("families_pooled")
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/pool_results.py ${families_dir} ${non_redundant_family_ids} ${similarity_edgelist}
+    """
+}
