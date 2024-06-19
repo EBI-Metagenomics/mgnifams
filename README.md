@@ -11,9 +11,9 @@ nextflow run main.nf -c conf/end-to-end.config -profile local
 
 ![alt text](images/end-to-end.jpg)
 
-The end-to-end MGnifams pipeline chains the subworkflows of three thematically different workflows; setup_clusters, generate_families and annotate_families. Running the whole end-to-end pipeline in one step is not realistic with the current number of input sequences, due to the lengthy execution of the generate_families subworkflow. This would find use for estimated input sets of 1-10M sequences instead of 700M. After the pipeline finishes, the export_data workflow must be executed to produce all necessary CSV files to be then imported in an sqlite database (mgnifams.sqlite3). Following, the bin/helper/append_blobs_sqlite.py must be run, to append all blob file items to the db. Then, the db must be copied to either the mgnifams-site repo for local testing, or directly to ifs (/nfs/public/rw/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
+The end-to-end MGnifams pipeline chains the subworkflows of three thematically different workflows; setup_clusters, generate_nonredundant_families and annotate_families. After the pipeline finishes, the export_data workflow must be executed to produce all necessary CSV files to be then imported in an sqlite database (mgnifams.sqlite3). Following, the bin/helper/append_blobs_sqlite.py must be run, to append all blob file items to the db. Then, the db must be copied to either the mgnifams-site repo for local testing, or directly to ifs (/nfs/public/rw/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
-A more realistic scenario is breaking the MGnifams pipeline into four main workflows (each consisting of its respective same-coloured subworkflows below) and executing them one after the other as shown below:
+Another option is running the MGnifams pipeline’s four main workflows sequentially, each consisting of its respective same-coloured subworkflows below:
 
 ![alt text](images/workflows.png)
 
@@ -22,6 +22,12 @@ After the export_data produces all necessary output tables, do the following:
 * append blobs to db  
 * copy db to site/ifs  
 * host online with k8s  
+
+To run workflows other than the main.nf in the root directory of the project, an environment variable must be set for the latest versions of Nextflow:
+
+export NXF_SINGULARITY_HOME_MOUNT=true
+
+“Changed in version 23.07.0-edge: Nextflow no longer mounts the home directory when launching an Apptainer container. To re-enable the old behavior, set the environment variable NXF_APPTAINER_HOME_MOUNT to true.“ https://nextflow.io/docs/latest/container.html
 
 ### 1. setup_clusters
 
@@ -34,18 +40,14 @@ This is the first workflow to be executed before the main family generation. It 
 
 The initial input for this pipeline is the output file of the protein-landing-page data generation pipeline, sequence_explorer_protein.csv (e.g., /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv). In case this file is compressed, there are two different decompression modes available; gz and bz2. Set the --compress_mode parameter accordingly. Then, the known pfam domains are sliced off from proteins and we filter the remaining proteins to be above a given length threshold with the min_sequence_length parameter (e.g., >=100 AA).
 
-### 2. generate_families
+### 2. generate_nonredundant_families
 
 slurm:  
-nextflow run workflows/generate_families/main.nf -profile slurm -with-tower -resume  
+nextflow run workflows/generate_nonredundant_families/main.nf -profile slurm -with-tower -resume  
 local:  
-nextflow run workflows/generate_families/main.nf -profile local  
+nextflow run workflows/generate_nonredundant_families/main.nf -profile local  
 
-This workflow is the essence of MGnifams and is responsible for converting initial clusters into legit protein families. First, a pkl file is created for the clusters to be checked, for bookkeeping purposes. Then, along with the mgnifams_input.fa file they are fed into the bin/family/refine_families.py script, which iteratively recruits sequences in the families, starting from the largest family towards the smallest (minimum_members threshold 50).
-
-#### Restart strategy
-
-To continue from where the last family finished on the server execution, all updated_* files must be manually copied/moved from the work folder to the output/families directory (e.g., /nfs/production/rdf/metagenomics/users/vangelis/mgnifams/output/families). After removing or renaming (for backup) the old files there, the new ones must be renamed to the respective files without the udpated_ part. Also, make sure that the “iteration” parameter in nextflow.config in the generate_families subworkflow is set to the numeric value of the last properly checked family (e.g., if last generated family is 111, set the iteration param to 111). Add -resume to nextflow run, so the pkl generation module is not executed again.
+This workflow is the essence of MGnifams and is responsible for converting initial clusters into nonredundant protein families. The clusters from the previous workflow are chunked (minimum_members threshold=50, for clusters to keep) and then, along with the mgnifams_input.fa file they are fed into the generate_families_parallel subworkflow, which iteratively recruits sequences in the families, for each clusters’ chunk. The results are then pooled and checked for redundancy via the remove_redundancy subworkflow. To achieve that, an hhsuite compatible database is created, incorporating all families, and then through hhblits, redundant families are removed (prob > 95) or a similarity edge is created if (prob > 50). The remaining families are then assigned a unique integer ID.
 
 ### 3. annotate_families
 
