@@ -11,7 +11,7 @@ workflow GENERATE_FAMILIES_PARALLEL {
 
     main:
     clusters_chunks  = CHUNK_CLUSTERS(clusters_tsv, checked_clusters, params.minimum_members, params.num_cluster_chunks)
-    refined_families = REFINE_FAMILIES_PARALLEL(clusters_chunks.flatten(), mgnifams_fasta)
+    refined_families = REFINE_FAMILIES_PARALLEL(clusters_chunks.flatten(), mgnifams_fasta.first())
     
     emit:
     seed_msa_sto = refined_families.seed_msa_sto

@@ -9,24 +9,51 @@ if (params.help) {
 validateParameters()
 log.info paramsSummaryLog(workflow)
 
-include { PREPROCESS_INPUT                      } from "${projectDir}/subworkflows/preprocess_input/main.nf"
-include { INITIATE_PROTEINS                     } from "${projectDir}/subworkflows/initiate_proteins/main.nf"
-include { EXECUTE_CLUSTERING                    } from "${projectDir}/subworkflows/execute_clustering/main.nf"
-include { GENERATE_FAMILIES_ALL                 } from "${projectDir}/subworkflows/generate_families_all/main.nf"
+// setup_clusters
+include { PREPROCESS_INPUT   } from "${projectDir}/subworkflows/preprocess_input/main.nf"
+include { INITIATE_PROTEINS  } from "${projectDir}/subworkflows/initiate_proteins/main.nf"
+include { EXECUTE_CLUSTERING } from "${projectDir}/subworkflows/execute_clustering/main.nf"
+
+// generate_nonredundant_families
+include { GENERATE_FAMILIES_PARALLEL } from "${projectDir}/subworkflows/generate_families_parallel/main.nf"
+include { MOVE_TO_DIR                } from "${projectDir}/modules/family/main.nf"
+include { REMOVE_REDUNDANCY          } from "${projectDir}/subworkflows/remove_redundancy/main.nf"
+
+// annotate_families
 include { REFORMAT_MSA as REFORMAT_SEED_MSA     } from "${projectDir}/subworkflows/reformat_msa/main.nf"
 include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA } from "${projectDir}/subworkflows/reformat_msa/main.nf"
 include { ANNOTATE_MODELS                       } from "${projectDir}/subworkflows/annotate_models/main.nf"
 include { PREDICT_STRUCTURES                    } from "${projectDir}/subworkflows/predict_structures/main.nf"
 include { ANNOTATE_STRUCTURES                   } from "${projectDir}/subworkflows/annotate_structures/main.nf"
 
-workflow {
-    preprocessed_sequence_explorer_protein_ch = PREPROCESS_INPUT(params.sequence_explorer_protein_path, params.compress_mode).preprocessed_sequence_explorer_protein_ch
-    fasta_ch                                  = INITIATE_PROTEINS( preprocessed_sequence_explorer_protein_ch ).fasta_ch
-    clusters                                  = EXECUTE_CLUSTERING( fasta_ch )
-    clusters_tsv                              = clusters.clusters_tsv.map { meta, filepath -> filepath }
-    starting_num_sequences                    = clusters.num_sequences
-    generated_families                        = GENERATE_FAMILIES_ALL(clusters_tsv, fasta_ch, starting_num_sequences)
+// export_data
+// TODO
 
+workflow {
+    // setup_clusters
+    processed_input_protein_ch = PREPROCESS_INPUT(params.sequence_explorer_protein_path, params.compress_mode).processed_input_protein_ch
+    mgnifams_input_fasta_ch    = INITIATE_PROTEINS( processed_input_protein_ch ).fasta_ch
+    clusters                   = EXECUTE_CLUSTERING( mgnifams_input_fasta_ch )
+    clusters_tsv               = clusters.clusters_tsv.map { meta, filepath -> filepath }
+
+    // generate_nonredundant_families
+    families_ch = GENERATE_FAMILIES_PARALLEL( clusters_tsv, [], mgnifams_input_fasta_ch)
+
+    seed_msa_sto_ch = families_ch.seed_msa_sto.collect()
+    seed_msa_sto_dir = MOVE_TO_DIR(seed_msa_sto_ch, "seed_msa_sto")
+    seed_msa_sto_dir
+        .map { filepath ->
+            return [ [id:"remove_redundancy"], file(filepath) ]
+        }
+        .set { seed_msa_sto_dir }
+        
+    generated_families = REMOVE_REDUNDANCY(seed_msa_sto_dir, seed_msa_sto_ch, \
+        families_ch.msa_sto.collect(), families_ch.hmm.collect(), \
+        families_ch.rf.collect(), families_ch.domtblout.collect(), families_ch.tsv.collect(), \
+        families_ch.discarded.collect(), families_ch.successful.collect(), families_ch.converged.collect(), \
+        families_ch.metadata.collect(), families_ch.logs.collect())
+
+    // annotate_families
     generated_families.seed_msa_sto
         .map { files ->
             String filePath = files[0]
@@ -50,4 +77,7 @@ workflow {
     ANNOTATE_MODELS( fa_seed_msa_ch )
     pdb_ch = PREDICT_STRUCTURES(hmmalign_msa_ch).pdb_ch
     ANNOTATE_STRUCTURES(pdb_ch)
+
+    // export_data
+    // TODO
 }
