@@ -27,7 +27,9 @@ def remove_clusters(df, removal_file):
     Returns:
     pl.DataFrame: The filtered DataFrame with specified clusters removed.
     """
-    if os.path.getsize(removal_file) == 0:
+    if (removal_file == '0'): # default code when no file is provided
+        return df
+    if os.path.getsize(removal_file) == 0: # if file provided, but empty
         return df
 
     # Read the removal file into a Polars DataFrame

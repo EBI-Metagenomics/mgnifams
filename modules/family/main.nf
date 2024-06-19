@@ -71,6 +71,7 @@ process CHUNK_CLUSTERS {
     path("cluster_chunks/*")
 
     script:
+    def checked_clusters = "${checked_clusters}" ?: 0
     """
     python3 ${params.scriptDir}/family/chunk_clusters.py ${clusters} ${checked_clusters} ${minimum_members} ${num_cluster_chunks}
     """
