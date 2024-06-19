@@ -15,8 +15,8 @@ workflow PREPROCESS_INPUT {
     } else if (compress_mode == 'bz2') {
         sequence_explorer_protein_ch = DECOMPRESS_BZ2(sequence_explorer_protein_ch)
     }
-    preprocessed_sequence_explorer_protein_ch = REMOVE_HEADER(sequence_explorer_protein_ch)
+    processed_input_protein_ch = REMOVE_HEADER(sequence_explorer_protein_ch)
 
     emit:
-    preprocessed_sequence_explorer_protein_ch
+    processed_input_protein_ch
 }

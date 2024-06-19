@@ -65,12 +65,11 @@
                 "minimum_members": {
                     "type": "integer",
                     "default": 50,
-                    "description": "generate_families"
+                    "description": "chunk_clusters"
                 },
-                "iteration": {
+                "num_cluster_chunks": {
                     "type": "integer",
-                    "default": 0,
-                    "description": "generate_families"
+                    "description": "chunk_clusters"
                 },
                 "db_name": {
                     "type": "string",
@@ -98,6 +97,7 @@
                 "min_sequence_length",
                 "input_csv_chunk_size",
                 "minimum_members",
+                "num_cluster_chunks",
                 "db_name",
                 "hh_mode",
                 "pdb_chunk_size",
