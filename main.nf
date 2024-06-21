@@ -40,7 +40,6 @@ workflow {
     // generate_nonredundant_families
     families_ch = GENERATE_FAMILIES_PARALLEL( clusters_tsv, [], mgnifams_input_fasta_ch)
 
-    // Start flag_transmembrane
     msa_sto_ch = families_ch.msa_sto.collect()
     msa_sto_ch
         .map { files ->
@@ -48,49 +47,46 @@ workflow {
         }
         .set { tm_msa_ch }
     
-
     tm_ids_ch = FLAG_TRANSMEMBRANE(tm_msa_ch)
-    tm_ids_ch.view()
-    // End flag_transmembrane
     
-    // seed_msa_sto_ch = families_ch.seed_msa_sto.collect()
-    // seed_msa_sto_dir = MOVE_TO_DIR(seed_msa_sto_ch, "seed_msa_sto")
-    // seed_msa_sto_dir
-    //     .map { filepath ->
-    //         return [ [id:"remove_redundancy"], file(filepath) ]
-    //     }
-    //     .set { seed_msa_sto_dir }
+    seed_msa_sto_ch = families_ch.seed_msa_sto.collect()
+    seed_msa_sto_dir = MOVE_TO_DIR(seed_msa_sto_ch, "seed_msa_sto")
+    seed_msa_sto_dir
+        .map { filepath ->
+            return [ [id:"remove_redundancy"], file(filepath) ]
+        }
+        .set { seed_msa_sto_dir }
         
-    // generated_families = REMOVE_REDUNDANCY(seed_msa_sto_dir, seed_msa_sto_ch, \
-    //     families_ch.msa_sto.collect(), families_ch.hmm.collect(), \
-    //     families_ch.rf.collect(), families_ch.domtblout.collect(), families_ch.tsv.collect(), \
-    //     families_ch.discarded.collect(), families_ch.successful.collect(), families_ch.converged.collect(), \
-    //     families_ch.metadata.collect(), families_ch.logs.collect())
+    generated_families = REMOVE_REDUNDANCY(seed_msa_sto_dir, seed_msa_sto_ch, \
+        msa_sto_ch, families_ch.hmm.collect(), \
+        families_ch.rf.collect(), families_ch.domtblout.collect(), families_ch.tsv.collect(), \
+        families_ch.discarded.collect(), families_ch.successful.collect(), families_ch.converged.collect(), \
+        families_ch.metadata.collect(), families_ch.logs.collect(), tm_ids_ch)
 
-    // // annotate_families
-    // generated_families.seed_msa_sto
-    //     .map { files ->
-    //         String filePath = files[0]
-    //         int lastIndex = filePath.lastIndexOf('/')
-    //         String seed_msa_dir = filePath.substring(0, lastIndex + 1)
-    //         return [ [id:"seed_msa"], file(seed_msa_dir) ]
-    //     }
-    //     .set { seed_msa_ch }
+    // annotate_families
+    generated_families.seed_msa_sto
+        .map { files ->
+            String filePath = files[0]
+            int lastIndex = filePath.lastIndexOf('/')
+            String seed_msa_dir = filePath.substring(0, lastIndex + 1)
+            return [ [id:"seed_msa"], file(seed_msa_dir) ]
+        }
+        .set { seed_msa_ch }
     
-    // generated_families.msa_sto
-    //     .map { files ->
-    //         String filePath = files[0]
-    //         int lastIndex = filePath.lastIndexOf('/')
-    //         String msa_dir = filePath.substring(0, lastIndex + 1)
-    //         return [ [id:"msa"], file(msa_dir) ]
-    //     }
-    //     .set { hmmalign_msa_ch }
+    generated_families.msa_sto
+        .map { files ->
+            String filePath = files[0]
+            int lastIndex = filePath.lastIndexOf('/')
+            String msa_dir = filePath.substring(0, lastIndex + 1)
+            return [ [id:"msa"], file(msa_dir) ]
+        }
+        .set { hmmalign_msa_ch }
 
-    // fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
-    // REFORMAT_HMMALIGN_MSA( hmmalign_msa_ch )
-    // ANNOTATE_MODELS( fa_seed_msa_ch )
-    // pdb_ch = PREDICT_STRUCTURES(hmmalign_msa_ch).pdb_ch
-    // ANNOTATE_STRUCTURES(pdb_ch)
+    fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
+    REFORMAT_HMMALIGN_MSA( hmmalign_msa_ch )
+    ANNOTATE_MODELS( fa_seed_msa_ch )
+    pdb_ch = PREDICT_STRUCTURES(hmmalign_msa_ch).pdb_ch
+    ANNOTATE_STRUCTURES(pdb_ch)
 
     // export_data
     // TODO

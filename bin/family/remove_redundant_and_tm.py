@@ -24,6 +24,16 @@ def map_and_remove_self(hh_hits, rep_to_fam_dict):
     hh_hits = hh_hits[hh_hits['Fam'] != hh_hits['Hit']]
     return hh_hits
 
+def remove_tm(hh_hits, fams_to_export, tm_ids_file):
+    tm_ids = []
+    with open(tm_ids_file, 'r') as file:
+        for line in file:
+            tm_ids.append(line.strip())
+
+    hh_hits        = hh_hits[~hh_hits['Fam'].isin(tm_ids) & ~hh_hits['Hit'].isin(tm_ids)]
+    fams_to_export = [value for value in fams_to_export if value not in tm_ids]
+    return hh_hits, fams_to_export
+
 def remove_redundant(hh_hits, fam):
     hh_hits = hh_hits[(hh_hits['Fam'] != fam) & (hh_hits['Hit'] != fam)]
     return hh_hits
@@ -72,14 +82,15 @@ def write_non_redundant_fam_ids(fams_to_export):
         for id in fams_to_export:
             f.write(f"{id}\n")
 
-def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
+def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, tm_ids_file, \
     non_redundant_fam_ids_file, similarity_edgelist_file, \
     redundant_threshold=95, similarity_threshold=50):
 
-    hh_hits         = read_hh_hits(hh_hits_file)
-    fams_to_export  = hh_hits['Fam'].unique().tolist() # This must be done here, before removing self-hits (some fams might have only self-hits)
-    rep_to_fam_dict = read_rep_to_fam_dict(fam_rep_mapping_file)
-    hh_hits         = map_and_remove_self(hh_hits, rep_to_fam_dict)
+    hh_hits                 = read_hh_hits(hh_hits_file)
+    fams_to_export          = hh_hits['Fam'].unique().tolist() # This must be done here, before removing self-hits (some fams might have only self-hits)
+    rep_to_fam_dict         = read_rep_to_fam_dict(fam_rep_mapping_file)
+    hh_hits                 = map_and_remove_self(hh_hits, rep_to_fam_dict)
+    hh_hits, fams_to_export = remove_tm(hh_hits, fams_to_export, tm_ids_file)
     
     i = 0
     while len(hh_hits) > i:
@@ -91,12 +102,12 @@ def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
     write_non_redundant_fam_ids(fams_to_export)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python remove_redundant.py <hh_hits> <fam_rep_mapping> <output_fam_ids>")
+    if len(sys.argv) != 4:
+        print("Usage: python remove_redundant.py <hh_hits> <fam_rep_mapping> <output_fam_ids> <tm_ids_file>")
         sys.exit(1)
 
     non_redundant_fam_ids_file = "non_redundant_fam_ids.txt"
     similarity_edgelist_file   = "similarity_edgelist.csv"
     with open("similarity_edgelist.csv", "w") as file:
         pass # init empty
-    export_non_redundant_family_ids(sys.argv[1], sys.argv[2], non_redundant_fam_ids_file, similarity_edgelist_file)
+    export_non_redundant_family_ids(sys.argv[1], sys.argv[2], sys.argv[3], non_redundant_fam_ids_file, similarity_edgelist_file)

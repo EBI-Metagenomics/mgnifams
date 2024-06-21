@@ -169,7 +169,7 @@ process MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID {
     """
 }
 
-process REMOVE_REDUNDANT {
+process REMOVE_REDUNDANT_AND_TM {
     publishDir "${params.outDir}/families/", mode: "copy"
     tag "$meta.id"
     label "venv"
@@ -177,6 +177,7 @@ process REMOVE_REDUNDANT {
     input:
     tuple val(meta), path(hits)
     path(fam_rep_mapping)
+    tuple val(meta2), path(tm_ids_ch)
 
     output:
     path("non_redundant_fam_ids.txt"), emit: non_redundant_fam_ids
@@ -184,7 +185,7 @@ process REMOVE_REDUNDANT {
 
     script:
     """
-    python3 ${params.scriptDir}/family/remove_redundant.py ${hits} ${fam_rep_mapping}
+    python3 ${params.scriptDir}/family/remove_redundant_and_tm.py ${hits} ${fam_rep_mapping} ${tm_ids_ch}
     """
 }
 
