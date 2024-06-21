@@ -1,4 +1,5 @@
 process FLAG_TM {
+    publishDir "${params.outDir}/tm", mode: "copy"
     tag "$meta.id"
     label 'venv'
 

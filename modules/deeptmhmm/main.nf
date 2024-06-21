@@ -1,4 +1,5 @@
 process DEEPTMHMM {
+    publishDir "${params.outDir}/tm", mode: "copy"
     tag "$meta.id"
     label 'process_medium'
 
