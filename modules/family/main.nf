@@ -122,6 +122,23 @@ process MOVE_TO_DIR {
 }
 
 process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
+    tag "$meta.id"
+    label "venv"
+
+    input:
+    tuple val(meta), path(msa_sto, stageAs: "msa_sto/*")
+
+    output:
+    tuple val(meta), path("family_reps.fasta")
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/extract_first_stockholm_sequences.py msa_sto family_reps.fasta
+    """
+}
+
+process EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER {
+    tag "$meta.id"
     label "venv"
 
     input:
@@ -137,6 +154,7 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
 }
 
 process MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID {
+    tag "$meta.id"
     label "venv"
 
     input:
@@ -151,13 +169,15 @@ process MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID {
     """
 }
 
-process REMOVE_REDUNDANT {
+process REMOVE_REDUNDANT_AND_TM {
     publishDir "${params.outDir}/families/", mode: "copy"
+    tag "$meta.id"
     label "venv"
 
     input:
     tuple val(meta), path(hits)
     path(fam_rep_mapping)
+    tuple val(meta2), path(tm_ids_ch)
 
     output:
     path("non_redundant_fam_ids.txt"), emit: non_redundant_fam_ids
@@ -165,7 +185,7 @@ process REMOVE_REDUNDANT {
 
     script:
     """
-    python3 ${params.scriptDir}/family/remove_redundant.py ${hits} ${fam_rep_mapping}
+    python3 ${params.scriptDir}/family/remove_redundant_and_tm.py ${hits} ${fam_rep_mapping} ${tm_ids_ch}
     """
 }
 

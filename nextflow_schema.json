@@ -55,21 +55,25 @@
                 "min_sequence_length": {
                     "type": "integer",
                     "default": 100,
-                    "description": "initiate_proteins"
+                    "description": "Sequence (and slice) length threshold to continue to clustering"
                 },
                 "input_csv_chunk_size": {
                     "type": "integer",
                     "default": 50000000,
-                    "description": "initiate_proteins"
+                    "description": "Chunk size for parallel slicing and filtering of sequence space"
                 },
                 "minimum_members": {
                     "type": "integer",
                     "default": 50,
-                    "description": "chunk_clusters"
+                    "description": "Minimum number of members a cluster is allowed to have to continue with family generation"
                 },
                 "num_cluster_chunks": {
                     "type": "integer",
-                    "description": "chunk_clusters"
+                    "description": "Number of chunks the linclust clustering file will be divided into for parallel family generation"
+                },
+                "tm_fraction_threshold": {
+                    "type": "number",
+                    "description": "Predicted transmembrane fraction of total length allowed for families"
                 },
                 "db_name": {
                     "type": "string",
@@ -84,12 +88,12 @@
                 "pdb_chunk_size": {
                     "type": "integer",
                     "default": 50,
-                    "description": "predict_structures"
+                    "description": "Chunk size for parallel structure prediction"
                 },
                 "compute_mode": {
                     "type": "string",
                     "default": "gpu",
-                    "description": "predict_structures"
+                    "description": "GPU or CPU mode, depending on sequence length"
                 }
             },
             "required": [
@@ -98,6 +102,7 @@
                 "input_csv_chunk_size",
                 "minimum_members",
                 "num_cluster_chunks",
+                "tm_fraction_threshold",
                 "db_name",
                 "hh_mode",
                 "pdb_chunk_size",
