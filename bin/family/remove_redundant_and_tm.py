@@ -180,6 +180,7 @@ def calculate_aa_jaccard_index(fam, hit, fam_proteins, max_hmm_lengths):
     aa_set2          = create_aa_set(df, max_hmm_lengths)
     aa_jaccard_index = calculate_jaccard_index(aa_set1, aa_set2)
     print(f'### AA similarity: {aa_jaccard_index}, id to remove: {id_to_remove} ###')
+    
     return aa_jaccard_index, id_to_remove
 
 def check_jaccard_similarity_remove_if_redundant(hh_hits, row, \
