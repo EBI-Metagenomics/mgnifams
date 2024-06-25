@@ -149,40 +149,6 @@ def get_fam_rep_subsets(fam1, fam2, fam_proteins):
 
     return fam_subset, hit_subset
 
-# TODO
-# def fill_empty_regions():
-#     pass
-
-# def calculate_protein_name(fam_rep_whole):
-#     fam_rep = fam_rep_whole
-#     if '/' in fam_rep_whole: # part of whole or slice
-#         fam_rep, region = fam_rep_whole.split('/', 1)
-#     elif ('_' in fam_rep_whole): # whole slice
-#         parts  = fam_rep_whole.split('_')
-#         region = f'{parts[1]}_{parts[2]}'
-#     else: # whole protein
-#         fam = rep_to_fam_dict[fam_rep_whole]
-#         region = f'1_{rep_length_dict[fam]}'
-#     return fam_rep, region
-
-# def calculate_region(fam_rep_whole, rep_length_dict):
-#     fam_rep = fam_rep_whole
-#     if '/' in fam_rep_whole: # part of whole or slice
-#         fam_rep, region = fam_rep_whole.split('/', 1)
-#     elif ('_' in fam_rep_whole): # whole slice
-#         parts  = fam_rep_whole.split('_')
-#         region = f'{parts[1]}_{parts[2]}'
-#     else: # whole protein
-#         fam = rep_to_fam_dict[fam_rep_whole]
-#         region = f'1_{rep_length_dict[fam]}'
-#     return fam_rep, region
-
-# def fill_none(row):
-#     if pd.isna(row['Region']):
-#         return calculate_region(row['Protein'])
-#     else:
-#         return row['Region']
-
 def create_aa_set(df, rep_length_dict):
     aa_set = set()
 
@@ -190,8 +156,6 @@ def create_aa_set(df, rep_length_dict):
     for index, row in df.iterrows():
         protein = row['Protein']
         region  = row['Region']
-        
-        protein, region = calculate_name_and_region(protein, region, rep_length_dict)
         
         # Split the region_str into individual regions
         regions = region.split('_')
@@ -207,32 +171,20 @@ def create_aa_set(df, rep_length_dict):
 
 def calculate_aa_jaccard_index(fam, hit, fam_proteins, rep_length_dict):
     fam_subset, hit_subset = get_fam_rep_subsets(fam, hit, fam_proteins)
-    print("#### 1 ####")
-    print(fam_subset)
-    print(hit_subset)
-    # fam_rep_whole   = fam_to_rep_dict[fam] # TODO needed?
     id_to_remove = hit
     if hit_subset.empty: # if Fam rep protein name was not found in Hit
         fam_subset, hit_subset = get_fam_rep_subsets(hit, fam, fam_proteins)
-        print("#### 2 ####")
-        print(fam_subset)
-        print(hit_subset)
         id_to_remove = fam
-        # filtered_hit_df, fam_rep_whole, id_to_remove = filter_protein_region_df(hit, fam, fam_proteins) # TODO remove
         if hit_subset.empty: # if Hit rep protein name was not found in Fam either, assume non redundant
             return -1, 0
     
-    # fam_subset = fill_empty_regions(fam_subset, rep_length_dict)
-    # hit_subset = fill_empty_regions(hit_subset, rep_length_dict)
-    aa_set1          = create_aa_set(fam_subset, rep_length_dict)
-    # fam_rep, region  = calculate_name_and_region(fam_rep_whole, rep_length_dict)
-    # df               = pd.DataFrame({'Protein': [fam_rep], 'Region': [region]})
-    aa_set2          = create_aa_set(hit_subset, rep_length_dict)
-    print(aa_set1)
-    print(aa_set2)
-    aa_jaccard_index = calculate_jaccard_index(aa_set1, aa_set2)  # TODO back
-    print(aa_jaccard_index)
-    return -1, 0 # aa_jaccard_index, id_to_remove # TODO back
+    fam_subset['Region'] = fam_subset['Region'].fillna(f'1_{rep_length_dict[fam]}')
+    hit_subset['Region'] = hit_subset['Region'].fillna(f'1_{rep_length_dict[fam]}')
+    aa_set1              = create_aa_set(fam_subset, rep_length_dict)
+    aa_set2              = create_aa_set(hit_subset, rep_length_dict)
+    aa_jaccard_index     = calculate_jaccard_index(aa_set1, aa_set2)
+
+    return aa_jaccard_index, id_to_remove
 
 def remove_redundant(hh_hits, fam, redundant_fam_ids_file):
     hh_hits = hh_hits[(hh_hits['Fam'] != fam) & (hh_hits['Hit'] != fam)]
@@ -265,7 +217,6 @@ def check_jaccard_similarity_remove_if_redundant(hh_hits, row, \
         if (aa_jaccard_index >= redundant_threshold): # 0.95
             with open(log_file, 'a') as file:
                 file.write(f"AA Jaccard Index: {aa_jaccard_index}. Removing {id_to_remove}\n")
-            print(f"{fam} {hit} -> ")
             fams_to_export.remove(id_to_remove)
             hh_hits = remove_redundant(hh_hits, id_to_remove, redundant_fam_ids_file)
         elif (aa_jaccard_index >= similarity_threshold): # 0.5
