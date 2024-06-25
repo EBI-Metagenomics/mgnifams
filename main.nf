@@ -47,7 +47,9 @@ workflow {
         }
         .set { tm_msa_ch }
     
-    tm_ids_ch = FLAG_TRANSMEMBRANE(tm_msa_ch)
+    tm_ch     = FLAG_TRANSMEMBRANE(tm_msa_ch)
+    rep_fa_ch = tm_ch.fa_ch
+    tm_ids_ch = tm_ch.tm_ids_ch
     
     seed_msa_sto_ch = families_ch.seed_msa_sto.collect()
     seed_msa_sto_dir = MOVE_TO_DIR(seed_msa_sto_ch, "seed_msa_sto")
@@ -61,32 +63,32 @@ workflow {
         msa_sto_ch, families_ch.hmm.collect(), \
         families_ch.rf.collect(), families_ch.domtblout.collect(), families_ch.tsv.collect(), \
         families_ch.discarded.collect(), families_ch.successful.collect(), families_ch.converged.collect(), \
-        families_ch.metadata.collect(), families_ch.logs.collect(), tm_ids_ch)
+        families_ch.metadata.collect(), families_ch.logs.collect(), tm_ids_ch, rep_fa_ch)
 
     // annotate_families
-    generated_families.seed_msa_sto
-        .map { files ->
-            String filePath = files[0]
-            int lastIndex = filePath.lastIndexOf('/')
-            String seed_msa_dir = filePath.substring(0, lastIndex + 1)
-            return [ [id:"seed_msa"], file(seed_msa_dir) ]
-        }
-        .set { seed_msa_ch }
+    // generated_families.seed_msa_sto
+    //     .map { files ->
+    //         String filePath = files[0]
+    //         int lastIndex = filePath.lastIndexOf('/')
+    //         String seed_msa_dir = filePath.substring(0, lastIndex + 1)
+    //         return [ [id:"seed_msa"], file(seed_msa_dir) ]
+    //     }
+    //     .set { seed_msa_ch }
     
-    generated_families.msa_sto
-        .map { files ->
-            String filePath = files[0]
-            int lastIndex = filePath.lastIndexOf('/')
-            String msa_dir = filePath.substring(0, lastIndex + 1)
-            return [ [id:"msa"], file(msa_dir) ]
-        }
-        .set { hmmalign_msa_ch }
+    // generated_families.msa_sto
+    //     .map { files ->
+    //         String filePath = files[0]
+    //         int lastIndex = filePath.lastIndexOf('/')
+    //         String msa_dir = filePath.substring(0, lastIndex + 1)
+    //         return [ [id:"msa"], file(msa_dir) ]
+    //     }
+    //     .set { hmmalign_msa_ch }
 
-    fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
-    REFORMAT_HMMALIGN_MSA( hmmalign_msa_ch )
-    ANNOTATE_MODELS( fa_seed_msa_ch )
-    pdb_ch = PREDICT_STRUCTURES(hmmalign_msa_ch).pdb_ch
-    ANNOTATE_STRUCTURES(pdb_ch)
+    // fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
+    // REFORMAT_HMMALIGN_MSA( hmmalign_msa_ch )
+    // ANNOTATE_MODELS( fa_seed_msa_ch )
+    // pdb_ch = PREDICT_STRUCTURES(hmmalign_msa_ch).pdb_ch
+    // ANNOTATE_STRUCTURES(pdb_ch)
 
     // export_data
     // TODO

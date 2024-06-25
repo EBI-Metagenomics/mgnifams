@@ -2,13 +2,44 @@ import sys
 import pandas as pd
 import csv
 
-def read_hh_hits(hh_hits_file):
-    column_names = ["Fam", "Hit", "Prob", "E-value", "P-value", "Score", "SS", "Cols", "Query HMM", "Template HMM", ""]
-    hh_hits      = pd.read_csv(hh_hits_file, delimiter='\t', header=None, names=column_names, skiprows=1)
+# Initiation Functions Start ###
+def initialize_outfiles(file_paths):
+    """Initialize multiple files to be empty."""
+    for file_path in file_paths:
+        with open(file_path, "w") as file:
+            pass
 
-    return hh_hits
+def create_fasta_to_length_dict(fasta_file):
+    with open(log_file, 'a') as file:
+        file.write("Reading family rep lengths from fasta...")
+
+    length_dict = {}
+    with open(fasta_file, 'r') as file:
+        current_id = None
+        current_length = 0
+
+        for line in file:
+            line = line.strip()
+            if line.startswith(">"):
+                if current_id is not None:
+                    length_dict[current_id] = current_length
+                current_id = line[1:]  # Get the ID (remove '>')
+                current_length = 0  # Reset length for the new sequence
+            else:
+                current_length += len(line)
+
+        # Adding last sequence
+        if current_id is not None:
+            length_dict[current_id] = current_length
+
+    with open(log_file, 'a') as file:
+        file.write("Done\n")
+    return length_dict
 
 def read_rep_to_fam_dicts(fam_rep_mapping_file):
+    with open(log_file, 'a') as file:
+        file.write("Reading rep_to_fam and fam_to_rep dictionaries...")
+
     rep_to_fam_dict = {}
     fam_to_rep_dict = {}
     
@@ -20,65 +51,36 @@ def read_rep_to_fam_dicts(fam_rep_mapping_file):
             rep_to_fam_dict[rep] = fam
             fam_to_rep_dict[fam] = rep
 
+    with open(log_file, 'a') as file:
+        file.write("Done\n")
     return rep_to_fam_dict, fam_to_rep_dict
 
+def read_hh_hits(hh_hits_file):
+    with open(log_file, 'a') as file:
+        file.write("Reading hh_hits files...")
+
+    column_names = ["Fam", "Hit", "Prob", "E-value", "P-value", "Score", "SS", "Cols", "Query HMM", "Template HMM", ""]
+    hh_hits      = pd.read_csv(hh_hits_file, delimiter='\t', header=None, names=column_names, skiprows=1)
+
+    with open(log_file, 'a') as file:
+        file.write("Done\n")
+    return hh_hits
+
 def map_and_remove_self(hh_hits):
+    with open(log_file, 'a') as file:
+        file.write("Mapping reps to fams and removing self hits...")
+
     hh_hits['Hit'] = hh_hits['Hit'].map(rep_to_fam_dict) # Do the mapping on the df
     hh_hits = hh_hits[hh_hits['Fam'] != hh_hits['Hit']]
+
+    with open(log_file, 'a') as file:
+        file.write("Done\n")
     return hh_hits
-
-def remove_tm(hh_hits, fams_to_export, tm_ids_file):
-    tm_ids = []
-    with open(tm_ids_file, 'r') as file:
-        for line in file:
-            tm_ids.append(line.strip())
-
-    hh_hits        = hh_hits[~hh_hits['Fam'].isin(tm_ids) & ~hh_hits['Hit'].isin(tm_ids)]
-    fams_to_export = [value for value in fams_to_export if value not in tm_ids]
-    return hh_hits, fams_to_export
-
-def read_fam_proteins(fam_proteins_file):
-    column_names = ['Fam', 'Protein']
-    fam_proteins = pd.read_csv(fam_proteins_file, sep='\t', header=None, names=column_names)
-    fam_proteins[['Protein', 'Region']] = fam_proteins['Protein'].str.split('/', n=1, expand=True)
-    return fam_proteins
-
-def remove_redundant(hh_hits, fam):
-    hh_hits = hh_hits[(hh_hits['Fam'] != fam) & (hh_hits['Hit'] != fam)]
-    return hh_hits
-
-def remove_pair(hh_hits, fam, hit):
-    hh_hits = hh_hits[(hh_hits['Fam'] != fam) & (hh_hits['Hit'] != hit)]
-    hh_hits = hh_hits[(hh_hits['Fam'] != hit) & (hh_hits['Hit'] != fam)]
-    return hh_hits
-
-def find_max_lengths(df):
-    max_lengths = {}
-
-    # Iterate over each row in the DataFrame
-    for index, row in df.iterrows():
-        fam = row['Fam']
-        hit = row['Hit']
-
-        # Extract and process Query HMM for Fam
-        if fam not in max_lengths:
-            max_lengths[fam] = 0
-        fam_query_hmm = row['Query HMM']
-        if pd.notna(fam_query_hmm):
-            fam_length = int(fam_query_hmm.split('-')[1])
-            max_lengths[fam] = max(max_lengths[fam], fam_length)
-
-        # Extract and process Template HMM for Hit
-        if hit not in max_lengths:
-            max_lengths[hit] = 0
-        hit_template_hmm = row['Template HMM']
-        if pd.notna(hit_template_hmm):
-            hit_length = int(hit_template_hmm.split('-')[1])
-            max_lengths[hit] = max(max_lengths[hit], hit_length)
-
-    return max_lengths
 
 def keep_unique_pairs(hh_hits):
+    with open(log_file, 'a') as file:
+        file.write("Keeping unique pairs...")
+
     hh_hits = hh_hits[['Fam', 'Hit']]
     # Remove exact duplicates
     hh_hits = hh_hits.drop_duplicates()
@@ -95,52 +97,107 @@ def keep_unique_pairs(hh_hits):
 
     hh_hits = pd.DataFrame(unique_rows)
 
+    with open(log_file, 'a') as file:
+        file.write("Done\n")
     return hh_hits
 
-def calculate_jaccard_index(set_fam, set_hit):
-    intersection = set_fam.intersection(set_hit)
-    union = set_fam.union(set_hit)
+def remove_tm(hh_hits, fams_to_export, tm_ids_file):
+    with open(log_file, 'a') as file:
+        file.write("Removing TM -")
+
+    tm_ids = []
+    with open(tm_ids_file, 'r') as file:
+        for line in file:
+            tm_ids.append(line.strip())
+
+    with open(log_file, 'a') as file:
+        file.write(f"{len(tm_ids)} fam(s)...")
+
+    hh_hits        = hh_hits[~hh_hits['Fam'].isin(tm_ids) & ~hh_hits['Hit'].isin(tm_ids)]
+    fams_to_export = [value for value in fams_to_export if value not in tm_ids]
+
+    with open(log_file, 'a') as file:
+        file.write("Done\n")
+    return hh_hits, fams_to_export
+
+def read_fam_proteins_df(fam_proteins_file):
+    with open(log_file, 'a') as file:
+        file.write("Reading fam to proteins df...")
+
+    column_names = ['Fam', 'Protein']
+    fam_proteins = pd.read_csv(fam_proteins_file, sep='\t', header=None, names=column_names)
+    fam_proteins[['Protein', 'Region']] = fam_proteins['Protein'].str.split('/', n=1, expand=True)
+
+    with open(log_file, 'a') as file:
+        file.write("Done\n")
+    return fam_proteins
+
+# Initiation Functions End ###
+
+# Similarity Index Functions Start ###
+def calculate_jaccard_index(set1, set2):
+    intersection = set1.intersection(set2)
+    union = set1.union(set2)
     jaccard_index = len(intersection) / len(union)
     return jaccard_index
 
-def filter_protein_region_df(fam1, fam2, fam_proteins):
-    fam_rep_whole = fam_to_rep_dict[fam1]
-    if '/' in fam_rep_whole:
-        fam_rep, region = fam_rep_whole.split('/', 1)
-    else:
-        fam_rep = fam_rep_whole
-        region = None
+def get_fam_rep_subsets(fam1, fam2, fam_proteins):
+    fam_rep = fam_to_rep_dict[fam1].split('/', 1)[0]
+    
+    fam_subset = fam_proteins[(fam_proteins['Fam'] == fam1) & (fam_proteins['Protein'] == fam_rep)][['Protein', 'Region']]
+    hit_subset = fam_proteins[(fam_proteins['Fam'] == fam2) & (fam_proteins['Protein'] == fam_rep)][['Protein', 'Region']]
 
-    filtered_df = fam_proteins[(fam_proteins['Fam'] == fam2) & (fam_proteins['Protein'] == fam_rep)][['Protein', 'Region']]
-    return filtered_df
+    return fam_subset, hit_subset
 
-def calculate_whole_region(protein, max_hmm_lengths):
-    if ('_' in protein): # whole slice
-        parts      = protein.split('_')
-        region_str = f'{parts[1]}_{parts[2]}'
-    else: # whole protein
-        fam = rep_to_fam_dict[protein]
-        region_str = f'1_{max_hmm_lengths[fam]}'
+# TODO
+# def fill_empty_regions():
+#     pass
 
-    return region_str
+# def calculate_protein_name(fam_rep_whole):
+#     fam_rep = fam_rep_whole
+#     if '/' in fam_rep_whole: # part of whole or slice
+#         fam_rep, region = fam_rep_whole.split('/', 1)
+#     elif ('_' in fam_rep_whole): # whole slice
+#         parts  = fam_rep_whole.split('_')
+#         region = f'{parts[1]}_{parts[2]}'
+#     else: # whole protein
+#         fam = rep_to_fam_dict[fam_rep_whole]
+#         region = f'1_{rep_length_dict[fam]}'
+#     return fam_rep, region
 
-def create_aa_set(df, max_hmm_lengths):
+# def calculate_region(fam_rep_whole, rep_length_dict):
+#     fam_rep = fam_rep_whole
+#     if '/' in fam_rep_whole: # part of whole or slice
+#         fam_rep, region = fam_rep_whole.split('/', 1)
+#     elif ('_' in fam_rep_whole): # whole slice
+#         parts  = fam_rep_whole.split('_')
+#         region = f'{parts[1]}_{parts[2]}'
+#     else: # whole protein
+#         fam = rep_to_fam_dict[fam_rep_whole]
+#         region = f'1_{rep_length_dict[fam]}'
+#     return fam_rep, region
+
+# def fill_none(row):
+#     if pd.isna(row['Region']):
+#         return calculate_region(row['Protein'])
+#     else:
+#         return row['Region']
+
+def create_aa_set(df, rep_length_dict):
     aa_set = set()
 
     # Iterate through each row in the DataFrame
     for index, row in df.iterrows():
-        protein    = row['Protein']
-        region_str = row['Region']
+        protein = row['Protein']
+        region  = row['Region']
         
-        if (region_str is None):
-            region_str = calculate_whole_region(protein, max_hmm_lengths)
+        protein, region = calculate_name_and_region(protein, region, rep_length_dict)
         
         # Split the region_str into individual regions
-        regions = region_str.split('_')
-        
+        regions = region.split('_')
         # Extract start and end numbers from the first and last region
         start_num = int(regions[0])
-        end_num = int(regions[-1])
+        end_num   = int(regions[-1])
         
         # Generate all combinations and add them to the set
         for num in range(start_num, end_num + 1):
@@ -148,44 +205,50 @@ def create_aa_set(df, max_hmm_lengths):
             
     return aa_set
 
-def calculate_name_and_region(fam_rep_whole, max_hmm_lengths):
-    fam_rep = fam_rep_whole
-    if '/' in fam_rep_whole: # part of whole or slice
-        fam_rep, region = fam_rep_whole.split('/', 1)
-    elif ('_' in fam_rep_whole): # whole slice
-        parts  = fam_rep_whole.split('_')
-        region = f'{parts[1]}_{parts[2]}'
-    else: # whole protein
-        fam = rep_to_fam_dict[fam_rep_whole]
-        region = f'1_{max_hmm_lengths[fam]}'
-    return fam_rep, region
+def calculate_aa_jaccard_index(fam, hit, fam_proteins, rep_length_dict):
+    fam_subset, hit_subset = get_fam_rep_subsets(fam, hit, fam_proteins)
+    print("#### 1 ####")
+    print(fam_subset)
+    print(hit_subset)
+    # fam_rep_whole   = fam_to_rep_dict[fam] # TODO needed?
+    id_to_remove = hit
+    if hit_subset.empty: # if Fam rep protein name was not found in Hit
+        fam_subset, hit_subset = get_fam_rep_subsets(hit, fam, fam_proteins)
+        print("#### 2 ####")
+        print(fam_subset)
+        print(hit_subset)
+        id_to_remove = fam
+        # filtered_hit_df, fam_rep_whole, id_to_remove = filter_protein_region_df(hit, fam, fam_proteins) # TODO remove
+        if hit_subset.empty: # if Hit rep protein name was not found in Fam either, assume non redundant
+            return -1, 0
+    
+    # fam_subset = fill_empty_regions(fam_subset, rep_length_dict)
+    # hit_subset = fill_empty_regions(hit_subset, rep_length_dict)
+    aa_set1          = create_aa_set(fam_subset, rep_length_dict)
+    # fam_rep, region  = calculate_name_and_region(fam_rep_whole, rep_length_dict)
+    # df               = pd.DataFrame({'Protein': [fam_rep], 'Region': [region]})
+    aa_set2          = create_aa_set(hit_subset, rep_length_dict)
+    print(aa_set1)
+    print(aa_set2)
+    aa_jaccard_index = calculate_jaccard_index(aa_set1, aa_set2)  # TODO back
+    print(aa_jaccard_index)
+    return -1, 0 # aa_jaccard_index, id_to_remove # TODO back
 
-def calculate_aa_jaccard_index(fam, hit, fam_proteins, max_hmm_lengths):
-    print("### calculate_aa_jaccard_index ###")
-    print(f"{fam} vs {hit}")
-    filtered_hit_df = filter_protein_region_df(fam, hit, fam_proteins)
-    fam_rep_whole   = fam_to_rep_dict[fam]
-    id_to_remove    = hit
-    if filtered_hit_df.empty: # if Fam rep protein name was not found in Hit
-        filtered_hit_df = filter_protein_region_df(hit, fam, fam_proteins)
-        fam_rep_whole   = fam_to_rep_dict[hit]
-        id_to_remove    = fam
-    
-        if filtered_hit_df.empty: # if Hit rep protein name was not found in Fam either, assume non redundant
-            return 0, 0
-    
-    aa_set1          = create_aa_set(filtered_hit_df, max_hmm_lengths)
-    fam_rep, region  = calculate_name_and_region(fam_rep_whole, max_hmm_lengths)
-    df               = pd.DataFrame({'Protein': [fam_rep], 'Region': [region]})
-    aa_set2          = create_aa_set(df, max_hmm_lengths)
-    aa_jaccard_index = calculate_jaccard_index(aa_set1, aa_set2)
-    print(f'### AA similarity: {aa_jaccard_index}, id to remove: {id_to_remove} ###')
-    
-    return aa_jaccard_index, id_to_remove
+def remove_redundant(hh_hits, fam, redundant_fam_ids_file):
+    hh_hits = hh_hits[(hh_hits['Fam'] != fam) & (hh_hits['Hit'] != fam)]
+
+    with open(redundant_fam_ids_file, 'a') as file:
+        file.write(f"{fam}\n")
+    return hh_hits
+
+def remove_pair(hh_hits, fam, hit):
+    hh_hits = hh_hits[(hh_hits['Fam'] != fam) & (hh_hits['Hit'] != hit)]
+    hh_hits = hh_hits[(hh_hits['Fam'] != hit) & (hh_hits['Hit'] != fam)]
+    return hh_hits
 
 def check_jaccard_similarity_remove_if_redundant(hh_hits, row, \
-    fam_proteins, max_hmm_lengths, \
-    fams_to_export, similarity_edgelist_file, \
+    fam_proteins, rep_length_dict, \
+    fams_to_export, redundant_fam_ids_file, similarity_edgelist_file, \
     redundant_threshold, similarity_threshold):
     fam = row['Fam']
     hit = row['Hit']
@@ -195,22 +258,32 @@ def check_jaccard_similarity_remove_if_redundant(hh_hits, row, \
     jaccard_index = calculate_jaccard_index(set_fam, set_hit)
     
     if (jaccard_index >= similarity_threshold): # 0.5
-        aa_jaccard_index, id_to_remove = calculate_aa_jaccard_index(fam, hit, fam_proteins, max_hmm_lengths)
+        with open(log_file, 'a') as file:
+            file.write(f"{fam} vs {hit}: Initial Jaccard Index: {jaccard_index}...")
+        aa_jaccard_index, id_to_remove = calculate_aa_jaccard_index(fam, hit, fam_proteins, rep_length_dict)
+
         if (aa_jaccard_index >= redundant_threshold): # 0.95
-            print(f"{fam} {hit} -> Removing {id_to_remove}")
+            with open(log_file, 'a') as file:
+                file.write(f"AA Jaccard Index: {aa_jaccard_index}. Removing {id_to_remove}\n")
+            print(f"{fam} {hit} -> ")
             fams_to_export.remove(id_to_remove)
-            hh_hits = remove_redundant(hh_hits, id_to_remove)
+            hh_hits = remove_redundant(hh_hits, id_to_remove, redundant_fam_ids_file)
         elif (aa_jaccard_index >= similarity_threshold): # 0.5
+            with open(log_file, 'a') as file:
+                file.write(f"AA Jaccard Index: {aa_jaccard_index}. Keeping similarity edge\n")
             with open(similarity_edgelist_file, 'a') as f: 
                 f.write(f"{fam},{hit},{aa_jaccard_index}\n")
-            hh_hits = remove_pair(hh_hits, fam, hit)
+            hh_hits = remove_pair(hh_hits, fam, hit) # don't check same pair again
+        else:
+            with open(log_file, 'a') as file:
+                file.write(f"AA Jaccard Index: {aa_jaccard_index}. Not similar enough\n")
     
     return hh_hits, fams_to_export
 
 # Might still use this while comparing MGnifams to other resource families
 # Don't call keep_unique(hh_hits) before this
 def check_similarity_remove_if_redundant_hhblits_only(hh_hits, row, \
-    fams_to_export, similarity_edgelist_file, \
+    fams_to_export, redundant_fam_ids_file, similarity_edgelist_file, \
     redundant_threshold, similarity_threshold):
     fam       = row['Fam']
     hit       = row['Hit']
@@ -223,19 +296,19 @@ def check_similarity_remove_if_redundant_hhblits_only(hh_hits, row, \
         if (avg_score1 != avg_score2): # check Score
             if (avg_score1 > avg_score2):
                 fams_to_export.remove(hit)
-                hh_hits = remove_redundant(hh_hits, hit)
+                hh_hits = remove_redundant(hh_hits, hit, redundant_fam_ids_file)
             else:
                 fams_to_export.remove(fam)
-                hh_hits = remove_redundant(hh_hits, fam)
+                hh_hits = remove_redundant(hh_hits, fam, redundant_fam_ids_file)
         else: # check Cols
             avg_cols1  = hh_hits[(hh_hits['Fam'] == fam) & (hh_hits['Hit'] == hit)]['Cols'].mean()
             avg_cols2  = hh_hits[(hh_hits['Fam'] == hit) & (hh_hits['Hit'] == fam)]['Cols'].mean()
             if (avg_cols1 >= avg_cols2):
                 fams_to_export.remove(hit)
-                hh_hits = remove_redundant(hh_hits, hit)
+                hh_hits = remove_redundant(hh_hits, hit, redundant_fam_ids_file)
             else:
                 fams_to_export.remove(fam)
-                hh_hits = remove_redundant(hh_hits, fam)
+                hh_hits = remove_redundant(hh_hits, fam, redundant_fam_ids_file)
     elif (avg_prob >= similarity_threshold):
         with open(similarity_edgelist_file, 'a') as f: 
             f.write(f"{fam},{hit},{avg_prob}\n")
@@ -243,45 +316,45 @@ def check_similarity_remove_if_redundant_hhblits_only(hh_hits, row, \
 
     return hh_hits, fams_to_export
 
-def write_non_redundant_fam_ids(fams_to_export):
+def write_non_redundant_fam_ids(fams_to_export, non_redundant_fam_ids_file):
     with open(non_redundant_fam_ids_file, 'w') as f:
         for id in fams_to_export:
             f.write(f"{id}\n")
 
 def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
-    tm_ids_file, fam_proteins_file, \
-    non_redundant_fam_ids_file, similarity_edgelist_file, \
+    tm_ids_file, fam_proteins_file, rep_fa_file, \
+    non_redundant_fam_ids_file, redundant_fam_ids_file, similarity_edgelist_file, log_f, \
     redundant_threshold=0.95, similarity_threshold=0.5):
 
-    global rep_to_fam_dict, fam_to_rep_dict
-
+    global rep_to_fam_dict, fam_to_rep_dict, log_file
+    log_file                         = log_f
+    rep_length_dict                  = create_fasta_to_length_dict(rep_fa_file)
+    rep_to_fam_dict, fam_to_rep_dict = read_rep_to_fam_dicts(fam_rep_mapping_file)
     hh_hits                          = read_hh_hits(hh_hits_file)
     fams_to_export                   = hh_hits['Fam'].unique().tolist() # This must be done here, before removing self-hits (some fams might have only self-hits)
-    rep_to_fam_dict, fam_to_rep_dict = read_rep_to_fam_dicts(fam_rep_mapping_file)
     hh_hits                          = map_and_remove_self(hh_hits)
-    hh_hits, fams_to_export          = remove_tm(hh_hits, fams_to_export, tm_ids_file)
-    fam_proteins                     = read_fam_proteins(fam_proteins_file)
-    max_hmm_lengths                  = find_max_lengths(hh_hits)
     hh_hits                          = keep_unique_pairs(hh_hits)
+    hh_hits, fams_to_export          = remove_tm(hh_hits, fams_to_export, tm_ids_file)
+    fam_proteins                     = read_fam_proteins_df(fam_proteins_file)
     
     i = 0
     while len(hh_hits) > i:
         row = hh_hits.iloc[i]
         hh_hits, fams_to_export = check_jaccard_similarity_remove_if_redundant(hh_hits, row, \
-            fam_proteins, max_hmm_lengths, \
-            fams_to_export, similarity_edgelist_file, \
+            fam_proteins, rep_length_dict, \
+            fams_to_export, redundant_fam_ids_file, similarity_edgelist_file, \
             redundant_threshold, similarity_threshold)
         i += 1
 
-    write_non_redundant_fam_ids(fams_to_export)
+    write_non_redundant_fam_ids(fams_to_export, non_redundant_fam_ids_file)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        print("Usage: python remove_redundant_and_tm.py <hh_hits> <fam_rep_mapping> <tm_ids_file> <fam_proteins_file>")
+    if len(sys.argv) != 10:
+        print("Usage: python remove_redundant_and_tm.py <hh_hits> <fam_rep_mapping> <tm_ids_file> <fam_proteins_file> <rep_fa_file> \
+            <non_redundant_fam_ids> <redundant_fam_ids> <similarity_edgelist> <log.txt>")
         sys.exit(1)
 
-    non_redundant_fam_ids_file = "non_redundant_fam_ids.txt"
-    similarity_edgelist_file   = "similarity_edgelist.csv"
-    with open("similarity_edgelist.csv", "w") as file:
-        pass # init empty
-    export_non_redundant_family_ids(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], non_redundant_fam_ids_file, similarity_edgelist_file)
+    initialize_outfiles(sys.argv[6:10]) # for the three output files: 6, 7, 8
+    export_non_redundant_family_ids(sys.argv[1], sys.argv[2], \
+        sys.argv[3], sys.argv[4], sys.argv[5], \
+        sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9])

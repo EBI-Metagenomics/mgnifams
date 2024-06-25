@@ -1,5 +1,5 @@
 process FLAG_TM {
-    publishDir "${params.outDir}/tm", mode: "copy"
+    publishDir "${params.outDir}/redundancy/tm", mode: "copy"
     tag "$meta.id"
     label 'venv'
 
