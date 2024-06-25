@@ -14,5 +14,6 @@ workflow FLAG_TRANSMEMBRANE {
     tm_ids_ch = FLAG_TM(gff3_ch, params.tm_fraction_threshold)
 
     emit:
-    tm_ids_ch
+    fa_ch     = fa_ch
+    tm_ids_ch = tm_ids_ch
 }

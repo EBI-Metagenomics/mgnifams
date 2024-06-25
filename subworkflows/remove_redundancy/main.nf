@@ -5,6 +5,7 @@ include { HHSUITE_BUILDHHDB                    } from "${params.moduleDir}/hhsui
 include { HHSUITE_HHBLITS                      } from "${params.moduleDir}/hhsuite/hhblits/main.nf"
 include { COMBINE_HH_RESULTS                   } from "${params.moduleDir}/hhsuite/combine_hh_results.nf"
 include { MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID } from "${params.moduleDir}/family/main.nf"
+include { POOL_FAM_PROTEINS                    } from "${params.moduleDir}/family/main.nf"
 include { REMOVE_REDUNDANT_AND_TM              } from "${params.moduleDir}/family/main.nf"
 include { POOL_FAMILY_RESULTS                  } from "${params.moduleDir}/family/main.nf"
 
@@ -23,6 +24,7 @@ workflow REMOVE_REDUNDANCY {
     metadata_ch
     logs_ch
     tm_ids_ch
+    rep_fa_ch
 
     main:
     a3m_ch  = HHSUITE_REFORMAT(seed_msa_sto_dir, "sto", "a3m").fa
@@ -42,7 +44,8 @@ workflow REMOVE_REDUNDANCY {
     hhr_all_ch = COMBINE_HH_RESULTS(hhr_ch)
 
     mapping               = MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID(a3m_ch)
-    non_redundant         = REMOVE_REDUNDANT_AND_TM(hhr_all_ch, mapping, tm_ids_ch)
+    refined_fam_proteins  = POOL_FAM_PROTEINS(tsv_ch.collect())
+    non_redundant         = REMOVE_REDUNDANT_AND_TM(hhr_all_ch, mapping, tm_ids_ch, refined_fam_proteins, rep_fa_ch)
     non_redundant_fam_ids = non_redundant.non_redundant_fam_ids
     similarity_edgelist   = non_redundant.similarity_edgelist
     pooled_families       = POOL_FAMILY_RESULTS(seed_msa_sto_ch, \

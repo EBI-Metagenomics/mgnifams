@@ -169,23 +169,45 @@ process MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID {
     """
 }
 
+process POOL_FAM_PROTEINS {
+    label "venv"
+
+    input:
+    path tsv, stageAs: "refined_families/*"
+
+    output:
+    path "fam_proteins.tsv"
+
+    script:
+    """
+    python3 ${params.scriptDir}/family/pool_fam_proteins.py refined_families fam_proteins.tsv
+    """
+}
+
 process REMOVE_REDUNDANT_AND_TM {
-    publishDir "${params.outDir}/families/", mode: "copy"
+    publishDir "${params.outDir}/redundancy/", mode: "copy"
     tag "$meta.id"
     label "venv"
 
     input:
-    tuple val(meta), path(hits)
+    tuple val(meta), path(hhblits_hits)
     path(fam_rep_mapping)
-    tuple val(meta2), path(tm_ids_ch)
+    tuple val(meta2), path(tm_ids)
+    path(refined_fam_proteins)
+    tuple val(meta3), path(rep_fa)
 
     output:
     path("non_redundant_fam_ids.txt"), emit: non_redundant_fam_ids
+    path("redundant_fam_ids.txt")    , emit: redundant_fam_ids
     path("similarity_edgelist.csv")  , emit: similarity_edgelist
+    path("log.txt")                  , emit: log
 
     script:
     """
-    python3 ${params.scriptDir}/family/remove_redundant_and_tm.py ${hits} ${fam_rep_mapping} ${tm_ids_ch}
+    python3 ${params.scriptDir}/family/remove_redundant_and_tm.py \
+        ${hhblits_hits} ${fam_rep_mapping} \
+        ${tm_ids} ${refined_fam_proteins} ${rep_fa} \
+        non_redundant_fam_ids.txt redundant_fam_ids.txt similarity_edgelist.csv log.txt
     """
 }
 
