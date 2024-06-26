@@ -101,19 +101,7 @@ workflow {
         generated_families.tsv, pfam_hits, foldseek_hits, scores_ch )
 
     // TODO
-    // seed_msa_sto = pooled_families.seed_msa_sto
-    // msa_sto = pooled_families.msa_sto
-    // hmm = pooled_families.hmm
-    // rf = pooled_families.rf
-    // domtblout = pooled_families.domtblout
-    // tsv = pooled_families.tsv
-    // discarded = pooled_families.discarded
-    // successful = pooled_families.successful
-    // converged = pooled_families.converged
-    // metadata = pooled_families.metadata
-    // id_mapping = pooled_families.id_mapping
-
-    // query_results = QUERY_MGNPROTEIN_DB(params.db_config_file, updated_refined_families_ch)
+    query_results = QUERY_MGNPROTEIN_DB(params.db_config_file, generated_families.tsv)
 
     // PARSE_BIOMES(query_results)
     // PARSE_DOMAINS(query_results, params.updated_refined_families_path)

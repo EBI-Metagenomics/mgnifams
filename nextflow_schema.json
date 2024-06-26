@@ -30,7 +30,12 @@
                 "esm_conda_path": {
                     "type": "string",
                     "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/miniconda3/envs/esmfold_gpu",
-                    "description": "predict_structures"
+                    "description": "predict_structures ESMfold conda env"
+                },
+                "db_config_file": {
+                    "type": "string",
+                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/bin/db_config.ini",
+                    "description": "secrets for sqlite db"
                 }
             },
             "required": [
@@ -38,7 +43,8 @@
                 "moduleDir",
                 "outDir",
                 "sequence_explorer_protein_path",
-                "esm_conda_path"
+                "esm_conda_path",
+                "db_config_file"
             ]
         },
         "module_parameters": {
