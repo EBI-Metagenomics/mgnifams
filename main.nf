@@ -29,7 +29,6 @@ include { ANNOTATE_STRUCTURES                   } from "${projectDir}/subworkflo
 
 // export_data
 include { EXPORT_MGNIFAMS_CSV } from "${params.moduleDir}/export.nf"
-// TODO
 include { QUERY_MGNPROTEIN_DB } from "${params.moduleDir}/postprocess.nf"
 include { PARSE_BIOMES        } from "${params.moduleDir}/postprocess.nf"
 include { PARSE_DOMAINS       } from "${params.moduleDir}/postprocess.nf"
@@ -99,10 +98,7 @@ workflow {
     // export_data
     EXPORT_MGNIFAMS_CSV( generated_families.metadata, generated_families.converged, \
         generated_families.tsv, pfam_hits, foldseek_hits, scores_ch )
-
-    // TODO
     query_results = QUERY_MGNPROTEIN_DB(params.db_config_file, generated_families.tsv)
-
-    // PARSE_BIOMES(query_results)
-    // PARSE_DOMAINS(query_results, params.updated_refined_families_path)
+    PARSE_BIOMES(query_results)
+    PARSE_DOMAINS(query_results, generated_families.tsv)
 }
