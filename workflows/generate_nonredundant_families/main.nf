@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 include { GENERATE_FAMILIES_PARALLEL } from "${projectDir}/../../subworkflows/generate_families_parallel/main.nf"
-include { FLAG_TRANSMEMBRANE         } from "${projectDir}/subworkflows/flag_transmembrane/main.nf"
+include { FLAG_TRANSMEMBRANE         } from "${projectDir}/../../subworkflows/flag_transmembrane/main.nf"
 include { MOVE_TO_DIR                } from "${projectDir}/../../modules/family/main.nf"
 include { REMOVE_REDUNDANCY          } from "${projectDir}/../../subworkflows/remove_redundancy/main.nf"
 
