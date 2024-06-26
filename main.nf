@@ -28,7 +28,11 @@ include { PREDICT_STRUCTURES                    } from "${projectDir}/subworkflo
 include { ANNOTATE_STRUCTURES                   } from "${projectDir}/subworkflows/annotate_structures/main.nf"
 
 // export_data
+include { EXPORT_MGNIFAMS_CSV } from "${params.moduleDir}/export.nf"
 // TODO
+include { QUERY_MGNPROTEIN_DB } from "${params.moduleDir}/postprocess.nf"
+include { PARSE_BIOMES        } from "${params.moduleDir}/postprocess.nf"
+include { PARSE_DOMAINS       } from "${params.moduleDir}/postprocess.nf"
 
 workflow {
     // setup_clusters
@@ -86,10 +90,31 @@ workflow {
 
     fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
     REFORMAT_HMMALIGN_MSA( hmmalign_msa_ch )
-    ANNOTATE_MODELS( fa_seed_msa_ch )
-    pdb_ch = PREDICT_STRUCTURES(hmmalign_msa_ch).pdb_ch
-    ANNOTATE_STRUCTURES(pdb_ch)
+    pfam_hits     = ANNOTATE_MODELS( fa_seed_msa_ch )
+    structure_ch  = PREDICT_STRUCTURES(hmmalign_msa_ch)
+    pdb_ch        = structure_ch.pdb_ch
+    scores_ch     = structure_ch.scores_ch
+    foldseek_hits = ANNOTATE_STRUCTURES(pdb_ch)
 
     // export_data
+    EXPORT_MGNIFAMS_CSV( generated_families.metadata, generated_families.converged, \
+        generated_families.tsv, pfam_hits, foldseek_hits, scores_ch )
+
     // TODO
+    // seed_msa_sto = pooled_families.seed_msa_sto
+    // msa_sto = pooled_families.msa_sto
+    // hmm = pooled_families.hmm
+    // rf = pooled_families.rf
+    // domtblout = pooled_families.domtblout
+    // tsv = pooled_families.tsv
+    // discarded = pooled_families.discarded
+    // successful = pooled_families.successful
+    // converged = pooled_families.converged
+    // metadata = pooled_families.metadata
+    // id_mapping = pooled_families.id_mapping
+
+    // query_results = QUERY_MGNPROTEIN_DB(params.db_config_file, updated_refined_families_ch)
+
+    // PARSE_BIOMES(query_results)
+    // PARSE_DOMAINS(query_results, params.updated_refined_families_path)
 }

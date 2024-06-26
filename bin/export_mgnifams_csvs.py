@@ -166,13 +166,13 @@ def write_mgnifam_folds(mgnifams_out_dir, output_dir):
         writer.writerows(structural_annotations)
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python bin/export_mgnifams_csvs.py <mgnifams_out_dir> <families_dir_name>")
+    if len(sys.argv) != 4:
+        print("Usage: python bin/export_mgnifams_csvs.py <mgnifams_out_dir> <families_dir_name> <output_dir>")
         sys.exit(1)
 
     mgnifams_out_dir  = sys.argv[1]
     families_dir_name = sys.argv[2]
-    output_dir        = 'tables'
+    output_dir        = sys.argv[3] # 'tables'
     os.makedirs(output_dir, exist_ok=True)
 
     initiate_output_csvs(mgnifams_out_dir, output_dir)

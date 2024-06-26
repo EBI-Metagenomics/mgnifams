@@ -18,5 +18,8 @@ workflow ANNOTATE_MODELS {
     } else {
         throw new Exception("Invalid hh_mode value. Should be 'hhblits' or 'hhsearch'.")
     }
-    FILTER_HH_RESULTS(hhr_ch)
+    pfam_hits = FILTER_HH_RESULTS(hhr_ch).pfam_hits
+
+    emit:
+    pfam_hits
 }

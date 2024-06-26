@@ -48,10 +48,11 @@ workflow PREDICT_STRUCTURES {
     // End long sequences
 
     scores_ch = EXTRACT_ESMFOLD_SCORES(esmfold_result.scores.concat(esmfold_long_result.scores)).csv.map { meta, filepath -> filepath }
-    scores_ch.collectFile(name: "pdb_scores.csv", storeDir: params.outDir + "/structures")
+    scores_ch = scores_ch.collectFile(name: "pdb_scores.csv", storeDir: params.outDir + "/structures")
     pdb_ch = esmfold_result.pdb.concat(esmfold_long_result.pdb)
     PARSE_CIF(pdb_ch)
 
     emit:
+    scores_ch
     pdb_ch
 }

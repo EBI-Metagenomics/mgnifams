@@ -27,10 +27,13 @@ workflow ANNOTATE_STRUCTURES {
         esm_aln = FOLDSEEK_EASYSEARCH_ESM(pdb_ch, esm_db).aln
     }
 
-    result_files = pdb_aln
+    foldseek_hits = pdb_aln
         .concat(alphafold_aln)
         .concat(esm_aln)
         .map { it[1] }
         .collectFile(name: 'foldseek_hits.tsv', storeDir: params.outDir + "/structures/foldseek")
-    FIND_ANNOTATED_FAMILIES_BY_STRUCTURE(result_files)
+    FIND_ANNOTATED_FAMILIES_BY_STRUCTURE(foldseek_hits)
+
+    emit:
+    foldseek_hits
 }
