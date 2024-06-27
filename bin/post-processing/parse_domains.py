@@ -172,7 +172,7 @@ def translate_architecture(architecture_json, pfam_mapping_df):
     for architecture_container in translated_top_json:
         for domain in architecture_container['domains']:
             if 'PF' in domain['id']: # pfam
-                domain['link']  = f'https://www.ebi.ac.uk/interpro/entry/pfam/{domain["id"]}/domain_architecture/'
+                domain['link']  = f'https://www.ebi.ac.uk/interpro/entry/pfam/{domain["id"]}'
                 domain['name']  = pfam_mapping_df.loc[pfam_mapping_df['id'] == domain["id"], 'name'].values[0]
                 domain['color'] = string_to_hex_color(domain['name'])
             else: # mgnifam
