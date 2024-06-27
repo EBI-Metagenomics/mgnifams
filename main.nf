@@ -28,7 +28,7 @@ include { PREDICT_STRUCTURES                    } from "${projectDir}/subworkflo
 include { ANNOTATE_STRUCTURES                   } from "${projectDir}/subworkflows/annotate_structures/main.nf"
 
 // export_data
-include { EXPORT_DATA } from "${projectDir}/subworkflows/export_data/main.nf"
+include { EXPORT_DB } from "${projectDir}/subworkflows/export_db/main.nf"
 
 workflow {
     // setup_clusters
@@ -93,6 +93,6 @@ workflow {
     foldseek_hits = ANNOTATE_STRUCTURES(pdb_ch)
 
     // export_data
-    EXPORT_DATA(generated_families.metadata, generated_families.converged, \
+    EXPORT_DB(generated_families.metadata, generated_families.converged, \
         generated_families.tsv, pfam_hits, foldseek_hits, scores_ch)
 }

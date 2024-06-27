@@ -44,3 +44,18 @@ process PARSE_DOMAINS {
     python3 ${params.scriptDir}/post-processing/parse_domains.py ${query_results} ${refined_families}
     """
 }
+
+process INITIATE_SQLITE {
+    label "venv"
+
+    input:
+    path schema_file
+    path tables
+    
+    output:
+    path "mgnifams.sqlite3"
+
+    """
+    touch mgnifams.sqlite3
+    """
+}
