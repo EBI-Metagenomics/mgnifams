@@ -28,7 +28,7 @@ include { PREDICT_STRUCTURES                    } from "${projectDir}/subworkflo
 include { ANNOTATE_STRUCTURES                   } from "${projectDir}/subworkflows/annotate_structures/main.nf"
 
 // export_data
-include { EXPORT_DATA } from "${projectDir}/subworkflows/export_data/main.nf"
+include { EXPORT_DB } from "${projectDir}/subworkflows/export_db/main.nf"
 
 workflow {
     // setup_clusters
@@ -85,14 +85,17 @@ workflow {
         .set { hmmalign_msa_ch }
 
     fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
-    REFORMAT_HMMALIGN_MSA( hmmalign_msa_ch )
-    pfam_hits     = ANNOTATE_MODELS( fa_seed_msa_ch )
-    structure_ch  = PREDICT_STRUCTURES(hmmalign_msa_ch)
-    pdb_ch        = structure_ch.pdb_ch
-    scores_ch     = structure_ch.scores_ch
-    foldseek_hits = ANNOTATE_STRUCTURES(pdb_ch)
+    fa_msa_ch      = REFORMAT_HMMALIGN_MSA(hmmalign_msa_ch).fa_ch
+    pfam_hits      = ANNOTATE_MODELS(fa_seed_msa_ch)
+    structure_ch   = PREDICT_STRUCTURES(hmmalign_msa_ch)
+    pdb_ch         = structure_ch.pdb_ch
+    scores_ch      = structure_ch.scores_ch
+    cif_ch         = structure_ch.cif_ch
+    foldseek_hits  = ANNOTATE_STRUCTURES(pdb_ch)
 
-    // export_data
-    EXPORT_DATA(generated_families.metadata, generated_families.converged, \
-        generated_families.tsv, pfam_hits, foldseek_hits, scores_ch)
+    // export_db
+    EXPORT_DB(generated_families.metadata, generated_families.converged, \
+        generated_families.tsv, pfam_hits, foldseek_hits, scores_ch, \
+        cif_ch, fa_seed_msa_ch, fa_msa_ch, \
+        generated_families.hmm, generated_families.rf)
 }

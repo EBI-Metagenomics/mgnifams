@@ -36,7 +36,12 @@
                     "type": "string",
                     "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/bin/db_config.ini",
                     "description": "secrets for sqlite db"
-                }
+                },
+                "db_schema_file": {
+                    "type": "string",
+                    "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/mgnifams/DB/schema.sqlite",
+                    "description": "schema for sqlite db"
+                },
             },
             "required": [
                 "scriptDir",
@@ -44,7 +49,8 @@
                 "outDir",
                 "sequence_explorer_protein_path",
                 "esm_conda_path",
-                "db_config_file"
+                "db_config_file",
+                "db_schema_file"
             ]
         },
         "module_parameters": {
