@@ -78,8 +78,8 @@ process CHUNK_CLUSTERS {
 }
 
 process REFINE_FAMILIES_PARALLEL {
-    // publishDir "${params.outDir}/families/", mode: "copy"
     conda "${moduleDir}/environment.yml"
+    errorStrategy 'finish'
     
     input:
     path(clusters_chunk)
