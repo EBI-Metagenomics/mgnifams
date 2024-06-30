@@ -142,6 +142,6 @@ process APPEND_BLOBS_PARALLEL {
     path "${db}"
 
     """
-    python3 ${params.scriptDir}/post-processing/append_blobs_sqlite_parallel.py ${db} output families
+    python3 ${params.scriptDir}/post-processing/append_blobs_sqlite_parallel.py ${db} output families ${task.cpus}
     """
 }

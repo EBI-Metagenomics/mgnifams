@@ -85,6 +85,7 @@ def import_files(db_path, base_dir, family_dir, max_workers=8):
     conn.close()
 
     tasks = []
+    print(f"Using {max_workers} parallel import jobs\n")
     for row in rows:
         tasks.extend(process_row(db_path, base_dir, family_dir, row))
 
@@ -94,16 +95,17 @@ def import_files(db_path, base_dir, family_dir, max_workers=8):
             future.result()  # This will raise exceptions if any occurred during processing
 
 def main():
-    if len(sys.argv) != 4:
-        print("Usage: python3 ${params.scriptDir}/post-processing/append_blobs_sqlite_parallel.py <db.sqlite3> <output_dir> <families_dir>")
+    if len(sys.argv) != 5:
+        print("Usage: python3 ${params.scriptDir}/post-processing/append_blobs_sqlite_parallel.py <db.sqlite3> <output_dir> <families_dir> <threads>")
         sys.exit(1)
 
-    db_path    = sys.argv[1]
-    base_dir   = sys.argv[2]
-    family_dir = sys.argv[3]
+    db_path     = sys.argv[1]
+    base_dir    = sys.argv[2]
+    family_dir  = sys.argv[3]
+    max_workers = int(sys.argv[4])
 
     # Import files in parallel
-    import_files(db_path, base_dir, family_dir)
+    import_files(db_path, base_dir, family_dir, max_workers)
     
 if __name__ == "__main__":
     main()
