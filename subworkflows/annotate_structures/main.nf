@@ -14,7 +14,6 @@ workflow ANNOTATE_STRUCTURES {
     def foldseek_alphafold_path = params.foldseek_db_path + "/alphafold"
     def foldseek_esm_path       = params.foldseek_db_path + "/esm"
 
-    pdb_aln       = Channel.empty()
     alphafold_aln = Channel.empty()
     esm_aln       = Channel.empty()
     

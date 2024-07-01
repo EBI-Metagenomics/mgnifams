@@ -9,17 +9,18 @@ flowchart TB
     v33["dir_name"]
     v45["informat"]
     v46["outformat"]
-    v71["informat"]
-    v72["outformat"]
-    v76["informat"]
-    v77["outformat"]
-    v82["informat"]
-    v83["outformat"]
-    v86["hmm_db"]
-    v87["db_name"]
-    v95["compute_mode"]
-    v119[" "]
-    v130["config_file"]
+    v69["informat"]
+    v70["outformat"]
+    v74["informat"]
+    v75["outformat"]
+    v79["informat"]
+    v80["outformat"]
+    v83["hmm_db"]
+    v84["db_name"]
+    v92["compute_mode"]
+    v115[" "]
+    v125["config_file"]
+    v129["schema_file"]
     end
     subgraph PREPROCESS_INPUT
     v1([REMOVE_HEADER])
@@ -53,23 +54,17 @@ flowchart TB
     v64["successful"]
     v65["discarded"]
     v66["domtblout"]
-    v67["rf"]
-    v68["hmm"]
-    v74[" "]
-    v79[" "]
-    v81["fa_ch"]
-    v85[" "]
-    v89[" "]
-    v91[" "]
-    v97[" "]
+    v72[" "]
+    v77[" "]
+    v82[" "]
+    v86[" "]
+    v88[" "]
+    v94[" "]
+    v103[" "]
     v106[" "]
-    v109[" "]
-    v114[" "]
-    v121[" "]
-    v127[" "]
-    v129[" "]
-    v133[" "]
-    v135[" "]
+    v117[" "]
+    v123[" "]
+    v132[" "]
     end
     subgraph GENERATE_FAMILIES_PARALLEL
     v17([CHUNK_CLUSTERS])
@@ -104,46 +99,49 @@ flowchart TB
     v62([POOL_FAMILY_RESULTS])
     v49(( ))
     v52(( ))
-    v69(( ))
-    v70(( ))
+    v67(( ))
+    v68(( ))
     end
     subgraph REFORMAT_SEED_MSA
-    v73([HHSUITE_REFORMAT])
-    v75([TRANSLATE_MSA_MGYPS])
+    v71([HHSUITE_REFORMAT])
+    v73([TRANSLATE_MSA_MGYPS])
     end
     subgraph REFORMAT_HMMALIGN_MSA
-    v78([HHSUITE_REFORMAT])
-    v80([TRANSLATE_MSA_MGYPS])
+    v76([HHSUITE_REFORMAT])
+    v78([TRANSLATE_MSA_MGYPS])
     end
     subgraph ANNOTATE_MODELS
-    v84([HHSUITE_REFORMAT])
-    v88([HHSUITE_HHBLITS])
-    v90([FILTER_HH_RESULTS])
+    v81([HHSUITE_REFORMAT])
+    v85([HHSUITE_HHBLITS])
+    v87([FILTER_HH_RESULTS])
     end
     subgraph PREDICT_STRUCTURES
-    v92([EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER])
-    v96([ESMFOLD])
-    v102([EXTRACT_LONG_FA])
-    v105([ESMFOLD_CPU])
-    v108([EXTRACT_ESMFOLD_SCORES])
-    v113([PARSE_CIF])
-    v93(( ))
-    v99(( ))
-    v103(( ))
+    v89([EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER])
+    v93([ESMFOLD])
+    v99([EXTRACT_LONG_FA])
+    v102([ESMFOLD_CPU])
+    v105([EXTRACT_ESMFOLD_SCORES])
+    v110([PARSE_CIF])
+    v90(( ))
+    v96(( ))
+    v100(( ))
+    v104(( ))
     v107(( ))
-    v110(( ))
-    v112(( ))
+    v109(( ))
+    v111(( ))
     end
     subgraph ANNOTATE_STRUCTURES
-    v120([FOLDSEEK_EASYSEARCH_PDB])
-    v126([FIND_ANNOTATED_FAMILIES_BY_STRUCTURE])
-    v122(( ))
+    v116([FOLDSEEK_EASYSEARCH_PDB])
+    v122([FIND_ANNOTATED_FAMILIES_BY_STRUCTURE])
+    v118(( ))
     end
-    subgraph EXPORT_DATA
-    v128([EXPORT_MGNIFAMS_CSV])
-    v131([QUERY_MGNPROTEIN_DB])
-    v132([PARSE_BIOMES])
-    v134([PARSE_DOMAINS])
+    subgraph EXPORT_DB
+    v124([EXPORT_MGNIFAMS_CSV])
+    v126([QUERY_MGNPROTEIN_DB])
+    v127([PARSE_BIOMES])
+    v128([PARSE_DOMAINS])
+    v130([INITIATE_SQLITE])
+    v131([APPEND_BLOBS_PARALLEL])
     end
     v35(( ))
     v0 --> v1
@@ -223,70 +221,74 @@ flowchart TB
     v42 --> v62
     v43 --> v62
     v44 --> v62
-    v62 --> v68
-    v62 --> v67
+    v62 --> v131
     v62 --> v66
-    v62 --> v128
+    v62 --> v124
     v62 --> v65
     v62 --> v64
     v62 --> v63
-    v62 --> v131
-    v62 --> v134
-    v62 --> v69
-    v62 --> v70
+    v62 --> v126
+    v62 --> v128
+    v62 --> v67
+    v62 --> v68
+    v69 --> v71
+    v70 --> v71
+    v67 --> v71
     v71 --> v73
-    v72 --> v73
-    v69 --> v73
-    v73 --> v75
-    v73 --> v74
-    v75 --> v84
+    v71 --> v72
+    v73 --> v81
+    v73 --> v131
+    v74 --> v76
+    v75 --> v76
+    v68 --> v76
     v76 --> v78
-    v77 --> v78
-    v70 --> v78
-    v78 --> v80
-    v78 --> v79
+    v76 --> v77
+    v78 --> v131
+    v79 --> v81
     v80 --> v81
-    v82 --> v84
-    v83 --> v84
-    v84 --> v88
+    v81 --> v85
+    v81 --> v82
+    v83 --> v85
     v84 --> v85
-    v86 --> v88
+    v85 --> v87
+    v85 --> v86
+    v87 --> v124
     v87 --> v88
-    v88 --> v90
-    v88 --> v89
-    v90 --> v128
-    v90 --> v91
-    v70 --> v92
+    v68 --> v89
+    v89 --> v90
     v92 --> v93
-    v95 --> v96
+    v90 --> v93
+    v93 --> v94
     v93 --> v96
-    v96 --> v97
+    v93 --> v104
+    v93 --> v109
+    v90 --> v99
     v96 --> v99
-    v96 --> v107
-    v96 --> v112
-    v93 --> v102
-    v99 --> v102
+    v99 --> v100
+    v100 --> v102
     v102 --> v103
-    v103 --> v105
+    v102 --> v104
+    v102 --> v109
+    v104 --> v105
     v105 --> v106
     v105 --> v107
-    v105 --> v112
-    v107 --> v108
-    v108 --> v109
-    v108 --> v110
-    v112 --> v113
-    v113 --> v114
-    v119 --> v120
-    v112 --> v120
-    v120 --> v121
-    v120 --> v122
-    v122 --> v126
+    v109 --> v110
+    v110 --> v111
+    v115 --> v116
+    v109 --> v116
+    v116 --> v117
+    v116 --> v118
+    v118 --> v122
+    v122 --> v123
+    v107 --> v124
+    v118 --> v124
+    v124 --> v130
+    v125 --> v126
     v126 --> v127
-    v110 --> v128
-    v122 --> v128
-    v128 --> v129
+    v126 --> v128
+    v127 --> v131
+    v128 --> v131
+    v129 --> v130
     v130 --> v131
+    v111 --> v131
     v131 --> v132
-    v131 --> v134
-    v132 --> v133
-    v134 --> v135
