@@ -143,7 +143,7 @@ def write_mgnifam_folds(mgnifams_out_dir, output_dir):
         structural_annotations = []
         for file_line in f:
             parts = file_line.strip().split('\t')
-            mgnifam_id = parts[0].split('.')[0]
+            mgnifam_id = parts[0].split('.')[0] # .split('.')[0] for legacy purposes, not needed by foldseek v9 onwards
             target_structure_identifier = parts[1]
 
             annotation = {

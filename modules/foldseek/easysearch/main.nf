@@ -2,18 +2,18 @@ process FOLDSEEK_EASYSEARCH {
     tag "$meta.id"
     label 'process_medium'
 
-    // conda "${moduleDir}/environment.yml"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/foldseek:8.ef4e960--pl5321hb365157_0':
-        'biocontainers/foldseek:8.ef4e960--pl5321hb365157_0' }"
+        'https://depot.galaxyproject.org/singularity/foldseek:9.427df8a--pl5321hb365157_0':
+        'biocontainers/foldseek:9.427df8a--pl5321hb365157_0' }"
 
     input:
     tuple val(meta)   , path(pdb)
     tuple val(meta_db), path(db)
 
     output:
-    tuple val(meta), path("*.m8"), emit: aln
-    path "versions.yml"          , emit: versions
+    tuple val(meta), path("${meta.id}.m8"), emit: aln
+    path "versions.yml"                   , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -26,7 +26,7 @@ process FOLDSEEK_EASYSEARCH {
         easy-search \\
         ${pdb} \\
         ${db}/${meta_db.id} \\
-        ${meta_db.id}_${prefix}.m8 \\
+        ${prefix}.m8 \\
         tmpFolder \\
         ${args}
 
@@ -41,7 +41,7 @@ process FOLDSEEK_EASYSEARCH {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    touch ${meta_db.id}_${prefix}.m8
+    touch ${prefix}.m8
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
