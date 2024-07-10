@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-include { FILTER_UNANNOTATED_SLICES } from "${params.moduleDir}/initiate.nf"
+include { FILTER_UNANNOTATED_SLICES } from "../../modules/initiate.nf"
 
 workflow INITIATE_PROTEINS {
     take:

@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 
-include { EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER } from "${params.moduleDir}/family/main.nf"
-include { ESMFOLD                                       } from "${params.moduleDir}/esmfold/main.nf"
-include { EXTRACT_LONG_FA                               } from "${params.moduleDir}/esmfold/extract_long_fa.nf"
-include { ESMFOLD_CPU                                   } from "${params.moduleDir}/esmfold/cpu.nf"
-include { EXTRACT_ESMFOLD_SCORES                        } from "${params.moduleDir}/esmfold/extract_esmfold_scores.nf"
-include { PARSE_CIF                                     } from "${params.moduleDir}/esmfold/parse_cif.nf"
+include { EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER } from "../../modules/family/main.nf"
+include { ESMFOLD                                       } from "../../modules/esmfold/main.nf"
+include { EXTRACT_LONG_FA                               } from "../../modules/esmfold/extract_long_fa.nf"
+include { ESMFOLD_CPU                                   } from "../../modules/esmfold/cpu.nf"
+include { EXTRACT_ESMFOLD_SCORES                        } from "../../modules/esmfold/extract_esmfold_scores.nf"
+include { PARSE_CIF                                     } from "../../modules/esmfold/parse_cif.nf"
 
 workflow PREDICT_STRUCTURES {
     take:

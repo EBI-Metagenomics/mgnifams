@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import os
 
@@ -44,7 +46,7 @@ def process_file(input_file, output_file):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: python bin/post-processing/translate_msa_mgyps.py input_folder output_folder") # msa or seed_msa paths
+        print("Usage: python3 bin/translate_msa_mgyps.py input_folder output_folder") # msa or seed_msa paths
     else:
         input_folder  = sys.argv[1]
         output_folder = sys.argv[2]

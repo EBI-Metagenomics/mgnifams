@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sqlite3
 import sys
 import os
@@ -19,8 +21,8 @@ def construct_file_path(base_dir, family_dir, col_iter, file_column):
         2: f"{family_dir}/msa",
         3: f"{family_dir}/hmm",
         4: f"{family_dir}/rf",
-        5: "post-processing/biome_results",
-        6: "post-processing/domain_results"
+        5: "biome_results",
+        6: "domain_results"
     }
     
     directory = file_directory.get(col_iter)
@@ -96,7 +98,7 @@ def import_files(db_path, base_dir, family_dir, max_workers=8):
 
 def main():
     if len(sys.argv) != 5:
-        print("Usage: python3 ${params.scriptDir}/post-processing/append_blobs_sqlite_parallel.py <db.sqlite3> <output_dir> <families_dir> <threads>")
+        print("Usage: python3 append_blobs_sqlite_parallel.py <db.sqlite3> <output_dir> <families_dir> <threads>")
         sys.exit(1)
 
     db_path     = sys.argv[1]

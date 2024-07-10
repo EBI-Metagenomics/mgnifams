@@ -3,10 +3,9 @@
 report*
 trace*
 timeline*
-work/
+output/
 tmp/
-output/*
-output_backup/*
 venv/
+work/
 db_config.ini
 mgnifams.sqlite3

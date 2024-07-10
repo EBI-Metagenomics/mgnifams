@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 
-include { EXPORT_MGNIFAMS_CSV   } from "${params.moduleDir}/export.nf"
-include { QUERY_MGNPROTEIN_DB   } from "${params.moduleDir}/postprocess.nf"
-include { PARSE_BIOMES          } from "${params.moduleDir}/postprocess.nf"
-include { PARSE_DOMAINS         } from "${params.moduleDir}/postprocess.nf"
-include { INITIATE_SQLITE       } from "${params.moduleDir}/postprocess.nf"
-include { APPEND_BLOBS_PARALLEL } from "${params.moduleDir}/postprocess.nf"
+include { EXPORT_MGNIFAMS_CSV   } from "../../modules/export.nf"
+include { QUERY_MGNPROTEIN_DB   } from "../../modules/postprocess.nf"
+include { PARSE_BIOMES          } from "../../modules/postprocess.nf"
+include { PARSE_DOMAINS         } from "../../modules/postprocess.nf"
+include { INITIATE_SQLITE       } from "../../modules/postprocess.nf"
+include { APPEND_BLOBS_PARALLEL } from "../../modules/postprocess.nf"
 
 workflow EXPORT_DB {
     take:

@@ -17,6 +17,6 @@ process FLAG_TM {
 
     script:
     """
-    python3 ${params.scriptDir}/flag_transmembrane.py ${fraction} ${gff3} tm_ids.txt
+    flag_transmembrane.py ${fraction} ${gff3} tm_ids.txt
     """
 }

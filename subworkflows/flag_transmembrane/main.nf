@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
-include { EXTRACT_FIRST_STOCKHOLM_SEQUENCES } from "${params.moduleDir}/family/main.nf"
-include { DEEPTMHMM                         } from "${params.moduleDir}/deeptmhmm/main.nf"
-include { FLAG_TM                           } from "${params.moduleDir}/deeptmhmm/flag_tm.nf"
+include { EXTRACT_FIRST_STOCKHOLM_SEQUENCES } from "../../modules/family/main.nf"
+include { DEEPTMHMM                         } from "../../modules/deeptmhmm/main.nf"
+include { FLAG_TM                           } from "../../modules/deeptmhmm/flag_tm.nf"
 
 workflow FLAG_TRANSMEMBRANE {
     take:

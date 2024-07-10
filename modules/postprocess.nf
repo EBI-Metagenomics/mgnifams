@@ -10,7 +10,7 @@ process QUERY_MGNPROTEIN_DB {
     path "post-processing"
 
     """
-    python3 ${params.scriptDir}/post-processing/query_mgnprotein_db.py ${config_file} ${family_proteins_file}
+    query_mgnprotein_db.py ${config_file} ${family_proteins_file}
     """
 }
 
@@ -25,7 +25,7 @@ process PARSE_BIOMES {
     path "biome_results"
 
     """
-    python3 ${params.scriptDir}/post-processing/parse_biomes.py ${query_results}
+    parse_biomes.py ${query_results}
     """
 }
 
@@ -41,7 +41,7 @@ process PARSE_DOMAINS {
     path "domain_results"
 
     """
-    python3 ${params.scriptDir}/post-processing/parse_domains.py ${query_results} ${refined_families}
+    parse_domains.py ${query_results} ${refined_families}
     """
 }
 
@@ -135,13 +135,13 @@ process APPEND_BLOBS_PARALLEL {
     tuple val(meta3), path(msa_ch     , stageAs: "output/families/*")
     path hmm_ch   , stageAs: "output/families/hmm/*"
     path rf_ch    , stageAs: "output/families/rf/*"
-    path biome_ch , stageAs: "output/post-processing/*"
-    path domain_ch, stageAs: "output/post-processing/*"
+    path biome_ch , stageAs: "output/*"
+    path domain_ch, stageAs: "output/*"
     
     output:
     path "${db}"
 
     """
-    python3 ${params.scriptDir}/post-processing/append_blobs_sqlite_parallel.py ${db} output families ${task.cpus}
+    append_blobs_sqlite_parallel.py ${db} output families ${task.cpus}
     """
 }

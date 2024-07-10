@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-include { CHUNK_CLUSTERS           } from "${params.moduleDir}/family/main.nf"
-include { REFINE_FAMILIES_PARALLEL } from "${params.moduleDir}/family/main.nf"
+include { CHUNK_CLUSTERS           } from "../../modules/family/main.nf"
+include { REFINE_FAMILIES_PARALLEL } from "../../modules/family/main.nf"
 
 workflow GENERATE_FAMILIES_PARALLEL {
     take:

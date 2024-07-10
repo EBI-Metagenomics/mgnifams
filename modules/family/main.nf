@@ -1,63 +1,3 @@
-process CREATE_CLUSTERS_PKL {
-    publishDir "${params.outDir}/families/", mode: "copy"
-    
-    conda "${moduleDir}/environment.yml"
-    
-    input:
-    path(clusters_tsv)
-
-    output:
-    path("clusters_bookkeeping_df.pkl"), emit: pkl
-    path("pkl_log.txt")                , emit: pkl_log
-    path("refined_families.tsv")       , emit: refined_families
-    path("discarded_clusters.txt")     , emit: discarded_clusters
-    path("converged_families.txt")     , emit: converged_families
-    path("family_metadata.csv")        , emit: family_metadata
-
-    script:
-    """
-    python3 ${params.scriptDir}/family/create_clusters_bookkeeping_df.py ${clusters_tsv}
-    touch refined_families.tsv
-    touch discarded_clusters.txt
-    touch converged_families.txt
-    touch family_metadata.csv
-    """
-}
-
-process REFINE_FAMILIES {
-    publishDir "${params.outDir}/families/", mode: "copy"
-    conda "${moduleDir}/environment.yml"
-    
-    input:
-    path(clusters_pkl)
-    path(families_tsv)
-    path(mgnifams_fasta)
-    path(discarded_clusters)
-    path(converged_families)
-    path(family_sizes)
-    val(starting_num_sequences)
-    val(minimum_members)
-    val(iteration)
-
-    output:
-    path("seed_msa_sto/*")                , emit: seed_msa_sto
-    path("msa_sto/*")                     , emit: msa_sto
-    path("hmm/*")                         , emit: hmm
-    path("rf/*")                          , emit: rf
-    path("domtblout/*")                   , emit: domtblout
-    path("updated_refined_families.tsv")  , emit: tsv
-    path("updated_mgnifams_input.fa")     , emit: fa
-    path("updated_discarded_clusters.txt"), emit: discarded
-    path("updated_converged_families.txt"), emit: converged
-    path("updated_family_metadata.csv")   , emit: metadata
-    path("log.txt")                       , emit: log
-
-    script:
-    """
-    python3 ${params.scriptDir}/family/refine_families.py ${clusters_pkl} ${families_tsv} ${mgnifams_fasta} ${discarded_clusters} ${converged_families} ${family_sizes} ${starting_num_sequences} ${minimum_members} ${iteration}
-    """
-}
-
 process CHUNK_CLUSTERS {
     conda "${moduleDir}/environment.yml"
 
@@ -73,7 +13,7 @@ process CHUNK_CLUSTERS {
     script:
     def checked_clusters = "${checked_clusters}" ?: 0
     """
-    python3 ${params.scriptDir}/family/chunk_clusters.py ${clusters} ${checked_clusters} ${minimum_members} ${num_cluster_chunks}
+    chunk_clusters.py ${clusters} ${checked_clusters} ${minimum_members} ${num_cluster_chunks}
     """
 }
 
@@ -100,7 +40,7 @@ process REFINE_FAMILIES_PARALLEL {
 
     script:
     """
-    python3 ${params.scriptDir}/family/refine_families_parallel.py ${clusters_chunk} ${mgnifams_fasta} ${task.cpus}
+    refine_families_parallel.py ${clusters_chunk} ${mgnifams_fasta} ${task.cpus}
     """
 }
 
@@ -133,7 +73,7 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
 
     script:
     """
-    python3 ${params.scriptDir}/family/extract_first_stockholm_sequences.py msa_sto family_reps.fasta
+    extract_first_stockholm_sequences.py msa_sto family_reps.fasta
     """
 }
 
@@ -149,7 +89,7 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER {
 
     script:
     """
-    python3 ${params.scriptDir}/family/extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta
+    extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta
     """
 }
 
@@ -165,7 +105,7 @@ process MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID {
 
     script:
     """
-    python3 ${params.scriptDir}/family/map_first_a3m_sequences_to_family_id.py ${msa_a3m} fam_rep_mapping.csv
+    map_first_a3m_sequences_to_family_id.py ${msa_a3m} fam_rep_mapping.csv
     """
 }
 
@@ -180,7 +120,7 @@ process POOL_FAM_PROTEINS {
 
     script:
     """
-    python3 ${params.scriptDir}/family/pool_fam_proteins.py refined_families fam_proteins.tsv
+    pool_fam_proteins.py refined_families fam_proteins.tsv
     """
 }
 
@@ -204,7 +144,7 @@ process REMOVE_REDUNDANT_AND_TM {
 
     script:
     """
-    python3 ${params.scriptDir}/family/remove_redundant_and_tm.py \
+    remove_redundant_and_tm.py \
         ${hhblits_hits} ${fam_rep_mapping} \
         ${tm_ids} ${refined_fam_proteins} ${rep_fa} \
         non_redundant_fam_ids.txt redundant_fam_ids.txt similarity_edgelist.csv log.txt
@@ -245,24 +185,6 @@ process POOL_FAMILY_RESULTS {
 
     script:
     """
-    python3 ${params.scriptDir}/family/pool_results.py families_prepooled families ${non_redundant_family_ids} ${similarity_edgelist}
-    """
-}
-
-process POOL_FAMILY_RESULTS_FROM_FOLDER {
-    publishDir "${params.outDir}/", mode: "copy"
-    conda "${moduleDir}/environment.yml"
-
-    input:
-    path(families_dir)
-    path(non_redundant_family_ids)
-    path(similarity_edgelist)
-
-    output:
-    path("families_pooled")
-
-    script:
-    """
-    python3 ${params.scriptDir}/family/pool_results.py ${families_dir} ${non_redundant_family_ids} ${similarity_edgelist}
+    pool_results.py families_prepooled families ${non_redundant_family_ids} ${similarity_edgelist}
     """
 }
