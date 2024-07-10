@@ -135,8 +135,8 @@ process APPEND_BLOBS_PARALLEL {
     tuple val(meta3), path(msa_ch     , stageAs: "output/families/*")
     path hmm_ch   , stageAs: "output/families/hmm/*"
     path rf_ch    , stageAs: "output/families/rf/*"
-    path biome_ch , stageAs: "output/*"
-    path domain_ch, stageAs: "output/*"
+    path biome_ch , stageAs: "output/post-processing/*"
+    path domain_ch, stageAs: "output/post-processing/*"
     
     output:
     path "${db}"

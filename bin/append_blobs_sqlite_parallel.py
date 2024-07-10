@@ -21,8 +21,8 @@ def construct_file_path(base_dir, family_dir, col_iter, file_column):
         2: f"{family_dir}/msa",
         3: f"{family_dir}/hmm",
         4: f"{family_dir}/rf",
-        5: "biome_results",
-        6: "domain_results"
+        5: "post-processing/biome_results",
+        6: "post-processing/domain_results"
     }
     
     directory = file_directory.get(col_iter)

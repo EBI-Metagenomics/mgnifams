@@ -99,7 +99,7 @@ def main():
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    df = pl.read_csv(arg_clusters, separator='\t', has_header=False)
+    df = pl.read_csv(arg_clusters, separator='\t', has_header=False, dtypes={'column_1': pl.Utf8, 'column_2': pl.Utf8})
     df = df.rename({"column_1": "rep", "column_2": "mem"})
     
     filtered_df = remove_clusters(df, arg_checked_clusters)
