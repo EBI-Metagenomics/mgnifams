@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 import csv
 from Bio.Seq import Seq

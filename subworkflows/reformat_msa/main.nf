@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-include { HHSUITE_REFORMAT    } from "${params.moduleDir}/hhsuite/reformat/main.nf"
-include { TRANSLATE_MSA_MGYPS } from "${params.moduleDir}/translate.nf"
+include { HHSUITE_REFORMAT    } from "../../modules/hhsuite/reformat/main.nf"
+include { TRANSLATE_MSA_MGYPS } from "../../modules/translate.nf"
 
 workflow REFORMAT_MSA {
     take:

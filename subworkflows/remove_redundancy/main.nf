@@ -1,13 +1,13 @@
 #!/usr/bin/env nextflow
 
-include { HHSUITE_REFORMAT                     } from "${params.moduleDir}/hhsuite/reformat/main.nf"
-include { HHSUITE_BUILDHHDB                    } from "${params.moduleDir}/hhsuite/buildhhdb/main.nf"
-include { HHSUITE_HHBLITS                      } from "${params.moduleDir}/hhsuite/hhblits/main.nf"
-include { COMBINE_HH_RESULTS                   } from "${params.moduleDir}/hhsuite/combine_hh_results.nf"
-include { MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID } from "${params.moduleDir}/family/main.nf"
-include { POOL_FAM_PROTEINS                    } from "${params.moduleDir}/family/main.nf"
-include { REMOVE_REDUNDANT_AND_TM              } from "${params.moduleDir}/family/main.nf"
-include { POOL_FAMILY_RESULTS                  } from "${params.moduleDir}/family/main.nf"
+include { HHSUITE_REFORMAT                     } from "../../modules/hhsuite/reformat/main.nf"
+include { HHSUITE_BUILDHHDB                    } from "../../modules/hhsuite/buildhhdb/main.nf"
+include { HHSUITE_HHBLITS                      } from "../../modules/hhsuite/hhblits/main.nf"
+include { COMBINE_HH_RESULTS                   } from "../../modules/hhsuite/combine_hh_results.nf"
+include { MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID } from "../../modules/family/main.nf"
+include { POOL_FAM_PROTEINS                    } from "../../modules/family/main.nf"
+include { REMOVE_REDUNDANT_AND_TM              } from "../../modules/family/main.nf"
+include { POOL_FAMILY_RESULTS                  } from "../../modules/family/main.nf"
 
 workflow REMOVE_REDUNDANCY {
     take:

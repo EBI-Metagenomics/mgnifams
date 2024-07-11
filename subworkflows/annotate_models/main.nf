@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
-include { HHSUITE_REFORMAT  } from "${params.moduleDir}/hhsuite/reformat/main.nf"
-include { HHSUITE_HHBLITS   } from "${params.moduleDir}/hhsuite/hhblits/main.nf"
-include { HHSUITE_HHSEARCH  } from "${params.moduleDir}/hhsuite/hhsearch/main.nf"
-include { FILTER_HH_RESULTS } from "${params.moduleDir}/hhsuite/filter_hh_results.nf"
+include { HHSUITE_REFORMAT  } from "../../modules/hhsuite/reformat/main.nf"
+include { HHSUITE_HHBLITS   } from "../../modules/hhsuite/hhblits/main.nf"
+include { HHSUITE_HHSEARCH  } from "../../modules/hhsuite/hhsearch/main.nf"
+include { FILTER_HH_RESULTS } from "../../modules/hhsuite/filter_hh_results.nf"
 
 workflow ANNOTATE_MODELS {
     take:

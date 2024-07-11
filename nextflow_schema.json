@@ -11,13 +11,6 @@
             "description": "Define where the pipeline should find input data and save output data.",
             "default": "",
             "properties": {
-                "scriptDir": {
-                    "type": "string",
-                    "default": "bin/"
-                },
-                "moduleDir": {
-                    "type": "string"
-                },
                 "outDir": {
                     "type": "string",
                     "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output"
@@ -34,18 +27,16 @@
                 },
                 "db_config_file": {
                     "type": "string",
-                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/bin/db_config.ini",
+                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/assets/db_config.ini",
                     "description": "secrets for sqlite db"
                 },
                 "db_schema_file": {
                     "type": "string",
-                    "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/mgnifams/DB/schema.sqlite",
+                    "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/mgnifams/assets/db_schema.sqlite",
                     "description": "schema for sqlite db"
                 },
             },
             "required": [
-                "scriptDir",
-                "moduleDir",
                 "outDir",
                 "sequence_explorer_protein_path",
                 "esm_conda_path",
@@ -153,6 +144,13 @@
                     "type": "boolean",
                     "hidden": true,
                     "description": "Display help text."
+                },
+                "validate_params": {
+                    "type": "boolean",
+                    "description": "Boolean whether to validate parameters against the schema at runtime",
+                    "default": true,
+                    "fa_icon": "fas fa-check-square",
+                    "hidden": true
                 }
             }
         }

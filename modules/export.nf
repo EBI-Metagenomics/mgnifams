@@ -1,5 +1,5 @@
 process EXPORT_MGNIFAMS_CSV {
-    publishDir "${params.outDir}", mode: "copy"
+    publishDir "${params.outDir}/post-processing", mode: "copy"
     label "venv"
 
     input:
@@ -14,21 +14,6 @@ process EXPORT_MGNIFAMS_CSV {
     path "tables"
 
     """
-    python3 ${params.scriptDir}/export_mgnifams_csvs.py results families tables
-    """
-}
-
-process EXPORT_MGNIFAMS_CSV_FROM_FOLDER {
-    publishDir "${params.outDir}", mode: "copy"
-    label "venv"
-
-    input:
-    path out_dir
-
-    output:
-    path "tables"
-
-    """
-    python3 ${params.scriptDir}/export_mgnifams_csvs.py ${out_dir} families tables
+    export_mgnifams_csvs.py results families tables
     """
 }

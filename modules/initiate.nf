@@ -10,6 +10,6 @@ process FILTER_UNANNOTATED_SLICES {
 
     script:
     """
-    python3 ${params.scriptDir}/filter_unannotated_slices_fasta.py ${sequence_chunk} ${sequence_chunk.baseName}.fa ${min_sequence_length}
+    filter_unannotated_slices_fasta.py ${sequence_chunk} ${sequence_chunk.baseName}.fa ${min_sequence_length}
     """
 }

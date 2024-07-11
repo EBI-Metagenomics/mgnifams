@@ -9,6 +9,6 @@ process TRANSLATE_MSA_MGYPS {
 
     script:
     """
-    python3 ${params.scriptDir}/translate_msa_mgyps.py ${msa_fas} ${meta.id}
+    translate_msa_mgyps.py ${msa_fas} ${meta.id}
     """
 }

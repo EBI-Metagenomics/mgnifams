@@ -10,6 +10,6 @@ process EXTRACT_LONG_FA {
 
     script:
     """
-    python3 ${params.scriptDir}/extract_long_fa.py fasta scores family_reps.fasta
+    extract_long_fa.py fasta scores family_reps.fasta
     """
 }

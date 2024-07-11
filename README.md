@@ -7,13 +7,13 @@ nextflow run main.nf -c conf/end-to-end.config -profile slurm -with-tower
 local:  
 nextflow run main.nf -c conf/end-to-end.config -profile local
 
-![alt text](images/pipeline.jpg)
+![alt text](assets/pipeline.jpg)
 
 The end-to-end MGnifams pipeline chains the subworkflows of four thematically different workflows; setup_clusters, generate_nonredundant_families, annotate_families and export_db. After the pipeline finishes its execution, the produced db can be copied to either the mgnifams-site repo for local testing, or directly to ifs (/nfs/public/rw/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
 The four thematic workflows can be seen below, along with their respective same-coloured subworkflows and modules:
 
-![alt text](images/workflows.png)
+![alt text](assets/workflows.png)
 
 After the db has been produced by the pipeline, do the following:  
 * copy db to site/ifs  
