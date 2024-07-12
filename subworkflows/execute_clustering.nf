@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
-include { MMSEQS_CREATEDB     } from "../../modules/mmseqs/createdb/main.nf"
-include { MMSEQS_LINCLUST     } from "../../modules/mmseqs/linclust/main.nf"
-include { EXPORT_CLUSTERS_TSV } from "../../modules/mmseqs/export_clusters_tsv.nf"
+include { MMSEQS_CREATEDB     } from "../modules/nf-core/mmseqs/createdb/main.nf"
+include { MMSEQS_LINCLUST     } from "../modules/nf-core/mmseqs/linclust/main.nf"
+include { EXPORT_CLUSTERS_TSV } from "../modules/local/export_clusters_tsv.nf"
 
 workflow EXECUTE_CLUSTERING {
     take:

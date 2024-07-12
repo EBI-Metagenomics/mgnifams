@@ -125,7 +125,7 @@ process POOL_FAM_PROTEINS {
 }
 
 process REMOVE_REDUNDANT_AND_TM {
-    publishDir "${params.outDir}/redundancy/", mode: "copy"
+    publishDir "${params.outdir}/redundancy/", mode: "copy"
     tag "$meta.id"
     label "venv"
 
@@ -152,7 +152,7 @@ process REMOVE_REDUNDANT_AND_TM {
 }
 
 process POOL_FAMILY_RESULTS {
-    publishDir "${params.outDir}/", mode: "copy"
+    publishDir "${params.outdir}/", mode: "copy"
     conda "${moduleDir}/environment.yml"
 
     input:

@@ -1,6 +1,6 @@
 process PARSE_CIF {
     label "venv"
-    publishDir "${params.outDir}/structures/cif", mode: "copy"
+    publishDir "${params.outdir}/structures/cif", mode: "copy"
 
     input:
     tuple val(meta), path(pdb_folder)

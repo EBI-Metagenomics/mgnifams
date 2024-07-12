@@ -30,7 +30,7 @@ workflow ANNOTATE_STRUCTURES {
         .concat(alphafold_aln)
         .concat(esm_aln)
         .map { it[1] }
-        .collectFile(name: 'foldseek_hits.tsv', storeDir: params.outDir + "/structures/foldseek")
+        .collectFile(name: 'foldseek_hits.tsv', storeDir: params.outdir + "/structures/foldseek")
     FIND_ANNOTATED_FAMILIES_BY_STRUCTURE(foldseek_hits)
 
     emit:

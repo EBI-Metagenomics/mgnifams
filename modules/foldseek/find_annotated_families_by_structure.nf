@@ -1,5 +1,5 @@
 process FIND_ANNOTATED_FAMILIES_BY_STRUCTURE {
-    publishDir "${params.outDir}/structures/foldseek", mode: "copy"
+    publishDir "${params.outdir}/structures/foldseek", mode: "copy"
     label "general"
 
     input:

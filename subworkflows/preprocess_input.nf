@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
-include { DECOMPRESS_GZ  } from "../../modules/preprocess.nf"
-include { DECOMPRESS_BZ2 } from "../../modules/preprocess.nf"
-include { REMOVE_HEADER  } from "../../modules/preprocess.nf"
+include { DECOMPRESS_GZ  } from "../modules/local/decompress_gz.nf"
+include { DECOMPRESS_BZ2 } from "../modules/local/decompress_bz2.nf"
+include { REMOVE_HEADER  } from "../modules/local/remove_header.nf"
 
 workflow PREPROCESS_INPUT {
     take:

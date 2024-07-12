@@ -1,5 +1,5 @@
 process EXPORT_MGNIFAMS_CSV {
-    publishDir "${params.outDir}/post-processing", mode: "copy"
+    publishDir "${params.outdir}/post-processing", mode: "copy"
     label "venv"
 
     input:

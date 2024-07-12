@@ -1,5 +1,5 @@
 process QUERY_MGNPROTEIN_DB {
-    publishDir "${params.outDir}", mode: "copy"
+    publishDir "${params.outdir}", mode: "copy"
     label "venv"
 
     input:
@@ -15,7 +15,7 @@ process QUERY_MGNPROTEIN_DB {
 }
 
 process PARSE_BIOMES {
-    publishDir "${params.outDir}/post-processing", mode: "copy"
+    publishDir "${params.outdir}/post-processing", mode: "copy"
     label "venv"
 
     input:
@@ -30,7 +30,7 @@ process PARSE_BIOMES {
 }
 
 process PARSE_DOMAINS {
-    publishDir "${params.outDir}/post-processing", mode: "copy"
+    publishDir "${params.outdir}/post-processing", mode: "copy"
     label "venv"
 
     input:
@@ -125,7 +125,7 @@ process INITIATE_SQLITE {
 }
 
 process APPEND_BLOBS_PARALLEL {
-    publishDir "${params.outDir}/post-processing", mode: "copy"
+    publishDir "${params.outdir}/post-processing", mode: "copy"
     label "venv"
 
     input:

@@ -1,5 +1,5 @@
 process FILTER_HH_RESULTS {
-    publishDir "${params.outDir}/hh", mode: "copy"
+    publishDir "${params.outdir}/hh", mode: "copy"
     label "general"
 
     input:

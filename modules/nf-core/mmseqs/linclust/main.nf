@@ -1,6 +1,6 @@
-process MMSEQS_CREATEDB {
+process MMSEQS_LINCLUST {
     tag "$meta.id"
-    label 'process_low'
+    // label 'process_high'
 
     // conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,32 +8,33 @@ process MMSEQS_CREATEDB {
         'biocontainers/mmseqs2:15.6f452--pl5321h6a68c12_0' }"
 
     input:
-    tuple val(meta), path(sequence)
+    tuple val(meta), path(db_input)
 
     output:
-    tuple val(meta), path("${prefix}/"), emit: db
-    path "versions.yml"                , emit: versions
+    tuple val(meta), path("${prefix}/"), emit: db_cluster
+    path "versions.yml"                , topic: 'versions'
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: "*.dbtype"
     prefix = task.ext.prefix ?: "${meta.id}"
-    def is_compressed = sequence.getExtension() == "gz" ? true : false
-    def sequence_name = is_compressed ? sequence.getBaseName() : sequence
-    """
-    if [ "${is_compressed}" == "true" ]; then
-        gzip -c -d ${sequence} > ${sequence_name}
-    fi
+    if ("$db_input" == "${prefix}") error "Input and output names of databases are the same, set prefix in module configuration to disambiguate!"
 
+    """
     mkdir -p ${prefix}
+    # Extract files with specified args based suffix | remove suffix | isolate longest common substring of files
+    DB_INPUT_PATH_NAME=\$(find -L "$db_input/" -maxdepth 1 -name "$args2" | sed 's/\\.\\[^.\\]*\$//' |  sed -e 'N;s/^\\(.*\\).*\\n\\1.*\$/\\1\\n\\1/;D' )
 
     mmseqs \\
-        createdb \\
-        ${sequence_name} \\
+        linclust \\
+        \$DB_INPUT_PATH_NAME \\
         ${prefix}/${prefix} \\
+        tmp1 \\
         $args \\
+        --threads ${task.cpus} \\
         --compressed 0
 
     cat <<-END_VERSIONS > versions.yml
@@ -48,14 +49,9 @@ process MMSEQS_CREATEDB {
     """
     mkdir -p ${prefix}
 
-    touch ${prefix}/${prefix}
+    touch ${prefix}/${prefix}.{0..9}
     touch ${prefix}/${prefix}.dbtype
     touch ${prefix}/${prefix}.index
-    touch ${prefix}/${prefix}.lookup
-    touch ${prefix}/${prefix}.source
-    touch ${prefix}/${prefix}_h
-    touch ${prefix}/${prefix}_h.dbtype
-    touch ${prefix}/${prefix}_h.index
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

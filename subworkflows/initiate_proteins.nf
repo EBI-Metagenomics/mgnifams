@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-include { FILTER_UNANNOTATED_SLICES } from "../../modules/initiate.nf"
+include { FILTER_UNANNOTATED_SLICES } from "../modules/local/filter_unannotated_slices.nf"
 
 workflow INITIATE_PROTEINS {
     take:
@@ -11,7 +11,7 @@ workflow INITIATE_PROTEINS {
         .splitText(file:true, by: params.input_csv_chunk_size)
         .set { sequence_chunk_ch }
     fasta_chunk_ch = FILTER_UNANNOTATED_SLICES(sequence_chunk_ch, params.min_sequence_length)
-    fasta_ch = fasta_chunk_ch.collectFile(name: "mgnifams_input.fa", storeDir: params.outDir)
+    fasta_ch = fasta_chunk_ch.collectFile(name: "mgnifams_input.fa", storeDir: params.outdir)
 
     emit:
     fasta_ch
