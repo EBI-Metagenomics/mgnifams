@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
-include { GENERATE_FAMILIES_PARALLEL } from "./generate_families_parallel/main.nf"
-include { FLAG_TRANSMEMBRANE         } from "./flag_transmembrane/main.nf"
-include { MOVE_TO_DIR                } from "../modules/family/main.nf"
-include { REMOVE_REDUNDANCY          } from "./remove_redundancy/main.nf"
+include { GENERATE_FAMILIES_PARALLEL } from "./generate_families_parallel.nf"
+include { FLAG_TRANSMEMBRANE         } from "./flag_transmembrane.nf"
+include { MOVE_TO_DIR                } from "../modules/local/move_to_dir.nf"
+include { REMOVE_REDUNDANCY          } from "./remove_redundancy.nf"
 
 workflow GENERATE_NONREDUNDANT_FAMILIES {
     take:

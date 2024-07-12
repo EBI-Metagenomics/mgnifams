@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
-include { PREPROCESS_INPUT   } from "./preprocess_input/main.nf"
-include { INITIATE_PROTEINS  } from "./initiate_proteins/main.nf"
-include { EXECUTE_CLUSTERING } from "./execute_clustering/main.nf"
+include { PREPROCESS_INPUT   } from "./preprocess_input.nf"
+include { INITIATE_PROTEINS  } from "./initiate_proteins.nf"
+include { EXECUTE_CLUSTERING } from "./execute_clustering.nf"
 
 workflow SETUP_CLUSTERS {
     take:

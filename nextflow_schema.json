@@ -11,7 +11,7 @@
             "description": "Define where the pipeline should find input data and save output data.",
             "default": "",
             "properties": {
-                "outDir": {
+                "outdir": {
                     "type": "string",
                     "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output"
                 },
@@ -34,10 +34,10 @@
                     "type": "string",
                     "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/mgnifams/assets/db_schema.sqlite",
                     "description": "schema for sqlite db"
-                },
+                }
             },
             "required": [
-                "outDir",
+                "outdir",
                 "sequence_explorer_protein_path",
                 "esm_conda_path",
                 "db_config_file",
@@ -78,6 +78,16 @@
                     "type": "number",
                     "description": "Predicted transmembrane fraction of total length allowed for families"
                 },
+                "redundant_threshold": {
+                    "type": "number",
+                    "default": 0.95,
+                    "description": "AA Jaccard Index threshold to deem two families similar, hence removing one as redundant"
+                },
+                "similarity_threshold": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "Family Jaccard Index threshold to deem two families similar, requiring further investigation at AA level"
+                },
                 "db_name": {
                     "type": "string",
                     "default": "pfam",
@@ -106,6 +116,8 @@
                 "minimum_members",
                 "num_cluster_chunks",
                 "tm_fraction_threshold",
+                "redundant_threshold",
+                "similarity_threshold",
                 "db_name",
                 "hh_mode",
                 "pdb_chunk_size",
@@ -144,6 +156,22 @@
                     "type": "boolean",
                     "hidden": true,
                     "description": "Display help text."
+                },
+                "publish_dir_mode": {
+                    "type": "string",
+                    "default": "copy",
+                    "description": "Method used to save pipeline results to output directory.",
+                    "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
+                    "fa_icon": "fas fa-copy",
+                    "enum": [
+                        "symlink",
+                        "rellink",
+                        "link",
+                        "copy",
+                        "copyNoFollow",
+                        "move"
+                    ],
+                    "hidden": true
                 },
                 "validate_params": {
                     "type": "boolean",
