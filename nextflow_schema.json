@@ -78,6 +78,16 @@
                     "type": "number",
                     "description": "Predicted transmembrane fraction of total length allowed for families"
                 },
+                "redundant_threshold": {
+                    "type": "number",
+                    "default": 0.95,
+                    "description": "AA Jaccard Index threshold to deem two families similar, hence removing one as redundant"
+                },
+                "similarity_threshold": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "Family Jaccard Index threshold to deem two families similar, requiring further investigation at AA level"
+                },
                 "db_name": {
                     "type": "string",
                     "default": "pfam",
@@ -106,6 +116,8 @@
                 "minimum_members",
                 "num_cluster_chunks",
                 "tm_fraction_threshold",
+                "redundant_threshold",
+                "similarity_threshold",
                 "db_name",
                 "hh_mode",
                 "pdb_chunk_size",

@@ -302,12 +302,13 @@ def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
     write_non_redundant_fam_ids(fams_to_export, non_redundant_fam_ids_file)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 10:
+    if len(sys.argv) != 12:
         print("Usage: python remove_redundant_and_tm.py <hh_hits> <fam_rep_mapping> <tm_ids_file> <fam_proteins_file> <rep_fa_file> \
-            <non_redundant_fam_ids> <redundant_fam_ids> <similarity_edgelist> <log.txt>")
+            <non_redundant_fam_ids> <redundant_fam_ids> <similarity_edgelist> <log.txt> <redundant_threshold> <similarity_threshold>")
         sys.exit(1)
 
     initialize_outfiles(sys.argv[6:10]) # for the three output files: 6, 7, 8
     export_non_redundant_family_ids(sys.argv[1], sys.argv[2], \
         sys.argv[3], sys.argv[4], sys.argv[5], \
-        sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9])
+        sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], \
+        float(sys.argv[10]), float(sys.argv[11]))

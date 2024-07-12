@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 
-include { REFORMAT_MSA as REFORMAT_SEED_MSA     } from "./reformat_msa/main.nf"
-include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA } from "./reformat_msa/main.nf"
-include { ANNOTATE_MODELS                       } from "./annotate_models/main.nf"
-include { PREDICT_STRUCTURES                    } from "./predict_structures/main.nf"
-include { ANNOTATE_STRUCTURES                   } from "./annotate_structures/main.nf"
+include { REFORMAT_MSA as REFORMAT_SEED_MSA     } from "./reformat_msa.nf"
+include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA } from "./reformat_msa.nf"
+include { ANNOTATE_MODELS                       } from "./annotate_models.nf"
+include { PREDICT_STRUCTURES                    } from "./predict_structures.nf"
+include { ANNOTATE_STRUCTURES                   } from "./annotate_structures.nf"
 
 workflow ANNOTATE_FAMILIES {
     take:
