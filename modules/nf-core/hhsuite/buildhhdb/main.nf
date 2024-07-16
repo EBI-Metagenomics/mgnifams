@@ -2,7 +2,7 @@ process HHSUITE_BUILDHHDB {
     tag "$meta.id"
     // label 'process_high'
 
-    container 'quay.io/microbiome-informatics/hh-suite-db-builder:1.0.0'
+    container "quay.io/microbiome-informatics/hh-suite-db-builder:1.0.0"
 
     input:
     tuple val(meta), path(a3m)
