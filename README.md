@@ -3,9 +3,9 @@ Starting from MGnify proteins, MGnifams aim to: i) generate microbial sequence f
 
 ## Nextflow pipeline
 slurm:  
-nextflow run main.nf -profile slurm -with-tower 
+nextflow run main.nf -profile slurm,conda,singularity -with-tower 
 local:  
-nextflow run main.nf -profile test_local
+nextflow run main.nf -profile test_local,conda,singularity
 
 ![alt text](assets/pipeline.jpg)
 
