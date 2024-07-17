@@ -2,10 +2,14 @@
 Starting from MGnify proteins, MGnifams aim to: i) generate microbial sequence families to expand the currently known protein family space, ii) aid in their characterisation and iii) investigate potential novel functionalities.
 
 ## Nextflow pipeline
-slurm:  
-nextflow run main.nf -profile slurm,conda,singularity -with-tower 
-local:  
+slurm:
+```
+nextflow run main.nf -profile slurm,conda,singularity -with-tower
+```
+local:
+```
 nextflow run main.nf -profile test_local,conda,singularity
+```
 
 ![alt text](assets/pipeline.jpg)
 
@@ -107,3 +111,14 @@ chmod 775 mgnifams.sqlite3 after moving the db there
 
 ## Anti bus-factor 1 measures
 Currently, extra documentation can be found in the google doc: https://docs.google.com/document/d/1eeglnQb9M-D0iK9AFbTypLYvvKHeUg6XtzmlKN874k4/edit
+
+## External usage
+The pipeline is also useable outside the MGnify team, given a protein fasta file as input.
+The **--input** parameter denotes the fasta file and the **--fasta_input_mode** flag parameter must be set to true.
+
+Example usage:
+```
+nextflow run main.nf -profile test_local,conda,singularity --input assets/test_data/mgnifams_input.fa  --fasta_input_mode true
+```
+**
+The HHsuite Pfam database (https://wwwuser.gwdguser.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/pfamA_35.0.tar.gz) and the respective foldseek databases (foldseek downloads command for PDB and optionally AlphaFold and ESMAtlas, https://github.com/steineggerlab/foldseek) must be downloaded by the user and the parameters **hhdb_folder_path** and **foldseek_db_path** must be set accordingly.

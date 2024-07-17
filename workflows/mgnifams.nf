@@ -30,7 +30,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS    } from '../modules/nf-core/custom/dumps
 nextflow.preview.topic = true
 
 workflow MGNIFAMS {
-    setup_res          = SETUP_CLUSTERS(params.sequence_explorer_protein_path, params.compress_mode)    
+    setup_res          = SETUP_CLUSTERS(params.input, params.fasta_input_mode, params.compress_mode)    
     generated_families = GENERATE_NONREDUNDANT_FAMILIES(setup_res.clusters_tsv, [], setup_res.mgnifams_input_fa)
     annotated_families = ANNOTATE_FAMILIES(generated_families.seed_msa_sto, generated_families.msa_sto)
     EXPORT_DB(generated_families.metadata, generated_families.converged, generated_families.tsv, \
