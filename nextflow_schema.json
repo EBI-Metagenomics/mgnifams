@@ -11,14 +11,15 @@
             "description": "Define where the pipeline should find input data and save output data.",
             "default": "",
             "properties": {
-                "outdir": {
-                    "type": "string",
-                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output"
-                },
-                "sequence_explorer_protein_path": {
+                "input": {
                     "type": "string",
                     "default": "/nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_2/sequence_explorer_protein.csv.bz2",
-                    "description": "The pipeline main input data."
+                    "description": "The pipeline main input data. Either sequence_explorer_protein from MGnify proteins, or a fasta file with fasta_input_mode set to true."
+                },
+                "fasta_input_mode": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "If this flag is set, the pipeline starts from a fasta-file, without executing the preprocessing steps required for the sequence_explorer_protein file from MGnify proteins."
                 },
                 "esm_conda_path": {
                     "type": "string",
@@ -34,14 +35,18 @@
                     "type": "string",
                     "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/mgnifams/assets/db_schema.sqlite",
                     "description": "schema for sqlite db"
+                },
+                "outdir": {
+                    "type": "string",
+                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output"
                 }
             },
             "required": [
-                "outdir",
-                "sequence_explorer_protein_path",
+                "input",
                 "esm_conda_path",
                 "db_config_file",
-                "db_schema_file"
+                "db_schema_file",
+                "outdir"
             ]
         },
         "module_parameters": {
