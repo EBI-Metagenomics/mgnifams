@@ -20,15 +20,18 @@ workflow EXPORT_DB {
     msa_ch
     hmm_ch
     rf_ch
+    fasta_input_mode
     
     main:
     tables = EXPORT_MGNIFAMS_CSV(fam_metadata, fam_converged, \
         refined_families, pfam_hits, foldseek_hits, predict_scores)
-    query_results  = QUERY_MGNPROTEIN_DB(params.db_config_file, refined_families)
-    biome_results  = PARSE_BIOMES(query_results)
-    domain_results = PARSE_DOMAINS(query_results, refined_families)
+    if (!fasta_input_mode) {
+        query_results  = QUERY_MGNPROTEIN_DB(params.db_config_file, refined_families)
+        biome_results  = PARSE_BIOMES(query_results)
+        domain_results = PARSE_DOMAINS(query_results, refined_families)
 
-    db = INITIATE_SQLITE(params.db_schema_file, tables)
-    APPEND_BLOBS_PARALLEL(db, cif_ch, seed_msa_ch, msa_ch, hmm_ch, rf_ch, \
-        biome_results, domain_results)
+        db = INITIATE_SQLITE(params.db_schema_file, tables)
+        APPEND_BLOBS_PARALLEL(db, cif_ch, seed_msa_ch, msa_ch, hmm_ch, rf_ch, \
+            biome_results, domain_results)
+    }
 }

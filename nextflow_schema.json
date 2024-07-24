@@ -44,8 +44,6 @@
             "required": [
                 "input",
                 "esm_conda_path",
-                "db_config_file",
-                "db_schema_file",
                 "outdir"
             ]
         },
@@ -64,6 +62,21 @@
                     "type": "integer",
                     "default": 100,
                     "description": "Sequence (and slice) length threshold to continue to clustering"
+                },
+                "linclust_seq_identity": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "mmseqs/linclust parameter for minimum sequence identity"
+                },
+                "linclust_coverage": {
+                    "type": "number",
+                    "default": 0.9,
+                    "description": "mmseqs/linclust parameter for minimum sequence coverage ratio"
+                },
+                "linclust_cov_mode": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "mmseqs/linclust parameter for coverage mode: 0 for both, 1 for target and 2 for query sequence"
                 },
                 "input_csv_chunk_size": {
                     "type": "integer",
@@ -113,21 +126,7 @@
                     "default": "gpu",
                     "description": "GPU or CPU mode, depending on sequence length"
                 }
-            },
-            "required": [
-                "compress_mode",
-                "min_sequence_length",
-                "input_csv_chunk_size",
-                "minimum_members",
-                "num_cluster_chunks",
-                "tm_fraction_threshold",
-                "redundant_threshold",
-                "similarity_threshold",
-                "db_name",
-                "hh_mode",
-                "pdb_chunk_size",
-                "compute_mode"
-            ]
+            }
         },
         "reference_databases": {
             "title": "reference_databases",
