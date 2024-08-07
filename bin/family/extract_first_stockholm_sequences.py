@@ -20,7 +20,7 @@ def process_file(file_path, output_fasta, problematic_seqs_file):
     except Exception as e:
         logging.error(f"Error processing file {file_path}: {e}")
         with open(problematic_seqs_file, 'a') as out_f:
-            out_f.write(f">{basename}\n")
+            out_f.write(f"{basename}\n")
 
 def main(input_msa_folder, output_fasta, problematic_seqs_file):
     for file in os.listdir(input_msa_folder):
