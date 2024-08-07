@@ -79,7 +79,6 @@ process CHUNK_CLUSTERS {
 
 process REFINE_FAMILIES_PARALLEL {
     conda "${moduleDir}/environment.yml"
-    errorStrategy 'finish'
     
     input:
     path(clusters_chunk)
@@ -129,11 +128,12 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     tuple val(meta), path(msa_sto, stageAs: "msa_sto/*")
 
     output:
-    tuple val(meta), path("family_reps.fasta")
+    tuple val(meta), path("family_reps.fasta"), emit: fa
+    path("problematic_ids.txt")               , emit: prob_ids
 
     script:
     """
-    python3 ${params.scriptDir}/family/extract_first_stockholm_sequences.py msa_sto family_reps.fasta
+    python3 ${params.scriptDir}/family/extract_first_stockholm_sequences.py msa_sto family_reps.fasta problematic_ids.txt
     """
 }
 
@@ -149,7 +149,7 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER {
 
     script:
     """
-    python3 ${params.scriptDir}/family/extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta
+    python3 ${params.scriptDir}/family/extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta problematic_ids.txt
     """
 }
 
@@ -193,6 +193,7 @@ process REMOVE_REDUNDANT_AND_TM {
     tuple val(meta), path(hhblits_hits)
     path(fam_rep_mapping)
     tuple val(meta2), path(tm_ids)
+    path(prob_ids)
     path(refined_fam_proteins)
     tuple val(meta3), path(rep_fa)
 
@@ -206,7 +207,7 @@ process REMOVE_REDUNDANT_AND_TM {
     """
     python3 ${params.scriptDir}/family/remove_redundant_and_tm.py \
         ${hhblits_hits} ${fam_rep_mapping} \
-        ${tm_ids} ${refined_fam_proteins} ${rep_fa} \
+        ${tm_ids} ${prob_ids} ${refined_fam_proteins} ${rep_fa} \
         non_redundant_fam_ids.txt redundant_fam_ids.txt similarity_edgelist.csv log.txt
     """
 }
