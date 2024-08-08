@@ -10,6 +10,6 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER {
 
     script:
     """
-    extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta
+    extract_first_stockholm_sequences.py ${msa_sto} family_reps.fasta problematic_ids.txt
     """
 }

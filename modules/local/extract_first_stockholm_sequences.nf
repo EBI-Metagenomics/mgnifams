@@ -6,10 +6,11 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
     tuple val(meta), path(msa_sto, stageAs: "msa_sto/*")
 
     output:
-    tuple val(meta), path("family_reps.fasta")
+    tuple val(meta), path("family_reps.fasta"), emit: fa
+    path("problematic_ids.txt")               , emit: prob_ids
 
     script:
     """
-    extract_first_stockholm_sequences.py msa_sto family_reps.fasta
+    extract_first_stockholm_sequences.py msa_sto family_reps.fasta problematic_ids.txt
     """
 }

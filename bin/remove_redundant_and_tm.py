@@ -103,20 +103,23 @@ def keep_unique_pairs(hh_hits):
         file.write("Done\n")
     return hh_hits
 
-def remove_tm(hh_hits, fams_to_export, tm_ids_file):
+def remove_tm_and_problematic(hh_hits, fams_to_export, tm_ids_file, prob_ids_file):
     with open(log_file, 'a') as file:
-        file.write("Removing TM -")
+        file.write("Removing TM and problematic -")
 
-    tm_ids = []
+    ids_to_remove = []
     with open(tm_ids_file, 'r') as file:
         for line in file:
-            tm_ids.append(line.strip())
+            ids_to_remove.append(line.strip())
+    with open(prob_ids_file, 'r') as file:
+        for line in file:
+            ids_to_remove.append(line.strip())
 
     with open(log_file, 'a') as file:
-        file.write(f"{len(tm_ids)} fam(s)...")
+        file.write(f"{len(ids_to_remove)} fam(s)...")
 
-    hh_hits        = hh_hits[~hh_hits['Fam'].isin(tm_ids) & ~hh_hits['Hit'].isin(tm_ids)]
-    fams_to_export = [value for value in fams_to_export if value not in tm_ids]
+    hh_hits        = hh_hits[~hh_hits['Fam'].isin(ids_to_remove) & ~hh_hits['Hit'].isin(ids_to_remove)]
+    fams_to_export = [value for value in fams_to_export if value not in ids_to_remove]
 
     with open(log_file, 'a') as file:
         file.write("Done\n")
@@ -275,7 +278,7 @@ def write_non_redundant_fam_ids(fams_to_export, non_redundant_fam_ids_file):
             f.write(f"{id}\n")
 
 def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
-    tm_ids_file, fam_proteins_file, rep_fa_file, \
+    tm_ids_file, prob_ids_file, fam_proteins_file, rep_fa_file, \
     non_redundant_fam_ids_file, redundant_fam_ids_file, similarity_edgelist_file, log_f, \
     redundant_threshold=0.95, similarity_threshold=0.5):
 
@@ -287,7 +290,7 @@ def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
     fams_to_export                   = hh_hits['Fam'].unique().tolist() # This must be done here, before removing self-hits (some fams might have only self-hits)
     hh_hits                          = map_and_remove_self(hh_hits)
     hh_hits                          = keep_unique_pairs(hh_hits)
-    hh_hits, fams_to_export          = remove_tm(hh_hits, fams_to_export, tm_ids_file)
+    hh_hits, fams_to_export          = remove_tm_and_problematic(hh_hits, fams_to_export, tm_ids_file, prob_ids_file)
     fam_proteins                     = read_fam_proteins_df(fam_proteins_file)
     
     i = 0
@@ -302,13 +305,14 @@ def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
     write_non_redundant_fam_ids(fams_to_export, non_redundant_fam_ids_file)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 12:
-        print("Usage: python remove_redundant_and_tm.py <hh_hits> <fam_rep_mapping> <tm_ids_file> <fam_proteins_file> <rep_fa_file> \
-            <non_redundant_fam_ids> <redundant_fam_ids> <similarity_edgelist> <log.txt> <redundant_threshold> <similarity_threshold>")
+    if len(sys.argv) != 13:
+        print("Usage: python remove_redundant_and_tm.py <hh_hits> <fam_rep_mapping> <tm_ids_file> <prob_ids_file>  <fam_proteins_file> <rep_fa_file> \
+                <non_redundant_fam_ids> <redundant_fam_ids> <similarity_edgelist> <log.txt> \
+                <redundant_threshold> <similarity_threshold>")
         sys.exit(1)
 
-    initialize_outfiles(sys.argv[6:10]) # for the three output files: 6, 7, 8
+    initialize_outfiles(sys.argv[7:11]) # for the four output files: 7, 8, 9, 10
     export_non_redundant_family_ids(sys.argv[1], sys.argv[2], \
         sys.argv[3], sys.argv[4], sys.argv[5], \
-        sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], \
-        float(sys.argv[10]), float(sys.argv[11]))
+        sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10], \
+        float(sys.argv[11]), float(sys.argv[12]))

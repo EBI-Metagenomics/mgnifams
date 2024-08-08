@@ -92,6 +92,11 @@
                     "type": "integer",
                     "description": "Number of chunks the linclust clustering file will be divided into for parallel family generation"
                 },
+                "deeptmhmm_chunk_size": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Chunk size for parallel tm prediction"
+                },
                 "tm_fraction_threshold": {
                     "type": "number",
                     "description": "Predicted transmembrane fraction of total length allowed for families"

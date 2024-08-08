@@ -24,6 +24,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     tm_ch     = FLAG_TRANSMEMBRANE(tm_msa_ch)
     rep_fa_ch = tm_ch.fa_ch
     tm_ids_ch = tm_ch.tm_ids_ch
+    prob_ids  = tm_ch.prob_ids
     
     seed_msa_sto_ch = families_ch.seed_msa_sto.collect()
     seed_msa_sto_dir = MOVE_TO_DIR(seed_msa_sto_ch, "seed_msa_sto")
@@ -37,7 +38,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         msa_sto_ch, families_ch.hmm.collect(), \
         families_ch.rf.collect(), families_ch.domtblout.collect(), families_ch.tsv.collect(), \
         families_ch.discarded.collect(), families_ch.successful.collect(), families_ch.converged.collect(), \
-        families_ch.metadata.collect(), families_ch.logs.collect(), tm_ids_ch, rep_fa_ch)
+        families_ch.metadata.collect(), families_ch.logs.collect(), tm_ids_ch, prob_ids, rep_fa_ch)
 
     emit:
     seed_msa_sto = generated_families.seed_msa_sto
