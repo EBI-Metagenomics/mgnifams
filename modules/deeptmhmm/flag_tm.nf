@@ -2,11 +2,6 @@ process FLAG_TM {
     tag "$meta.id"
     label 'venv'
 
-    // conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/pybiolib:1.1.2025--pyhdfd78af_0':
-        'biocontainers/pybiolib:1.1.2025--pyhdfd78af_0' }"
-
     input:
     tuple val(meta), path(gff3)
     val(fraction)
