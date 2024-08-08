@@ -1,5 +1,4 @@
 process DEEPTMHMM {
-    publishDir "${params.outDir}/redundancy/tm", mode: "copy"
     tag "$meta.id"
     label 'process_medium'
 
@@ -28,6 +27,8 @@ process DEEPTMHMM {
     def fasta_name = fasta.name.replace(".gz", "")
 
     """
+    export XDG_CACHE_HOME=/tmp/biolib_cache
+
     if [ "$is_compressed" == "true" ]; then
         gzip -c -d $fasta > $fasta_name
     fi
