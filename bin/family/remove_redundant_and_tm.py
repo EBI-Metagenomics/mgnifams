@@ -1,6 +1,7 @@
 import sys
 import pandas as pd
 import csv
+import shutil
 
 # Initiation Functions Start ###
 def initialize_outfiles(file_paths):
@@ -101,7 +102,7 @@ def keep_unique_pairs(hh_hits):
         file.write("Done\n")
     return hh_hits
 
-def remove_tm_and_problematic(hh_hits, fams_to_export, tm_ids_file, prob_ids_file):
+def remove_tm_and_problematic(hh_hits, fams_to_export, tm_ids_file, prob_ids_file, fam_proteins, restart_redundant_fam_ids):
     with open(log_file, 'a') as file:
         file.write("Removing TM and problematic -")
 
@@ -112,16 +113,21 @@ def remove_tm_and_problematic(hh_hits, fams_to_export, tm_ids_file, prob_ids_fil
     with open(prob_ids_file, 'r') as file:
         for line in file:
             ids_to_remove.append(line.strip())
+    if restart_redundant_fam_ids is not None:
+        with open(restart_redundant_fam_ids, 'r') as file:
+            for line in file:
+                ids_to_remove.append(line.strip())
 
     with open(log_file, 'a') as file:
         file.write(f"{len(ids_to_remove)} fam(s)...")
 
     hh_hits        = hh_hits[~hh_hits['Fam'].isin(ids_to_remove) & ~hh_hits['Hit'].isin(ids_to_remove)]
     fams_to_export = [value for value in fams_to_export if value not in ids_to_remove]
+    fam_proteins   = fam_proteins[~fam_proteins['Fam'].isin(ids_to_remove)]
 
     with open(log_file, 'a') as file:
         file.write("Done\n")
-    return hh_hits, fams_to_export
+    return hh_hits, fams_to_export, fam_proteins
 
 def read_fam_proteins_df(fam_proteins_file):
     with open(log_file, 'a') as file:
@@ -208,31 +214,44 @@ def check_jaccard_similarity_remove_if_redundant(hh_hits, row, \
     fam = row['Fam']
     hit = row['Hit']
     
-    set_fam       = set(fam_proteins[fam_proteins['Fam'] == fam]['Protein'])
-    set_hit       = set(fam_proteins[fam_proteins['Fam'] == hit]['Protein'])
-    jaccard_index = calculate_jaccard_index(set_fam, set_hit)
-    
-    if (jaccard_index >= similarity_threshold): # 0.5
+    global restart_flag_continue # skipping already calculated pairs of families
+    global restart_fam_id
+    if not restart_flag_continue:
         with open(log_file, 'a') as file:
-            file.write(f"{fam} vs {hit}: Initial Jaccard Index: {jaccard_index}...")
-        aa_jaccard_index, id_to_remove = calculate_aa_jaccard_index(fam, hit, fam_proteins, rep_length_dict)
+            file.write(f"{fam}\n")
+        if (fam == restart_fam_id):
+            restart_flag_continue = True
 
-        if (aa_jaccard_index >= redundant_threshold): # 0.95
+    if (restart_flag_continue):
+        set_fam       = set(fam_proteins[fam_proteins['Fam'] == fam]['Protein'])
+        set_hit       = set(fam_proteins[fam_proteins['Fam'] == hit]['Protein'])
+        jaccard_index = calculate_jaccard_index(set_fam, set_hit)
+        
+        if (jaccard_index >= similarity_threshold): # 0.5
             with open(log_file, 'a') as file:
-                file.write(f"AA Jaccard Index: {aa_jaccard_index}. Removing {id_to_remove}\n")
-            fams_to_export.remove(id_to_remove)
-            hh_hits = remove_redundant(hh_hits, id_to_remove, redundant_fam_ids_file)
-        elif (aa_jaccard_index >= similarity_threshold): # 0.5
-            with open(log_file, 'a') as file:
-                file.write(f"AA Jaccard Index: {aa_jaccard_index}. Keeping similarity edge\n")
-            with open(similarity_edgelist_file, 'a') as f: 
-                f.write(f"{fam},{hit},{aa_jaccard_index}\n")
-            hh_hits = remove_pair(hh_hits, fam, hit) # don't check same pair again
-        else:
-            with open(log_file, 'a') as file:
-                file.write(f"AA Jaccard Index: {aa_jaccard_index}. Not similar enough\n")
+                file.write(f"{fam} vs {hit}: Initial Jaccard Index: {jaccard_index}...")
+            aa_jaccard_index, id_to_remove = calculate_aa_jaccard_index(fam, hit, fam_proteins, rep_length_dict)
+
+            if (aa_jaccard_index >= redundant_threshold): # 0.95
+                with open(log_file, 'a') as file:
+                    file.write(f"AA Jaccard Index: {aa_jaccard_index}. Removing {id_to_remove}\n")
+                try:
+                    fams_to_export.remove(id_to_remove)
+                    fam_proteins = fam_proteins[fam_proteins['Fam'] != id_to_remove]
+                except ValueError as e:
+                    print(f"Error: {e}")
+                hh_hits = remove_redundant(hh_hits, id_to_remove, redundant_fam_ids_file)
+            elif (aa_jaccard_index >= similarity_threshold): # 0.5
+                with open(log_file, 'a') as file:
+                    file.write(f"AA Jaccard Index: {aa_jaccard_index}. Keeping similarity edge\n")
+                with open(similarity_edgelist_file, 'a') as f: 
+                    f.write(f"{fam},{hit},{aa_jaccard_index}\n")
+                hh_hits = remove_pair(hh_hits, fam, hit) # don't check same pair again
+            else:
+                with open(log_file, 'a') as file:
+                    file.write(f"AA Jaccard Index: {aa_jaccard_index}. Not similar enough\n")
     
-    return hh_hits, fams_to_export
+    return hh_hits, fams_to_export, fam_proteins
 
 # Might still use this while comparing MGnifams to other resource families
 # Don't call keep_unique(hh_hits) before this
@@ -277,38 +296,54 @@ def write_non_redundant_fam_ids(fams_to_export, non_redundant_fam_ids_file):
 
 def export_non_redundant_family_ids(hh_hits_file, fam_rep_mapping_file, \
     tm_ids_file, prob_ids_file, fam_proteins_file, rep_fa_file, \
-    non_redundant_fam_ids_file, redundant_fam_ids_file, similarity_edgelist_file, log_f, \
+    non_redundant_fam_ids_file, redundant_fam_ids_file, similarity_edgelist_file, log_f, restart_redundant_fam_ids, \
     redundant_threshold=0.95, similarity_threshold=0.5):
 
     global rep_to_fam_dict, fam_to_rep_dict, log_file
-    log_file                         = log_f
-    rep_length_dict                  = create_fasta_to_length_dict(rep_fa_file)
-    rep_to_fam_dict, fam_to_rep_dict = read_rep_to_fam_dicts(fam_rep_mapping_file)
-    hh_hits                          = read_hh_hits(hh_hits_file)
-    fams_to_export                   = hh_hits['Fam'].unique().tolist() # This must be done here, before removing self-hits (some fams might have only self-hits)
-    hh_hits                          = map_and_remove_self(hh_hits)
-    hh_hits                          = keep_unique_pairs(hh_hits)
-    hh_hits, fams_to_export          = remove_tm_and_problematic(hh_hits, fams_to_export, tm_ids_file, prob_ids_file)
-    fam_proteins                     = read_fam_proteins_df(fam_proteins_file)
+    log_file                              = log_f
+    rep_length_dict                       = create_fasta_to_length_dict(rep_fa_file)
+    rep_to_fam_dict, fam_to_rep_dict      = read_rep_to_fam_dicts(fam_rep_mapping_file)
+    fam_proteins                          = read_fam_proteins_df(fam_proteins_file)
+    hh_hits                               = read_hh_hits(hh_hits_file)
+    fams_to_export                        = hh_hits['Fam'].unique().tolist() # This must be done here, before removing self-hits (some fams might have only self-hits)
+    hh_hits                               = map_and_remove_self(hh_hits)
+    hh_hits                               = keep_unique_pairs(hh_hits)
+    hh_hits, fams_to_export, fam_proteins = remove_tm_and_problematic(hh_hits, fams_to_export, tm_ids_file, prob_ids_file, fam_proteins, restart_redundant_fam_ids)
     
     i = 0
     while len(hh_hits) > i:
         row = hh_hits.iloc[i]
-        hh_hits, fams_to_export = check_jaccard_similarity_remove_if_redundant(hh_hits, row, \
+        hh_hits, fams_to_export, fam_proteins = check_jaccard_similarity_remove_if_redundant(hh_hits, row, \
             fam_proteins, rep_length_dict, \
             fams_to_export, redundant_fam_ids_file, similarity_edgelist_file, \
             redundant_threshold, similarity_threshold)
         i += 1
-
+    
     write_non_redundant_fam_ids(fams_to_export, non_redundant_fam_ids_file)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 11:
+    if len(sys.argv) not in [11, 12, 13, 14]:
         print("Usage: python remove_redundant_and_tm.py <hh_hits> <fam_rep_mapping> <tm_ids_file> <prob_ids_file>  <fam_proteins_file> <rep_fa_file> \
-            <non_redundant_fam_ids> <redundant_fam_ids> <similarity_edgelist> <log.txt>")
+            <non_redundant_fam_ids> <redundant_fam_ids> <similarity_edgelist> <log.txt> <restart_redundant_fam_ids> <restart_similarity_edgelist> <restart_fam_id>")
         sys.exit(1)
 
-    initialize_outfiles(sys.argv[7:11]) # for the three output files: 7, 8, 9, 10
+    initialize_outfiles(sys.argv[7:11]) # for the four output files: 7, 8, 9, 10
+    redundant_fam_ids = sys.argv[8]
+    similarity_edgelist = sys.argv[9]
+
+    # Optional arguments
+    restart_redundant_fam_ids = sys.argv[11] if len(sys.argv) > 11 else None
+    restart_similarity_edgelist = sys.argv[12] if len(sys.argv) > 12 else None
+    restart_fam_id = sys.argv[13] if len(sys.argv) > 13 else None
+
+    restart_flag_continue = False
+    if restart_fam_id is None:
+        restart_flag_continue = True
+    else:
+        shutil.copy(restart_redundant_fam_ids, redundant_fam_ids)
+        shutil.copy(restart_similarity_edgelist, similarity_edgelist) 
+        
     export_non_redundant_family_ids(sys.argv[1], sys.argv[2], \
         sys.argv[3], sys.argv[4], sys.argv[5], \
-        sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10])
+        sys.argv[6], sys.argv[7], redundant_fam_ids, similarity_edgelist, sys.argv[10], \
+        restart_redundant_fam_ids)

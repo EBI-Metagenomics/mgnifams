@@ -46,10 +46,13 @@ workflow REMOVE_REDUNDANCY {
 
     mapping               = MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID(a3m_ch)
     refined_fam_proteins  = POOL_FAM_PROTEINS(tsv_ch.collect())
-    non_redundant         = REMOVE_REDUNDANT_AND_TM(hhr_all_ch, mapping, tm_ids_ch, prob_ids_ch, refined_fam_proteins, rep_fa_ch)
-    non_redundant_fam_ids = non_redundant.non_redundant_fam_ids
-    similarity_edgelist   = non_redundant.similarity_edgelist
-    pooled_families       = POOL_FAMILY_RESULTS(seed_msa_sto_ch, \
+
+    restart_redundant_fam_ids   = (params.restart_redundant_fam_ids == "") ? [] : params.restart_redundant_fam_ids
+    restart_similarity_edgelist = (params.restart_similarity_edgelist == "") ? [] : params.restart_similarity_edgelist
+    non_redundant               = REMOVE_REDUNDANT_AND_TM(hhr_all_ch, mapping, tm_ids_ch, prob_ids_ch, refined_fam_proteins, rep_fa_ch, restart_redundant_fam_ids, restart_similarity_edgelist, params.restart_fam_id)
+    non_redundant_fam_ids       = non_redundant.non_redundant_fam_ids
+    similarity_edgelist         = non_redundant.similarity_edgelist
+    pooled_families             = POOL_FAMILY_RESULTS(seed_msa_sto_ch, \
         msa_sto_ch, hmm_ch, rf_ch, domtblout_ch, tsv_ch, \
         discarded_ch, successful_ch, converged_ch, \
         metadata_ch, logs_ch, non_redundant_fam_ids, similarity_edgelist)

@@ -196,6 +196,9 @@ process REMOVE_REDUNDANT_AND_TM {
     path(prob_ids)
     path(refined_fam_proteins)
     tuple val(meta3), path(rep_fa)
+    path restart_redundant_fam_ids, stageAs: 'restart_redundant_fam_ids.txt'
+    path restart_similarity_edgelist, stageAs: 'restart_similarity_edgelist.csv'
+    val restart_fam_id
 
     output:
     path("non_redundant_fam_ids.txt"), emit: non_redundant_fam_ids
@@ -204,11 +207,14 @@ process REMOVE_REDUNDANT_AND_TM {
     path("log.txt")                  , emit: log
 
     script:
+    def restart_redundant_fam_ids = restart_redundant_fam_ids ? "restart_redundant_fam_ids.txt" : ""
+    def restart_similarity_edgelist = restart_similarity_edgelist ? "restart_similarity_edgelist.csv" : ""
     """
     python3 ${params.scriptDir}/family/remove_redundant_and_tm.py \
         ${hhblits_hits} ${fam_rep_mapping} \
         ${tm_ids} ${prob_ids} ${refined_fam_proteins} ${rep_fa} \
-        non_redundant_fam_ids.txt redundant_fam_ids.txt similarity_edgelist.csv log.txt
+        non_redundant_fam_ids.txt redundant_fam_ids.txt similarity_edgelist.csv log.txt \
+        ${restart_redundant_fam_ids} ${restart_similarity_edgelist} ${restart_fam_id}
     """
 }
 
