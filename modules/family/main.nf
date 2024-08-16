@@ -139,7 +139,6 @@ process EXTRACT_FIRST_STOCKHOLM_SEQUENCES {
 
 process EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER {
     tag "$meta.id"
-    label "venv"
 
     input:
     tuple val(meta), path(msa_sto)
