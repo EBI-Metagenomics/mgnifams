@@ -1,5 +1,6 @@
 process QUERY_MGNPROTEIN_DB {
     publishDir "${params.outDir}", mode: "copy"
+    container "quay.io/microbiome-informatics/mgnifams:2.0.0"
 
     input:
     path config_file
