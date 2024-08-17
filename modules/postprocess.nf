@@ -1,6 +1,5 @@
 process QUERY_MGNPROTEIN_DB {
     publishDir "${params.outDir}", mode: "copy"
-    label "venv"
 
     input:
     path config_file
@@ -16,7 +15,6 @@ process QUERY_MGNPROTEIN_DB {
 
 process PARSE_BIOMES {
     publishDir "${params.outDir}/post-processing", mode: "copy"
-    label "venv"
 
     input:
     path query_results
@@ -31,7 +29,6 @@ process PARSE_BIOMES {
 
 process PARSE_DOMAINS {
     publishDir "${params.outDir}/post-processing", mode: "copy"
-    label "venv"
 
     input:
     path query_results
