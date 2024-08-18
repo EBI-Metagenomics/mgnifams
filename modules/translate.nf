@@ -1,6 +1,4 @@
 process TRANSLATE_MSA_MGYPS {
-    label "venv"
-
     input:
     tuple val(meta), path(msa_fas)
 

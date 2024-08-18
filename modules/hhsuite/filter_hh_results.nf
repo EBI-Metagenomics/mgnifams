@@ -1,6 +1,5 @@
 process FILTER_HH_RESULTS {
     publishDir "${params.outDir}/hh", mode: "copy"
-    label "general"
 
     input:
     tuple val(meta), path(hhr_folder)
