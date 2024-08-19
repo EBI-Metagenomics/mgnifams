@@ -1,5 +1,5 @@
 process QUERY_MGNPROTEIN_DB {
-    label "venv"
+    container "quay.io/microbiome-informatics/mgnifams:2.0.0"
 
     input:
     path config_file

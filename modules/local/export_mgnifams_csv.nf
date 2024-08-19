@@ -1,6 +1,4 @@
 process EXPORT_MGNIFAMS_CSV {
-    label "venv"
-
     input:
     path metadata                  , stageAs: "results/families/*"
     path converged                 , stageAs: "results/families/*"

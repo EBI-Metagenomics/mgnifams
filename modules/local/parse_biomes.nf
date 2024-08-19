@@ -1,6 +1,4 @@
 process PARSE_BIOMES {
-    label "venv"
-
     input:
     path query_results
 

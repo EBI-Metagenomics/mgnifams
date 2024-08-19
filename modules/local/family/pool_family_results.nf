@@ -27,6 +27,7 @@ process POOL_FAMILY_RESULTS {
     path("families/successful_clusters.txt"), emit: successful
     path("families/converged_families.txt") , emit: converged
     path("families/family_metadata.csv")    , emit: metadata
+    path("families/similarity_edgelist.csv"), emit: similarity_edgelist
     path("families/family_to_id.json")      , emit: id_mapping
 
     script:

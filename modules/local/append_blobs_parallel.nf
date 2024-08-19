@@ -1,6 +1,4 @@
 process APPEND_BLOBS_PARALLEL {
-    label "venv"
-
     input:
     path db
     path cif_ch   , stageAs: "output/structures/cif/*"

@@ -1,6 +1,4 @@
 process PARSE_DOMAINS {
-    label "venv"
-
     input:
     path query_results
     path refined_families
