@@ -1,4 +1,5 @@
 process DEEPTMHMM {
+    maxForks 3
     tag "$meta.id"
 
     // conda "${moduleDir}/environment.yml"

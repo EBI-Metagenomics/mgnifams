@@ -1,4 +1,5 @@
 process REFINE_FAMILIES_PARALLEL {
+    maxForks 30
     conda "${moduleDir}/environment.yml"
     
     input:
