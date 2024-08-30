@@ -104,8 +104,13 @@
                 },
                 "pdb_chunk_size": {
                     "type": "integer",
-                    "default": 50,
+                    "default": 500,
                     "description": "Chunk size for parallel structure prediction"
+                },
+                "pdb_chunk_size_long": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Chunk size for parallel structure prediction for long sequences"
                 },
                 "compute_mode": {
                     "type": "string",
