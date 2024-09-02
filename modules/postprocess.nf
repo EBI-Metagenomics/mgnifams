@@ -39,7 +39,7 @@ process PARSE_DOMAINS {
     path "domain_results"
 
     """
-    python3 ${params.scriptDir}/post-processing/parse_domains.py ${query_results} ${refined_families}
+    python3 ${params.scriptDir}/post-processing/parse_domains.py ${query_results} ${refined_families} ${task.cpus}
     """
 }
 
