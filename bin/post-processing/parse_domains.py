@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import ast
 import json
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 def extract_mgyp(protein_name):
     parts = protein_name.split('/')
@@ -228,7 +228,7 @@ if __name__ == "__main__":
     os.makedirs(outdir, exist_ok=True)
 
     # Use ThreadPoolExecutor to run tasks in parallel
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for tsv in query_results_files:
             file_path = os.path.join(query_results_dir, tsv)
