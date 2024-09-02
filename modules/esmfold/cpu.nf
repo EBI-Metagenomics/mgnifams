@@ -1,5 +1,5 @@
 process ESMFOLD_CPU {
-    maxForks 20
+    maxForks 10
     tag "$meta.id"
     label 'process_high'
 
