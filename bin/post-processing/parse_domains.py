@@ -3,7 +3,8 @@ import os
 import pandas as pd
 import ast
 import json
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
+import threading
 
 def extract_mgyp(protein_name):
     parts = protein_name.split('/')
@@ -190,12 +191,16 @@ def write_out(translated_json, out_file):
         json.dump(translated_json, out_file, indent=4)
 
 def process_tsv(file_path, family_id, refined_families_df, pfam_mapping_df, outdir):
+    print(f"Thread {threading.current_thread().name} is processing file: {file_path} with family ID: {family_id}")
+
     domain_architecture_counts = count_domain_architectures(file_path, family_id, refined_families_df)
     architecture_json = construct_architecture_json(domain_architecture_counts)
     translated_top_json = translate_architecture(architecture_json, pfam_mapping_df)
 
     out_file = os.path.join(outdir, f"{family_id}.json")
     write_out(translated_top_json, out_file)
+    
+    print(f"Thread {threading.current_thread().name} has finished processing file: {file_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse the protein query TSV results into domain architecture JSONs.")
@@ -221,14 +226,14 @@ if __name__ == "__main__":
     query_results_files = os.listdir(query_results_dir)
     refined_families_df = pd.read_csv(args.refined_families_file, sep='\t', header=None, names=['family_id', 'protein_name'])
 
-    max_workers = int(args.max_workers)
+    max_workers = int(args.max_workers) - 1
     print(f"Using {max_workers} parallel parse jobs\n")
 
     outdir = "domain_results"
     os.makedirs(outdir, exist_ok=True)
 
     # Use ThreadPoolExecutor to run tasks in parallel
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for tsv in query_results_files:
             file_path = os.path.join(query_results_dir, tsv)
