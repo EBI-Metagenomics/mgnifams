@@ -116,6 +116,11 @@
                     "type": "string",
                     "default": "gpu",
                     "description": "GPU or CPU mode, depending on sequence length"
+                },
+                "query_results_chunk_size": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "num of folder chunks for parsing domains for export"
                 }
             },
             "required": [

@@ -3,6 +3,18 @@ import sys
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+def get_basenames(directory):
+    # Ensure the directory exists
+    if not os.path.exists(directory):
+        raise FileNotFoundError(f"The directory {directory} does not exist.")
+
+    # Get the list of basenames without the extensions
+    basenames = [os.path.splitext(os.path.basename(file))[0] 
+                for file in os.listdir(directory) 
+                if os.path.isfile(os.path.join(directory, file))]
+
+    return basenames
+
 def test_connection(conn): 
     try:
         cursor = conn.cursor()
@@ -77,7 +89,7 @@ def process_row(db_path, base_dir, family_dir, row):
     
     return tasks
 
-def import_files(db_path, base_dir, family_dir, max_workers=8):
+def import_files(db_path, base_dir, family_dir, basenames, max_workers=8):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT id, cif_file, seed_msa_file, msa_file, hmm_file, rf_file, biomes_file, domain_architecture_file FROM mgnifam")
@@ -87,7 +99,9 @@ def import_files(db_path, base_dir, family_dir, max_workers=8):
     tasks = []
     print(f"Using {max_workers} parallel import jobs\n")
     for row in rows:
-        tasks.extend(process_row(db_path, base_dir, family_dir, row))
+        row_id = str(row[0])
+        if row_id in basenames:
+            tasks.extend(process_row(db_path, base_dir, family_dir, row))
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [executor.submit(update_blob_column, db_path, *task) for task in tasks]
@@ -104,8 +118,12 @@ def main():
     family_dir  = sys.argv[3]
     max_workers = int(sys.argv[4])
 
+    # Get chunks to check from domains chunked folder
+    domain_chunk_dir = os.path.join(base_dir, "post-processing", "domain_results")
+    basenames = get_basenames(domain_chunk_dir)
+    print(basenames)
     # Import files in parallel
-    import_files(db_path, base_dir, family_dir, max_workers)
+    import_files(db_path, base_dir, family_dir, basenames, max_workers)
     
 if __name__ == "__main__":
     main()

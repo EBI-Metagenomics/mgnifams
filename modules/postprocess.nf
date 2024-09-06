@@ -28,10 +28,44 @@ process PARSE_BIOMES {
     """
 }
 
+process CHUNK_QUERY_RESULTS_FOLDER {
+    input:
+    path post_processing
+    val chunk_size
+
+    output:
+    path "chunk_folder*"
+
+    """
+    input_folder="${post_processing}/query_results"  # Path to the folder with the files
+    chunk_number=${chunk_size}                        # Number of chunks you want
+    output_base="chunk_folder"                        # Base name for the output folders (e.g., chunk_folder_1, chunk_folder_2, etc.)
+
+    # Create output folders
+    for ((i=1; i<=chunk_number; i++)); do
+        mkdir -p "\${output_base}_\${i}"
+    done
+
+    # Find all files and symlinks in the input folder and split them into chunks
+    file_count=\$(find "\$input_folder" \\( -type f -o -type l \\) | wc -l)
+    files_per_chunk=\$(( (file_count + chunk_number - 1) / chunk_number ))  # Calculate files per chunk (ceil rounding)
+
+    # Distribute files (and symlinks) into chunk folders
+    i=1
+    find "\$input_folder" \\( -type f -o -type l \\) | while read -r file; do
+        # Determine the chunk folder to move the file/symlink to
+        chunk=\$(( (i - 1) / files_per_chunk + 1 ))
+        cp "\$file" "\${output_base}_\${chunk}/"
+        ((i++))
+    done
+    """
+}
+
 process PARSE_DOMAINS {
     publishDir "${params.outDir}/post-processing", mode: "copy"
 
     input:
+    path chunk
     path query_results
     path refined_families
 
@@ -39,7 +73,7 @@ process PARSE_DOMAINS {
     path "domain_results"
 
     """
-    python3 ${params.scriptDir}/post-processing/parse_domains.py ${query_results} ${refined_families} ${task.cpus}
+    python3 ${params.scriptDir}/post-processing/parse_domains.py ${chunk} ${query_results} ${refined_families}
     """
 }
 

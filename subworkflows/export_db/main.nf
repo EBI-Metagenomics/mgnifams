@@ -1,11 +1,12 @@
 #!/usr/bin/env nextflow
 
-include { EXPORT_MGNIFAMS_CSV   } from "${params.moduleDir}/export.nf"
-include { QUERY_MGNPROTEIN_DB   } from "${params.moduleDir}/postprocess.nf"
-include { PARSE_BIOMES          } from "${params.moduleDir}/postprocess.nf"
-include { PARSE_DOMAINS         } from "${params.moduleDir}/postprocess.nf"
-include { INITIATE_SQLITE       } from "${params.moduleDir}/postprocess.nf"
-include { APPEND_BLOBS_PARALLEL } from "${params.moduleDir}/postprocess.nf"
+include { EXPORT_MGNIFAMS_CSV        } from "${params.moduleDir}/export.nf"
+include { QUERY_MGNPROTEIN_DB        } from "${params.moduleDir}/postprocess.nf"
+include { PARSE_BIOMES               } from "${params.moduleDir}/postprocess.nf"
+include { CHUNK_QUERY_RESULTS_FOLDER } from "${params.moduleDir}/postprocess.nf"
+include { PARSE_DOMAINS              } from "${params.moduleDir}/postprocess.nf"
+include { INITIATE_SQLITE            } from "${params.moduleDir}/postprocess.nf"
+include { APPEND_BLOBS_PARALLEL      } from "${params.moduleDir}/postprocess.nf"
 
 workflow EXPORT_DB {
     take:
@@ -26,9 +27,10 @@ workflow EXPORT_DB {
         refined_families, pfam_hits, foldseek_hits, predict_scores)
     query_results  = QUERY_MGNPROTEIN_DB(params.db_config_file, refined_families)
     biome_results  = PARSE_BIOMES(query_results)
-    domain_results = PARSE_DOMAINS(query_results, refined_families)
-
+    chunks = CHUNK_QUERY_RESULTS_FOLDER(query_results, params.query_results_chunk_size)
+    domain_results = PARSE_DOMAINS(chunks.flatten(), query_results.first(), refined_families.first())
+    
     db = INITIATE_SQLITE(params.db_schema_file, tables)
-    APPEND_BLOBS_PARALLEL(db, cif_ch, seed_msa_ch, msa_ch, hmm_ch, rf_ch, \
-        biome_results, domain_results)
+    APPEND_BLOBS_PARALLEL(db.first(), cif_ch, seed_msa_ch.first(), msa_ch.first(), hmm_ch.first(), rf_ch.first(), \
+        biome_results.first(), domain_results.flatten())
 }
