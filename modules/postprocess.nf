@@ -62,7 +62,7 @@ process CHUNK_QUERY_RESULTS_FOLDER {
 }
 
 process PARSE_DOMAINS {
-    publishDir "${params.outDir}/post-processing", mode: "copy"
+    // publishDir "${params.outDir}/post-processing", mode: "copy"
 
     input:
     path chunk
