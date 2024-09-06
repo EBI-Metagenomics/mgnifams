@@ -3,8 +3,7 @@ import os
 import pandas as pd
 import ast
 import json
-from concurrent.futures import ThreadPoolExecutor
-import threading
+from concurrent.futures import ProcessPoolExecutor
 
 def extract_mgyp(protein_name):
     parts = protein_name.split('/')
@@ -191,7 +190,7 @@ def write_out(translated_json, out_file):
         json.dump(translated_json, out_file, indent=4)
 
 def process_tsv(file_path, family_id, refined_families_df, pfam_mapping_df, outdir):
-    print(f"Thread {threading.current_thread().name} is processing file: {file_path} with family ID: {family_id}")
+    print(f"Process {os.getpid()} starting processing file: {file_path} with family ID: {family_id}")
 
     domain_architecture_counts = count_domain_architectures(file_path, family_id, refined_families_df)
     architecture_json = construct_architecture_json(domain_architecture_counts)
@@ -199,8 +198,8 @@ def process_tsv(file_path, family_id, refined_families_df, pfam_mapping_df, outd
 
     out_file = os.path.join(outdir, f"{family_id}.json")
     write_out(translated_top_json, out_file)
-    
-    print(f"Thread {threading.current_thread().name} has finished processing file: {file_path}")
+
+    print(f"Process {os.getpid()} processed file: {file_path} with family ID: {family_id}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse the protein query TSV results into domain architecture JSONs.")
@@ -233,7 +232,7 @@ if __name__ == "__main__":
     os.makedirs(outdir, exist_ok=True)
 
     # Use ThreadPoolExecutor to run tasks in parallel
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for tsv in query_results_files:
             file_path = os.path.join(query_results_dir, tsv)
