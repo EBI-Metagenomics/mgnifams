@@ -1,5 +1,6 @@
 process ESMFOLD_CPU {
     tag "$meta.id"
+    maxForks 5
     // label 'process_high'
 
     conda params.esm_conda_path

@@ -35,7 +35,7 @@ workflow PREDICT_STRUCTURES {
         .set { score_paths_ch }
 
     long_reps_fa_ch = EXTRACT_LONG_FA(fa_paths_ch.collect(), score_paths_ch.collect())
-    fasta_long_chunks_ch = long_reps_fa_ch.splitFasta( by: params.pdb_chunk_size, file: true )
+    fasta_long_chunks_ch = long_reps_fa_ch.splitFasta( by: params.pdb_chunk_size_long, file: true )
     fasta_long_chunks_ch
         .map { filepath ->
             def parts = filepath.baseName.split('\\.')
