@@ -6,7 +6,7 @@ include { QUERY_MGNPROTEIN_DB        } from "${params.moduleDir}/postprocess.nf"
 include { PARSE_BIOMES               } from "${params.moduleDir}/postprocess.nf"
 include { CHUNK_QUERY_RESULTS_FOLDER } from "${params.moduleDir}/postprocess.nf"
 include { PARSE_DOMAINS              } from "${params.moduleDir}/postprocess.nf"
-include { APPEND_BLOBS_PARALLEL      } from "${params.moduleDir}/postprocess.nf"
+include { APPEND_BLOBS               } from "${params.moduleDir}/postprocess.nf"
 
 workflow EXPORT_DB {
     take:
@@ -31,6 +31,6 @@ workflow EXPORT_DB {
     biome_results  = PARSE_BIOMES(query_results)
     chunks         = CHUNK_QUERY_RESULTS_FOLDER(query_results, params.query_results_chunk_size)
     domain_results = PARSE_DOMAINS(chunks.flatten(), query_results.first(), refined_families.first())
-    APPEND_BLOBS_PARALLEL(db.first(), cif_ch, seed_msa_ch.first(), msa_ch.first(), hmm_ch.first(), rf_ch.first(), \
-        biome_results.first(), domain_results.flatten())
+    APPEND_BLOBS(db.first(), cif_ch, seed_msa_ch.first(), msa_ch.first(), hmm_ch.first(), rf_ch.first(), \
+        biome_results.first(), domain_results.flatten(), params.update_blobs_from_row_id)
 }

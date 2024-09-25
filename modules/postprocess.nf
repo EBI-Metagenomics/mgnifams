@@ -156,7 +156,7 @@ process INITIATE_SQLITE {
     """
 }
 
-process APPEND_BLOBS_PARALLEL {
+process APPEND_BLOBS {
     publishDir "${params.outDir}/post-processing", mode: "copy"
     label "venv"
 
@@ -169,11 +169,12 @@ process APPEND_BLOBS_PARALLEL {
     path rf_ch    , stageAs: "output/families/rf/*"
     path biome_ch , stageAs: "output/post-processing/*"
     path domain_ch, stageAs: "output/post-processing/*"
+    val update_blobs_from_row_id
     
     output:
     path "${db}"
 
     """
-    python3 ${params.scriptDir}/post-processing/append_blobs_sqlite_parallel.py ${db} output families ${task.cpus}
+    python3 ${params.scriptDir}/post-processing/append_blobs_sqlite_parallel.py ${db} output families ${update_blobs_from_row_id}
     """
 }

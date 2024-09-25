@@ -41,7 +41,7 @@
                     "type": "string",
                     "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/mgnifams/DB/schema.sqlite",
                     "description": "schema for sqlite db"
-                },
+                }
             },
             "required": [
                 "scriptDir",
@@ -121,6 +121,11 @@
                     "type": "integer",
                     "default": 100,
                     "description": "num of folder chunks for parsing domains for export"
+                },
+                "update_blobs_from_row_id": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "restarting mechanism for updating sqlite blobs"
                 }
             },
             "required": [
