@@ -175,6 +175,6 @@ process APPEND_BLOBS {
     path "${db}"
 
     """
-    python3 ${params.scriptDir}/post-processing/append_blobs_sqlite_parallel.py ${db} output families ${update_blobs_from_row_id}
+    python3 ${params.scriptDir}/post-processing/append_blobs_sqlite.py ${db} output families ${update_blobs_from_row_id}
     """
 }

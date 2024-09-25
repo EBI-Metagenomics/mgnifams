@@ -49,16 +49,27 @@ def read_file(file_path):
         return None
 
 def update_blob_columns(conn, task):
-    if len(task[0][1]) > 2**31 - 1:
-            raise ValueError(f"BLOB size for row {task[0][2]} exceeds the maximum allowed limit of 2GB")
     try:
+        blob_data = task[0][1]
+        
+        # Check if the BLOB size exceeds 2GB (2**31 bytes)
+        if len(blob_data) > 2**31 - 1:
+            raise ValueError(f"BLOB size for row {task[0][2]} exceeds the maximum allowed limit of 2GB")
+
         cursor = conn.cursor()
         query = f"UPDATE mgnifam SET {task[0][0]} = ? WHERE id = ?"
-        cursor.execute(query, (sqlite3.Binary(task[0][1]), task[0][2]))
+        cursor.execute(query, (sqlite3.Binary(blob_data), task[0][2]))
         conn.commit()
         print(f"Updated {task[0][0]} for row {task[0][2]}")
+    
     except sqlite3.Error as e:
-        print(f"Failed to update row {task[0][2]}: {e}")
+        print(f"Database error while updating row {task[0][2]}: {e}")
+    
+    except ValueError as ve:
+        print(f"Value error: {ve}")
+    
+    except Exception as ex:
+        print(f"An unexpected error occurred while updating row {task[0][2]}: {ex}")
 
 def process_row(base_dir, family_dir, row):
     row_id = row[0]
@@ -91,7 +102,7 @@ def import_files(conn, base_dir, family_dir, start_row_id=0):
 
 def main():
     if len(sys.argv) != 5:
-        print("Usage: python3 append_blobs_sqlite_single_thread.py <db.sqlite3> <output_dir> <families_dir> <start_row_id>")
+        print("Usage: python3 append_blobs_sqlite.py <db.sqlite3> <output_dir> <families_dir> <start_row_id>")
         sys.exit(1)
 
     db_path      = sys.argv[1]
