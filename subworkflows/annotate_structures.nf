@@ -19,7 +19,7 @@ workflow ANNOTATE_STRUCTURES {
     
     pdb_db = [ [ id:'pdb' ], file(foldseek_pdb_path) ]
     pdb_aln = FOLDSEEK_EASYSEARCH_PDB(pdb_ch, pdb_db).aln
-    if (workflow.profile == "slurm") {
+    if (workflow.profile.contains("slurm")) {
         alphafold_db = [ [ id:'alphafold' ], file(foldseek_alphafold_path) ]
         alphafold_aln = FOLDSEEK_EASYSEARCH_ALPHAFOLDB(pdb_ch, alphafold_db).aln
         esm_db = [ [ id:'esm' ], file(foldseek_esm_path) ]
