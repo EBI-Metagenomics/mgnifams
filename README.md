@@ -1,5 +1,5 @@
 # MGnifams
-Starting from MGnify proteins, MGnifams aim to: i) generate microbial sequence families to expand the currently known protein family space, ii) aid in their characterisation and iii) investigate potential novel functionalities.
+![alt text](assets/mgnifams.png)
 
 ## Nextflow pipeline
 slurm:
@@ -11,7 +11,7 @@ local:
 nextflow run main.nf -profile test_local,conda,singularity
 ```
 
-![alt text](assets/pipeline.jpg)
+![alt text](assets/pipeline.png)
 
 The end-to-end MGnifams pipeline chains the subworkflows of four thematically different workflows; setup_clusters, generate_nonredundant_families, annotate_families and export_db. After the pipeline finishes its execution, the produced db can be copied to either the mgnifams-site repo for local testing, or directly to ifs (/nfs/public/rw/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
