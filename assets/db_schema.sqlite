@@ -14,6 +14,8 @@ CREATE TABLE mgnifam (
     rf_file TEXT,
     biomes_file TEXT,
     domain_architecture_file TEXT,
+    quality_rank INTEGER DEFAULT 0,
+    novelty_rank INTEGER DEFAULT 0,
     cif_blob BLOB DEFAULT NULL,
     seed_msa_blob BLOB DEFAULT NULL,
     msa_blob BLOB DEFAULT NULL,
