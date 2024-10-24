@@ -15,7 +15,7 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { validateParameters; paramsHelp } from 'plugin/nf-schema'
+include { validateParameters; paramsHelp; samplesheetToList } from 'plugin/nf-schema'
 
 if (params.help) {
     log.info paramsHelp("nextflow run main.nf -profile slurm")
@@ -37,7 +37,10 @@ include { MGNIFAMS } from './workflows/mgnifams'
 // WORKFLOW: Run main analysis pipeline
 //
 workflow EBIMETAGENOMICS_MGNIFAMS {
-    MGNIFAMS ()
+
+    ch_input = Channel.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
+    MGNIFAMS (ch_input)
+
 }
 
 /*

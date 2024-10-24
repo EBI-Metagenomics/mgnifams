@@ -13,8 +13,14 @@
             "properties": {
                 "input": {
                     "type": "string",
-                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_2/sequence_explorer_protein.csv.bz2",
-                    "description": "The pipeline main input data. Either sequence_explorer_protein from MGnify proteins, or a fasta file with fasta_input_mode set to true."
+                    "mimetype": "text/csv",
+                    "format": "file-path-pattern",
+                    "exists": true,
+                    "schema": "assets/schema_input.json",
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "CSV samplesheet file containing information about the MGnifams input file.",
+                    "help_text": "Use this to specify the location of your input file. The CSV file must have only one column (protein_input).",
+                    "fa_icon": "fas fa-file-csv"
                 },
                 "fasta_input_mode": {
                     "type": "boolean",
