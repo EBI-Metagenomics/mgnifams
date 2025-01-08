@@ -6,8 +6,6 @@
 
 include { paramsSummaryLog } from 'plugin/nf-schema'
 
-log.info paramsSummaryLog(workflow)
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT MODULES / SUBWORKFLOWS
@@ -35,6 +33,8 @@ workflow MGNIFAMS {
     ch_input
 
     main:
+    log.info paramsSummaryLog(workflow)
+    
     setup_res          = SETUP_CLUSTERS(ch_input, params.fasta_input_mode, params.compress_mode)    
     generated_families = GENERATE_NONREDUNDANT_FAMILIES(setup_res.clusters_tsv, [], setup_res.mgnifams_input_fa)
     annotated_families = ANNOTATE_FAMILIES(generated_families.seed_msa_sto, generated_families.msa_sto)

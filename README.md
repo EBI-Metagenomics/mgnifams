@@ -2,12 +2,24 @@
 ![alt text](assets/mgnifams.png)
 
 ## Nextflow pipeline
-slurm:
+
+First, prepare a samplesheet with your input data that looks as follows:
+
+`samplesheet.csv`:
+
+```csv
+protein_input
+assets/test_data/sequence_explorer_protein_test_100001.csv
 ```
+
+Now, you can run the pipeline either on slurm or locally.
+
+slurm:
+```bash
 nextflow run main.nf -profile slurm,conda,singularity -with-tower
 ```
 local:
-```
+```bash
 nextflow run main.nf -profile test_local,conda,singularity
 ```
 

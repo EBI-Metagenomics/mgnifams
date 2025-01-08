@@ -19,7 +19,7 @@
                     "schema": "assets/schema_input.json",
                     "pattern": "^\\S+\\.csv$",
                     "description": "CSV samplesheet file containing information about the MGnifams input file.",
-                    "help_text": "Use this to specify the location of your input file. The CSV file must have only one column (protein_input).",
+                    "help_text": "Use this to specify the location of your input file containing amino acid sequences. The CSV file must have only one column (protein_input).",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "fasta_input_mode": {
