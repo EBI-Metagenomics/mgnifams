@@ -2,6 +2,5 @@ name: hhsuite_hhblits
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - bioconda::hhsuite=3.3.0

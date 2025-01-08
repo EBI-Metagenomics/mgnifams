@@ -133,10 +133,8 @@ name: esmfold
 channels:
   - pytorch
   - nvidia
-  - anaconda
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_kmp_llvm
