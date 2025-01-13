@@ -1,4 +1,6 @@
-#!/usr/bin/env nextflow
+/*
+    SEQUENCE CLUSTERING
+*/
 
 include { EXTRACT_UNANNOTATED_FASTA } from "../subworkflows/extract_unannotated_fasta.nf"
 include { EXECUTE_CLUSTERING        } from "../subworkflows/execute_clustering.nf"
@@ -15,13 +17,10 @@ workflow SETUP_CLUSTERS {
     } else {
         mgnifams_input_fa = channel.fromPath(input)
     }
+    EXECUTE_CLUSTERING(mgnifams_input_fa)
 
-    // TODO
-    mgnifams_input_fa.view()
-    // clusters     = EXECUTE_CLUSTERING(mgnifams_input_fa)
-    // clusters_tsv = clusters.clusters_tsv.map { meta, filepath -> filepath }
-
-    // emit:
-    // mgnifams_input_fa
-    // clusters_tsv
+    emit:
+    mgnifams_input_fa = mgnifams_input_fa
+    clusters_tsv      = EXECUTE_CLUSTERING.out.clusters_tsv
+    num_sequences     = EXECUTE_CLUSTERING.out.num_sequences
 }

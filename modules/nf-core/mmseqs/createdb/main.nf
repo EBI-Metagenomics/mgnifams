@@ -1,11 +1,11 @@
 process MMSEQS_CREATEDB {
     tag "$meta.id"
-    // label 'process_low'
+    label 'process_low'
 
-    // conda "${moduleDir}/environment.yml"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mmseqs2:15.6f452--pl5321h6a68c12_0':
-        'biocontainers/mmseqs2:15.6f452--pl5321h6a68c12_0' }"
+        'https://depot.galaxyproject.org/singularity/mmseqs2:16.747c6--pl5321h6a68c12_0':
+        'biocontainers/mmseqs2:16.747c6--pl5321h6a68c12_0' }"
 
     input:
     tuple val(meta), path(sequence)
@@ -34,7 +34,7 @@ process MMSEQS_CREATEDB {
         ${sequence_name} \\
         ${prefix}/${prefix} \\
         $args \\
-        --compressed 0
+        --compressed 1
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
