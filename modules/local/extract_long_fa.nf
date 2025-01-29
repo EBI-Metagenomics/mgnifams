@@ -2,14 +2,17 @@ process EXTRACT_LONG_FA {
     label "venv"
 
     input:
-    path fasta , stageAs: "fasta/*"
-    path scores, stageAs: "scores/*"
+    tuple val(meta) , path(fasta , stageAs: "fasta/*")
+    tuple val(meta2), path(scores, stageAs: "scores/*")
 
     output:
-    path "family_reps.fasta"
+    tuple val(meta), path("family_reps.fasta")
 
     script:
     """
-    extract_long_fa.py fasta scores family_reps.fasta
+    extract_long_fa.py \\
+        fasta \\
+        scores \\
+        family_reps.fasta
     """
 }

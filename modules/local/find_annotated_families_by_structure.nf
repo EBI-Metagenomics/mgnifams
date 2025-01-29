@@ -2,10 +2,10 @@ process FIND_ANNOTATED_FAMILIES_BY_STRUCTURE {
     label "general"
 
     input:
-    path(m8s)
+    tuple val(meta), path(m8s)
 
     output:
-    path("annotated_structures.txt"), optional: true, emit: annotated_structures
+    tuple val(meta), path("annotated_structures.txt"), optional: true, emit: annotated_structures
 
     script:
     """

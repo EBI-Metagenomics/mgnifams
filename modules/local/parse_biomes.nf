@@ -1,9 +1,9 @@
 process PARSE_BIOMES {
     input:
-    path query_results
+    tuple val(meta), path(query_results)
 
     output:
-    path "biome_results"
+    tuple val(meta), path("biome_results")
 
     script:
     """
