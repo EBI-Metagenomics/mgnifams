@@ -3,8 +3,8 @@ process REFINE_FAMILIES_PARALLEL {
     conda "${moduleDir}/environment.yml"
     
     input:
-    path(clusters_chunk)
-    path(mgnifams_fasta)
+    tuple val(meta), path(clusters_chunk)
+    tuple val(meta2), path(mgnifams_fasta)
 
     output:
     path("seed_msa_sto/*")       , emit: seed_msa_sto
@@ -22,7 +22,10 @@ process REFINE_FAMILIES_PARALLEL {
 
     script:
     """
-    refine_families_parallel.py ${clusters_chunk} ${mgnifams_fasta} ${task.cpus}
+    refine_families_parallel.py \\
+        ${clusters_chunk} \\
+        ${mgnifams_fasta} \\
+        ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
