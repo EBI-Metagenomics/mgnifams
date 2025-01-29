@@ -1,4 +1,4 @@
-Changes in module 'nf-core/mmseqs/createtsv'
+Changes in component 'nf-core/mmseqs/createtsv'
 'modules/nf-core/mmseqs/createtsv/meta.yml' is unchanged
 'modules/nf-core/mmseqs/createtsv/environment.yml' is unchanged
 Changes in 'mmseqs/createtsv/main.nf':

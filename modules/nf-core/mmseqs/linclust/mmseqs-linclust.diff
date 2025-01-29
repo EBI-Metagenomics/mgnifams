@@ -1,11 +1,11 @@
-Changes in module 'nf-core/mmseqs/linclust'
+Changes in component 'nf-core/mmseqs/linclust'
 'modules/nf-core/mmseqs/linclust/meta.yml' is unchanged
 'modules/nf-core/mmseqs/linclust/environment.yml' is unchanged
 Changes in 'mmseqs/linclust/main.nf':
 --- modules/nf-core/mmseqs/linclust/main.nf
 +++ modules/nf-core/mmseqs/linclust/main.nf
 @@ -8,7 +8,7 @@
-         'biocontainers/mmseqs2:16.747c6--pl5321h6a68c12_0' }"
+         'biocontainers/mmseqs2:17.b804f--hd6d6fdc_1' }"
  
      input:
 -    tuple val(meta), path(db_input)
