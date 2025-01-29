@@ -5,6 +5,7 @@ process PARSE_BIOMES {
     output:
     path "biome_results"
 
+    script:
     """
     parse_biomes.py ${query_results}
     """

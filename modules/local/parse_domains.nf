@@ -6,6 +6,7 @@ process PARSE_DOMAINS {
     output:
     path "domain_results"
 
+    script:
     """
     parse_domains.py ${query_results} ${refined_families}
     """

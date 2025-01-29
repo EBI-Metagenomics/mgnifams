@@ -8,6 +8,7 @@ process QUERY_MGNPROTEIN_DB {
     output:
     path "post-processing"
 
+    script:
     """
     query_mgnprotein_db.py ${config_file} ${family_proteins_file}
     """

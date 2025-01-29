@@ -8,6 +8,7 @@ process INITIATE_SQLITE {
     output:
     path "mgnifams.sqlite3"
 
+    script:
     """
     sqlite3 mgnifams.sqlite3 < ${schema_file}
 

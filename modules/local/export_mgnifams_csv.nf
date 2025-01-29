@@ -10,7 +10,11 @@ process EXPORT_MGNIFAMS_CSV {
     output:
     path "tables"
 
+    script:
     """
-    export_mgnifams_csvs.py results families tables
+    export_mgnifams_csvs.py \\
+        results \\
+        families \\
+        tables
     """
 }

@@ -12,7 +12,12 @@ process APPEND_BLOBS_PARALLEL {
     output:
     path "${db}"
 
+    script:
     """
-    append_blobs_sqlite_parallel.py ${db} output families ${task.cpus}
+    append_blobs_sqlite_parallel.py \\
+        ${db} \\
+        output \\
+        families \\
+        ${task.cpus}
     """
 }
