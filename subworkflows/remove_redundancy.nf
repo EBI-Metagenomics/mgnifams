@@ -30,8 +30,8 @@ workflow REMOVE_REDUNDANCY {
     main:
     a3m_ch  = HHSUITE_REFORMAT(seed_msa_sto_dir, "sto", "a3m").fa
     db_name = a3m_ch.map { meta, folderpath ->
-        path_str = folderpath.toString()
-        parts = path_str.split('/')
+        def path_str = folderpath.toString()
+        def parts = path_str.split('/')
         parts[-1]
     }
 

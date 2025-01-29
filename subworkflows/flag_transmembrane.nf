@@ -11,15 +11,13 @@ workflow FLAG_TRANSMEMBRANE {
     main:
     extracted_res   = EXTRACT_FIRST_STOCKHOLM_SEQUENCES(tm_msa_ch)
     prob_ids        = extracted_res.prob_ids
-    fa_ch           = extracted_res.fa
-    fa_ch           = fa_ch.map { meta, filepath -> filepath }
-    fasta_chunks_ch = fa_ch.splitFasta( by: params.deeptmhmm_chunk_size, file: true )
-    fasta_chunks_ch
-        .map { filepath ->
-            def parts = filepath.baseName.split('\\.')
-            def number = parts[1]
-            def id = "pdb${number}"
-            return [ [id:id], [file(filepath)] ]
+    extracted_res.fa
+        .map { meta, filepath ->
+            [ meta, filepath.splitFasta( by: params.deeptmhmm_chunk_size, file: true ) ]
+        }
+        .transpose()
+        .map { meta, filepath ->
+            [ [id: meta.id, chunk: filepath.getBaseName().split('\\.')[-1]], filepath ]
         }
         .set { fa_ch }
 
@@ -36,11 +34,14 @@ workflow FLAG_TRANSMEMBRANE {
             return [ [id:"tm_ids"], file(filepath) ]
         }
         .set { tm_ids_ch }
+
     fa_ch
-        .map { it[1][0] }
+        .map { meta, filepath ->
+            filepath
+        }
         .collectFile(name: 'family_reps.fasta')
         .map { filepath ->
-            return [ [id:"fa_reps"], file(filepath) ]
+            [ [id:"fa_reps"], file(filepath) ]
         }
         .set { fa_ch }
 
