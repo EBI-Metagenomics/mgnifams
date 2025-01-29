@@ -2,33 +2,33 @@ process POOL_FAMILY_RESULTS {
     conda "${moduleDir}/environment.yml"
 
     input:
-    path seed_msa_sto_ch, stageAs: "families_prepooled/seed_msa_sto/*"
-    path msa_sto_ch     , stageAs: "families_prepooled/msa_sto/*"
-    path hmm_ch         , stageAs: "families_prepooled/hmm/*"
-    path rf_ch          , stageAs: "families_prepooled/rf/*"
-    path domtblout_ch   , stageAs: "families_prepooled/domtblout/*"
-    path tsv_ch         , stageAs: "families_prepooled/refined_families/*"
-    path discarded_ch   , stageAs: "families_prepooled/discarded_clusters/*"
-    path successful_ch  , stageAs: "families_prepooled/successful_clusters/*"
-    path converged_ch   , stageAs: "families_prepooled/converged_families/*"
-    path metadata_ch    , stageAs: "families_prepooled/family_metadata/*"
-    path logs_ch        , stageAs: "families_prepooled/logs/*"
-    path non_redundant_family_ids
-    path similarity_edgelist
+    tuple val(meta)  , path(seed_msa_sto_ch, stageAs: "families_prepooled/seed_msa_sto/*")
+    tuple val(meta2) , path(msa_sto_ch     , stageAs: "families_prepooled/msa_sto/*")
+    tuple val(meta3) , path(hmm_ch         , stageAs: "families_prepooled/hmm/*")
+    tuple val(meta4) , path(rf_ch          , stageAs: "families_prepooled/rf/*")
+    tuple val(meta5) , path(domtblout_ch   , stageAs: "families_prepooled/domtblout/*")
+    tuple val(meta6) , path(tsv_ch         , stageAs: "families_prepooled/refined_families/*")
+    tuple val(meta7) , path(discarded_ch   , stageAs: "families_prepooled/discarded_clusters/*")
+    tuple val(meta8) , path(successful_ch  , stageAs: "families_prepooled/successful_clusters/*")
+    tuple val(meta9) , path(converged_ch   , stageAs: "families_prepooled/converged_families/*")
+    tuple val(meta10), path(metadata_ch    , stageAs: "families_prepooled/family_metadata/*")
+    tuple val(meta11), path(logs_ch        , stageAs: "families_prepooled/logs/*")
+    tuple val(meta12), path(non_redundant_family_ids)
+    tuple val(meta13), path(similarity_edgelist)
 
     output:
-    path("families/seed_msa_sto/*")         , emit: seed_msa_sto
-    path("families/msa_sto/*")              , emit: msa_sto
-    path("families/hmm/*")                  , emit: hmm
-    path("families/rf/*")                   , emit: rf
-    path("families/domtblout/*")            , emit: domtblout
-    path("families/refined_families.tsv")   , emit: tsv
-    path("families/discarded_clusters.txt") , emit: discarded
-    path("families/successful_clusters.txt"), emit: successful
-    path("families/converged_families.txt") , emit: converged
-    path("families/family_metadata.csv")    , emit: metadata
-    path("families/similarity_edgelist.csv"), emit: similarity_edgelist
-    path("families/family_to_id.json")      , emit: id_mapping
+    tuple val(meta), path("families/seed_msa_sto/*")         , emit: seed_msa_sto
+    tuple val(meta), path("families/msa_sto/*")              , emit: msa_sto
+    tuple val(meta), path("families/hmm/*")                  , emit: hmm
+    tuple val(meta), path("families/rf/*")                   , emit: rf
+    tuple val(meta), path("families/domtblout/*")            , emit: domtblout
+    tuple val(meta), path("families/refined_families.tsv")   , emit: tsv
+    tuple val(meta), path("families/discarded_clusters.txt") , emit: discarded
+    tuple val(meta), path("families/successful_clusters.txt"), emit: successful
+    tuple val(meta), path("families/converged_families.txt") , emit: converged
+    tuple val(meta), path("families/family_metadata.csv")    , emit: metadata
+    tuple val(meta), path("families/similarity_edgelist.csv"), emit: similarity_edgelist
+    tuple val(meta), path("families/family_to_id.json")      , emit: id_mapping
 
     script:
     """

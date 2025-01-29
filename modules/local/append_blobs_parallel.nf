@@ -1,16 +1,16 @@
 process APPEND_BLOBS_PARALLEL {
     input:
-    path db
-    path cif_ch   , stageAs: "output/structures/cif/*"
-    tuple val(meta2), path(seed_msa_ch, stageAs: "output/families/*")
-    tuple val(meta3), path(msa_ch     , stageAs: "output/families/*")
-    path hmm_ch   , stageAs: "output/families/hmm/*"
-    path rf_ch    , stageAs: "output/families/rf/*"
-    path biome_ch , stageAs: "output/post-processing/*"
-    path domain_ch, stageAs: "output/post-processing/*"
+    tuple val(meta) , path(db)
+    tuple val(meta2), path(cif_ch     , stageAs: "output/structures/cif/*")
+    tuple val(meta3), path(seed_msa_ch, stageAs: "output/families/*")
+    tuple val(meta4), path(msa_ch     , stageAs: "output/families/*")
+    tuple val(meta5), path(hmm_ch     , stageAs: "output/families/hmm/*")
+    tuple val(meta6), path(rf_ch      , stageAs: "output/families/rf/*")
+    tuple val(meta7), path(biome_ch   , stageAs: "output/post-processing/*")
+    tuple val(meta8), path(domain_ch  , stageAs: "output/post-processing/*")
     
     output:
-    path "${db}"
+    tuple val(meta), path("${db}")
 
     script:
     """
