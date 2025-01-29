@@ -23,12 +23,12 @@ workflow FLAG_TRANSMEMBRANE {
 
     deeptmhmm_res = DEEPTMHMM(fa_ch)
     deeptmhmm_res.line3
-        .map { it[1] }
+        .map { meta, file -> file }
         .collectFile(name: 'predicted_topologies.3line', storeDir: params.outdir + "/redundancy/tm")
     gff3_ch   = deeptmhmm_res.gff3
     tm_ids_ch = FLAG_TM(gff3_ch, params.tm_fraction_threshold)
     tm_ids_ch
-        .map { it[1] }
+        .map { meta, file -> file }
         .collectFile(name: 'tm_ids.txt', storeDir: params.outdir + "/redundancy/tm")
         .map { filepath ->
             return [ [id:"tm_ids"], file(filepath) ]
