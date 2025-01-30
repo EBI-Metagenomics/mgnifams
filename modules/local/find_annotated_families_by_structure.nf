@@ -1,4 +1,5 @@
 process FIND_ANNOTATED_FAMILIES_BY_STRUCTURE {
+    tag "$meta.id"
     label "general"
 
     input:

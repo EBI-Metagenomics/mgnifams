@@ -17,20 +17,27 @@ workflow ANNOTATE_STRUCTURES {
     alphafold_aln = Channel.empty()
     esm_aln       = Channel.empty()
     
-    pdb_db = [ [ id:'pdb' ], file(foldseek_pdb_path) ]
+    pdb_db = Channel.of([ [ id:'pdb' ], file(foldseek_pdb_path) ])
     pdb_aln = FOLDSEEK_EASYSEARCH_PDB(pdb_ch, pdb_db).aln
     if (workflow.profile.contains("slurm")) {
-        alphafold_db = [ [ id:'alphafold' ], file(foldseek_alphafold_path) ]
+        alphafold_db = Channel.of([ [ id:'alphafold' ], file(foldseek_alphafold_path) ])
         alphafold_aln = FOLDSEEK_EASYSEARCH_ALPHAFOLDB(pdb_ch, alphafold_db).aln
-        esm_db = [ [ id:'esm' ], file(foldseek_esm_path) ]
+        esm_db = Channel.of([ [ id:'esm' ], file(foldseek_esm_path) ])
         esm_aln = FOLDSEEK_EASYSEARCH_ESM(pdb_ch, esm_db).aln
     }
 
-    foldseek_hits = pdb_aln
+    pdb_aln
         .concat(alphafold_aln)
         .concat(esm_aln)
-        .map { it[1] }
+        .map { meta, file ->
+            file
+        }
         .collectFile(name: 'foldseek_hits.tsv', storeDir: params.outdir + "/structures/foldseek")
+        .map { file ->
+            [[id: 'foldseek_hits'], file]
+        }
+        .set { foldseek_hits }
+
     FIND_ANNOTATED_FAMILIES_BY_STRUCTURE(foldseek_hits)
 
     emit:
