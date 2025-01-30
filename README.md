@@ -8,8 +8,8 @@ First, prepare a samplesheet with your input data that looks as follows:
 `samplesheet.csv`:
 
 ```csv
-protein_input
-assets/test_data/sequence_explorer_protein_test_100001.csv
+sample,protein_input
+plp2024,assets/test_data/sequence_explorer_protein_test_100001.csv
 ```
 
 Now, you can run the pipeline either on slurm or locally.
@@ -36,9 +36,9 @@ After the db has been produced by the pipeline, do the following:
 * host online with k8s  
 
 ### 1. setup_clusters 
-This is the first workflow to be executed before the main family generation. It consists of three subworkflows; preprocess_input, initiate_proteins and execute_clustering. In a nutshell, this workflow converts the initial input (see below) into family-generation-ready input.
+This is the first workflow to be executed before the main family generation. It consists of two subworkflows; extract_unannotated_fasta and execute_clustering. In a nutshell, this workflow converts the initial input (see below) into family-generation-ready input.
 
-The initial input for this pipeline is the output file of the protein-landing-page data generation pipeline, sequence_explorer_protein.csv (e.g., /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv). In case this file is compressed, there are two different decompression modes available; gz and bz2. Set the --compress_mode parameter accordingly. Then, the known pfam domains are sliced off from proteins and we filter the remaining proteins to be above a given length threshold with the min_sequence_length parameter (e.g., >=100 AA).
+The initial input for this pipeline is the output file of the protein-landing-page data generation pipeline, sequence_explorer_protein.csv (e.g., /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv). In case this file is compressed, there are two different decompression modes available; gz and bz2. Set the --compress_mode parameter accordingly. Then, the known pfam domains (or previous versions MGnifams domains) are sliced off from proteins and we filter the remaining proteins to be above a given length threshold with the min_sequence_length parameter (e.g., >=100 AA).
 
 ### 2. generate_nonredundant_families
 This workflow is the essence of MGnifams and is responsible for converting initial clusters into nonredundant protein families. The clusters from the previous workflow are chunked (minimum_members threshold=50, for clusters to keep) and then, along with the mgnifams_input.fa file they are fed into the generate_families_parallel subworkflow, which iteratively recruits sequences in the families, for each clusters’ chunk. The results are then pooled and checked for transmembrane families (flagged and removed) and redundancy among families (keeping uniques) via the flag_transmembrane and remove_redundancy subworkflows. DeepTMHMM is used to predict TM protein regions. If TM regions (alpha or beta sheet) are more or equal to 0.4 of the total fam rep length, then the family is mapped as transmembrane and discarded. We chose a more relaxed threshold to flag families rather than the strict measure DeepTMHMM uses to flag them (lowest encountered so far 0.0840). To achieve removing redundancy, an hhsuite compatible database is created, incorporating all MGnifams, and then through hhblits, an initial filtering is carried out based on e-value scores. Then for each pair of remaining families a Jaccard index score is calculated for the base MGYPs in the families. If this score is equal or more than 0.5, the per Amino Acid Jaccard Similarities is also calculated. In more detail, if the rep from the first family is found in the second family, a per AA set is constructed for each family for all same-to-rep MGYPs in the family (subslices of the same protein/slice). If the second family doesn’t contain the rep of the first, we try the reverse (second family’s rep in the first family). If again it doesn’t exist, we do nothing. Else, we calculate the AA Jaccard Index; if it is equal or above 0.95 we remove the second family as redundant, else if it is above equal or 0.5 we write out the similarity edge between the two families, else we do nothing. The remaining families are then assigned a unique integer ID.

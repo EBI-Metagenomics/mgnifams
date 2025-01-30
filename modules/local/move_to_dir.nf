@@ -1,12 +1,13 @@
 process MOVE_TO_DIR {
+    tag "$meta.id"
     label "venv"
 
     input:
-    path(files)
+    tuple val(meta), path(files)
     val(dir_name)
 
     output:
-    path("${dir_name}")
+    tuple val(meta), path("${dir_name}")
 
     script:
     """

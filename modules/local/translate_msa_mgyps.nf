@@ -1,4 +1,5 @@
 process TRANSLATE_MSA_MGYPS {
+    tag "$meta.id"
     label "venv"
 
     input:
@@ -9,6 +10,8 @@ process TRANSLATE_MSA_MGYPS {
 
     script:
     """
-    translate_msa_mgyps.py ${msa_fas} ${meta.id}
+    translate_msa_mgyps.py \\
+        ${msa_fas} \\
+        ${meta.id}
     """
 }

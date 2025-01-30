@@ -1,11 +1,14 @@
 process PARSE_DOMAINS {
+    tag "$meta.id"
+    
     input:
-    path query_results
-    path refined_families
+    tuple val(meta) , path(query_results)
+    tuple val(meta2), path(refined_families)
 
     output:
-    path "domain_results"
+    tuple val(meta), path("domain_results")
 
+    script:
     """
     parse_domains.py ${query_results} ${refined_families}
     """

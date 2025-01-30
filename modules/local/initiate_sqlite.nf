@@ -1,13 +1,16 @@
 process INITIATE_SQLITE {
+    tag "$meta.id"
+
     container "docker://nouchka/sqlite3"
 
     input:
-    path schema_file
-    path tables
+    tuple val(meta) , path(schema_file)
+    tuple val(meta2), path(tables)
     
     output:
-    path "mgnifams.sqlite3"
+    tuple val(meta), path("mgnifams.sqlite3")
 
+    script:
     """
     sqlite3 mgnifams.sqlite3 < ${schema_file}
 

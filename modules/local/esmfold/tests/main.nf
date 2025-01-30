@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-include { ESMFOLD } from '../../../../modules/ebi-metagenomics/esmfold/main.nf'
+include { ESMFOLD } from '../../../../modules/local/esmfold/esmfold.nf'
 
 workflow test_esmfold {
 

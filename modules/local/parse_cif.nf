@@ -1,4 +1,5 @@
 process PARSE_CIF {
+    tag "$meta.id"
     label "venv"
 
     input:

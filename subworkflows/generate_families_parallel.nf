@@ -10,9 +10,17 @@ workflow GENERATE_FAMILIES_PARALLEL {
     mgnifams_fasta
 
     main:
-    clusters_chunks  = CHUNK_CLUSTERS(clusters_tsv, checked_clusters, params.minimum_members, params.num_cluster_chunks)
-    refined_families = REFINE_FAMILIES_PARALLEL(clusters_chunks.flatten(), mgnifams_fasta.first())
+    cluster_chunks = CHUNK_CLUSTERS(clusters_tsv, checked_clusters, params.minimum_members, params.num_cluster_chunks).fasta_chunks
     
+    cluster_chunks
+        .transpose()
+        .map { meta, file_path ->
+            [ [id: meta.id, chunk: file_path.getSimpleName().split('_')[-1]], file_path ]
+        }
+        .set { ch_cluster }
+
+    refined_families = REFINE_FAMILIES_PARALLEL(ch_cluster, mgnifams_fasta.first())
+
     emit:
     seed_msa_sto = refined_families.seed_msa_sto
     msa_sto      = refined_families.msa_sto

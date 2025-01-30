@@ -1,8 +1,9 @@
-#!/usr/bin/env nextflow
+/*
+    SEQUENCE CLUSTERING
+*/
 
-include { PREPROCESS_INPUT   } from "./preprocess_input.nf"
-include { INITIATE_PROTEINS  } from "./initiate_proteins.nf"
-include { EXECUTE_CLUSTERING } from "./execute_clustering.nf"
+include { EXTRACT_UNANNOTATED_FASTA } from "../subworkflows/extract_unannotated_fasta.nf"
+include { EXECUTE_CLUSTERING        } from "../subworkflows/execute_clustering.nf"
 
 workflow SETUP_CLUSTERS {
     take:
@@ -12,15 +13,14 @@ workflow SETUP_CLUSTERS {
 
     main:
     if (!fasta_input_mode) {
-        processed_input_protein_ch = PREPROCESS_INPUT(input, compress_mode).processed_input_protein_ch
-        mgnifams_input_fa          = INITIATE_PROTEINS(processed_input_protein_ch).fasta_ch
+        mgnifams_input_fa = EXTRACT_UNANNOTATED_FASTA( input, compress_mode ).fasta_ch
     } else {
         mgnifams_input_fa = channel.fromPath(input)
     }
-    clusters     = EXECUTE_CLUSTERING(mgnifams_input_fa)
-    clusters_tsv = clusters.clusters_tsv.map { meta, filepath -> filepath }
+    EXECUTE_CLUSTERING(mgnifams_input_fa)
 
     emit:
-    mgnifams_input_fa
-    clusters_tsv
+    mgnifams_input_fa = mgnifams_input_fa
+    clusters_tsv      = EXECUTE_CLUSTERING.out.clusters_tsv
+    num_sequences     = EXECUTE_CLUSTERING.out.num_sequences
 }

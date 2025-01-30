@@ -50,6 +50,7 @@ def main(input_file, output_file, min_sequence_length):
     
     with open(input_file, "r") as infile, open(output_file, "w") as outfile:
         csv_reader = csv.reader(infile)
+        next(csv_reader, None) # Skip the header
         records_batch = []
 
         for row in csv_reader:
@@ -76,7 +77,7 @@ def main(input_file, output_file, min_sequence_length):
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print("Usage: python filter_unannotated_slices_fasta.py <input_file> <output_file> <min_sequence_length>")
+        print("Usage: python extract_unannotated_slices.py <input_file> <output_file> <min_sequence_length>")
         sys.exit(1)
 
     main(sys.argv[1], sys.argv[2], int(sys.argv[3]))

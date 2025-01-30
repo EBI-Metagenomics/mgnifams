@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
-include { GENERATE_FAMILIES_PARALLEL } from "./generate_families_parallel.nf"
-include { FLAG_TRANSMEMBRANE         } from "./flag_transmembrane.nf"
+include { GENERATE_FAMILIES_PARALLEL } from "../subworkflows/generate_families_parallel.nf"
+include { FLAG_TRANSMEMBRANE         } from "../subworkflows/flag_transmembrane.nf"
 include { MOVE_TO_DIR                } from "../modules/local/move_to_dir.nf"
-include { REMOVE_REDUNDANCY          } from "./remove_redundancy.nf"
+include { REMOVE_REDUNDANCY          } from "../subworkflows/remove_redundancy.nf"
 
 workflow GENERATE_NONREDUNDANT_FAMILIES {
     take:
@@ -14,31 +14,128 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     main:
     families_ch = GENERATE_FAMILIES_PARALLEL(clusters_tsv, [], mgnifams_input_fa)
 
-    msa_sto_ch = families_ch.msa_sto.collect()
-    msa_sto_ch
-        .map { files ->
-            return [ [id:"flag_tm"], files ]
+    families_ch.msa_sto
+        .map { meta, files ->
+            files
         }
-        .set { tm_msa_ch }
+        .collect()
+        .map { file ->
+            [ [id:"msa_sto"], file ]
+        }
+        .set { msa_sto_ch }
     
-    tm_ch     = FLAG_TRANSMEMBRANE(tm_msa_ch)
+    tm_ch     = FLAG_TRANSMEMBRANE(msa_sto_ch)
     rep_fa_ch = tm_ch.fa_ch
     tm_ids_ch = tm_ch.tm_ids_ch
     prob_ids  = tm_ch.prob_ids
     
-    seed_msa_sto_ch = families_ch.seed_msa_sto.collect()
-    seed_msa_sto_dir = MOVE_TO_DIR(seed_msa_sto_ch, "seed_msa_sto")
-    seed_msa_sto_dir
-        .map { filepath ->
-            return [ [id:"remove_redundancy"], file(filepath) ]
+    families_ch.seed_msa_sto
+        .map { meta, files ->
+            files
         }
-        .set { seed_msa_sto_dir }
-        
+        .collect()
+        .map { file ->
+            [ [id:"seed_msa_sto"], file ]
+        }
+        .set { seed_msa_sto_ch }
+
+    seed_msa_sto_dir = MOVE_TO_DIR(seed_msa_sto_ch, "seed_msa_sto")
+
+    families_ch.hmm
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"hmm"], file ]
+        }
+        .set { hmm_ch }
+
+    families_ch.rf
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"rf"], file ]
+        }
+        .set { rf_ch }
+
+    families_ch.domtblout
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"domtblout"], file ]
+        }
+        .set { domtblout_ch }
+
+    families_ch.tsv
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"tsv"], file ]
+        }
+        .set { tsv_ch }
+
+    families_ch.discarded
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"discarded"], file ]
+        }
+        .set { discarded_ch }
+
+    families_ch.successful
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"successful"], file ]
+        }
+        .set { successful_ch }
+
+    families_ch.converged
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"converged"], file ]
+        }
+        .set { converged_ch }
+
+    families_ch.metadata
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"metadata"], file ]
+        }
+        .set { metadata_ch }
+
+    families_ch.logs
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"logs"], file ]
+        }
+        .set { logs_ch }
+
     generated_families = REMOVE_REDUNDANCY(seed_msa_sto_dir, seed_msa_sto_ch, \
-        msa_sto_ch, families_ch.hmm.collect(), \
-        families_ch.rf.collect(), families_ch.domtblout.collect(), families_ch.tsv.collect(), \
-        families_ch.discarded.collect(), families_ch.successful.collect(), families_ch.converged.collect(), \
-        families_ch.metadata.collect(), families_ch.logs.collect(), tm_ids_ch, prob_ids, rep_fa_ch)
+        msa_sto_ch, hmm_ch, \
+        rf_ch, domtblout_ch, tsv_ch, \
+        discarded_ch, successful_ch, converged_ch, \
+        metadata_ch, logs_ch, tm_ids_ch, prob_ids, rep_fa_ch)
 
     emit:
     seed_msa_sto = generated_families.seed_msa_sto

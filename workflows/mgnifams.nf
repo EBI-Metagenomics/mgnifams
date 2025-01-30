@@ -34,9 +34,9 @@ workflow MGNIFAMS {
 
     main:
     log.info paramsSummaryLog(workflow)
-    
-    setup_res          = SETUP_CLUSTERS(ch_input, params.fasta_input_mode, params.compress_mode)    
-    generated_families = GENERATE_NONREDUNDANT_FAMILIES(setup_res.clusters_tsv, [], setup_res.mgnifams_input_fa)
+
+    SETUP_CLUSTERS(ch_input, params.fasta_input_mode, params.compress_mode)
+    generated_families = GENERATE_NONREDUNDANT_FAMILIES(SETUP_CLUSTERS.out.clusters_tsv, [], SETUP_CLUSTERS.out.mgnifams_input_fa)
     annotated_families = ANNOTATE_FAMILIES(generated_families.seed_msa_sto, generated_families.msa_sto)
     EXPORT_DB(generated_families.metadata, generated_families.converged, generated_families.tsv, \
         annotated_families.pfam_hits, annotated_families.foldseek_hits, annotated_families.scores_ch, \

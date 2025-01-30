@@ -1,14 +1,14 @@
 process MMSEQS_LINCLUST {
     tag "$meta.id"
-    // label 'process_high'
+    label 'process_high'
 
-    // conda "${moduleDir}/environment.yml"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mmseqs2:15.6f452--pl5321h6a68c12_0':
-        'biocontainers/mmseqs2:15.6f452--pl5321h6a68c12_0' }"
+        'https://depot.galaxyproject.org/singularity/mmseqs2:17.b804f--hd6d6fdc_1':
+        'biocontainers/mmseqs2:17.b804f--hd6d6fdc_1' }"
 
     input:
-    tuple val(meta), path(db_input)
+    tuple val(meta), path(db_input, stageAs: "db_input")
 
     output:
     tuple val(meta), path("${prefix}/"), emit: db_cluster
@@ -26,7 +26,7 @@ process MMSEQS_LINCLUST {
     """
     mkdir -p ${prefix}
     # Extract files with specified args based suffix | remove suffix | isolate longest common substring of files
-    DB_INPUT_PATH_NAME=\$(find -L "$db_input/" -maxdepth 1 -name "$args2" | sed 's/\\.\\[^.\\]*\$//' |  sed -e 'N;s/^\\(.*\\).*\\n\\1.*\$/\\1\\n\\1/;D' )
+    DB_INPUT_PATH_NAME=\$(find -L "$db_input/" -maxdepth 1 -name "$args2" | sed 's/\\.[^.]*\$//' |  sed -e 'N;s/^\\(.*\\).*\\n\\1.*\$/\\1\\n\\1/;D' )
 
     mmseqs \\
         linclust \\
@@ -34,8 +34,7 @@ process MMSEQS_LINCLUST {
         ${prefix}/${prefix} \\
         tmp1 \\
         $args \\
-        --threads ${task.cpus} \\
-        --compressed 0
+        --threads ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

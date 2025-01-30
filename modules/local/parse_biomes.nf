@@ -1,10 +1,13 @@
 process PARSE_BIOMES {
+    tag "$meta.id"
+    
     input:
-    path query_results
+    tuple val(meta), path(query_results)
 
     output:
-    path "biome_results"
+    tuple val(meta), path("biome_results")
 
+    script:
     """
     parse_biomes.py ${query_results}
     """
