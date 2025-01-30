@@ -1,4 +1,5 @@
 process POOL_FAMILY_RESULTS {
+    tag "$meta12.id"
     conda "${moduleDir}/environment.yml"
 
     input:
@@ -18,20 +19,24 @@ process POOL_FAMILY_RESULTS {
 
     output:
     tuple val(meta), path("families/seed_msa_sto/*")         , emit: seed_msa_sto
-    tuple val(meta), path("families/msa_sto/*")              , emit: msa_sto
-    tuple val(meta), path("families/hmm/*")                  , emit: hmm
-    tuple val(meta), path("families/rf/*")                   , emit: rf
-    tuple val(meta), path("families/domtblout/*")            , emit: domtblout
-    tuple val(meta), path("families/refined_families.tsv")   , emit: tsv
-    tuple val(meta), path("families/discarded_clusters.txt") , emit: discarded
-    tuple val(meta), path("families/successful_clusters.txt"), emit: successful
-    tuple val(meta), path("families/converged_families.txt") , emit: converged
-    tuple val(meta), path("families/family_metadata.csv")    , emit: metadata
-    tuple val(meta), path("families/similarity_edgelist.csv"), emit: similarity_edgelist
-    tuple val(meta), path("families/family_to_id.json")      , emit: id_mapping
+    tuple val(meta2), path("families/msa_sto/*")              , emit: msa_sto
+    tuple val(meta3), path("families/hmm/*")                  , emit: hmm
+    tuple val(meta4), path("families/rf/*")                   , emit: rf
+    tuple val(meta5), path("families/domtblout/*")            , emit: domtblout
+    tuple val(meta6), path("families/refined_families.tsv")   , emit: tsv
+    tuple val(meta7), path("families/discarded_clusters.txt") , emit: discarded
+    tuple val(meta8), path("families/successful_clusters.txt"), emit: successful
+    tuple val(meta9), path("families/converged_families.txt") , emit: converged
+    tuple val(meta10), path("families/family_metadata.csv")    , emit: metadata
+    tuple val(meta13), path("families/similarity_edgelist.csv"), emit: similarity_edgelist
+    tuple val(meta12), path("families/family_to_id.json")      , emit: id_mapping
 
     script:
     """
-    pool_results.py families_prepooled families ${non_redundant_family_ids} ${similarity_edgelist}
+    pool_results.py \\
+        families_prepooled \\
+        families \\
+        ${non_redundant_family_ids} \\
+        ${similarity_edgelist}
     """
 }

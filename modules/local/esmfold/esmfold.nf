@@ -10,9 +10,9 @@ process ESMFOLD {
     val(compute_mode)
 
     output:
-    tuple val(meta), path("${meta.id}")           , emit: pdb
-    tuple val(meta), path("${meta.id}_scores.txt"), emit: scores
-    path "versions.yml"                           , topic: 'versions'
+    tuple val(meta), path("${meta.id}_${meta.chunk}"), emit: pdb
+    tuple val(meta), path("*_scores.txt")            , emit: scores
+    path "versions.yml"                              , topic: 'versions'
 
     when:
     task.ext.when == null || task.ext.when

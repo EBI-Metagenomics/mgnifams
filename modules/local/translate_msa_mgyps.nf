@@ -1,4 +1,5 @@
 process TRANSLATE_MSA_MGYPS {
+    tag "$meta.id"
     label "venv"
 
     input:

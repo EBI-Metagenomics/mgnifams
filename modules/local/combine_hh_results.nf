@@ -1,4 +1,5 @@
 process COMBINE_HH_RESULTS {
+    tag "$meta.id"
     label "general"
 
     input:

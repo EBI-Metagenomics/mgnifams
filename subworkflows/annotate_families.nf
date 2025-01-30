@@ -13,20 +13,20 @@ workflow ANNOTATE_FAMILIES {
 
     main:
     seed_msa_sto
-        .map { files ->
+        .map { meta, files ->
             String filePath = files[0]
             int lastIndex = filePath.lastIndexOf('/')
             String seed_msa_dir = filePath.substring(0, lastIndex + 1)
-            return [ [id:"seed_msa"], file(seed_msa_dir) ]
+            [ meta, file(seed_msa_dir) ]
         }
         .set { seed_msa_ch }
     
     msa_sto
-        .map { files ->
+        .map { meta, files ->
             String filePath = files[0]
             int lastIndex = filePath.lastIndexOf('/')
             String msa_dir = filePath.substring(0, lastIndex + 1)
-            return [ [id:"msa"], file(msa_dir) ]
+            [ meta, file(msa_dir) ]
         }
         .set { hmmalign_msa_ch }
 
@@ -34,16 +34,17 @@ workflow ANNOTATE_FAMILIES {
     fa_msa_ch      = REFORMAT_HMMALIGN_MSA(hmmalign_msa_ch).fa_ch
     pfam_hits      = ANNOTATE_MODELS(fa_seed_msa_ch)
     structure_ch   = PREDICT_STRUCTURES(hmmalign_msa_ch)
+    // TODO
     pdb_ch         = structure_ch.pdb_ch
     scores_ch      = structure_ch.scores_ch
     cif_ch         = structure_ch.cif_ch
-    foldseek_hits  = ANNOTATE_STRUCTURES(pdb_ch)
+    // foldseek_hits  = ANNOTATE_STRUCTURES(pdb_ch)
 
-    emit:
-    pfam_hits
-    foldseek_hits
-    scores_ch
-    cif_ch
-    fa_seed_msa_ch
-    fa_msa_ch
+    // emit:
+    // pfam_hits
+    // foldseek_hits
+    // scores_ch
+    // cif_ch
+    // fa_seed_msa_ch
+    // fa_msa_ch
 }

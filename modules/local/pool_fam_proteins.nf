@@ -1,4 +1,5 @@
 process POOL_FAM_PROTEINS {
+    tag "$meta.id"
     label "venv"
 
     input:

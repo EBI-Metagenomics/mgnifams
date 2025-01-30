@@ -13,48 +13,75 @@ workflow PREDICT_STRUCTURES {
     
     main:
     family_reps_fa_ch = EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER(msa_sto_ch)
-    fasta_chunks_ch = family_reps_fa_ch.splitFasta( by: params.pdb_chunk_size, file: true )
-    fasta_chunks_ch
-        .map { filepath ->
-            def parts = filepath.baseName.split('\\.')
-            def number = parts[1]
-            def id = "pdb${number}"
-            return [ [id:id], [file(filepath)] ]
+    family_reps_fa_ch
+        .map { meta, filepath ->
+            [ meta, filepath.splitFasta( by: params.pdb_chunk_size, file: true ) ]
+        }
+        .transpose()
+        .map { meta, filepath ->
+            [ [id: meta.id, chunk: filepath.getBaseName().split('\\.')[-1]], filepath ]
         }
         .set { fa_ch }
-    esmfold_result = ESMFOLD(fa_ch, params.compute_mode)
 
+    esmfold_result = ESMFOLD(fa_ch, params.compute_mode)
+    
     // Long sequences that cannot be run on GPU
-    fa_ch.map { id, filepath ->
-            return filepath
+    fa_ch
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"esm_scores"], file ]
         }
         .set { fa_paths_ch }
-    esmfold_result.scores.map { id, filepath ->
-            return filepath
+
+    esmfold_result.scores
+        .map { meta, files ->
+            files
+        }
+        .collect()
+        .map { file ->
+            [ [id:"esm_scores"], file ]
         }
         .set { score_paths_ch }
+    
+    long_reps_fa_ch = EXTRACT_LONG_FA(fa_paths_ch, score_paths_ch)
 
-    long_reps_fa_ch = EXTRACT_LONG_FA(fa_paths_ch.collect(), score_paths_ch.collect())
-    fasta_long_chunks_ch = long_reps_fa_ch.splitFasta( by: params.pdb_chunk_size_long, file: true )
-    fasta_long_chunks_ch
-        .map { filepath ->
-            def parts = filepath.baseName.split('\\.')
-            def number = parts[1]
-            def id = "pdb${number}"
-            return [ [id:id], [file(filepath)] ]
+    long_reps_fa_ch
+        .map { meta, filepath ->
+            [ meta, filepath.splitFasta( by: params.pdb_chunk_size_long, file: true ) ]
+        }
+        .transpose()
+        .map { meta, filepath ->
+            [ [id: meta.id, chunk: filepath.getBaseName().split('\\.')[-1]], filepath ]
         }
         .set { fa_long_ch }
+
     esmfold_long_result = ESMFOLD_CPU(fa_long_ch)
     // End long sequences
 
-    scores_ch = EXTRACT_ESMFOLD_SCORES(esmfold_result.scores.concat(esmfold_long_result.scores)).csv.map { meta, filepath -> filepath }
-    scores_ch = scores_ch.collectFile(name: "pdb_scores.csv", storeDir: params.outdir + "/structures")
+    scores_ch = EXTRACT_ESMFOLD_SCORES(esmfold_result.scores.concat(esmfold_long_result.scores)).csv
+    
+    scores_ch
+        .map { meta, file ->
+            file
+        }
+        .collectFile(name: "pdb_scores.csv", storeDir: params.outdir + "/structures")
+        .map { file ->
+            [ [id: "scores"], file ]
+        }
+        .set { scores_ch }
+    
     pdb_ch = esmfold_result.pdb.concat(esmfold_long_result.pdb)
     cif_ch = PARSE_CIF(pdb_ch)
     cif_ch
-        .map { id, filepath ->
-            return filepath }
+        .map { meta, filepath ->
+            filepath }
         .collect()
+        .map { file ->
+            [ [id: "cif"], file ]
+        }
         .set { cif_ch }
 
     emit:

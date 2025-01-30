@@ -1,4 +1,5 @@
 process MOVE_TO_DIR {
+    tag "$meta.id"
     label "venv"
 
     input:

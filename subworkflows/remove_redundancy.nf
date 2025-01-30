@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
-include { HHSUITE_REFORMAT                     } from "../modules/nf-core/hhsuite/reformat/main.nf"
-include { HHSUITE_BUILDHHDB                    } from "../modules/nf-core/hhsuite/buildhhdb/main.nf"
-include { HHSUITE_HHBLITS                      } from "../modules/nf-core/hhsuite/hhblits/main.nf"
+include { HHSUITE_REFORMAT                     } from "../modules/local/hhsuite/reformat/main.nf"
+include { HHSUITE_BUILDHHDB                    } from "../modules/local/hhsuite/buildhhdb/main.nf"
+include { HHSUITE_HHBLITS                      } from "../modules/local/hhsuite/hhblits/main.nf"
 include { COMBINE_HH_RESULTS                   } from "../modules/local/combine_hh_results.nf"
 include { MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID } from "../modules/local/map_first_a3m_sequences_to_family_id.nf"
 include { POOL_FAM_PROTEINS                    } from "../modules/local/pool_fam_proteins.nf"

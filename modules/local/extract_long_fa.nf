@@ -1,4 +1,5 @@
 process EXTRACT_LONG_FA {
+    tag "$meta.id"
     label "venv"
 
     input:
