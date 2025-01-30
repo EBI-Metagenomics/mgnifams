@@ -1,4 +1,6 @@
 process PARSE_DOMAINS {
+    tag "$meta.id"
+    
     input:
     tuple val(meta) , path(query_results)
     tuple val(meta2), path(refined_families)

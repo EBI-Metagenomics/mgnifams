@@ -17,7 +17,7 @@ workflow ANNOTATE_FAMILIES {
             String filePath = files[0]
             int lastIndex = filePath.lastIndexOf('/')
             String seed_msa_dir = filePath.substring(0, lastIndex + 1)
-            [ meta, file(seed_msa_dir) ]
+            [ [id:"seed_msa"], file(seed_msa_dir) ]
         }
         .set { seed_msa_ch }
     
@@ -26,7 +26,7 @@ workflow ANNOTATE_FAMILIES {
             String filePath = files[0]
             int lastIndex = filePath.lastIndexOf('/')
             String msa_dir = filePath.substring(0, lastIndex + 1)
-            [ meta, file(msa_dir) ]
+            [ [id:"msa"], file(msa_dir) ]
         }
         .set { hmmalign_msa_ch }
 

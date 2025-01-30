@@ -37,13 +37,11 @@ workflow MGNIFAMS {
 
     SETUP_CLUSTERS(ch_input, params.fasta_input_mode, params.compress_mode)
     generated_families = GENERATE_NONREDUNDANT_FAMILIES(SETUP_CLUSTERS.out.clusters_tsv, [], SETUP_CLUSTERS.out.mgnifams_input_fa)
-    // TODO
-    ANNOTATE_FAMILIES(generated_families.seed_msa_sto, generated_families.msa_sto)
-    // annotated_families = ANNOTATE_FAMILIES(generated_families.seed_msa_sto, generated_families.msa_sto)
-    // EXPORT_DB(generated_families.metadata, generated_families.converged, generated_families.tsv, \
-    //     annotated_families.pfam_hits, annotated_families.foldseek_hits, annotated_families.scores_ch, \
-    //     annotated_families.cif_ch, annotated_families.fa_seed_msa_ch, annotated_families.fa_msa_ch, \
-    //     generated_families.hmm, generated_families.rf, params.fasta_input_mode)
+    annotated_families = ANNOTATE_FAMILIES(generated_families.seed_msa_sto, generated_families.msa_sto)
+    EXPORT_DB(generated_families.metadata, generated_families.converged, generated_families.tsv, \
+        annotated_families.pfam_hits, annotated_families.foldseek_hits, annotated_families.scores_ch, \
+        annotated_families.cif_ch, annotated_families.fa_seed_msa_ch, annotated_families.fa_msa_ch, \
+        generated_families.hmm, generated_families.rf, params.fasta_input_mode)
 
     CUSTOM_DUMPSOFTWAREVERSIONS(channel.topic('versions').unique().collectFile(name: 'collated_versions.yml'))
 

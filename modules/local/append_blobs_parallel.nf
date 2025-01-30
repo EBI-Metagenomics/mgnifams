@@ -1,4 +1,6 @@
 process APPEND_BLOBS_PARALLEL {
+    tag "$meta.id"
+
     input:
     tuple val(meta) , path(db)
     tuple val(meta2), path(cif_ch     , stageAs: "output/structures/cif/*")

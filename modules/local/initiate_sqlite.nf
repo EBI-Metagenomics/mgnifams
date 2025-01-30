@@ -1,4 +1,6 @@
 process INITIATE_SQLITE {
+    tag "$meta.id"
+
     container "docker://nouchka/sqlite3"
 
     input:

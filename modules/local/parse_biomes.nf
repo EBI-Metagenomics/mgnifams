@@ -1,4 +1,6 @@
 process PARSE_BIOMES {
+    tag "$meta.id"
+    
     input:
     tuple val(meta), path(query_results)
 

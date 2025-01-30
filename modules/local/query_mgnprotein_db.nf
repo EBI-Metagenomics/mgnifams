@@ -1,4 +1,6 @@
 process QUERY_MGNPROTEIN_DB {
+    tag "$meta.id"
+
     container "quay.io/microbiome-informatics/mgnifams:2.0.0"
 
     input:
@@ -6,7 +8,7 @@ process QUERY_MGNPROTEIN_DB {
     tuple val(meta2), path(family_proteins_file)
 
     output:
-    tuple val(meta), path("post-processing")
+    tuple val(meta2), path("post-processing")
 
     script:
     """

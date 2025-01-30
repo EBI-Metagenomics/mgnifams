@@ -1,4 +1,6 @@
 process EXPORT_MGNIFAMS_CSV {
+    tag "$meta.id"
+
     input:
     tuple val(meta),  path(metadata    , stageAs: "results/families/*")
     tuple val(meta2), path(converged   , stageAs: "results/families/*")
