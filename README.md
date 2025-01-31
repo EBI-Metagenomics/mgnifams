@@ -25,7 +25,7 @@ nextflow run main.nf -c path/to/local.config -profile test,local,conda,singulari
 
 ![alt text](assets/pipeline.png)
 
-The end-to-end MGnifams pipeline chains the subworkflows of four thematically different workflows; setup_clusters, generate_nonredundant_families, annotate_families and export_db. After the pipeline finishes its execution, the produced db can be copied to either the mgnifams-site repo for local testing, or directly to ifs (/nfs/public/rw/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
+The end-to-end MGnifams pipeline chains the subworkflows of four thematically different workflows; setup_clusters, generate_nonredundant_families, annotate_families and export_db. After the pipeline finishes its execution, the produced db can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
 The four thematic workflows can be seen below, along with their respective same-coloured subworkflows and modules:
 
@@ -93,7 +93,7 @@ python manage.py migrate --fake
 python manage.py runserver 0.0.0.0:8000
 
 ### Hosting with k8s
-Move the db to /nfs/public/rw/metagenomics/mgnifams/dbs while on the datamover queue.  
+Move the db to path/to/metagenomics/mgnifams/dbs while on the datamover queue.  
 slurm:  
 salloc -t 3:30:00 --mem=8G -p datamover
 
@@ -118,14 +118,14 @@ sudo docker login quay.io
 sudo docker push quay.io/microbiome-informatics/mgnifams_site:ebi-wp-k8s-hl
 
 #### If the db was created on a local machine
-Move sqlite3 DB from local machine to /nfs/public/rw/metagenomics/mgnifams/dbs  
+Move sqlite3 DB from local machine to path/to/metagenomics/mgnifams/dbs  
 slurm:  
 salloc -t 3:30:00 --mem=8G -p datamover
 
 wormhole send mgnifams_site/dbs/mgnifams.sqlite3
 
 This needs to be added to ~/.zshrc:  
-MIT_BASERC="/hps/software/users/rdf/metagenomics/service-team/repos/mi-automation/team_environments/codon/baserc.sh"
+MIT_BASERC="path/to/team_environments/codon/baserc.sh"
 
 if [ -f $MIT_BASERC ]; then  
   . $MIT_BASERC  

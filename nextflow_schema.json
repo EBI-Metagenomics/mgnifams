@@ -148,13 +148,11 @@
             "properties": {
                 "hhdb_folder_path": {
                     "type": "string",
-                    "description": "annotate_models",
-                    "default": "/hps/nobackup/rdf/metagenomics/service-team/ref-dbs/hh/pfamA_35.0"
+                    "description": "annotate_models"
                 },
                 "foldseek_db_path": {
                     "type": "string",
-                    "description": "annotate_structures",
-                    "default": "/hps/nobackup/rdf/metagenomics/service-team/ref-dbs/foldseek/8-ef4e960"
+                    "description": "annotate_structures"
                 }
             },
             "required": [
