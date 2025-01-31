@@ -8,4 +8,7 @@ tmp/
 venv/
 work/
 db_config.ini
+samplesheet*.csv
 mgnifams.sqlite3
+conf/slurm.config
+conf/local.config
