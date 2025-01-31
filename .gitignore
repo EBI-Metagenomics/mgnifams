@@ -9,3 +9,5 @@ venv/
 work/
 db_config.ini
 mgnifams.sqlite3
+conf/slurm.config
+conf/local.config

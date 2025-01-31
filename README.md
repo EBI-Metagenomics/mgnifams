@@ -16,11 +16,11 @@ Now, you can run the pipeline either on slurm or locally.
 
 slurm:
 ```bash
-nextflow run main.nf -profile slurm,conda,singularity -with-tower
+nextflow run main.nf -c path/to/slurm.config -profile test,slurm,conda,singularity -with-tower
 ```
 local:
 ```bash
-nextflow run main.nf -profile test_local,conda,singularity
+nextflow run main.nf -c path/to/local.config -profile test,local,conda,singularity
 ```
 
 ![alt text](assets/pipeline.png)
@@ -38,7 +38,22 @@ After the db has been produced by the pipeline, do the following:
 ### 1. setup_clusters 
 This is the first workflow to be executed before the main family generation. It consists of two subworkflows; extract_unannotated_fasta and execute_clustering. In a nutshell, this workflow converts the initial input (see below) into family-generation-ready input.
 
-The initial input for this pipeline is the output file of the protein-landing-page data generation pipeline, sequence_explorer_protein.csv (e.g., /nfs/production/rdf/metagenomics/users/vangelis/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv). In case this file is compressed, there are two different decompression modes available; gz and bz2. Set the --compress_mode parameter accordingly. Then, the known pfam domains (or previous versions MGnifams domains) are sliced off from proteins and we filter the remaining proteins to be above a given length threshold with the min_sequence_length parameter (e.g., >=100 AA).
+The initial input for this pipeline is the output file of the protein-landing-page data generation pipeline, sequence_explorer_protein.csv (e.g., path/to/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv).
+
+head:
+```bash
+mgyp,sequence,full_length,cluster_size,metadata
+1127097383,MPMRVLYGLMFLSHLTTPSTLIANCWYNQMVRDDEITSSLKLMSLRRRTMEKMIVYGTRWCGDTRRSLRILDGREINYKWIDIDKDPEGEKFVKETNQGNRSVPTILFPDESILVEPSNQELNEKLDALSL,false,2,"{""s"":[[112156,[[781358,[[1218588979,1,396,1]]]]]],""b"":[[120,1]],""p"":[[""PF00462"",7.5e-8,39.0,2,58,53,113]]}"
+3682963857,MSEIEKNIKEMIASNDVVLFMKGNPNQPQCGFSAKVVQCLKEVGKPFGYVDVLACLLYTSDAAD,false,3,"{""s"":[[133749,[[4291090,[[436986755,2,193,-1]]]]]],""b"":[[154,1]],""p"":[[""PF00462"",0.000011,32.1,1,32,17,56]]}"
+1454792104,NEIDISRVDGAMDEMIKKANGKRTIPQIFFGEQHIGGYDEVRALEKEKKLQDLLK,false,1,"{""s"":[[104174,[[842953,[[393236313,739,906,-1]]]]]],""b"":[[158,1]],""p"":[[""PF00462"",0.00083,26.1,28,60,1,35]]}"
+4689549003,MLFICYPKCSTCQKAKKWLDENGIDYTERHIVESNPTYEELKKWHAISGLPLKKFFNTSGMLYKEKKLKDKLPSMSEDEQLK,false,1,"{""s"":[[133688,[[4567313,[[752013464,2956,3201,1]]]]]],""b"":[[356,1]],""p"":[[""PF00462"",0.000027,30.8,7,45,1,52],[""PF03960"",0.00019,28.2,3,46,5,82]]}"
+3125700799,MTASDQIKQTVTSHDVVLFMKGTKTMPQCGFSSRVAGVLNFMGIDYTDVNVLADDQIRQGIKDYSDWPTIPQLYVKGEFVGGCDIITEMTLSGELDTLLSDKGIAFDQAAADK,false,1,"{""s"":[[130231,[[2772491,[[1774364588,459,797,1]]]]]],""b"":[[132,1]],""p"":[[""PF00462"",1.5e-17,70.1,1,60,16,80]]}"
+1248493701,MTIIVYGTQTCSQCKMFKEKLEENNIDFNSTDDLETLLDLSEKTGIMSAPIVKIEDEYFDTMGAFKKIGLC,true,6,"{""s"":[[112618,[[795058,[[328816056,2554,2769,-1]]]]],[112596,[[795030,[[232524699,1534,1749,-1]]]]]],""b"":[[63,2]],""p"":[[""PF00462"",0.00015,28.4,1,59,3,59]]}"
+6079945953,MDKIKNAINDYVIISKKNCVFCDMVNELLDDNFIDYTVIKIETLSEDELNEIKPEEAKKYPFIFKNKIYIGSYNELKKELNN,true,3,"{""s"":[[136659,[[7462376,[[1835504261,23748,23996,-1]]]]]],""b"":[[132,1]],""p"":[[""PF00462"",0.00014,28.6,2,56,11,70]]}"
+1821912652,RQRQMCIRDRAVTMFALEWCEFCWSIRKLFETCGIEYRSVDLDSVAYQEGDLGGRLRAALHARTGSPTVPQVFVGETYVGGCTETLDAFRSGELQRLLERDGVPYSAPAGLDPGKLLPAWLHPR,false,1,"{""s"":[[125457,[[1689011,[[989761960,1,375,1]]]]]],""b"":[[88,1]],""p"":[[""PF00462"",1.5e-12,54.1,1,60,12,79]]}"
+760903384,MNIQIFGTSKCFDTKKAQRYFKERGIKFQMIDLKEKEMSRGEFENVARALGGWEKLVDPNAKDKQTLALLDALVDWQKEDKLFENQQLLRTPIVRNGRKATVGYQPDVSVSYTHLRAHE,false,1,"{""s"":[[108957,[[654179,[[823249866,507,863,1]]]]]],""b"":[[361,1]],""p"":[[""PF00462"",0.0021,24.8,2,48,3,56],[""PF03960"",8.6e-6,32.5,1,74,6,110]]}"
+```
+In case this file is compressed, there are two different decompression modes available; gz and bz2. Set the --compress_mode parameter accordingly. Then, the known pfam domains (or previous versions MGnifams domains) are sliced off from proteins and we filter the remaining proteins to be above a given length threshold with the min_sequence_length parameter (e.g., >=100 AA).
 
 ### 2. generate_nonredundant_families
 This workflow is the essence of MGnifams and is responsible for converting initial clusters into nonredundant protein families. The clusters from the previous workflow are chunked (minimum_members threshold=50, for clusters to keep) and then, along with the mgnifams_input.fa file they are fed into the generate_families_parallel subworkflow, which iteratively recruits sequences in the families, for each clusters’ chunk. The results are then pooled and checked for transmembrane families (flagged and removed) and redundancy among families (keeping uniques) via the flag_transmembrane and remove_redundancy subworkflows. DeepTMHMM is used to predict TM protein regions. If TM regions (alpha or beta sheet) are more or equal to 0.4 of the total fam rep length, then the family is mapped as transmembrane and discarded. We chose a more relaxed threshold to flag families rather than the strict measure DeepTMHMM uses to flag them (lowest encountered so far 0.0840). To achieve removing redundancy, an hhsuite compatible database is created, incorporating all MGnifams, and then through hhblits, an initial filtering is carried out based on e-value scores. Then for each pair of remaining families a Jaccard index score is calculated for the base MGYPs in the families. If this score is equal or more than 0.5, the per Amino Acid Jaccard Similarities is also calculated. In more detail, if the rep from the first family is found in the second family, a per AA set is constructed for each family for all same-to-rep MGYPs in the family (subslices of the same protein/slice). If the second family doesn’t contain the rep of the first, we try the reverse (second family’s rep in the first family). If again it doesn’t exist, we do nothing. Else, we calculate the AA Jaccard Index; if it is equal or above 0.95 we remove the second family as redundant, else if it is above equal or 0.5 we write out the similarity edge between the two families, else we do nothing. The remaining families are then assigned a unique integer ID.
@@ -130,7 +145,7 @@ The **--input** parameter denotes the fasta file and the **--fasta_input_mode** 
 
 Example usage:
 ```
-nextflow run main.nf -profile test_local,conda,singularity --input assets/test_data/mgnifams_input.fa  --fasta_input_mode true
+nextflow run main.nf -c path/to/local.config -profile test,local,conda,singularity --input assets/test_data/mgnifams_input.fa  --fasta_input_mode true
 ```
 **
 The HHsuite Pfam database (https://wwwuser.gwdguser.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/pfamA_35.0.tar.gz) and the respective foldseek databases (foldseek downloads command for PDB and optionally AlphaFold and ESMAtlas, https://github.com/steineggerlab/foldseek) must be downloaded by the user and the parameters **hhdb_folder_path** and **foldseek_db_path** must be set accordingly. A working conda environment for esm-fold must be also set manually, and the **esm_conda_path** parameter must be updated with that path.

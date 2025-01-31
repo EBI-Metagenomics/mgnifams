@@ -29,22 +29,18 @@
                 },
                 "esm_conda_path": {
                     "type": "string",
-                    "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/miniconda3/envs/esmfold_gpu",
                     "description": "predict_structures ESMfold conda env"
                 },
                 "db_config_file": {
                     "type": "string",
-                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/assets/db_config.ini",
                     "description": "secrets for sqlite db"
                 },
                 "db_schema_file": {
                     "type": "string",
-                    "default": "/hps/nobackup/rdf/metagenomics/service-team/users/vangelis/mgnifams/assets/db_schema.sqlite",
                     "description": "schema for sqlite db"
                 },
                 "outdir": {
-                    "type": "string",
-                    "default": "/nfs/production/rdf/metagenomics/users/vangelis/mgnifams/data/output"
+                    "type": "string"
                 }
             },
             "required": [
