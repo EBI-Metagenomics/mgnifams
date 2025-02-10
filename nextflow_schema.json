@@ -137,6 +137,11 @@
                     "type": "string",
                     "default": "gpu",
                     "description": "GPU or CPU mode, depending on sequence length"
+                },
+                "query_result_chunks": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Chunk size for parallel data exporting (biomes and domains)"
                 }
             }
         },

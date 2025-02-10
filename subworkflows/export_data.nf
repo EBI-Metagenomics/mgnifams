@@ -18,7 +18,20 @@ workflow EXPORT_DATA {
     tables = EXPORT_MGNIFAMS_CSV( fam_metadata, fam_converged, \
         refined_families, pfam_hits, foldseek_hits, predict_scores )
     query_results  = QUERY_MGNPROTEIN_DB( Channel.of( [ [id:"config"], params.db_config_file ] ), refined_families )
-    // TODO chunking
-    PARSE_BIOMES( query_results.res, query_results.biome_mapping )
-    PARSE_DOMAINS( query_results.res, query_results.pfam_mapping, refined_families )
+    
+    // Chunking query results to run in parallel
+    def counter = 0
+    ch_query_results_batch = query_results.res
+        .map{ meta, path ->
+            path
+        }
+        .flatten()
+        .collate( params.query_result_chunks )
+        .map { batch -> 
+            counter += 1
+            [ [id:"batch_" + counter], batch ]
+        }
+
+    PARSE_BIOMES( ch_query_results_batch, query_results.biome_mapping.first() )
+    PARSE_DOMAINS( ch_query_results_batch, query_results.pfam_mapping.first(), refined_families.first() )
 }
