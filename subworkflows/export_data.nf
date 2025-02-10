@@ -20,16 +20,11 @@ workflow EXPORT_DATA {
     query_results  = QUERY_MGNPROTEIN_DB( Channel.of( [ [id:"config"], params.db_config_file ] ), refined_families )
     
     // Chunking query results to run in parallel
-    def counter = 0
     ch_query_results_batch = query_results.res
-        .map{ meta, path ->
-            path
-        }
-        .flatten()
-        .collate( params.query_result_chunks )
-        .map { batch -> 
-            counter += 1
-            [ [id:"batch_" + counter], batch ]
+        .flatMap { _meta, files -> 
+            files.collate( params.query_result_chunks )
+                .withIndex()
+                .collect{ flist, index -> tuple( [id: "batch_${index}" ], flist ) }
         }
 
     PARSE_BIOMES( ch_query_results_batch, query_results.biome_mapping.first() )
