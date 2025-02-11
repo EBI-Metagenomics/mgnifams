@@ -14,6 +14,7 @@
 */
 
 include { MGNIFAMS                } from './workflows/mgnifams'
+include { UPDATE_MGNIFAMS_DB      } from './workflows/update_mgnifams_db'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
@@ -34,14 +35,34 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     main:
 
     //
-    // WORKFLOW: Run pipeline
+    // WORKFLOW: Run main pipeline
     //
-    MGNIFAMS( 
-        samplesheet
-    )
+    if (params.mode == "run_mgnifams_pipeline") {
+        MGNIFAMS( 
+            samplesheet
+        )
+        ch_multiqc = MGNIFAMS.out.multiqc_report
+    }
+    //
+    // WORKFLOW: Run update mgnifams db workflow
+    //
+    else if (params.mode == "update_mgnifams_db") {
+        UPDATE_MGNIFAMS_DB( 
+            samplesheet
+        )
+        ch_multiqc = UPDATE_MGNIFAMS_DB.out.multiqc_report
+    }
+    // TODO
+    // WORKFLOW: Run initialise mgnifams db workflow
+    //
+    // else if (params.mode == "initialise_mgnifams_db") {
+    //     INITIALISE_MGNIFAMS_DB( 
+    //         samplesheet
+    //     )
+    // }
 
     emit:
-    multiqc_report = MGNIFAMS.out.multiqc_report // channel: /path/to/multiqc_report.html
+    multiqc_report = ch_multiqc // channel: /path/to/multiqc_report.html
 }
 
 /*
