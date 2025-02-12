@@ -66,9 +66,25 @@ workflow PIPELINE_INITIALISATION {
     //
     // Create channel from input file provided through params.input
     //
-
     ch_samplesheet = Channel
-        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+            .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+
+    if (params.mode == "run_mgnifams_pipeline") {
+        ch_samplesheet = ch_samplesheet
+            .map { sample, protein_input, _schema ->
+                [ sample, protein_input ]
+            }
+    }
+    // // else if (params.mode == "update_mgnifams_db") {
+
+    // // }
+    else if (params.mode == "initialise_mgnifams_db") {
+        ch_samplesheet = ch_samplesheet
+            .map { sample, _protein_input, schema ->
+                [ sample, schema ]
+            }
+    }
+    
 
     emit:
     samplesheet = ch_samplesheet

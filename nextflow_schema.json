@@ -18,9 +18,16 @@
                     "exists": true,
                     "schema": "assets/schema_input.json",
                     "pattern": "^\\S+\\.csv$",
-                    "description": "CSV samplesheet file containing information about the MGnifams input file.",
-                    "help_text": "Use this to specify the location of your input file containing amino acid sequences. The CSV file must have only one column (protein_input).",
+                    "description": "CSV samplesheet file containing information about the MGnifams analysis pipeline input file, or sqlite db schema or folders to append data to the db.",
+                    "help_text": "Use this to specify the location of your input CSV file containing amino acid sequences (protein_input) for the main execution mode. Otherwise, give the path to the data base schema.sqlite file for db creation, or location of tables to append new data to the db.",
                     "fa_icon": "fas fa-file-csv"
+                },
+                "mode": {
+                    "type": "string",
+                    "default": "run_mgnifams_pipeline",
+                    "description": "Specifies the mode in which the pipeline will be run",
+                    "enum": ["run_mgnifams_pipeline", "update_mgnifams_db", "initialise_mgnifams_db"],
+                    "fa_icon": "fas fa-cogs"
                 },
                 "fasta_input_mode": {
                     "type": "boolean",

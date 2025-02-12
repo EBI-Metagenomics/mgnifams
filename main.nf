@@ -15,6 +15,7 @@
 
 include { MGNIFAMS                } from './workflows/mgnifams'
 include { UPDATE_MGNIFAMS_DB      } from './workflows/update_mgnifams_db'
+include { INITIALISE_SQLITE       } from './modules/local/initialise_sqlite/main'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
@@ -52,14 +53,15 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
         )
         ch_multiqc = UPDATE_MGNIFAMS_DB.out.multiqc_report
     }
-    // TODO
-    // WORKFLOW: Run initialise mgnifams db workflow
     //
-    // else if (params.mode == "initialise_mgnifams_db") {
-    //     INITIALISE_MGNIFAMS_DB( 
-    //         samplesheet
-    //     )
-    // }
+    // MODULE: Run initialise mgnifams db module
+    //
+    else if (params.mode == "initialise_mgnifams_db") {
+        INITIALISE_SQLITE( 
+            samplesheet
+        )
+        ch_multiqc = Channel.empty()
+    }
 
     emit:
     multiqc_report = ch_multiqc // channel: /path/to/multiqc_report.html

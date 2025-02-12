@@ -18,8 +18,14 @@
                 "pattern": "^\\S+\\.(gz|bz2|csv|fa|fasta)$",
                 "description": "The pipeline main input data. Either sequence_explorer_protein from MGnify proteins, or a protein fasta file with fasta_input_mode set to true.",
                 "errorMessage": "Must be either sequence_explorer_protein from MGnify proteins, or a protein fasta file with fasta_input_mode set to true."
+            },
+            "schema": {
+                "type": "string",
+                "pattern": "^\\S+\\.sqlite$",
+                "description": "The sqlite schema file with the databse table creation queries",
+                "errorMessage": "Must be a schema .sqlite file."
             }
         },
-        "required": ["sample", "protein_input"]
+        "required": ["sample"]
     }
 }
