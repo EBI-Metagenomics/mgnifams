@@ -16,12 +16,27 @@
             "protein_input": {
                 "type": "string",
                 "pattern": "^\\S+\\.(gz|bz2|csv|fa|fasta)$",
+                "exists": true,
                 "description": "The pipeline main input data. Either sequence_explorer_protein from MGnify proteins, or a protein fasta file with fasta_input_mode set to true.",
                 "errorMessage": "Must be either sequence_explorer_protein from MGnify proteins, or a protein fasta file with fasta_input_mode set to true."
+            },
+            "results_folder": {
+                "type": "string",
+                "format": "directory-path",
+                "exists": true,
+                "description": "Results from mgnifams analysis pipeline, to be imported in the database."
+            },
+            "existing_db": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.sqlite3$",
+                "description": "The existing mgnifams sqlite db."
             },
             "schema": {
                 "type": "string",
                 "pattern": "^\\S+\\.sqlite$",
+                "exists": true,
                 "description": "The sqlite schema file with the databse table creation queries",
                 "errorMessage": "Must be a schema .sqlite file."
             }
