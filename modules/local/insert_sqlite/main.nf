@@ -11,7 +11,8 @@ process INSERT_SQLITE {
     tuple val(meta), path(pipeline_results), path(db)
     
     output:
-    tuple val(meta), path(db)
+    tuple val(meta), path(db), emit: db
+    path "versions.yml"      , emit: versions
 
     script:
     """
