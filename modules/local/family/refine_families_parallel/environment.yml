@@ -1,0 +1,12 @@
+name: family
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bioconda::mafft=7.520
+  - bioconda::hmmer=3.4.0
+  - bioconda::easel=0.49
+  - python=3.8
+  - pandas
+  - polars
+  - biopython

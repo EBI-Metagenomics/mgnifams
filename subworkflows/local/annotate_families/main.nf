@@ -1,0 +1,50 @@
+#!/usr/bin/env nextflow
+
+include { REFORMAT_MSA as REFORMAT_SEED_MSA     } from "../../../subworkflows/local/reformat_msa"
+include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA } from "../../../subworkflows/local/reformat_msa"
+include { ANNOTATE_MODELS                       } from "../../../subworkflows/local/annotate_models"
+include { PREDICT_STRUCTURES                    } from "../../../subworkflows/local/predict_structures"
+include { ANNOTATE_STRUCTURES                   } from "../../../subworkflows/local/annotate_structures"
+
+workflow ANNOTATE_FAMILIES {
+    take:
+    seed_msa_sto
+    msa_sto
+
+    main:
+    seed_msa_sto
+        .map { meta, files ->
+            String filePath = files[0]
+            int lastIndex = filePath.lastIndexOf('/')
+            String seed_msa_dir = filePath.substring(0, lastIndex + 1)
+            [ [id:"seed_msa"], file(seed_msa_dir) ]
+        }
+        .set { seed_msa_ch }
+    
+    msa_sto
+        .map { meta, files ->
+            String filePath = files[0]
+            int lastIndex = filePath.lastIndexOf('/')
+            String msa_dir = filePath.substring(0, lastIndex + 1)
+            [ [id:"msa"], file(msa_dir) ]
+        }
+        .set { hmmalign_msa_ch }
+
+    fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
+    fa_msa_ch      = REFORMAT_HMMALIGN_MSA(hmmalign_msa_ch).fa_ch
+    pfam_hits      = ANNOTATE_MODELS(fa_seed_msa_ch)
+    
+    structure_ch   = PREDICT_STRUCTURES(hmmalign_msa_ch)
+    pdb_ch         = structure_ch.pdb_ch
+    scores_ch      = structure_ch.scores_ch
+    cif_ch         = structure_ch.cif_ch
+    foldseek_hits  = ANNOTATE_STRUCTURES(pdb_ch)
+
+    emit:
+    pfam_hits
+    foldseek_hits
+    scores_ch
+    cif_ch
+    fa_seed_msa_ch
+    fa_msa_ch
+}

@@ -9,10 +9,10 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 // include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
-include { SETUP_CLUSTERS                 } from "../subworkflows/setup_clusters.nf"
-include { GENERATE_NONREDUNDANT_FAMILIES } from "../subworkflows/generate_nonredundant_families.nf"
-include { ANNOTATE_FAMILIES              } from "../subworkflows/annotate_families.nf"
-include { EXPORT_DATA                    } from "../subworkflows/export_data.nf"
+include { SETUP_CLUSTERS                 } from "../subworkflows/local/setup_clusters"
+include { GENERATE_NONREDUNDANT_FAMILIES } from "../subworkflows/local/generate_nonredundant_families"
+include { ANNOTATE_FAMILIES              } from "../subworkflows/local/annotate_families"
+include { EXPORT_DATA                    } from "../subworkflows/local/export_data"
 
 include { CUSTOM_DUMPSOFTWAREVERSIONS    } from '../modules/nf-core/custom/dumpsoftwareversions/main.nf'
 
