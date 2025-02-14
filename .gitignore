@@ -3,7 +3,7 @@
 report*
 trace*
 timeline*
-output/
+output*
 tmp/
 venv/
 work/

@@ -52,7 +52,7 @@ workflow REMOVE_REDUNDANCY {
     pooled_families       = POOL_FAMILY_RESULTS(seed_msa_sto_ch, \
         msa_sto_ch, hmm_ch, rf_ch, domtblout_ch, tsv_ch, \
         discarded_ch, successful_ch, converged_ch, \
-        metadata_ch, logs_ch, non_redundant_fam_ids, similarity_edgelist)
+        metadata_ch, logs_ch, non_redundant_fam_ids, similarity_edgelist, params.starting_id)
 
     emit:
     seed_msa_sto = pooled_families.seed_msa_sto

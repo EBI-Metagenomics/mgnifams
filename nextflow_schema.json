@@ -116,6 +116,12 @@
                     "type": "integer",
                     "description": "Number of chunks the linclust clustering file will be divided into for parallel family generation"
                 },
+                "starting_id": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Integer id of the first family to be generated. The rest are iteratively incremented by one",
+                    "help_text": "Need to be manually update this parameter for subsequent releases of the db. E.g. the first version had 6096 families, so need to set this to 6097 in the v2 run"
+                },
                 "deeptmhmm_chunk_size": {
                     "type": "integer",
                     "default": 100,
