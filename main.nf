@@ -9,11 +9,15 @@
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    VALIDATE & PRINT PARAMETER SUMMARY
+    IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { validateParameters; paramsHelp; samplesheetToList } from 'plugin/nf-schema'
+include { MGNIFAMS                } from './workflows/mgnifams'
+include { UPDATE_DB               } from './subworkflows/local/update_db'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
+include { INITIALISE_SQLITE       } from './modules/local/initialise_sqlite/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,24 +25,46 @@ include { validateParameters; paramsHelp; samplesheetToList } from 'plugin/nf-sc
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { MGNIFAMS } from './workflows/mgnifams'
-
 //
 // WORKFLOW: Run main analysis pipeline
 //
 workflow EBIMETAGENOMICS_MGNIFAMS {
 
-    if (params.help) {
-        log.info paramsHelp("nextflow run main.nf -profile slurm,conda,singularity")
-        exit 0
+    take:
+    samplesheet // channel: samplesheet read in from --input
+
+    main:
+
+    ch_multiqc = Channel.empty()
+
+    //
+    // WORKFLOW: Run main pipeline
+    //
+    if (params.mode == "run_mgnifams_pipeline") {
+        MGNIFAMS( 
+            samplesheet
+        )
+        ch_multiqc = MGNIFAMS.out.multiqc_report
     }
-    if (params.validate_params) {
-        validateParameters()
+    //
+    // SUBWORKFLOW: Run update mgnifams db subworkflow
+    //
+    else if (params.mode == "update_mgnifams_db") {
+        UPDATE_DB( 
+            samplesheet
+        )
+    }
+    //
+    // MODULE: Run initialise mgnifams db module
+    //
+    else if (params.mode == "initialise_mgnifams_db") {
+        INITIALISE_SQLITE( 
+            samplesheet
+        )
     }
 
-    ch_input = Channel.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
-    MGNIFAMS( ch_input )
-
+    emit:
+    multiqc_report = ch_multiqc // channel: /path/to/multiqc_report.html
 }
 
 /*
@@ -51,7 +77,38 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
 // WORKFLOW: Execute a single named workflow for the pipeline
 //
 workflow {
-    EBIMETAGENOMICS_MGNIFAMS ()
+    //
+    // SUBWORKFLOW: Run initialisation tasks
+    //
+
+    PIPELINE_INITIALISATION (
+        params.version,
+        params.validate_params,
+        params.monochrome_logs,
+        args,
+        params.outdir,
+        params.input
+    )
+    
+    //
+    // WORKFLOW: Run main workflow
+    //
+    EBIMETAGENOMICS_MGNIFAMS (
+        PIPELINE_INITIALISATION.out.samplesheet
+    )
+
+    //
+    // SUBWORKFLOW: Run completion tasks
+    //
+    PIPELINE_COMPLETION (
+        params.email,
+        params.email_on_fail,
+        params.plaintext_email,
+        params.outdir,
+        params.monochrome_logs,
+        params.hook_url,
+        EBIMETAGENOMICS_MGNIFAMS.out.multiqc_report
+    )
 }
 
 /*

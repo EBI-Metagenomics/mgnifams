@@ -4,7 +4,7 @@ biothings-client==0.3.0
 certifi==2024.7.4
 charset-normalizer==3.1.0
 gprofiler-official==1.0.0
-idna==3.4
+idna==3.7
 mygene==3.2.2
 numpy==1.25.0
 packaging==23.1
@@ -15,9 +15,9 @@ psutil
 pyhmmer==0.8.2
 python-dateutil==2.8.2
 pytz==2023.3
-requests==2.31.0
+requests==2.32.0
 six==1.16.0
-tqdm==4.65.0
+tqdm==4.66.3
 tzdata==2023.3
-urllib3==2.0.3
+urllib3==2.0.6
 psycopg2-binary==2.9.9

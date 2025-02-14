@@ -1,28 +1,30 @@
-process INITIATE_SQLITE {
+process INSERT_SQLITE {
     tag "$meta.id"
+    label 'process_single'
 
-    container "docker://nouchka/sqlite3"
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/d4/d41320ac1ca5f0a626982296d23ded50376a966b9e8240aa50dba2014a805bf5/data':
+        'community.wave.seqera.io/library/sqlite:3.48.0--48957425ca78aa09' }"
 
     input:
-    tuple val(meta) , path(schema_file)
-    tuple val(meta2), path(tables)
+    tuple val(meta), path(pipeline_results), path(db)
     
     output:
-    tuple val(meta), path("mgnifams.sqlite3")
+    tuple val(meta), path(db), emit: db
+    path "versions.yml"      , emit: versions
 
     script:
     """
-    sqlite3 mgnifams.sqlite3 < ${schema_file}
-
     # Import mgnifam.csv directly with NULLs for missing columns
-    sqlite3 mgnifams.sqlite3 <<EOF
+    sqlite3 ${db} <<EOF
     .mode csv
-    .import '${tables}/mgnifam.csv' mgnifam
+    .import 'mgnifam.csv' mgnifam
     .exit
     EOF
 
     # Create temporary tables for the other CSV files
-    sqlite3 mgnifams.sqlite3 <<EOF
+    sqlite3 ${db} <<EOF
     CREATE TEMP TABLE temp_mgnifam_proteins (
         mgnifam_id INTEGER,
         protein INTEGER,
@@ -53,16 +55,16 @@ process INITIATE_SQLITE {
     EOF
 
     # Import data into temporary tables
-    sqlite3 mgnifams.sqlite3 <<EOF
+    sqlite3 ${db} <<EOF
     .mode csv
-    .import '${tables}/mgnifam_proteins.csv' temp_mgnifam_proteins
-    .import '${tables}/mgnifam_pfams.csv' temp_mgnifam_pfams
-    .import '${tables}/mgnifam_folds.csv' temp_mgnifam_folds
+    .import 'mgnifam_proteins.csv' temp_mgnifam_proteins
+    .import 'mgnifam_pfams.csv' temp_mgnifam_pfams
+    .import 'mgnifam_folds.csv' temp_mgnifam_folds
     .exit
     EOF
 
     # Insert data from temporary tables into the main tables
-    sqlite3 mgnifams.sqlite3 <<EOF
+    sqlite3 ${db} <<EOF
     INSERT INTO mgnifam_proteins (mgnifam_id, protein, region)
     SELECT mgnifam_id, protein, region FROM temp_mgnifam_proteins;
 
@@ -77,5 +79,10 @@ process INITIATE_SQLITE {
     DROP TABLE temp_mgnifam_folds;
     .exit
     EOF
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        sqlite3: \$(sqlite3 --version | awk '{print \$1}')
+    END_VERSIONS
     """
 }

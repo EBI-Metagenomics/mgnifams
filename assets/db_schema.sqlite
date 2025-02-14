@@ -14,6 +14,7 @@ CREATE TABLE mgnifam (
     rf_file TEXT,
     biomes_file TEXT,
     domain_architecture_file TEXT,
+    pred_secondary_structure_file TEXT,
     quality_rank INTEGER DEFAULT 0,
     novelty_rank INTEGER DEFAULT 0,
     cif_blob BLOB DEFAULT NULL,
@@ -22,7 +23,8 @@ CREATE TABLE mgnifam (
     hmm_blob BLOB DEFAULT NULL,
     rf_blob BLOB DEFAULT NULL,
     biomes_blob BLOB DEFAULT NULL,
-    domain_architecture_blob BLOB DEFAULT NULL
+    domain_architecture_blob BLOB DEFAULT NULL,
+    pred_secondary_structure_blob BLOB DEFAULT NULL
 );
 
 CREATE TABLE mgnifam_proteins (

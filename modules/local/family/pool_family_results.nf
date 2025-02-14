@@ -16,6 +16,7 @@ process POOL_FAMILY_RESULTS {
     tuple val(meta11), path(logs_ch        , stageAs: "families_prepooled/logs/*")
     tuple val(meta12), path(non_redundant_family_ids)
     tuple val(meta13), path(similarity_edgelist)
+    val(starting_id)
 
     output:
     tuple val(meta), path("families/seed_msa_sto/*")         , emit: seed_msa_sto
@@ -37,6 +38,7 @@ process POOL_FAMILY_RESULTS {
         families_prepooled \\
         families \\
         ${non_redundant_family_ids} \\
-        ${similarity_edgelist}
+        ${similarity_edgelist} \\
+        ${starting_id}
     """
 }

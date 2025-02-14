@@ -8,9 +8,10 @@ import pandas as pd
 
 def parse_args():
     global arg_families_dir, arg_out_dir, \
-        arg_non_redundant_fam_ids_file, arg_similarity_edgelist
+        arg_non_redundant_fam_ids_file, arg_similarity_edgelist, \
+        arg_starting_id
         
-    if not (len(sys.argv) == 5):
+    if not (len(sys.argv) == 6):
         print("Incorrect number of args.")
         sys.exit(1)
 
@@ -18,6 +19,7 @@ def parse_args():
     arg_out_dir                    = sys.argv[2]
     arg_non_redundant_fam_ids_file = sys.argv[3]
     arg_similarity_edgelist        = sys.argv[4]
+    arg_starting_id                = int(sys.argv[5])
 
 def read_non_redundant_fam_ids(file_path):
     with open(file_path, 'r') as file:
@@ -26,7 +28,7 @@ def read_non_redundant_fam_ids(file_path):
 
 def create_mapping_dict():
     non_redundant_fam_ids.sort()
-    family_to_id = {filename: idx + 1 for idx, filename in enumerate(non_redundant_fam_ids)}
+    family_to_id = {filename: idx + arg_starting_id for idx, filename in enumerate(non_redundant_fam_ids)}
 
     return family_to_id
     
