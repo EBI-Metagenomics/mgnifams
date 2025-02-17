@@ -6,7 +6,7 @@
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-// include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
 include { SETUP_CLUSTERS                 } from "../subworkflows/local/setup_clusters"
@@ -14,15 +14,11 @@ include { GENERATE_NONREDUNDANT_FAMILIES } from "../subworkflows/local/generate_
 include { ANNOTATE_FAMILIES              } from "../subworkflows/local/annotate_families"
 include { EXPORT_DATA                    } from "../subworkflows/local/export_data"
 
-include { CUSTOM_DUMPSOFTWAREVERSIONS    } from '../modules/nf-core/custom/dumpsoftwareversions/main.nf'
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
-nextflow.preview.topic = true
 
 workflow MGNIFAMS {
     
@@ -31,27 +27,32 @@ workflow MGNIFAMS {
 
     main:
     
-    ch_collated_versions = Channel.empty()
-    ch_multiqc_files     = Channel.empty()
+    ch_versions      = Channel.empty()
+    ch_multiqc_files = Channel.empty()
 
     SETUP_CLUSTERS( ch_samplesheet, params.fasta_input_mode, params.compress_mode )
+    ch_versions = ch_versions.mix( SETUP_CLUSTERS.out.versions )
+
     generated_families = GENERATE_NONREDUNDANT_FAMILIES(SETUP_CLUSTERS.out.clusters_tsv, [], SETUP_CLUSTERS.out.mgnifams_input_fa)
+    ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
+
     annotated_families = ANNOTATE_FAMILIES(generated_families.seed_msa_sto, generated_families.msa_sto)
+    ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
+
     EXPORT_DATA(generated_families.metadata, generated_families.converged, generated_families.tsv, \
-        annotated_families.pfam_hits, annotated_families.foldseek_hits, annotated_families.scores_ch)
+        annotated_families.pfam_hits, annotated_families.foldseek_hits, annotated_families.scores)
+    ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
 
     //
     // Collate and save software versions
     //
-    ch_collated_versions = CUSTOM_DUMPSOFTWAREVERSIONS(channel.topic('versions').unique().collectFile(name: 'collated_versions.yml')).yml
-
-    // softwareVersionsToYAML(ch_versions)
-    //     .collectFile(
-    //         storeDir: "${params.outdir}/pipeline_info",
-    //         name: 'nf_core_pipeline_software_mqc_versions.yml',
-    //         sort: true,
-    //         newLine: true
-    //     ).set { ch_collated_versions }
+    softwareVersionsToYAML(ch_versions)
+        .collectFile(
+            storeDir: "${params.outdir}/pipeline_info",
+            name: 'nf_core_pipeline_software_mqc_versions.yml',
+            sort: true,
+            newLine: true
+        ).set { ch_collated_versions }
 
     //
     // MODULE: MultiQC
@@ -84,19 +85,18 @@ workflow MGNIFAMS {
         )
     )
 
-    // TODO
-    // MULTIQC (
-    //     ch_multiqc_files.collect(),
-    //     ch_multiqc_config.toList(),
-    //     ch_multiqc_custom_config.toList(),
-    //     ch_multiqc_logo.toList(),
-    //     [],
-    //     []
-    // )
+    MULTIQC (
+        ch_multiqc_files.collect(),
+        ch_multiqc_config.toList(),
+        ch_multiqc_custom_config.toList(),
+        ch_multiqc_logo.toList(),
+        [],
+        []
+    )
 
     emit:
-    multiqc_report = Channel.empty() // TODO MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
-    versions       = ch_collated_versions // channel: [ path(versions.yml) ]
+    multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
+    versions       = ch_versions // channel: [ path(versions.yml) ]
 }
 
 /*

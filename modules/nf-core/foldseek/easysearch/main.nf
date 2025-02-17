@@ -13,7 +13,7 @@ process FOLDSEEK_EASYSEARCH {
 
     output:
     tuple val(meta), path("${meta.id}.m8"), emit: aln
-    path "versions.yml"                   , topic: 'versions'
+    path "versions.yml"                   , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

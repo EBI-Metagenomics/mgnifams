@@ -12,7 +12,7 @@ process MMSEQS_LINCLUST {
 
     output:
     tuple val(meta), path("${prefix}/"), emit: db_cluster
-    path "versions.yml"                , topic: 'versions'
+    path "versions.yml"                , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

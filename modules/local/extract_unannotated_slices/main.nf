@@ -12,7 +12,7 @@ process EXTRACT_UNANNOTATED_SLICES {
 
     output:
     tuple val(meta), path("${sequence_chunk.baseName}.fa"), emit: fa
-    path "versions.yml"                                   , topic: 'versions'
+    path "versions.yml"                                   , emit: versions
 
     script:
     """

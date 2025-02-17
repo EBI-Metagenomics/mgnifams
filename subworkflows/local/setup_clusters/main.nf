@@ -12,14 +12,19 @@ workflow SETUP_CLUSTERS {
     compress_mode
 
     main:
+    ch_versions = Channel.empty()
+
     if (!fasta_input_mode) {
-        mgnifams_input_fa = EXTRACT_UNANNOTATED_FASTA( input, compress_mode ).fasta_ch
+        mgnifams_input_fa = EXTRACT_UNANNOTATED_FASTA( input, compress_mode ).fasta
+        ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_FASTA.out.versions )
     } else {
         mgnifams_input_fa = channel.fromPath(input)
     }
     EXECUTE_CLUSTERING(mgnifams_input_fa)
+    ch_versions = ch_versions.mix( EXECUTE_CLUSTERING.out.versions )
 
     emit:
+    versions          = ch_versions
     mgnifams_input_fa = mgnifams_input_fa
     clusters_tsv      = EXECUTE_CLUSTERING.out.clusters_tsv
     num_sequences     = EXECUTE_CLUSTERING.out.num_sequences

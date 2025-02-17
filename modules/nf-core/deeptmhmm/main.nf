@@ -16,7 +16,7 @@ process DEEPTMHMM {
     tuple val(meta), path("biolib_results/deeptmhmm_results.md")      , emit: md
     tuple val(meta), path("biolib_results/*_probs.csv")               , optional: true, emit: csv
     tuple val(meta), path("biolib_results/plot.png")                  , optional: true, emit: png
-    path "versions.yml"                                               , topic: 'versions'
+    path "versions.yml"                                               , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

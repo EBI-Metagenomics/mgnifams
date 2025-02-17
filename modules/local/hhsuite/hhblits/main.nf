@@ -14,7 +14,7 @@ process HHSUITE_HHBLITS {
 
     output:
     tuple val(meta), path("${meta.id}_hhr"), emit: hhr
-    path "versions.yml"                    , topic: 'versions'
+    path "versions.yml"                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

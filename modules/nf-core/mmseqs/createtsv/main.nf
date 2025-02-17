@@ -16,7 +16,7 @@ process MMSEQS_CREATETSV {
     output:
     tuple val(meta), path("*.tsv"), emit: tsv
     env 'num_sequences'           , emit: num_sequences
-    path "versions.yml"           , topic: 'versions'
+    path "versions.yml"           , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

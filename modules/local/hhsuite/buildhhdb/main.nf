@@ -9,7 +9,7 @@ process HHSUITE_BUILDHHDB {
 
     output:
     tuple val(meta), path("${meta.id}"), emit: hh_db
-    path "versions.yml"                , topic: 'versions'
+    path "versions.yml"                , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

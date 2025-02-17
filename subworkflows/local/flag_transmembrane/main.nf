@@ -9,8 +9,12 @@ workflow FLAG_TRANSMEMBRANE {
     tm_msa_ch
 
     main:
-    extracted_res   = EXTRACT_FIRST_STOCKHOLM_SEQUENCES(tm_msa_ch)
-    prob_ids        = extracted_res.prob_ids
+    ch_versions = Channel.empty()
+
+    extracted_res = EXTRACT_FIRST_STOCKHOLM_SEQUENCES(tm_msa_ch)
+    // TODO ch_versions = ch_versions.mix( EXTRACT_FIRST_STOCKHOLM_SEQUENCES.out.versions )
+
+    prob_ids = extracted_res.prob_ids
     extracted_res.fa
         .map { meta, filepath ->
             [ meta, filepath.splitFasta( by: params.deeptmhmm_chunk_size, file: true ) ]
@@ -22,11 +26,15 @@ workflow FLAG_TRANSMEMBRANE {
         .set { fa_ch }
 
     deeptmhmm_res = DEEPTMHMM(fa_ch)
+    ch_versions = ch_versions.mix( DEEPTMHMM.out.versions )
+
     deeptmhmm_res.line3
         .map { meta, file -> file }
         .collectFile(name: 'predicted_topologies.3line', storeDir: params.outdir + "/redundancy/tm")
     gff3_ch   = deeptmhmm_res.gff3
     tm_ids_ch = FLAG_TM(gff3_ch, params.tm_fraction_threshold)
+    // TODO ch_versions = ch_versions.mix( FLAG_TM.out.versions )
+
     tm_ids_ch
         .map { meta, file -> file }
         .collectFile(name: 'tm_ids.txt', storeDir: params.outdir + "/redundancy/tm")
@@ -46,6 +54,7 @@ workflow FLAG_TRANSMEMBRANE {
         .set { fa_ch }
 
     emit:
+    versions  = ch_versions
     tm_ids_ch = tm_ids_ch
     prob_ids  = prob_ids
     fa_ch     = fa_ch

@@ -12,7 +12,10 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     mgnifams_input_fa
 
     main:
+    ch_versions = Channel.empty()
+
     families_ch = GENERATE_FAMILIES_PARALLEL(clusters_tsv, [], mgnifams_input_fa)
+    ch_versions = ch_versions.mix( GENERATE_FAMILIES_PARALLEL.out.versions )
 
     families_ch.msa_sto
         .map { meta, files ->
@@ -24,10 +27,12 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         }
         .set { msa_sto_ch }
     
-    tm_ch     = FLAG_TRANSMEMBRANE(msa_sto_ch)
+    tm_ch = FLAG_TRANSMEMBRANE(msa_sto_ch)
+    ch_versions = ch_versions.mix( FLAG_TRANSMEMBRANE.out.versions )
+
     rep_fa_ch = tm_ch.fa_ch
     tm_ids_ch = tm_ch.tm_ids_ch
-    prob_ids  = tm_ch.prob_ids
+    prob_ids = tm_ch.prob_ids
     
     families_ch.seed_msa_sto
         .map { meta, files ->
@@ -40,6 +45,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .set { seed_msa_sto_ch }
 
     seed_msa_sto_dir = MOVE_TO_DIR(seed_msa_sto_ch, "seed_msa_sto")
+    // TODO ch_versions = ch_versions.mix( MOVE_TO_DIR.out.versions )
 
     families_ch.hmm
         .map { meta, files ->
@@ -136,8 +142,10 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         rf_ch, domtblout_ch, tsv_ch, \
         discarded_ch, successful_ch, converged_ch, \
         metadata_ch, logs_ch, tm_ids_ch, prob_ids, rep_fa_ch)
+    ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
 
     emit:
+    versions     = ch_versions
     seed_msa_sto = generated_families.seed_msa_sto
     msa_sto      = generated_families.msa_sto
     metadata     = generated_families.metadata

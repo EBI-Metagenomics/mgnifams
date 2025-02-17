@@ -11,7 +11,7 @@ process PIGZ_UNCOMPRESS {
 
     output:
     tuple val(meta), path("${uncompressed_filename}") , emit: file
-    path "versions.yml"                               , topic: 'versions'
+    path "versions.yml"                               , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

@@ -11,7 +11,7 @@ process HHSUITE_REFORMAT {
 
     output:
     tuple val(meta), path("${meta.id}_tmp"), emit: fa
-    path "versions.yml"                    , topic: 'versions'
+    path "versions.yml"                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

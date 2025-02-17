@@ -10,8 +10,11 @@ workflow GENERATE_FAMILIES_PARALLEL {
     mgnifams_fasta
 
     main:
+    ch_versions = Channel.empty()
+
     cluster_chunks = CHUNK_CLUSTERS(clusters_tsv, checked_clusters, params.minimum_members, params.num_cluster_chunks).fasta_chunks
-    
+    ch_versions = ch_versions.mix( CHUNK_CLUSTERS.out.versions )
+
     cluster_chunks
         .transpose()
         .map { meta, file_path ->
@@ -20,8 +23,10 @@ workflow GENERATE_FAMILIES_PARALLEL {
         .set { ch_cluster }
 
     refined_families = REFINE_FAMILIES_PARALLEL(ch_cluster, mgnifams_fasta.first())
+    ch_versions = ch_versions.mix( REFINE_FAMILIES_PARALLEL.out.versions )
 
     emit:
+    versions     = ch_versions
     seed_msa_sto = refined_families.seed_msa_sto
     msa_sto      = refined_families.msa_sto
     hmm          = refined_families.hmm
