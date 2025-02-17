@@ -11,7 +11,7 @@ process BZ2_UNCOMPRESS {
 
     output:
     tuple val(meta), path("${bz2_file.baseName}"), emit: file
-    path "versions.yml"                          , topic: 'versions'
+    path "versions.yml"                          , emit: versions
 
     script:
     """

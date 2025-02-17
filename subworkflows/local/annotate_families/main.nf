@@ -12,6 +12,8 @@ workflow ANNOTATE_FAMILIES {
     msa_sto
 
     main:
+    ch_versions = Channel.empty()
+
     seed_msa_sto
         .map { meta, files ->
             String filePath = files[0]
@@ -30,21 +32,31 @@ workflow ANNOTATE_FAMILIES {
         }
         .set { hmmalign_msa_ch }
 
-    fa_seed_msa_ch = REFORMAT_SEED_MSA(seed_msa_ch).fa_ch
-    fa_msa_ch      = REFORMAT_HMMALIGN_MSA(hmmalign_msa_ch).fa_ch
-    pfam_hits      = ANNOTATE_MODELS(fa_seed_msa_ch)
+    ch_fa_seed_msa = REFORMAT_SEED_MSA(seed_msa_ch).fasta
+    ch_versions = ch_versions.mix( REFORMAT_SEED_MSA.out.versions )
+
+    ch_fa_msa = REFORMAT_HMMALIGN_MSA(hmmalign_msa_ch).fasta
+    ch_versions = ch_versions.mix( REFORMAT_HMMALIGN_MSA.out.versions )
+
+    ch_pfam_hits = ANNOTATE_MODELS(ch_fa_seed_msa).pfam_hits
+    ch_versions = ch_versions.mix( ANNOTATE_MODELS.out.versions )
     
-    structure_ch   = PREDICT_STRUCTURES(hmmalign_msa_ch)
-    pdb_ch         = structure_ch.pdb_ch
-    scores_ch      = structure_ch.scores_ch
-    cif_ch         = structure_ch.cif_ch
-    foldseek_hits  = ANNOTATE_STRUCTURES(pdb_ch)
+    ch_structures = PREDICT_STRUCTURES(hmmalign_msa_ch)
+    ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
+
+    ch_pdb    = ch_structures.pdb
+    ch_scores = ch_structures.scores
+    ch_cif    = ch_structures.cif
+
+    ch_foldseek_hits = ANNOTATE_STRUCTURES(ch_pdb).foldseek_hits
+    ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
 
     emit:
-    pfam_hits
-    foldseek_hits
-    scores_ch
-    cif_ch
-    fa_seed_msa_ch
-    fa_msa_ch
+    versions      = ch_versions
+    pfam_hits     = ch_pfam_hits
+    foldseek_hits = ch_foldseek_hits
+    scores        = ch_scores
+    cif           = ch_cif
+    fa_seed_msa   = ch_fa_seed_msa
+    fa_msa        = ch_fa_msa
 }

@@ -18,7 +18,7 @@ process REFINE_FAMILIES_PARALLEL {
     tuple val(meta), path("converged_families/*") , emit: converged
     tuple val(meta), path("family_metadata/*")    , emit: metadata
     tuple val(meta), path("logs/*")               , emit: logs
-    path("versions.yml")                          , topic: 'versions'
+    path("versions.yml")                          , emit: versions
 
     script:
     """

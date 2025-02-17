@@ -12,7 +12,7 @@ process FOLDSEEK_CREATEDB {
 
     output:
     tuple val(meta), path("${meta.id}"), emit: db
-    path "versions.yml"                , topic: 'versions'
+    path "versions.yml"                , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

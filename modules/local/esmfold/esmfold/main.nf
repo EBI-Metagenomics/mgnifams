@@ -12,7 +12,7 @@ process ESMFOLD {
     output:
     tuple val(meta), path("${meta.id}_${meta.chunk}"), emit: pdb
     tuple val(meta), path("*_scores.txt")            , emit: scores
-    path "versions.yml"                              , topic: 'versions'
+    path "versions.yml"                              , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
