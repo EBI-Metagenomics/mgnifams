@@ -12,3 +12,4 @@ samplesheet*.csv
 mgnifams.sqlite3
 conf/slurm.config
 conf/local.config
+.nf-test*

@@ -24,7 +24,19 @@ process EXTRACT_UNANNOTATED_SLICES {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')
-        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('biopython').version)")
+        biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
+    END_VERSIONS
+    """
+
+    stub:
+    def args = task.ext.args ?: ''
+    """
+    touch ${sequence_chunk.baseName}.fa
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
     END_VERSIONS
     """
 }

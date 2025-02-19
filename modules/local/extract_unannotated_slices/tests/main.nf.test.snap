@@ -1,0 +1,68 @@
+{
+    "sequence_explorer_protein - csv": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "sequence_explorer_protein_mgnifams_100.fa:md5,e7fab289e702bb5c6d81e8ec7feef549"
+                    ]
+                ],
+                "1": [
+                    "versions.yml:md5,6858c0454c7f109a05b20a72bbf4a3ee"
+                ],
+                "fa": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "sequence_explorer_protein_mgnifams_100.fa:md5,e7fab289e702bb5c6d81e8ec7feef549"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,6858c0454c7f109a05b20a72bbf4a3ee"
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "24.10.2"
+        },
+        "timestamp": "2025-02-19T12:36:35.501818536"
+    },
+    "sequence_explorer_protein - csv - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "sequence_explorer_protein_mgnifams_100.fa:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    "versions.yml:md5,6858c0454c7f109a05b20a72bbf4a3ee"
+                ],
+                "fa": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "sequence_explorer_protein_mgnifams_100.fa:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,6858c0454c7f109a05b20a72bbf4a3ee"
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "24.10.2"
+        },
+        "timestamp": "2025-02-19T12:36:39.237616285"
+    }
+}
