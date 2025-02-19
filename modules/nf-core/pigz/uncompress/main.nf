@@ -1,5 +1,7 @@
 process PIGZ_UNCOMPRESS {
     tag "$meta.id"
+    label 'process_low'
+    //stageInMode 'copy' // this directive can be set in case the original input should be kept
 
     conda "conda-forge::pigz"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -29,7 +31,7 @@ process PIGZ_UNCOMPRESS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        pigz: \$(echo \$(pigz --version 2>&1) | sed 's/^.*pigz\\w*//' ))
+        pigz: \$(echo \$(pigz --version 2>&1) | sed 's/^.*pigz\\w*//' )
     END_VERSIONS
     """
 
@@ -41,7 +43,7 @@ process PIGZ_UNCOMPRESS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        pigz: \$(echo \$(pigz --version 2>&1) | sed 's/^.*pigz\\w*//' ))
+        pigz: \$(echo \$(pigz --version 2>&1) | sed 's/^.*pigz\\w*//' )
     END_VERSIONS
     """
 }
