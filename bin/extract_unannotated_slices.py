@@ -6,30 +6,34 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import sys
 
-def hasPfam(metadata):
+def hasAnnotation(metadata):
     try:
         data = json.loads(metadata)
-        return "p" in data
+        return "p" in data or "m" in data
     except json.JSONDecodeError:
         return False
 
 def sliceProtein(row, min_sequence_length):
     metadata, sequence, mgyp = row["metadata"], row["sequence"], row["mgyp"]
     data = json.loads(metadata)
-    pfams = data.get("p", [])
     
-    # Create a sorted list of non-overlapping Pfam regions
-    sorted_pfams = sorted((pfam[-2], pfam[-1]) for pfam in pfams)
-    merged_pfams = []
-    for start, end in sorted_pfams:
-        if not merged_pfams or start > merged_pfams[-1][1]:
-            merged_pfams.append([start, end])
+    # Extract Pfam ("p") and "m" regions
+    pfams = data.get("p", [])
+    mgnifams = data.get("m", [])
+    
+    # Create a sorted list of non-overlapping regions from both "p" and "m"
+    sorted_regions = sorted((region[-2], region[-1]) for region in pfams + mgnifams)
+    merged_regions = []
+    
+    for start, end in sorted_regions:
+        if not merged_regions or start > merged_regions[-1][1]:
+            merged_regions.append([start, end])
         else:
-            merged_pfams[-1][1] = max(merged_pfams[-1][1], end)
+            merged_regions[-1][1] = max(merged_regions[-1][1], end)
 
     sliced_sequences = {}
     current_start = 1
-    for start, end in merged_pfams:
+    for start, end in merged_regions:
         if start - current_start >= min_sequence_length:
             key = f"{mgyp}_{current_start}_{start - 1}"
             sliced_sequences[key] = sequence[current_start - 1:start - 1]
@@ -58,7 +62,7 @@ def main(input_file, output_file, min_sequence_length):
                 print(f"Skipping malformed line: {row}")
                 continue
             mgyp, sequence, _, _, metadata = row
-            if hasPfam(metadata):
+            if hasAnnotation(metadata):
                 row_dict = {"mgyp": mgyp, "sequence": sequence, "metadata": metadata}
                 sliced_sequences = sliceProtein(row_dict, min_sequence_length)
                 for key, seq in sliced_sequences.items():
