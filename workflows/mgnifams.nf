@@ -33,15 +33,16 @@ workflow MGNIFAMS {
     SETUP_CLUSTERS( ch_samplesheet )
     ch_versions = ch_versions.mix( SETUP_CLUSTERS.out.versions )
 
-    generated_families = GENERATE_NONREDUNDANT_FAMILIES( SETUP_CLUSTERS.out.clusters_tsv, [], SETUP_CLUSTERS.out.mgnifams_input_fa )
-    ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
+    // TODO
+    // generated_families = GENERATE_NONREDUNDANT_FAMILIES( SETUP_CLUSTERS.out.clusters_tsv, [], SETUP_CLUSTERS.out.mgnifams_input_fa )
+    // ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
-    annotated_families = ANNOTATE_FAMILIES( generated_families.seed_msa_sto, generated_families.msa_sto )
-    ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
+    // annotated_families = ANNOTATE_FAMILIES( generated_families.seed_msa_sto, generated_families.msa_sto )
+    // ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
-    EXPORT_DATA( generated_families.metadata, generated_families.converged, generated_families.tsv, \
-        annotated_families.pfam_hits, annotated_families.foldseek_hits, annotated_families.scores )
-    ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
+    // EXPORT_DATA( generated_families.metadata, generated_families.converged, generated_families.tsv, \
+    //     annotated_families.pfam_hits, annotated_families.foldseek_hits, annotated_families.scores )
+    // ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
 
     //
     // Collate and save software versions
@@ -84,6 +85,8 @@ workflow MGNIFAMS {
             sort: true
         )
     )
+
+    ch_multiqc_files = ch_multiqc_files.mix(SETUP_CLUSTERS.out.cluster_distr_mqc.collect{it[1]}.ifEmpty([]))
 
     MULTIQC (
         ch_multiqc_files.collect(),
