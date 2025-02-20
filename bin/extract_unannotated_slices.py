@@ -2,9 +2,34 @@
 
 import json
 import csv
+import argparse
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-import sys
+
+def parse_args(args=None):
+    parser = argparse.ArgumentParser(description="Extract unannotated protein slices from input CSV.")
+    parser.add_argument(
+        "-i", "--input_file",
+        required=True,
+        metavar="FILE",
+        type=str,
+        help="Path to the input CSV file containing protein sequences and metadata."
+    )
+    parser.add_argument(
+        "-o", "--output_file",
+        required=True,
+        metavar="FILE",
+        type=str,
+        help="Path to the output FASTA file to store the extracted sequences."
+    )
+    parser.add_argument(
+        "-l", "--min_sequence_length",
+        required=True,
+        metavar="INT",
+        type=int,
+        help="Minimum sequence length for unannotated slices."
+    )
+    return parser.parse_args(args)
 
 def hasAnnotation(metadata):
     try:
@@ -49,10 +74,11 @@ def writeFastaSingleLine(records, file_handle):
     for record in records:
         file_handle.write(f">{record.id}\n{str(record.seq)}\n")
 
-def main(input_file, output_file, min_sequence_length):
+def main():
+    args = parse_args()
     csv.field_size_limit(500000)
     
-    with open(input_file, "r") as infile, open(output_file, "w") as outfile:
+    with open(args.input_file, "r") as infile, open(args.output_file, "w") as outfile:
         csv_reader = csv.reader(infile)
         next(csv_reader, None) # Skip the header
         records_batch = []
@@ -64,11 +90,11 @@ def main(input_file, output_file, min_sequence_length):
             mgyp, sequence, _, _, metadata = row
             if hasAnnotation(metadata):
                 row_dict = {"mgyp": mgyp, "sequence": sequence, "metadata": metadata}
-                sliced_sequences = sliceProtein(row_dict, min_sequence_length)
+                sliced_sequences = sliceProtein(row_dict, args.min_sequence_length)
                 for key, seq in sliced_sequences.items():
                     records_batch.append(SeqRecord(Seq(seq), id=key, description=""))
             else:
-                if len(sequence) >= min_sequence_length:
+                if len(sequence) >= args.min_sequence_length:
                     records_batch.append(SeqRecord(Seq(sequence), id=mgyp, description=""))
 
             if len(records_batch) >= 10000:  # Adjust batch size as needed
@@ -80,8 +106,4 @@ def main(input_file, output_file, min_sequence_length):
             writeFastaSingleLine(records_batch, outfile)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python extract_unannotated_slices.py <input_file> <output_file> <min_sequence_length>")
-        sys.exit(1)
-
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+    main()

@@ -32,9 +32,9 @@ workflow EXTRACT_UNANNOTATED_FASTA {
         .map { meta, file ->
             file
         }
-        .collectFile(name: "mgnifams_input.fa", storeDir: params.outdir)
+        .collectFile(name: "mgnifams_input_v2.fa", storeDir: params.outdir)
         .map { file ->
-            [[id: 'mgnifams_input'], file]
+            [[id: 'mgnifams_input_v2'], file]
         }
 
     emit:

@@ -18,9 +18,9 @@ process EXTRACT_UNANNOTATED_SLICES {
     script:
     """
     extract_unannotated_slices.py \\
-        ${sequence_chunk} \\
-        ${sequence_chunk.baseName}.fa \\
-        ${min_sequence_length}
+        --input_file ${sequence_chunk} \\
+        --output_file ${sequence_chunk.baseName}.fa \\
+        --min_sequence_length ${min_sequence_length}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
