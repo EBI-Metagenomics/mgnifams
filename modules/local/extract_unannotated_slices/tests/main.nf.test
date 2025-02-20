@@ -1,0 +1,57 @@
+nextflow_process {
+
+    name "Test Process EXTRACT_UNANNOTATED_SLICES"
+    script "../main.nf"
+    process "EXTRACT_UNANNOTATED_SLICES"
+
+    tag "modules"
+    tag "modules_local"
+    tag "extract_unannotated_slices"
+
+    test("sequence_explorer_protein - csv") {
+
+        when {
+            process {
+                """
+                input[0] = [ [ id:'test'],
+                    file("${moduleDir}/tests/test.csv", checkIfExists: true)
+                ]
+                input[1] = 5
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
+    test("sequence_explorer_protein - csv - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [ [ id:'test'],
+                    file("${moduleDir}/tests/test.csv", checkIfExists: true)
+                ]
+                input[1] = 5
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
+}

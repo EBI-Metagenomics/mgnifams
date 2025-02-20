@@ -30,7 +30,7 @@ workflow MGNIFAMS {
     ch_versions      = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
-    SETUP_CLUSTERS( ch_samplesheet, params.fasta_input_mode, params.compress_mode )
+    SETUP_CLUSTERS( ch_samplesheet )
     ch_versions = ch_versions.mix( SETUP_CLUSTERS.out.versions )
 
     generated_families = GENERATE_NONREDUNDANT_FAMILIES(SETUP_CLUSTERS.out.clusters_tsv, [], SETUP_CLUSTERS.out.mgnifams_input_fa)

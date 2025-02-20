@@ -6,37 +6,35 @@ include { EXTRACT_UNANNOTATED_SLICES } from "../../../modules/local/extract_unan
 
 workflow EXTRACT_UNANNOTATED_FASTA {
     take:
-    sequence_explorer_protein_ch
-    compress_mode
+    ch_sequence_explorer_protein
     
     main:
     ch_versions = Channel.empty()
 
-    if (compress_mode == 'gz') {
-        sequence_explorer_protein_ch = PIGZ_UNCOMPRESS( sequence_explorer_protein_ch ).file
+    if (params.compress_mode == 'gz') {
+        ch_sequence_explorer_protein = PIGZ_UNCOMPRESS( ch_sequence_explorer_protein ).file
         ch_versions = ch_versions.mix( PIGZ_UNCOMPRESS.out.versions )
-    } else if (compress_mode == 'bz2') {
-        sequence_explorer_protein_ch = BZ2_UNCOMPRESS( sequence_explorer_protein_ch ).file
+    } else if (params.compress_mode == 'bz2') {
+        ch_sequence_explorer_protein = BZ2_UNCOMPRESS( ch_sequence_explorer_protein ).file
         ch_versions = ch_versions.mix( BZ2_UNCOMPRESS.out.versions )
     }
 
-    sequence_explorer_protein_ch
+    ch_sequence_explorer_chunk = ch_sequence_explorer_protein
         .splitText(file:true, by: params.input_csv_chunk_size, keepHeader: true)
         .map { meta, file ->
             [[id: meta.id, chunk: file.getBaseName(1).split('\\.')[-1]], file]
         }
-        .set { sequence_chunk_ch }
     
-    fasta_chunk_ch = EXTRACT_UNANNOTATED_SLICES( sequence_chunk_ch, params.min_sequence_length ).fa
+    ch_fasta_chunk = EXTRACT_UNANNOTATED_SLICES( ch_sequence_explorer_chunk, params.min_sequence_length ).fa
     ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_SLICES.out.versions )
     
-    ch_fasta = fasta_chunk_ch
+    ch_fasta = ch_fasta_chunk
         .map { meta, file ->
             file
         }
-        .collectFile(name: "mgnifams_input.fa", storeDir: params.outdir)
+        .collectFile(name: "mgnifams_input_v2.fa", storeDir: params.outdir)
         .map { file ->
-            [[id: 'mgnifams_input'], file]
+            [[id: 'mgnifams_input_v2'], file]
         }
 
     emit:
