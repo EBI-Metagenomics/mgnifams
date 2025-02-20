@@ -7,22 +7,22 @@
                         {
                             "id": "test"
                         },
-                        "test.fa:md5,856212330791d51c4d585d0075c422b5"
+                        "test.fa:md5,32aaa7e3ff941b773fd9703bb01b1bb7"
                     ]
                 ],
                 "1": [
-                    "versions.yml:md5,f1294cd766c5be4cdd4ff8911859573d"
+                    "versions.yml:md5,6cdb75a9f4459848a530c58cc3ff9ee3"
                 ],
                 "fa": [
                     [
                         {
                             "id": "test"
                         },
-                        "test.fa:md5,856212330791d51c4d585d0075c422b5"
+                        "test.fa:md5,32aaa7e3ff941b773fd9703bb01b1bb7"
                     ]
                 ],
                 "versions": [
-                    "versions.yml:md5,f1294cd766c5be4cdd4ff8911859573d"
+                    "versions.yml:md5,6cdb75a9f4459848a530c58cc3ff9ee3"
                 ]
             }
         ],
@@ -30,7 +30,7 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-20T08:24:35.061440003"
+        "timestamp": "2025-02-20T11:47:37.891485715"
     },
     "sequence_explorer_protein - csv - stub": {
         "content": [
@@ -44,7 +44,7 @@
                     ]
                 ],
                 "1": [
-                    "versions.yml:md5,f1294cd766c5be4cdd4ff8911859573d"
+                    "versions.yml:md5,6cdb75a9f4459848a530c58cc3ff9ee3"
                 ],
                 "fa": [
                     [
@@ -55,7 +55,7 @@
                     ]
                 ],
                 "versions": [
-                    "versions.yml:md5,f1294cd766c5be4cdd4ff8911859573d"
+                    "versions.yml:md5,6cdb75a9f4459848a530c58cc3ff9ee3"
                 ]
             }
         ],
@@ -63,6 +63,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-20T08:24:39.151323684"
+        "timestamp": "2025-02-20T11:47:42.653471947"
     }
 }
