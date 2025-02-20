@@ -32,20 +32,13 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 def hasAnnotation(metadata):
-    try:
-        data = json.loads(metadata)
-        return "p" in data or "m" in data
-    except json.JSONDecodeError:
-        return False
+    return "p" in metadata or "m" in metadata
 
 def sliceProtein(row, min_sequence_length):
     metadata, sequence, mgyp = row["metadata"], row["sequence"], row["mgyp"]
-    data = json.loads(metadata)
-    
-    # Extract Pfam ("p") and "m" regions
-    pfams = data.get("p", [])
-    mgnifams = data.get("m", [])
-    
+    pfams = metadata.get("p", [])
+    mgnifams = metadata.get("m", [])
+
     # Create a sorted list of non-overlapping regions from both "p" and "m"
     sorted_regions = sorted((region[-2], region[-1]) for region in pfams + mgnifams)
     merged_regions = []
@@ -87,7 +80,13 @@ def main():
             sequence = row["sequence"]
             metadata = row["metadata"]
 
-            if hasAnnotation(metadata):
+            try:
+                metadata = json.loads(metadata)  # Parse JSON once here
+            except json.JSONDecodeError:
+                print(f"Skipping row due to JSON error: {row}")
+                continue
+            
+            if hasAnnotation(metadata):  # Pass parsed dict instead of JSON string
                 row_dict = {"mgyp": mgyp, "sequence": sequence, "metadata": metadata}
                 sliced_sequences = sliceProtein(row_dict, args.min_sequence_length)
                 for key, seq in sliced_sequences.items():
