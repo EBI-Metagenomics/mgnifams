@@ -14,9 +14,9 @@ nextflow_process {
             process {
                 """
                 input[0] = [ [ id:'test'],
-                    file("${moduleDir}/tests/sequence_explorer_protein_mgnifams_100.csv", checkIfExists: true)
+                    file("${moduleDir}/tests/test.csv", checkIfExists: true)
                 ]
-                input[1] = 100
+                input[1] = 5
                 """
             }
         }
@@ -38,9 +38,9 @@ nextflow_process {
             process {
                 """
                 input[0] = [ [ id:'test'],
-                    file("${moduleDir}/tests/sequence_explorer_protein_mgnifams_100.csv", checkIfExists: true)
+                    file("${moduleDir}/tests/test.csv", checkIfExists: true)
                 ]
-                input[1] = 100
+                input[1] = 5
                 """
             }
         }
