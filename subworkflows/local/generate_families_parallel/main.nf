@@ -12,17 +12,16 @@ workflow GENERATE_FAMILIES_PARALLEL {
     main:
     ch_versions = Channel.empty()
 
-    cluster_chunks = CHUNK_CLUSTERS(clusters_tsv, checked_clusters, params.minimum_members, params.num_cluster_chunks).fasta_chunks
+    cluster_chunks = CHUNK_CLUSTERS( clusters_tsv, checked_clusters, params.minimum_members, params.num_cluster_chunks ).fasta_chunks
     ch_versions = ch_versions.mix( CHUNK_CLUSTERS.out.versions )
 
-    cluster_chunks
+    ch_cluster = cluster_chunks
         .transpose()
         .map { meta, file_path ->
             [ [id: meta.id, chunk: file_path.getSimpleName().split('_')[-1]], file_path ]
         }
-        .set { ch_cluster }
 
-    refined_families = REFINE_FAMILIES_PARALLEL(ch_cluster, mgnifams_fasta.first())
+    refined_families = REFINE_FAMILIES_PARALLEL( ch_cluster, mgnifams_fasta.first() )
     ch_versions = ch_versions.mix( REFINE_FAMILIES_PARALLEL.out.versions )
 
     emit:

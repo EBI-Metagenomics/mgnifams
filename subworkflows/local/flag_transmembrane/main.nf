@@ -6,15 +6,15 @@ include { FLAG_TM                           } from "../../../modules/local/flag_
 
 workflow FLAG_TRANSMEMBRANE {
     take:
-    tm_msa_ch
+    tm_msa
 
     main:
     ch_versions = Channel.empty()
 
-    extracted_res = EXTRACT_FIRST_STOCKHOLM_SEQUENCES(tm_msa_ch)
+    extracted_res = EXTRACT_FIRST_STOCKHOLM_SEQUENCES( tm_msa )
     // TODO ch_versions = ch_versions.mix( EXTRACT_FIRST_STOCKHOLM_SEQUENCES.out.versions )
 
-    prob_ids = extracted_res.prob_ids
+    ch_prob_ids = extracted_res.prob_ids
     extracted_res.fa
         .map { meta, filepath ->
             [ meta, filepath.splitFasta( by: params.deeptmhmm_chunk_size, file: true ) ]
@@ -23,27 +23,26 @@ workflow FLAG_TRANSMEMBRANE {
         .map { meta, filepath ->
             [ [id: meta.id, chunk: filepath.getBaseName().split('\\.')[-1]], filepath ]
         }
-        .set { fa_ch }
+        .set { ch_fasta }
 
-    deeptmhmm_res = DEEPTMHMM(fa_ch)
+    deeptmhmm_res = DEEPTMHMM( ch_fasta )
     ch_versions = ch_versions.mix( DEEPTMHMM.out.versions )
 
     deeptmhmm_res.line3
         .map { meta, file -> file }
         .collectFile(name: 'predicted_topologies.3line', storeDir: params.outdir + "/redundancy/tm")
     gff3_ch   = deeptmhmm_res.gff3
-    tm_ids_ch = FLAG_TM(gff3_ch, params.tm_fraction_threshold)
+    ch_tm_ids = FLAG_TM( gff3_ch, params.tm_fraction_threshold )
     // TODO ch_versions = ch_versions.mix( FLAG_TM.out.versions )
 
-    tm_ids_ch
+    ch_tm_ids = ch_tm_ids
         .map { meta, file -> file }
         .collectFile(name: 'tm_ids.txt', storeDir: params.outdir + "/redundancy/tm")
         .map { filepath ->
             return [ [id:"tm_ids"], file(filepath) ]
         }
-        .set { tm_ids_ch }
 
-    fa_ch
+    ch_fasta = ch_fasta
         .map { meta, filepath ->
             filepath
         }
@@ -51,11 +50,10 @@ workflow FLAG_TRANSMEMBRANE {
         .map { filepath ->
             [ [id:"fa_reps"], file(filepath) ]
         }
-        .set { fa_ch }
 
     emit:
-    versions  = ch_versions
-    tm_ids_ch = tm_ids_ch
-    prob_ids  = prob_ids
-    fa_ch     = fa_ch
+    versions = ch_versions
+    tm_ids   = ch_tm_ids
+    prob_ids = ch_prob_ids
+    fasta    = ch_fasta
 }

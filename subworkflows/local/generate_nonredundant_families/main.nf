@@ -14,10 +14,10 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     main:
     ch_versions = Channel.empty()
 
-    families_ch = GENERATE_FAMILIES_PARALLEL(clusters_tsv, [], mgnifams_input_fa)
+    ch_families = GENERATE_FAMILIES_PARALLEL( clusters_tsv, checked_clusters, mgnifams_input_fa )
     ch_versions = ch_versions.mix( GENERATE_FAMILIES_PARALLEL.out.versions )
 
-    families_ch.msa_sto
+    ch_msa_sto = ch_families.msa_sto
         .map { meta, files ->
             files
         }
@@ -25,16 +25,15 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"msa_sto"], file ]
         }
-        .set { msa_sto_ch }
     
-    tm_ch = FLAG_TRANSMEMBRANE(msa_sto_ch)
+    ch_tm = FLAG_TRANSMEMBRANE( ch_msa_sto )
     ch_versions = ch_versions.mix( FLAG_TRANSMEMBRANE.out.versions )
 
-    rep_fa_ch = tm_ch.fa_ch
-    tm_ids_ch = tm_ch.tm_ids_ch
-    prob_ids = tm_ch.prob_ids
+    ch_rep_fa = ch_tm.fasta
+    ch_tm_ids = ch_tm.tm_ids
+    prob_ids = ch_tm.prob_ids
     
-    families_ch.seed_msa_sto
+    ch_seed_msa_sto = ch_families.seed_msa_sto
         .map { meta, files ->
             files
         }
@@ -42,12 +41,11 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"seed_msa_sto"], file ]
         }
-        .set { seed_msa_sto_ch }
 
-    seed_msa_sto_dir = MOVE_TO_DIR(seed_msa_sto_ch, "seed_msa_sto")
+    seed_msa_sto_dir = MOVE_TO_DIR( ch_seed_msa_sto, "seed_msa_sto" )
     // TODO ch_versions = ch_versions.mix( MOVE_TO_DIR.out.versions )
 
-    families_ch.hmm
+    ch_hmm = ch_families.hmm
         .map { meta, files ->
             files
         }
@@ -55,9 +53,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"hmm"], file ]
         }
-        .set { hmm_ch }
 
-    families_ch.rf
+    ch_rf = ch_families.rf
         .map { meta, files ->
             files
         }
@@ -65,9 +62,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"rf"], file ]
         }
-        .set { rf_ch }
 
-    families_ch.domtblout
+    ch_domtblout = ch_families.domtblout
         .map { meta, files ->
             files
         }
@@ -75,9 +71,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"domtblout"], file ]
         }
-        .set { domtblout_ch }
 
-    families_ch.tsv
+    ch_tsv = ch_families.tsv
         .map { meta, files ->
             files
         }
@@ -85,9 +80,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"tsv"], file ]
         }
-        .set { tsv_ch }
 
-    families_ch.discarded
+    ch_discarded = ch_families.discarded
         .map { meta, files ->
             files
         }
@@ -95,9 +89,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"discarded"], file ]
         }
-        .set { discarded_ch }
 
-    families_ch.successful
+    ch_successful = ch_families.successful
         .map { meta, files ->
             files
         }
@@ -105,9 +98,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"successful"], file ]
         }
-        .set { successful_ch }
 
-    families_ch.converged
+    ch_converged = ch_families.converged
         .map { meta, files ->
             files
         }
@@ -115,9 +107,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"converged"], file ]
         }
-        .set { converged_ch }
 
-    families_ch.metadata
+    ch_metadata = ch_families.metadata
         .map { meta, files ->
             files
         }
@@ -125,9 +116,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"metadata"], file ]
         }
-        .set { metadata_ch }
 
-    families_ch.logs
+    ch_logs = ch_families.logs
         .map { meta, files ->
             files
         }
@@ -135,13 +125,12 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file ->
             [ [id:"logs"], file ]
         }
-        .set { logs_ch }
 
-    generated_families = REMOVE_REDUNDANCY(seed_msa_sto_dir, seed_msa_sto_ch, \
-        msa_sto_ch, hmm_ch, \
-        rf_ch, domtblout_ch, tsv_ch, \
-        discarded_ch, successful_ch, converged_ch, \
-        metadata_ch, logs_ch, tm_ids_ch, prob_ids, rep_fa_ch)
+    generated_families = REMOVE_REDUNDANCY( seed_msa_sto_dir, ch_seed_msa_sto, \
+        ch_msa_sto, ch_hmm, \
+        ch_rf, ch_domtblout, ch_tsv, \
+        ch_discarded, ch_successful, ch_converged, \
+        ch_metadata, ch_logs, ch_tm_ids, prob_ids, ch_rep_fa )
     ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
 
     emit:

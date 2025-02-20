@@ -44,6 +44,7 @@ process MMSEQS_CREATETSV {
         --threads ${task.cpus}
     
     num_sequences=\$(wc -l < "${prefix}.tsv")
+    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         mmseqs: \$(mmseqs | grep 'Version' | sed 's/MMseqs2 Version: //')
