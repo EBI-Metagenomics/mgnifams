@@ -12,14 +12,15 @@ process EXTRACT_UNANNOTATED_SLICES {
     val min_sequence_length
 
     output:
-    tuple val(meta), path("${sequence_chunk.baseName}.fa"), emit: fa
-    path "versions.yml"                                   , emit: versions
+    tuple val(meta), path("${prefix}.fa"), emit: fa
+    path "versions.yml"                  , emit: versions
 
     script:
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     extract_unannotated_slices.py \\
         --input_file ${sequence_chunk} \\
-        --output_file ${sequence_chunk.baseName}.fa \\
+        --output_file ${prefix}.fa \\
         --min_sequence_length ${min_sequence_length}
 
     cat <<-END_VERSIONS > versions.yml
@@ -29,9 +30,9 @@ process EXTRACT_UNANNOTATED_SLICES {
     """
 
     stub:
-    def args = task.ext.args ?: ''
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${sequence_chunk.baseName}.fa
+    touch ${prefix}.fa
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -30,7 +30,7 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-20T11:47:37.891485715"
+        "timestamp": "2025-02-20T15:09:32.329775531"
     },
     "sequence_explorer_protein - csv - stub": {
         "content": [
@@ -63,6 +63,6 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-20T11:47:42.653471947"
+        "timestamp": "2025-02-20T15:09:36.49643819"
     }
 }
