@@ -1,5 +1,6 @@
 process EXTRACT_UNANNOTATED_SLICES {
     tag "$meta.id"
+    label "process_single"
 
     conda "conda-forge::biopython=1.84"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

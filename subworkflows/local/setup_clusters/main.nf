@@ -8,14 +8,12 @@ include { EXECUTE_CLUSTERING        } from "../../../subworkflows/local/execute_
 workflow SETUP_CLUSTERS {
     take:
     input
-    fasta_input_mode
-    compress_mode
 
     main:
     ch_versions = Channel.empty()
 
-    if (!fasta_input_mode) {
-        mgnifams_input_fa = EXTRACT_UNANNOTATED_FASTA( input, compress_mode ).fasta
+    if (!params.fasta_input_mode) {
+        mgnifams_input_fa = EXTRACT_UNANNOTATED_FASTA( input ).fasta
         ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_FASTA.out.versions )
     } else {
         mgnifams_input_fa = channel.fromPath(input)
