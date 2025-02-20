@@ -79,15 +79,14 @@ def main():
     csv.field_size_limit(500000)
     
     with open(args.input_file, "r") as infile, open(args.output_file, "w") as outfile:
-        csv_reader = csv.reader(infile)
-        next(csv_reader, None) # Skip the header
+        csv_reader = csv.DictReader(infile)
         records_batch = []
 
         for row in csv_reader:
-            if len(row) != 5:
-                print(f"Skipping malformed line: {row}")
-                continue
-            mgyp, sequence, _, _, metadata = row
+            mgyp = row["mgyp"]
+            sequence = row["sequence"]
+            metadata = row["metadata"]
+
             if hasAnnotation(metadata):
                 row_dict = {"mgyp": mgyp, "sequence": sequence, "metadata": metadata}
                 sliced_sequences = sliceProtein(row_dict, args.min_sequence_length)
