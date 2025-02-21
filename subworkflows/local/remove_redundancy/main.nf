@@ -7,7 +7,7 @@ include { COMBINE_HH_RESULTS                   } from "../../../modules/local/co
 include { MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID } from "../../../modules/local/map_first_a3m_sequences_to_family_id/main"
 include { POOL_FAM_PROTEINS                    } from "../../../modules/local/pool_fam_proteins/main"
 include { REMOVE_REDUNDANT_AND_TM              } from "../../../modules/local/remove_redundant_and_tm/main"
-include { POOL_FAMILY_RESULTS                  } from "../../../modules/local/family/pool_family_results/main"
+include { POOL_FAMILY_RESULTS                  } from "../../../modules/local/pool_family_results/main"
 
 workflow REMOVE_REDUNDANCY {
     take:

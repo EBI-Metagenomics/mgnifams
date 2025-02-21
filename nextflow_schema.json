@@ -112,9 +112,10 @@
                     "default": 50,
                     "description": "Minimum number of members a cluster is allowed to have to continue with family generation"
                 },
-                "num_cluster_chunks": {
+                "clusters_chunk_size": {
                     "type": "integer",
-                    "description": "Number of chunks the linclust clustering file will be divided into for parallel family generation"
+                    "default": 30,
+                    "description": "Chunk size to break the MMseqs clustering into, to then feed family generation in parallel"
                 },
                 "starting_id": {
                     "type": "integer",

@@ -23,5 +23,4 @@ workflow EXECUTE_CLUSTERING {
     emit:
     versions      = ch_versions
     clusters_tsv  = MMSEQS_CREATETSV.out.tsv
-    num_sequences = MMSEQS_CREATETSV.out.num_sequences
 }

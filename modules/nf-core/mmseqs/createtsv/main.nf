@@ -15,7 +15,6 @@ process MMSEQS_CREATETSV {
 
     output:
     tuple val(meta), path("*.tsv"), emit: tsv
-    env 'num_sequences'           , emit: num_sequences
     path "versions.yml"           , emit: versions
 
     when:
@@ -42,9 +41,7 @@ process MMSEQS_CREATETSV {
         ${prefix}.tsv \\
         $args \\
         --threads ${task.cpus}
-    
-    num_sequences=\$(wc -l < "${prefix}.tsv")
-    
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         mmseqs: \$(mmseqs | grep 'Version' | sed 's/MMseqs2 Version: //')

@@ -1,22 +1,22 @@
 #!/usr/bin/env nextflow
 
-include { GENERATE_FAMILIES_PARALLEL } from "../../../subworkflows/local/generate_families_parallel"
-include { FLAG_TRANSMEMBRANE         } from "../../../subworkflows/local/flag_transmembrane"
-include { MOVE_TO_DIR                } from "../../../modules/local/move_to_dir/main"
-include { REMOVE_REDUNDANCY          } from "../../../subworkflows/local/remove_redundancy"
+include { REFINE_FAMILIES_PARALLEL } from "../../../modules/local/refine_families_parallel/main" // TODO rename to GENERATE_FAMILIES
+include { FLAG_TRANSMEMBRANE       } from "../../../subworkflows/local/flag_transmembrane"
+include { MOVE_TO_DIR              } from "../../../modules/local/move_to_dir/main"
+include { REMOVE_REDUNDANCY        } from "../../../subworkflows/local/remove_redundancy"
 
 workflow GENERATE_NONREDUNDANT_FAMILIES {
     take:
-    clusters_tsv
-    checked_clusters
-    mgnifams_input_fa
+    cluster_chunks
+    mgnifams_fa
 
     main:
     ch_versions = Channel.empty()
 
-    ch_families = GENERATE_FAMILIES_PARALLEL( clusters_tsv, checked_clusters, mgnifams_input_fa )
-    ch_versions = ch_versions.mix( GENERATE_FAMILIES_PARALLEL.out.versions )
+    ch_families = REFINE_FAMILIES_PARALLEL( cluster_chunks, mgnifams_fa.first() )
+    ch_versions = ch_versions.mix( REFINE_FAMILIES_PARALLEL.out.versions )
 
+    // TODO multiMap?
     ch_msa_sto = ch_families.msa_sto
         .map { meta, files ->
             files

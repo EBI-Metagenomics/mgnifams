@@ -13,7 +13,7 @@ Changes in 'mmseqs/createtsv/environment.yml':
 Changes in 'mmseqs/createtsv/main.nf':
 --- modules/nf-core/mmseqs/createtsv/main.nf
 +++ modules/nf-core/mmseqs/createtsv/main.nf
-@@ -10,11 +10,12 @@
+@@ -10,8 +10,8 @@
  
      input:
      tuple val(meta), path(db_result)
@@ -24,21 +24,6 @@ Changes in 'mmseqs/createtsv/main.nf':
  
      output:
      tuple val(meta), path("*.tsv"), emit: tsv
-+    env 'num_sequences'           , emit: num_sequences
-     path "versions.yml"           , emit: versions
- 
-     when:
-@@ -41,7 +42,9 @@
-         ${prefix}.tsv \\
-         $args \\
-         --threads ${task.cpus}
--
-+    
-+    num_sequences=\$(wc -l < "${prefix}.tsv")
-+    
-     cat <<-END_VERSIONS > versions.yml
-     "${task.process}":
-         mmseqs: \$(mmseqs | grep 'Version' | sed 's/MMseqs2 Version: //')
 
 'modules/nf-core/mmseqs/createtsv/tests/taxonomy.nextflow.config' is unchanged
 'modules/nf-core/mmseqs/createtsv/tests/cluster.nextflow.config' is unchanged

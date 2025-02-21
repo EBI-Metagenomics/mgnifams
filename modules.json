@@ -1,72 +1,94 @@
 {
-  "name": "ebi-metagenomics/mgnifams",
-  "homePage": "https://github.com/ebi-metagenomics/mgnifams",
-  "repos": {
-    "https://github.com/nf-core/modules.git": {
-      "modules": {
-        "nf-core": {
-          "deeptmhmm": {
-            "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-            "installed_by": ["modules"]
-          },
-          "foldseek/createdb": {
-            "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-            "installed_by": ["modules"]
-          },
-          "foldseek/easysearch": {
-            "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-            "installed_by": ["modules"]
-          },
-          "mmseqs/createdb": {
-            "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-            "installed_by": ["modules"]
-          },
-          "mmseqs/createtsv": {
-            "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-            "installed_by": ["modules"],
-            "patch": "modules/nf-core/mmseqs/createtsv/mmseqs-createtsv.diff"
-          },
-          "mmseqs/linclust": {
-            "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-            "installed_by": ["modules"]
-          },
-          "multiqc": {
-            "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-            "installed_by": ["modules"]
-          },
-          "pigz/uncompress": {
-            "branch": "master",
-            "git_sha": "db63f85c5ad0cea2a5e21b79a3851d0dabe9d351",
-            "installed_by": ["modules"]
-          }
+    "name": "ebi-metagenomics/mgnifams",
+    "homePage": "https://github.com/ebi-metagenomics/mgnifams",
+    "repos": {
+        "https://github.com/nf-core/modules.git": {
+            "modules": {
+                "nf-core": {
+                    "deeptmhmm": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "foldseek/createdb": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "foldseek/easysearch": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "mmseqs/createdb": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "mmseqs/createtsv": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": [
+                            "modules"
+                        ],
+                        "patch": "modules/nf-core/mmseqs/createtsv/mmseqs-createtsv.diff"
+                    },
+                    "mmseqs/linclust": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "multiqc": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "pigz/uncompress": {
+                        "branch": "master",
+                        "git_sha": "db63f85c5ad0cea2a5e21b79a3851d0dabe9d351",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    }
+                }
+            },
+            "subworkflows": {
+                "nf-core": {
+                    "utils_nextflow_pipeline": {
+                        "branch": "master",
+                        "git_sha": "c2b22d85f30a706a3073387f30380704fcae013b",
+                        "installed_by": [
+                            "subworkflows"
+                        ]
+                    },
+                    "utils_nfcore_pipeline": {
+                        "branch": "master",
+                        "git_sha": "51ae5406a030d4da1e49e4dab49756844fdd6c7a",
+                        "installed_by": [
+                            "subworkflows"
+                        ]
+                    },
+                    "utils_nfschema_plugin": {
+                        "branch": "master",
+                        "git_sha": "2fd2cd6d0e7b273747f32e465fdc6bcc3ae0814e",
+                        "installed_by": [
+                            "subworkflows"
+                        ]
+                    }
+                }
+            }
         }
-      },
-      "subworkflows": {
-        "nf-core": {
-          "utils_nextflow_pipeline": {
-            "branch": "master",
-            "git_sha": "c2b22d85f30a706a3073387f30380704fcae013b",
-            "installed_by": ["subworkflows"]
-          },
-          "utils_nfcore_pipeline": {
-            "branch": "master",
-            "git_sha": "51ae5406a030d4da1e49e4dab49756844fdd6c7a",
-            "installed_by": ["subworkflows"]
-          },
-          "utils_nfschema_plugin": {
-            "branch": "master",
-            "git_sha": "2fd2cd6d0e7b273747f32e465fdc6bcc3ae0814e",
-            "installed_by": ["subworkflows"]
-          }
-        }
-      }
     }
-  }
 }
