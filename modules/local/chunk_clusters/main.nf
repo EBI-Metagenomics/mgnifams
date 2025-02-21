@@ -1,35 +1,39 @@
-process CHUNK_CLUSTERS { // TODO repurpose
+process CHUNK_CLUSTERS {
     tag "$meta.id"
     label 'process_single'
 
-    conda "conda-forge::polars=1.21.0"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/19/19b2e332c6af2e0b5a319689bfc2236715ace874a279a486fd69ff3b8c72e1c2/data' :
-        'community.wave.seqera.io/library/polars:1.21.0--8a6b364d2d19a70b' }"
+        'https://depot.galaxyproject.org/singularity/ubuntu:20.04' :
+        'nf-core/ubuntu:20.04' }"
 
     input:
-    tuple val(meta), path(clusters)
-    path(checked_clusters)
-    val(minimum_members)
-    val(num_cluster_chunks)
+    tuple val(meta) , path(reps)
+    tuple val(meta2), path(clusters)
 
     output:
-    tuple val(meta), path("cluster_chunks/*"), emit: fasta_chunks
-    path "versions.yml"                      , emit: versions
+    tuple val(meta), path("${prefix}.tsv"), emit: tsv
+    path "versions.yml"                   , emit: versions
 
     script:
-    def omit_clusters = "${checked_clusters}" ?: 0
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    chunk_clusters.py \\
-        ${clusters} \\
-        ${omit_clusters} \\
-        ${minimum_members} \\
-        ${num_cluster_chunks}
+    awk -F'\t' 'NR==FNR {names[\$1]; next} \$1 in names' ${reps} ${clusters} > ${prefix}.tsv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        sed: \$(sed --version 2>&1 | sed -n 1p | sed 's/sed (GNU sed) //')
+    END_VERSIONS
+    """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')
-        biopython: \$(python -c "import pkg_resources; print(pkg_resources.get_distribution('polars').version)")
     END_VERSIONS
     """
 }

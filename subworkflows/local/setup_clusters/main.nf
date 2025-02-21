@@ -36,12 +36,12 @@ workflow SETUP_CLUSTERS {
             [[id: meta.id, chunk: file.getBaseName(1).split('\\.')[-1]], file]
         }
 
-    // TODO CHUNK_CLUSTERS( EXECUTE_CLUSTERING.out.clusters_tsv, ch_from_split )
-    // ch_versions = ch_versions.mix( CHUNK_CLUSTERS.out.versions )
+    CHUNK_CLUSTERS( ch_cluster_reps_chunks, EXECUTE_CLUSTERING.out.clusters_tsv.first() )
+    ch_versions = ch_versions.mix( CHUNK_CLUSTERS.out.versions )
 
     emit:
     versions          = ch_versions
     mgnifams_input_fa = ch_mgnifams_input_fa
     cluster_distr_mqc = CALCULATE_CLUSTER_DISTRIBUTION.out.mqc
-    // cluster_chunks      = CHUNK_CLUSTERS.out.chunk // TODO
+    cluster_chunks    = CHUNK_CLUSTERS.out.tsv
 }
