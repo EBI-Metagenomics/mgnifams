@@ -20,7 +20,7 @@ process CALCULATE_CLUSTER_DISTRIBUTION {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    num_sequences=\$(wc -l < "${prefix}.tsv")
+    num_sequences=\$(wc -l < "${clusters}")
 
     cat <<EOF > ${prefix}_clustering_distribution_mqc.csv
     # id: "cluster_distribution"
