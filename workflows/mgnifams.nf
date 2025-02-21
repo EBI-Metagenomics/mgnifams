@@ -34,7 +34,7 @@ workflow MGNIFAMS {
     ch_versions = ch_versions.mix( SETUP_CLUSTERS.out.versions )
 
     // TODO
-    // generated_families = GENERATE_NONREDUNDANT_FAMILIES( SETUP_CLUSTERS.out.clusters_tsv, [], SETUP_CLUSTERS.out.mgnifams_input_fa )
+    // generated_families = GENERATE_NONREDUNDANT_FAMILIES( SETUP_CLUSTERS.out.cluster_chunks, SETUP_CLUSTERS.out.mgnifams_input_fa )
     // ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
     // annotated_families = ANNOTATE_FAMILIES( generated_families.seed_msa_sto, generated_families.msa_sto )
