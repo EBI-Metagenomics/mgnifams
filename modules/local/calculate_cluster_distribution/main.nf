@@ -20,13 +20,15 @@ process CALCULATE_CLUSTER_DISTRIBUTION {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
+    num_sequences=\$(wc -l < "${prefix}.tsv")
+
     cat <<EOF > ${prefix}_clustering_distribution_mqc.csv
     # id: "cluster_distribution"
     # section_name: "Initial Clustering Sizes Distribution"
-    # description: "The seed clusters were calculated via the mmseqs suite. The table below presents cluster sizes and how many times each size was encountered."
+    # description: "A total of <b> \$num_sequences </b> input sequences were processed, with seed clusters identified using the MMseqs suite. The table below provides a breakdown of cluster sizes, showing the number of times each unique cluster size was observed."
     # format: "csv"
     # plot_type: "table"
-    Sample Name,Cluster Size,Number of Clusters
+    Id,Cluster Size,Number of Clusters
     EOF
 
     awk '{count[\$1]++} END {for (c in count) size[count[c]]++} END {for (s in size) print s "," s "," size[s]}' ${clusters} | sort -n --parallel=${task.cpus} >> ${prefix}_clustering_distribution_mqc.csv
