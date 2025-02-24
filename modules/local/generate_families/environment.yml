@@ -3,10 +3,12 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  - python=3.13
+  - pandas
+  - numpy
   - bioconda::mafft=7.520
   - bioconda::hmmer=3.4.0
   - bioconda::easel=0.49
-  - python=3.8
-  - pandas
-  - polars
-  - biopython
+  - pip
+  - pip:
+      - biopython
