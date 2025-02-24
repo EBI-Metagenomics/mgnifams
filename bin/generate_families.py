@@ -6,6 +6,7 @@ import pandas as pd
 import time
 import pyfastx
 import pyfamsa
+import pyhmmer
 
 import subprocess
 import shutil
@@ -166,6 +167,26 @@ def run_initial_msa(members, pyfastx_obj):
 
     log_time(start_time, "run_initial_msa (pyfamsa): ")
 
+def run_hmmbuild(msa_file, chunk_num):
+    """Runs HMMER's hmmbuild using pyhmmer."""
+    start_time = time.time()                    
+
+    alphabet = pyhmmer.easel.Alphabet.amino()
+
+    with pyhmmer.easel.MSAFile(msa_file, digital=True, alphabet=alphabet) as msa_file:
+        msa = msa_file.read()
+    msa.name = f"protein_family_{chunk_num}".encode()
+
+    builder = pyhmmer.plan7.Builder(alphabet)
+    background = pyhmmer.plan7.Background(alphabet)
+    hmm, _, _ = builder.build_msa(msa, background)
+    print(hmm.consensus) # TODO write to file and emit as output
+
+    with open(tmp_hmm_path, "wb") as output_file:
+        hmm.write(output_file)
+
+    log_time(start_time, "run_hmmbuild (pyhmmer): ")
+
 
 #=========================== UPDATED UP TO HERE ===========================================#
 
@@ -233,7 +254,7 @@ def trim_seed_msa(occupancy_threshold=0.5):
 
     return original_sequence_names
 
-def run_hmmbuild(msa_file, extra_args):
+def run_hmmbuild_hmmer(msa_file, extra_args): # TODO remove
     start_time = time.time()                    
 
     hmmbuild_command = ["hmmbuild", "--cpu", arg_cpus] + extra_args + [tmp_hmm_path, msa_file]
@@ -475,7 +496,8 @@ def main():
         write_family_fasta_file(family_members, mgnifams_pyfastx_obj)
 
         run_initial_msa(family_members, mgnifams_pyfastx_obj)
-        # TODO run trim_seed_msa / clipkit?
+        # TODO run trim_seed_msa / clipkit? Probably not needed
+        # TODO renumber regions after clipping
 
         total_checked_sequences = family_members
         filtered_seq_names = []
@@ -492,11 +514,13 @@ def main():
                     file.write("Exiting-3 loops.\n")
                 file.write(str(family_iteration) + "\n")
             
-            run_msa(len(family_members)) # TODO remove from here?
-            original_sequence_names = trim_seed_msa() # TODO remove from here?
+            # run_msa(len(family_members)) # TODO remove from here?
+            # original_sequence_names = trim_seed_msa() # TODO remove from here?
 
             if not exit_flag: # main strategy branch
-                run_hmmbuild(tmp_seed_msa_path, ["--amino", "--informat", "afa"])
+                run_hmmbuild(tmp_seed_msa_path, arg_chunk_num)
+                exit()
+
                 run_hmmsearch()
                 recruited_sequence_names = extract_sequence_names_from_domtblout()
                 filtered_seq_names = filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
