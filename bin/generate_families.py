@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import argparse
 import os
 import subprocess
 import shutil
@@ -13,16 +13,17 @@ from Bio import SeqIO
 from Bio import AlignIO
 import time
 
-def parse_args():
+def parse_args(args=None):
     global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus
-        
-    if not (len(sys.argv) == 4):
-        print("Incorrect number of args.")
-        sys.exit(1)
-
-    arg_clusters_chunk            = sys.argv[1]
-    arg_mgnifams_input_fasta_file = sys.argv[2]
-    arg_cpus                      = sys.argv[3]
+    parser = argparse.ArgumentParser(description="Process clustering data and extract sequences.")
+    parser.add_argument("-c", "--clusters_chunk", required=True, type=str, help="Path to the clusters chunk file.")
+    parser.add_argument("-f", "--fasta_file", required=True, type=str, help="Path to the MGnifams input FASTA file.")
+    parser.add_argument("-p", "--cpus", required=True, type=str, help="Number of CPUs to use.")
+    args = parser.parse_args(args)
+    
+    arg_clusters_chunk = args.clusters_chunk
+    arg_mgnifams_input_fasta_file = args.fasta_file
+    arg_cpus = args.cpus
 
 def extract_chunk_number(filename):
     match = re.search(r'_(\d+)\.', filename)

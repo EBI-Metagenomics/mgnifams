@@ -33,9 +33,9 @@ process GENERATE_FAMILIES {
     def prefix = task.ext.prefix ?: "${meta.id}" // TODO prefix override and use in output naming
     """
     generate_families.py \\
-        ${clusters_chunk} \\
-        ${mgnifams_fasta} \\
-        ${task.cpus}
+        --clusters_chunk ${clusters_chunk} \\
+        --fasta_file ${mgnifams_fasta} \\
+        --cpus ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
