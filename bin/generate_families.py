@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import pyfastx
 import subprocess
 import shutil
 import pandas as pd
@@ -90,32 +91,38 @@ def create_empty_output_files():
 def load_clusters_df():
     return pd.read_csv(arg_clusters_chunk, sep='\t', header=None, names=['representative', 'member'], dtype=str)
 
+def log_time(start_time, text, mode='a'):
+    with open(log_file, mode) as file:
+        file.write(text)
+        file.write(str(time.time() - start_time) + "\n")
+
+# TODO
 def create_mgnifams_fasta_dict():
     start_time = time.time()
 
-    mgnifams_fasta_dict = {record.id: record for record in SeqIO.parse(arg_mgnifams_input_fasta_file, "fasta")}
+    # mgnifams_fasta_dict = {record.id: record for record in SeqIO.parse(arg_mgnifams_input_fasta_file, "fasta")} # TODO remove?
+    mgnifams_fasta_dict = pyfastx.Fasta(arg_mgnifams_input_fasta_file, key_func=str) # TODO test
 
-    with open(log_file, 'a') as file:
-        file.write("create_mgnifams_fasta_dict: ")
-        file.write(str(time.time() - start_time) + "\n")
+    log_time(start_time, "create_mgnifams_fasta_dict: ", 'w')
 
     return mgnifams_fasta_dict
 
 def get_next_family(clusters_df):
     start_time = time.time()
+
     if clusters_df.empty:
         return None, None
 
-    # Select the next family, which is the first row in the DataFrame
+    # Select the next family (first row in the dataFrame)
     next_family_rep = clusters_df.iloc[0]['representative']
-    next_family_members = clusters_df.loc[clusters_df['representative'] == next_family_rep, 'member']
-    # Ensure that next_family_members is a list
-    if not isinstance(next_family_members, list):
-        next_family_members = [next_family_members] if isinstance(next_family_members, str) else next_family_members.tolist()
+    next_family_members = clusters_df.loc[clusters_df['representative'] == next_family_rep, 'member'].tolist()
 
+    # Remove the selected family from the dataframe
+    clusters_df.drop(clusters_df[clusters_df['representative'] == next_family_rep].index, inplace=True)
+
+    # Logging execution time and results
     with open(log_file, 'a') as file:
-        file.write("\nget_next_family: ")
-        file.write(str(time.time() - start_time) + "\n")
+        file.write(f"\nget_next_family: {time.time() - start_time}\n")
         file.write(f"S: {next_family_rep}, s: {len(next_family_members)}\n")
     
     return next_family_rep, next_family_members
@@ -408,18 +415,6 @@ def get_final_family_original_names(filtered_seq_names):
     family_members = {name.split('/')[0] for name in filtered_seq_names}
     return family_members
 
-def update_clusters_df(clusters_df, family_rep):
-    start_time = time.time()    
-
-    # Remove checked or discarded cluster
-    clusters_df.drop(clusters_df[clusters_df['representative'] == family_rep].index, inplace=True)
-
-    with open(log_file, 'a') as file:
-        file.write("update_clusters_df: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-    return clusters_df
-
 def remove_tmp_files():
     for item in os.listdir(tmp_folder):
         item_path = os.path.join(tmp_folder, item)
@@ -431,8 +426,10 @@ def main():
     define_globals()
     create_empty_output_files()
     clusters_df = load_clusters_df()
-    
+
     mgnifams_fasta_dict = create_mgnifams_fasta_dict()
+    print(mgnifams_fasta_dict)
+
     iteration = 0
     while True:
         iteration += 1
@@ -442,6 +439,7 @@ def main():
                 file.write("Exiting all...")
             break
 
+        # TODO
         write_family_fasta_file(family_members, mgnifams_fasta_dict)
         total_checked_sequences = family_members
         discard_flag = False
@@ -533,7 +531,6 @@ def main():
             append_family_metadata(iteration)
             move_produced_models(iteration)
         
-        clusters_df = update_clusters_df(clusters_df, next_family_rep)
         remove_tmp_files()
 
     # # End of all families
