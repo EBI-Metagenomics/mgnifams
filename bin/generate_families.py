@@ -2,16 +2,19 @@
 
 import argparse
 import os
+import pandas as pd
+import time
 import pyfastx
+import pyfamsa
+
 import subprocess
 import shutil
-import pandas as pd
 import numpy as np
-from Bio.Seq import Seq
+from Bio.Seq import Seq # TODO remove
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 from Bio import AlignIO
-import time
+
 
 def parse_args(args=None):
     global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus, arg_chunk_num
@@ -136,7 +139,32 @@ def write_family_fasta_file(members, pyfastx_obj):
     sequences_to_write = [(member, str(pyfastx_obj[member])) for member in members if member in pyfastx_obj]
     write_fasta_sequences(sequences_to_write, tmp_family_sequences_path, "w")
 
-    log_time(start_time, "write_family_fasta_file: ")
+    log_time(start_time, "write_family_fasta_file (pyfastx): ")
+
+def run_initial_msa(members, pyfastx_obj):
+    """Aligns sequences using pyfamsa and writes the result to a FASTA file."""
+    start_time = time.time()
+    
+    # Convert sequences to pyfamsa.Sequence objects
+    sequences = [pyfamsa.Sequence(member.encode(), str(pyfastx_obj[member]).encode()) for member in members if member in pyfastx_obj]
+    
+    if not sequences:
+        raise ValueError("No valid sequences found for alignment.")
+
+    # Create an Aligner object
+    aligner = pyfamsa.Aligner()
+    
+    # Perform the multiple sequence alignment
+    alignment = aligner.align(sequences)
+
+    # Write the aligned sequences to a FASTA file
+    with open(tmp_seed_msa_path, "w") as output_handle:
+        for gapped_seq in alignment:
+            output_handle.write(f">{gapped_seq.id.decode()}\n{gapped_seq.sequence.decode()}\n")
+
+    shutil.copy(tmp_seed_msa_path, tmp_align_msa_path) # copy to full alignment, in case hmmsearch doesn't recruit anything new at the first loop (never happens)
+
+    log_time(start_time, "run_initial_msa (pyfamsa): ")
 
 
 #=========================== UPDATED UP TO HERE ===========================================#
@@ -446,8 +474,7 @@ def main():
 
         write_family_fasta_file(family_members, mgnifams_pyfastx_obj)
 
-        # TODO run_initial_msa
-
+        run_initial_msa(family_members, mgnifams_pyfastx_obj)
         # TODO run trim_seed_msa / clipkit?
 
         total_checked_sequences = family_members
