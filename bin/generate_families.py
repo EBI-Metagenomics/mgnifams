@@ -129,6 +129,17 @@ def get_next_family(clusters_df):
     
     return next_family_rep, next_family_members
 
+def read_pyhmmer_seqs():
+    start_time = time.time()
+
+    # pre-fetching targets - fast, but needs the whole target database in memory
+    with pyhmmer.easel.SequenceFile(arg_mgnifams_input_fasta_file, digital=True) as seq_file:
+        seqs = seq_file.read_block()
+
+    log_time(start_time, "read_pyhmmer_seqs (pyhmmer): ")
+
+    return seqs
+
 def write_fasta_sequences(sequences, file_path, mode):
     with open(file_path, mode) as output_handle:
         for header, sequence in sequences:
@@ -187,14 +198,16 @@ def run_hmmbuild(msa_file, chunk_num):
 
     log_time(start_time, "run_hmmbuild (pyhmmer): ")
 
-def run_hmmsearch():
+def run_hmmsearch(pyhmmer_seqs):
     """Runs HMMER's hmmsearch using pyhmmer."""
     start_time = time.time()
-    
+
     with pyhmmer.plan7.HMMFile(tmp_hmm_path) as hmm:
-        with pyhmmer.easel.SequenceFile(arg_mgnifams_input_fasta_file, digital=True) as seqs:
-            total = sum(len(hits) for hits in pyhmmer.hmmer.hmmsearch(hmm, seqs))
-            print(total) # TODO continue
+        for top_hits in pyhmmer.hmmer.hmmsearch(hmm, pyhmmer_seqs, cpus=int(arg_cpus), E=evalue_threshold):
+            print(len(top_hits))
+            for hit in top_hits:
+                print(f"Target: {hit.name.decode()}, E-value: {hit.evalue}")
+
 
     # Write the results to the output file
     # with open(tmp_domtblout_path, "w") as output_file:
@@ -490,6 +503,7 @@ def main():
     clusters_df = load_clusters_df()
 
     mgnifams_pyfastx_obj = create_mgnifams_pyfastx_obj()
+    pyhmmer_seqs = read_pyhmmer_seqs()
 
     iteration = 0
     while True:
@@ -526,7 +540,7 @@ def main():
 
             if not exit_flag: # main strategy branch
                 run_hmmbuild(tmp_seed_msa_path, arg_chunk_num)
-                run_hmmsearch()
+                run_hmmsearch(pyhmmer_seqs)
                 exit()
 
                 recruited_sequence_names = extract_sequence_names_from_domtblout()
