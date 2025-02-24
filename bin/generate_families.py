@@ -96,16 +96,14 @@ def log_time(start_time, text, mode='a'):
         file.write(text)
         file.write(str(time.time() - start_time) + "\n")
 
-# TODO
-def create_mgnifams_fasta_dict():
+def create_mgnifams_pyfastx_obj():
     start_time = time.time()
 
-    # mgnifams_fasta_dict = {record.id: record for record in SeqIO.parse(arg_mgnifams_input_fasta_file, "fasta")} # TODO remove?
-    mgnifams_fasta_dict = pyfastx.Fasta(arg_mgnifams_input_fasta_file, key_func=str) # TODO test
+    mgnifams_pyfastx_obj = pyfastx.Fasta(arg_mgnifams_input_fasta_file, key_func=str)
 
     log_time(start_time, "create_mgnifams_fasta_dict: ", 'w')
 
-    return mgnifams_fasta_dict
+    return mgnifams_pyfastx_obj
 
 def get_next_family(clusters_df):
     start_time = time.time()
@@ -129,11 +127,19 @@ def get_next_family(clusters_df):
 
 def write_fasta_sequences(sequences, file_path, mode):
     with open(file_path, mode) as output_handle:
-        SeqIO.write(sequences, output_handle, "fasta")
+        for header, sequence in sequences:
+            output_handle.write(f">{header}\n{sequence}\n")
 
-def write_family_fasta_file(members, mgnifams_fasta_dict):
-    sequences_to_write = [mgnifams_fasta_dict[member] for member in members if member in mgnifams_fasta_dict]
+def write_family_fasta_file(members, pyfastx_obj):
+    start_time = time.time()
+
+    sequences_to_write = [(member, str(pyfastx_obj[member])) for member in members if member in pyfastx_obj]
     write_fasta_sequences(sequences_to_write, tmp_family_sequences_path, "w")
+
+    log_time(start_time, "write_family_fasta_file: ")
+
+
+#=========================== UPDATED UP TO HERE ===========================================#
 
 def run_msa(family_size):
     start_time = time.time()
@@ -427,25 +433,28 @@ def main():
     create_empty_output_files()
     clusters_df = load_clusters_df()
 
-    mgnifams_fasta_dict = create_mgnifams_fasta_dict()
-    print(mgnifams_fasta_dict)
+    mgnifams_pyfastx_obj = create_mgnifams_pyfastx_obj()
 
     iteration = 0
     while True:
         iteration += 1
-        next_family_rep, family_members = get_next_family(clusters_df)
+        family_rep, family_members = get_next_family(clusters_df)
         if not family_members:
             with open(log_file, 'a') as file:
                 file.write("Exiting all...")
             break
 
-        # TODO
-        write_family_fasta_file(family_members, mgnifams_fasta_dict)
+        write_family_fasta_file(family_members, mgnifams_pyfastx_obj)
+
+        # TODO run_initial_msa
+
+        # TODO run trim_seed_msa / clipkit?
+
         total_checked_sequences = family_members
+        filtered_seq_names = []
         discard_flag = False
         exit_flag = False
         family_iteration = 0
-        filtered_seq_names = []
         while True:
             family_iteration += 1
             if (family_iteration > 3):
@@ -456,8 +465,8 @@ def main():
                     file.write("Exiting-3 loops.\n")
                 file.write(str(family_iteration) + "\n")
             
-            run_msa(len(family_members))
-            original_sequence_names = trim_seed_msa()
+            run_msa(len(family_members)) # TODO remove from here?
+            original_sequence_names = trim_seed_msa() # TODO remove from here?
 
             if not exit_flag: # main strategy branch
                 run_hmmbuild(tmp_seed_msa_path, ["--amino", "--informat", "afa"])
@@ -519,14 +528,14 @@ def main():
         # Exiting family loop
         if (discard_flag): # unsuccessfully
             with open(log_file, 'a') as file:
-                file.write("Discarding cluster " + next_family_rep + "\n")
+                file.write("Discarding cluster " + family_rep + "\n")
             
             with open(discarded_clusters_file, 'a') as outfile:
-                outfile.write(str(next_family_rep) + "\n")
+                outfile.write(str(family_rep) + "\n")
             iteration -= 1
         else: # successfully
             with open(successful_clusters_file, 'a') as outfile:
-                outfile.write(str(next_family_rep) + "\n")
+                outfile.write(str(family_rep) + "\n")
             append_family_file(iteration, filtered_seq_names)
             append_family_metadata(iteration)
             move_produced_models(iteration)
