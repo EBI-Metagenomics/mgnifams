@@ -6,7 +6,6 @@ import subprocess
 import shutil
 import pandas as pd
 import numpy as np
-import re
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
@@ -82,28 +81,14 @@ def define_globals():
     family_metadata_file      = os.path.join(family_metadata_folder    , f'{arg_chunk_num}.csv')
 
 def create_empty_output_files():
-    start_time = time.time()
-
     open(refined_families_tsv_file, 'w').close()
     open(discarded_clusters_file  , 'w').close()
     open(successful_clusters_file , 'w').close()
     open(converged_families_file  , 'w').close()
     open(family_metadata_file     , 'w').close()
 
-    with open(log_file, 'w') as file:
-        file.write("create_empty_output_files: ")
-        file.write(str(time.time() - start_time) + "\n")
-
 def load_clusters_df():
-    start_time = time.time()
-
-    clusters_df = pd.read_csv(arg_clusters_chunk, sep='\t', header=None, names=['representative', 'member'])
-
-    with open(log_file, 'a') as file:
-        file.write("load_clusters_df: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-    return clusters_df
+    return pd.read_csv(arg_clusters_chunk, sep='\t', header=None, names=['representative', 'member'], dtype=str)
 
 def create_mgnifams_fasta_dict():
     start_time = time.time()
@@ -444,9 +429,9 @@ def remove_tmp_files():
 def main():
     parse_args()
     define_globals()
-
     create_empty_output_files()
     clusters_df = load_clusters_df()
+    
     mgnifams_fasta_dict = create_mgnifams_fasta_dict()
     iteration = 0
     while True:
