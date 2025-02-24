@@ -14,24 +14,20 @@ from Bio import AlignIO
 import time
 
 def parse_args(args=None):
-    global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus
+    global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus, arg_chunk_num
     parser = argparse.ArgumentParser(description="Process clustering data and extract sequences.")
     parser.add_argument("-c", "--clusters_chunk", required=True, type=str, help="Path to the clusters chunk file.")
     parser.add_argument("-f", "--fasta_file", required=True, type=str, help="Path to the MGnifams input FASTA file.")
     parser.add_argument("-p", "--cpus", required=True, type=str, help="Number of CPUs to use.")
+    parser.add_argument("-n", "--chunk_num", required=True, type=str, help="Chunk number used for naming output files.")
     args = parser.parse_args(args)
     
     arg_clusters_chunk = args.clusters_chunk
     arg_mgnifams_input_fasta_file = args.fasta_file
     arg_cpus = args.cpus
+    arg_chunk_num = args.chunk_num
 
-def extract_chunk_number(filename):
-    match = re.search(r'_(\d+)\.', filename)
-    if match:
-        return int(match.group(1))
-    return None
-
-def define_globals(chunk_num):
+def define_globals():
     global log_file, refined_families_tsv_file, \
         discarded_clusters_file, successful_clusters_file, \
         converged_families_file, family_metadata_file, \
@@ -78,12 +74,12 @@ def define_globals(chunk_num):
     tmp_sequences_to_remove_path = os.path.join(tmp_folder, 'sequences_to_remove.txt')
     tmp_rf_path                  = os.path.join(tmp_folder, 'rf.txt')
 
-    log_file                  = os.path.join(logs_folder               , f'{chunk_num}.txt')
-    refined_families_tsv_file = os.path.join(refined_families_folder   , f'{chunk_num}.tsv')
-    discarded_clusters_file   = os.path.join(discarded_clusters_folder , f'{chunk_num}.txt')
-    successful_clusters_file  = os.path.join(successful_clusters_folder, f'{chunk_num}.txt')
-    converged_families_file   = os.path.join(converged_families_folder , f'{chunk_num}.txt')
-    family_metadata_file      = os.path.join(family_metadata_folder    , f'{chunk_num}.csv')
+    log_file                  = os.path.join(logs_folder               , f'{arg_chunk_num}.txt')
+    refined_families_tsv_file = os.path.join(refined_families_folder   , f'{arg_chunk_num}.tsv')
+    discarded_clusters_file   = os.path.join(discarded_clusters_folder , f'{arg_chunk_num}.txt')
+    successful_clusters_file  = os.path.join(successful_clusters_folder, f'{arg_chunk_num}.txt')
+    converged_families_file   = os.path.join(converged_families_folder , f'{arg_chunk_num}.txt')
+    family_metadata_file      = os.path.join(family_metadata_folder    , f'{arg_chunk_num}.csv')
 
 def create_empty_output_files():
     start_time = time.time()
@@ -416,12 +412,12 @@ def append_family_metadata(iteration):
     with open(family_metadata_file, 'a') as file:
         file.writelines(f"{iteration},{family_size},{protein_rep},{region}\n")
 
-def move_produced_models(iteration, chunk_num):
-    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder,  f'{chunk_num}_{iteration}.sto'))
-    shutil.move(tmp_align_msa_path,    os.path.join(align_msa_folder, f'{chunk_num}_{iteration}.sto'))
-    shutil.move(tmp_hmm_path,          os.path.join(hmm_folder,       f'{chunk_num}_{iteration}.hmm'))
-    shutil.move(tmp_domtblout_path,    os.path.join(domtblout_folder, f'{chunk_num}_{iteration}.domtblout'))
-    shutil.move(tmp_rf_path,           os.path.join(rf_folder,        f'{chunk_num}_{iteration}.txt'))
+def move_produced_models(iteration):
+    shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder,  f'{arg_chunk_num}_{iteration}.sto'))
+    shutil.move(tmp_align_msa_path,    os.path.join(align_msa_folder, f'{arg_chunk_num}_{iteration}.sto'))
+    shutil.move(tmp_hmm_path,          os.path.join(hmm_folder,       f'{arg_chunk_num}_{iteration}.hmm'))
+    shutil.move(tmp_domtblout_path,    os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
+    shutil.move(tmp_rf_path,           os.path.join(rf_folder,        f'{arg_chunk_num}_{iteration}.txt'))
 
 def get_final_family_original_names(filtered_seq_names):
     family_members = {name.split('/')[0] for name in filtered_seq_names}
@@ -447,8 +443,7 @@ def remove_tmp_files():
 
 def main():
     parse_args()
-    chunk_num = extract_chunk_number(arg_clusters_chunk)
-    define_globals(chunk_num)
+    define_globals()
 
     create_empty_output_files()
     clusters_df = load_clusters_df()
@@ -551,7 +546,7 @@ def main():
                 outfile.write(str(next_family_rep) + "\n")
             append_family_file(iteration, filtered_seq_names)
             append_family_metadata(iteration)
-            move_produced_models(iteration, chunk_num)
+            move_produced_models(iteration)
         
         clusters_df = update_clusters_df(clusters_df, next_family_rep)
         remove_tmp_files()
