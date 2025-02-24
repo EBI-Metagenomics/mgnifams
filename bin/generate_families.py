@@ -187,6 +187,23 @@ def run_hmmbuild(msa_file, chunk_num):
 
     log_time(start_time, "run_hmmbuild (pyhmmer): ")
 
+def run_hmmsearch():
+    """Runs HMMER's hmmsearch using pyhmmer."""
+    start_time = time.time()
+    
+    with pyhmmer.plan7.HMMFile(tmp_hmm_path) as hmm:
+        with pyhmmer.easel.SequenceFile(arg_mgnifams_input_fasta_file, digital=True) as seqs:
+            total = sum(len(hits) for hits in pyhmmer.hmmer.hmmsearch(hmm, seqs))
+            print(total) # TODO continue
+
+    # Write the results to the output file
+    # with open(tmp_domtblout_path, "w") as output_file:
+    #     hits.write(output_file, format="domtbl")
+
+    # hmmsearch_command = ["hmmsearch", "--cpu", arg_cpus, "--domtblout", tmp_domtblout_path, tmp_hmm_path, arg_mgnifams_input_fasta_file]
+    # subprocess.run(hmmsearch_command, stdout=subprocess.DEVNULL)
+
+    log_time(start_time, "run_hmmsearch (pyhmmer): ")
 
 #=========================== UPDATED UP TO HERE ===========================================#
 
@@ -262,16 +279,6 @@ def run_hmmbuild_hmmer(msa_file, extra_args): # TODO remove
     
     with open(log_file, 'a') as file:
         file.write("run_hmmbuild: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-def run_hmmsearch():
-    start_time = time.time()
-    
-    hmmsearch_command = ["hmmsearch", "--cpu", arg_cpus, "--domtblout", tmp_domtblout_path, tmp_hmm_path, arg_mgnifams_input_fasta_file]
-    subprocess.run(hmmsearch_command, stdout=subprocess.DEVNULL)
-
-    with open(log_file, 'a') as file:
-        file.write("run_hmmsearch: ")
         file.write(str(time.time() - start_time) + "\n")
 
 def extract_sequence_names_from_domtblout():
@@ -519,9 +526,9 @@ def main():
 
             if not exit_flag: # main strategy branch
                 run_hmmbuild(tmp_seed_msa_path, arg_chunk_num)
+                run_hmmsearch()
                 exit()
 
-                run_hmmsearch()
                 recruited_sequence_names = extract_sequence_names_from_domtblout()
                 filtered_seq_names = filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
