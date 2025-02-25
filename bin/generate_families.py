@@ -9,12 +9,7 @@ import pyfamsa
 import pyhmmer
 import shutil
 import subprocess
-
 from Bio import AlignIO
-# from Bio import SeqIO # TODO try to remove
-# import numpy as np # TODO remove if not trimming with own method
-# from Bio.Seq import Seq # TODO probably remove
-
 
 def parse_args(args=None):
     global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus, arg_chunk_num
@@ -303,7 +298,6 @@ def run_esl_weight(threshold=0.8):
 
     log_time(start_time, "run_esl_weight: ")
 
-# TODO in here
 def extract_RF():
     with open(tmp_seed_msa_path, 'r') as file: # TODO maybe change if .sto file is parsed or changed
         # Extract lines starting with "#=GC RF"
@@ -329,7 +323,6 @@ def check_seed_membership(original_sequence_names, filtered_seq_names):
     percentage_membership = common_count / len(original_sequence_names)
 
     return percentage_membership
-#############
 
 def append_family_file(iteration, family_members):
     lines = [f"{iteration}\t{member}\n" for member in family_members]
