@@ -202,21 +202,16 @@ def run_hmmbuild(msa_file, chunk_num):
 
     log_time(start_time, "run_hmmbuild (pyhmmer): ")
 
-def mask_sequence_name(sequence, env_from, env_to, pyfastx_obj):
+def mask_sequence(sequence, env_from, env_to):
     # Unpack the tuple (header, seq)
     header, seq = sequence[0]  # sequence[0] is a tuple
 
     # Modify header and sequence
-    new_header = f"{header}/{env_from}_{env_to}"
-    new_seq = seq[env_from - 1:env_to]  # -1 for 0-based indexing
+    header = f"{header}/{env_from}_{env_to}"
+    seq = seq[env_from - 1:env_to]  # -1 for 0-based indexing
 
     # Replace the old tuple with the new one
-    sequence[0] = (new_header, new_seq)
-
-    print("BEFORE SLICE")
-    print(seq)
-    print("AFTER SLICE")
-    print(new_seq)
+    sequence[0] = (header, seq)
 
     return sequence
 
@@ -230,42 +225,24 @@ def run_hmmsearch(pyhmmer_seqs, pyfastx_obj, exit_flag):
     with pyhmmer.plan7.HMMFile(tmp_hmm_path) as hmm_file:
         hmm = hmm_file.read()
         for top_hits in pyhmmer.hmmer.hmmsearch(hmm, pyhmmer_seqs, cpus=int(arg_cpus), E=evalue_threshold):
-            #top_hits.write(tmp_domtblout_path, format="domains") # TODO
+            with open(tmp_domtblout_path, "wb") as fh:
+                top_hits.write(fh, format="domains") # --domtblout
             qlen = top_hits.query.M
             for hit in top_hits:
                 sequence_name = hit.name.decode()
-                print(f"Target: {hit.name.decode()}, E-value: {hit.evalue}")
+                # print(f"Target name: {hit.name.decode()}, Hit E-value: {hit.evalue}") # debug
                 tlen = hit.length
                 for subhit in hit.domains:
-                    print(f"TARGET SEQUENCE: {subhit.alignment.target_sequence}") # TODO remove
+                    # print(f"TARGET SEQUENCE: {subhit.alignment.target_sequence}") # debug, different than target_env_sequence that we want, not provided by pyhmmer
                     env_length = subhit.env_to - subhit.env_from + 1
-                    print(f"from-to: {subhit.env_from}-{subhit.env_to}")
+                    # print(f"env from-to: {subhit.env_from}-{subhit.env_to}") # debug
                     if (exit_flag or env_length >= length_threshold * qlen):
                         sequence = get_fasta_sequences(pyfastx_obj, [sequence_name])
                         if (env_length < tlen):
-                            sequence = mask_sequence_name(sequence, subhit.env_from, subhit.env_to, pyfastx_obj)
+                            sequence = mask_sequence(sequence, subhit.env_from, subhit.env_to)
                         write_fasta_sequences(sequence, tmp_family_sequences_path, "a")
                         filtered_sequences.append(sequence[0][0]) # [0][0] is the header (list of tuples)
-            print(filtered_sequences)
-            print(len(top_hits))
-            exit()
-
-                    # if (exit_flag or env_length >= length_threshold * qlen): # only evalue filter when exiting, taking in shorter sequences
-                    #     sequence_name = columns[0]
-                    #     tlen = float(columns[2])
-                    #     if (env_length < tlen):
-                    #         sequence_name = mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict)
-                    #     else:
-                    #         write_fasta_sequences
-
-                    #     filtered_sequences.append(sequence_name)
-
-    # Write the results to the output file
-    # with open(tmp_domtblout_path, "w") as output_file:
-    #     hits.write(output_file, format="domtbl")
-
-    # hmmsearch_command = ["hmmsearch", "--cpu", arg_cpus, "--domtblout", tmp_domtblout_path, tmp_hmm_path, arg_mgnifams_input_fasta_file]
-    # subprocess.run(hmmsearch_command, stdout=subprocess.DEVNULL)
+                        # print(f"ENV SEQUENCE: {sequence[0][1]}") # debug
 
     log_time(start_time, "run_hmmsearch (pyhmmer): ")
 
@@ -583,13 +560,14 @@ def main():
             if not exit_flag: # main strategy branch
                 run_hmmbuild(tmp_seed_msa_path, arg_chunk_num)
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
-                exit()
+                print(filtered_seq_names)
 
-                recruited_sequence_names = extract_sequence_names_from_domtblout()
-                filtered_seq_names = filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
                     break
+
+                exit()
+
                 run_hmmalign()
                 length_seqs_for_esl = len(get_sequences_from_stockholm(tmp_align_msa_path))
                 if (length_seqs_for_esl > 70000):
