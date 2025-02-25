@@ -6,8 +6,8 @@ dependencies:
   - bioconda::easel=0.49
   - pip
   - pip:
-    - pandas
-    - biopython
-    - pyfastx
-    - pyfamsa
-    - pyhmmer
+    - pandas==2.2.3
+    - biopython==1.85
+    - pyfastx==2.2.0
+    - pyfamsa==0.5.3
+    - pyhmmer==0.11.0
