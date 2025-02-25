@@ -248,6 +248,28 @@ def run_hmmsearch(pyhmmer_seqs, pyfastx_obj, exit_flag):
 
     return filtered_sequences
 
+def run_hmmalign():
+    """Runs HMMER's hmmalign using pyhmmer."""
+    start_time = time.time()
+
+    num_seqs_result = 0
+
+    with pyhmmer.plan7.HMMFile(tmp_hmm_path) as hmm_file:
+        hmm = hmm_file.read()
+        with pyhmmer.easel.SequenceFile(tmp_family_sequences_path, digital=True) as seq_file:
+            seqs = seq_file.read_block()
+            hmmalign_res = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
+            with open(tmp_align_msa_path, "wb") as outfile:
+                hmmalign_res.write(outfile, format="stockholm") # TODO a2m here? (expected 'stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips')
+                # TODO manipulate the object below
+                # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
+                #     print(name.decode(), " ", aligned)
+                num_seqs_result = len(hmmalign_res.names)
+
+    log_time(start_time, "run_hmmalign (pyhmmer): ")
+
+    return [name.decode() for name in hmmalign_res.names], num_seqs_result
+
 #=========================== UPDATED UP TO HERE ===========================================#
 
 def run_msa(family_size):
@@ -380,17 +402,7 @@ def check_seed_membership(original_sequence_names, filtered_seq_names):
 
     return percentage_membership
 
-def run_hmmalign():
-    start_time = time.time()
-
-    hmmalign_command = ["hmmalign", "-o", tmp_align_msa_path, "--amino", tmp_hmm_path, tmp_family_sequences_path]
-    subprocess.run(hmmalign_command, stdout=subprocess.DEVNULL)
-
-    with open(log_file, 'a') as file:
-        file.write("run_hmmalign: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-def get_sequences_from_stockholm(file):
+def get_sequences_from_stockholm(file): # TODO remove?
     with open(file, "r") as f:
         alignment = AlignIO.read(f, "stockholm")
 
@@ -560,24 +572,20 @@ def main():
             if not exit_flag: # main strategy branch
                 run_hmmbuild(tmp_seed_msa_path, arg_chunk_num)
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
-                print(filtered_seq_names)
 
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
                     break
 
-                exit()
-
-                run_hmmalign()
-                length_seqs_for_esl = len(get_sequences_from_stockholm(tmp_align_msa_path))
-                if (length_seqs_for_esl > 70000):
+                recruited_sequence_names, num_seqs_for_esl = run_hmmalign()
+                unmasked_recruited_sequence_names = [seq.split('/')[0] for seq in recruited_sequence_names]
+                if (num_seqs_for_esl > 70000): # TODO remove if using mmseqs instead
                     discard_flag = True
                     with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: {iteration} too many sequences for esl ({length_seqs_for_esl}).\n")
+                        file.write(f"Discard-Warning: {iteration} too many sequences for esl ({num_seqs_for_esl}).\n")
                     break
-                new_recruited_sequences = set(recruited_sequence_names) - set(total_checked_sequences)
-                with open(log_file, 'a') as file:
-                    file.write("new_recruited_sequences calculated.\n")
+
+                new_recruited_sequences = set(unmasked_recruited_sequence_names) - set(total_checked_sequences)
                 if not new_recruited_sequences:
                     exit_flag = True
                     with open(log_file, 'a') as file:
@@ -585,6 +593,8 @@ def main():
                     with open(converged_families_file, 'a') as file:
                         file.write(f"{iteration}\n")
 
+            # TODO from here
+            exit()
             if exit_flag: # exit strategy branch
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
