@@ -12,7 +12,6 @@ import subprocess
 
 from Bio import AlignIO
 # from Bio import SeqIO # TODO try to remove
-
 # import numpy as np # TODO remove if not trimming with own method
 # from Bio.Seq import Seq # TODO probably remove
 
@@ -297,7 +296,7 @@ def run_esl_weight(threshold=0.8):
                 file.write("Rerunning esl_weight; ")
             shutil.copy(tmp_esl_weight_path, tmp_intermediate_esl_path)
 
-    shutil.copy(tmp_esl_weight_path, tmp_family_sequences_path) # TODO update with extra logic after Alex strategy's implemented
+    shutil.copy(tmp_esl_weight_path, tmp_seed_msa_path) # TODO update with extra logic after Alex strategy's implemented
 
     log_time(start_time, "run_esl_weight: ")
 
