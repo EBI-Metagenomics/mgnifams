@@ -301,8 +301,21 @@ def run_esl_weight(threshold=0.8):
 
     log_time(start_time, "run_esl_weight: ")
 
-# TODO in here
+def extract_RF():
+    with open(tmp_seed_msa_sto_path, 'r') as file:
+        # Extract lines starting with "#=GC RF"
+        relevant_lines = [line.strip() for line in file if line.startswith("#=GC RF")]
 
+    # Keep only 'x's and '.'
+    cleaned_lines = [''.join(filter(lambda c: c == 'x' or c == '.', line)) for line in relevant_lines]
+
+    # Combine lines into a single sequence
+    combined_sequence = ''.join(cleaned_lines)
+
+    with open(tmp_rf_path, 'w') as output_file:
+        output_file.write(combined_sequence)
+
+# TODO in here
 
 #############
 
@@ -385,20 +398,6 @@ def check_seed_membership(original_sequence_names, filtered_seq_names):
 
     return percentage_membership
 
-def extract_RF():
-    with open(tmp_seed_msa_sto_path, 'r') as file:
-        # Extract lines starting with "#=GC RF"
-        relevant_lines = [line.strip() for line in file if line.startswith("#=GC RF")]
-
-    # Keep only 'x's and '.'
-    cleaned_lines = [''.join(filter(lambda c: c == 'x' or c == '.', line)) for line in relevant_lines]
-
-    # Combine lines into a single sequence
-    combined_sequence = ''.join(cleaned_lines)
-
-    with open(tmp_rf_path, 'w') as output_file:
-        output_file.write(combined_sequence)
-
 def main():
     parse_args()
     define_globals()
@@ -444,7 +443,6 @@ def main():
             if not exit_flag: # main strategy branch
                 run_hmmbuild(tmp_seed_msa_path)
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
-
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
                     break
@@ -465,20 +463,18 @@ def main():
                     with open(converged_families_file, 'a') as file:
                         file.write(f"{iteration}\n")
 
-            # TODO exit strategy from here
             if exit_flag: # exit strategy branch
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
                 run_hmmbuild(tmp_seed_msa_path, hand=True)
-                extract_RF() # TODO further test/optimise
-                exit()
-                # TODO
-                run_hmmsearch()
-                filtered_seq_names = filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
+                extract_RF()
+                filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
                     break
 
+                # TODO
+                exit()
                 membership_percentage = check_seed_membership(original_sequence_names, filtered_seq_names)
                 if (membership_percentage < 0.9): 
                     discard_flag = True
