@@ -140,6 +140,10 @@ def read_pyhmmer_seqs():
 
     return seqs
 
+def get_fasta_sequences(pyfastx_obj, headers):
+    """Retrieve sequences from pyfastx_obj given a list of headers."""
+    return [(header, str(pyfastx_obj[header])) for header in headers if header in pyfastx_obj]
+
 def write_fasta_sequences(sequences, file_path, mode):
     with open(file_path, mode) as output_handle:
         for header, sequence in sequences:
@@ -148,7 +152,7 @@ def write_fasta_sequences(sequences, file_path, mode):
 def write_family_fasta_file(members, pyfastx_obj):
     start_time = time.time()
 
-    sequences_to_write = [(member, str(pyfastx_obj[member])) for member in members if member in pyfastx_obj]
+    sequences_to_write = get_fasta_sequences(pyfastx_obj, members)
     write_fasta_sequences(sequences_to_write, tmp_family_sequences_path, "w")
 
     log_time(start_time, "write_family_fasta_file (pyfastx): ")
@@ -198,16 +202,63 @@ def run_hmmbuild(msa_file, chunk_num):
 
     log_time(start_time, "run_hmmbuild (pyhmmer): ")
 
-def run_hmmsearch(pyhmmer_seqs):
+def mask_sequence_name(sequence, env_from, env_to, pyfastx_obj):
+    # Unpack the tuple (header, seq)
+    header, seq = sequence[0]  # sequence[0] is a tuple
+
+    # Modify header and sequence
+    new_header = f"{header}/{env_from}_{env_to}"
+    new_seq = seq[env_from - 1:env_to]  # -1 for 0-based indexing
+
+    # Replace the old tuple with the new one
+    sequence[0] = (new_header, new_seq)
+
+    print("BEFORE SLICE")
+    print(seq)
+    print("AFTER SLICE")
+    print(new_seq)
+
+    return sequence
+
+def run_hmmsearch(pyhmmer_seqs, pyfastx_obj, exit_flag):
     """Runs HMMER's hmmsearch using pyhmmer."""
     start_time = time.time()
 
-    with pyhmmer.plan7.HMMFile(tmp_hmm_path) as hmm:
-        for top_hits in pyhmmer.hmmer.hmmsearch(hmm, pyhmmer_seqs, cpus=int(arg_cpus), E=evalue_threshold):
-            print(len(top_hits))
-            for hit in top_hits:
-                print(f"Target: {hit.name.decode()}, E-value: {hit.evalue}")
+    filtered_sequences = []
+    os.remove(tmp_family_sequences_path) # emptying initial MSA tmp file
 
+    with pyhmmer.plan7.HMMFile(tmp_hmm_path) as hmm_file:
+        hmm = hmm_file.read()
+        for top_hits in pyhmmer.hmmer.hmmsearch(hmm, pyhmmer_seqs, cpus=int(arg_cpus), E=evalue_threshold):
+            #top_hits.write(tmp_domtblout_path, format="domains") # TODO
+            qlen = top_hits.query.M
+            for hit in top_hits:
+                sequence_name = hit.name.decode()
+                print(f"Target: {hit.name.decode()}, E-value: {hit.evalue}")
+                tlen = hit.length
+                for subhit in hit.domains:
+                    print(f"TARGET SEQUENCE: {subhit.alignment.target_sequence}") # TODO remove
+                    env_length = subhit.env_to - subhit.env_from + 1
+                    print(f"from-to: {subhit.env_from}-{subhit.env_to}")
+                    if (exit_flag or env_length >= length_threshold * qlen):
+                        sequence = get_fasta_sequences(pyfastx_obj, [sequence_name])
+                        if (env_length < tlen):
+                            sequence = mask_sequence_name(sequence, subhit.env_from, subhit.env_to, pyfastx_obj)
+                        write_fasta_sequences(sequence, tmp_family_sequences_path, "a")
+                        filtered_sequences.append(sequence[0][0]) # [0][0] is the header (list of tuples)
+            print(filtered_sequences)
+            print(len(top_hits))
+            exit()
+
+                    # if (exit_flag or env_length >= length_threshold * qlen): # only evalue filter when exiting, taking in shorter sequences
+                    #     sequence_name = columns[0]
+                    #     tlen = float(columns[2])
+                    #     if (env_length < tlen):
+                    #         sequence_name = mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict)
+                    #     else:
+                    #         write_fasta_sequences
+
+                    #     filtered_sequences.append(sequence_name)
 
     # Write the results to the output file
     # with open(tmp_domtblout_path, "w") as output_file:
@@ -217,6 +268,8 @@ def run_hmmsearch(pyhmmer_seqs):
     # subprocess.run(hmmsearch_command, stdout=subprocess.DEVNULL)
 
     log_time(start_time, "run_hmmsearch (pyhmmer): ")
+
+    return filtered_sequences
 
 #=========================== UPDATED UP TO HERE ===========================================#
 
@@ -306,17 +359,6 @@ def extract_sequence_names_from_domtblout():
             sequence_names.append(sequence_name)
 
     return sequence_names
-
-def mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict):
-    masked_name = f"{sequence_name}/{env_from}_{env_to}"
-
-    if sequence_name in mgnifams_fasta_dict:
-        sub_sequence = str(mgnifams_fasta_dict[sequence_name].seq[env_from - 1:env_to])  # -1 because Python uses 0-based indexing
-        masked_seq_record = SeqRecord(Seq(sub_sequence), id=masked_name, description="")
-
-        write_fasta_sequences(masked_seq_record, tmp_family_sequences_path, "a")
-
-    return masked_name
 
 def filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag):
     start_time = time.time()
@@ -540,7 +582,7 @@ def main():
 
             if not exit_flag: # main strategy branch
                 run_hmmbuild(tmp_seed_msa_path, arg_chunk_num)
-                run_hmmsearch(pyhmmer_seqs)
+                filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 exit()
 
                 recruited_sequence_names = extract_sequence_names_from_domtblout()
