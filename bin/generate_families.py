@@ -181,7 +181,7 @@ def run_initial_msa(members, pyfastx_obj):
 
     log_time(start_time, "run_initial_msa (pyfamsa): ")
 
-def run_hmmbuild(msa_file, chunk_num):
+def run_hmmbuild(msa_file, hand=False): # TODO remove msa_file arg if always called for same global file
     """Runs HMMER's hmmbuild using pyhmmer."""
     start_time = time.time()                    
 
@@ -189,9 +189,10 @@ def run_hmmbuild(msa_file, chunk_num):
 
     with pyhmmer.easel.MSAFile(msa_file, digital=True, alphabet=alphabet) as msa_file:
         msa = msa_file.read()
-    msa.name = f"protein_family_{chunk_num}".encode()
+    msa.name = f"protein_family_{arg_chunk_num}".encode()
 
-    builder = pyhmmer.plan7.Builder(alphabet)
+    architecture = "hand" if hand else "fast"
+    builder = pyhmmer.plan7.Builder(alphabet, architecture=architecture)
     background = pyhmmer.plan7.Background(alphabet)
     hmm, _, _ = builder.build_msa(msa, background)
     print(hmm.consensus) # TODO write to file and emit as output
@@ -353,10 +354,6 @@ def move_produced_models(iteration):
     shutil.move(tmp_domtblout_path,    os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
     shutil.move(tmp_rf_path,           os.path.join(rf_folder,        f'{arg_chunk_num}_{iteration}.txt'))
 
-def get_final_family_original_names(filtered_seq_names):
-    family_members = {name.split('/')[0] for name in filtered_seq_names}
-    return family_members
-
 def remove_tmp_files():
     for item in os.listdir(tmp_folder):
         item_path = os.path.join(tmp_folder, item)
@@ -445,7 +442,7 @@ def main():
             # original_sequence_names = trim_seed_msa() # TODO remove from here?
 
             if not exit_flag: # main strategy branch
-                run_hmmbuild(tmp_seed_msa_path, arg_chunk_num)
+                run_hmmbuild(tmp_seed_msa_path)
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
 
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
@@ -470,12 +467,12 @@ def main():
 
             # TODO exit strategy from here
             if exit_flag: # exit strategy branch
-                exit()
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
-                run_hmmbuild(tmp_seed_msa_path, ["-O", tmp_seed_msa_sto_path])
-                run_hmmbuild(tmp_seed_msa_sto_path, ["--hand"])
-                extract_RF()
+                run_hmmbuild(tmp_seed_msa_path, hand=True)
+                extract_RF() # TODO further test/optimise
+                exit()
+                # TODO
                 run_hmmsearch()
                 filtered_seq_names = filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag) # also writes in tmp_family_sequences_path
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
