@@ -373,7 +373,7 @@ def append_family_metadata(iteration):
         file.writelines(f"{iteration},{family_size},{protein_rep},{region}\n")
 
 def move_produced_models(iteration):
-    # shutil.move(tmp_seed_msa_sto_path, os.path.join(seed_msa_folder,  f'{arg_chunk_num}_{iteration}.sto')) # TODO check if finally needed
+    shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder,  f'{arg_chunk_num}_{iteration}.sto')) # TODO tmp_seed_msa_path is currently tmp_seed_msa_sto_path
     shutil.move(tmp_align_msa_path,    os.path.join(align_msa_folder, f'{arg_chunk_num}_{iteration}.sto'))
     shutil.move(tmp_hmm_path,          os.path.join(hmm_folder,       f'{arg_chunk_num}_{iteration}.hmm'))
     shutil.move(tmp_domtblout_path,    os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
