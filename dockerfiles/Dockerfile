@@ -4,26 +4,17 @@ FROM continuumio/miniconda3:latest
 # Set the working directory
 WORKDIR /app
 
-# Configure Conda to only use conda-forge and bioconda channels
 RUN conda config --add channels conda-forge \
     && conda config --add channels bioconda \
     && conda config --set channel_priority strict
-    
-RUN conda install -y \
-    pandas \
-    numpy \
-    bioconda::mafft=7.520 \
-    bioconda::hmmer=3.4.0 \
-    bioconda::easel=0.49
 
-# Create a virtual environment (optional)
-RUN conda create -n myenv pandas numpy bioconda::mafft=7.520 bioconda::hmmer=3.4.0 bioconda::easel=0.49
+RUN conda install -y bioconda::easel=0.49
 
-# Activate the environment and set it as the default for the Docker container
-SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
+# Install Python dependencies using pip
+RUN pip install pandas pyfastx pyfamsa pyhmmer biopython
 
-# Install Biopython using pip (since it's not available in the conda channels)
-RUN pip install biopython
+# Set environment variable to ensure Conda is properly configured
+ENV PATH /opt/conda/bin:$PATH
 
-# Set environment variable to use conda environment by default
-ENV PATH /opt/conda/envs/myenv/bin:$PATH
+# Set default shell
+SHELL ["/bin/bash", "-c"]
