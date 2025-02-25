@@ -407,6 +407,7 @@ def main():
 
         total_checked_sequences = family_members
         filtered_seq_names = []
+        hand_flag = False
         discard_flag = False
         exit_flag = False
         family_iteration = 0
@@ -449,7 +450,7 @@ def main():
             if exit_flag: # exit strategy branch
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
-                run_hmmbuild(tmp_seed_msa_path, hand=True)
+                run_hmmbuild(tmp_seed_msa_path, hand=hand_flag)
                 extract_RF()
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
@@ -474,6 +475,7 @@ def main():
             with open(log_file, 'a') as file:
                 file.write("total_checked_sequences calculated and starting run_esl_weight\n")
             run_esl_weight() # removes redundant sequences
+            hand_flag = True # means the algorithm reached here at elast once, generating a stockholm format alignment
 
         # Exiting family loop
         if (discard_flag): # unsuccessfully
