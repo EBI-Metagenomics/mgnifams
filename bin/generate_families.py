@@ -162,7 +162,6 @@ def run_initial_msa(members, pyfastx_obj):
     
     # Convert sequences to pyfamsa.Sequence objects
     sequences = [pyfamsa.Sequence(member.encode(), str(pyfastx_obj[member]).encode()) for member in members if member in pyfastx_obj]
-    
     if not sequences:
         raise ValueError("No valid sequences found for alignment.")
 
@@ -270,6 +269,9 @@ def run_hmmalign():
 
     return [name.decode() for name in hmmalign_res.names], num_seqs_result
 
+def unmask_sequence_names(names):
+    return [name.split('/')[0] for name in names]
+
 def get_sequences_from_stockholm(file): # TODO remove and do with pyhmmer obj instead?
     with open(file, "r") as f:
         return AlignIO.read(f, "stockholm")
@@ -301,8 +303,9 @@ def run_esl_weight(threshold=0.8):
 
     log_time(start_time, "run_esl_weight: ")
 
+# TODO in here
 def extract_RF():
-    with open(tmp_seed_msa_sto_path, 'r') as file:
+    with open(tmp_seed_msa_path, 'r') as file: # TODO maybe change if .sto file is parsed or changed
         # Extract lines starting with "#=GC RF"
         relevant_lines = [line.strip() for line in file if line.startswith("#=GC RF")]
 
@@ -315,8 +318,17 @@ def extract_RF():
     with open(tmp_rf_path, 'w') as output_file:
         output_file.write(combined_sequence)
 
-# TODO in here
+def check_seed_membership(original_sequence_names, filtered_seq_names):
+    def extract_first_part(sequence_name):
+        return sequence_name.split('/')[0]
 
+    original_first_parts = set(map(extract_first_part, original_sequence_names))
+    filtered_first_parts = set(map(extract_first_part, filtered_seq_names))
+    common_first_parts = original_first_parts & filtered_first_parts
+    common_count = len(common_first_parts)
+    percentage_membership = common_count / len(original_sequence_names)
+
+    return percentage_membership
 #############
 
 def append_family_file(iteration, family_members):
@@ -373,31 +385,6 @@ def remove_tmp_files():
         if os.path.isfile(item_path):
             os.remove(item_path)
 
-
-#=========================== UPDATED UP TO HERE ===========================================#
-
-def run_hmmbuild_hmmer(msa_file, extra_args): # TODO remove?
-    start_time = time.time()                    
-
-    hmmbuild_command = ["hmmbuild", "--cpu", arg_cpus] + extra_args + [tmp_hmm_path, msa_file]
-    subprocess.run(hmmbuild_command, stdout=subprocess.DEVNULL)
-    
-    with open(log_file, 'a') as file:
-        file.write("run_hmmbuild: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-def check_seed_membership(original_sequence_names, filtered_seq_names):
-    def extract_first_part(sequence_name):
-        return sequence_name.split('/')[0]
-
-    original_first_parts = set(map(extract_first_part, original_sequence_names))
-    filtered_first_parts = set(map(extract_first_part, filtered_seq_names))
-    common_first_parts = original_first_parts & filtered_first_parts
-    common_count = len(common_first_parts)
-    percentage_membership = common_count / len(original_sequence_names)
-
-    return percentage_membership
-
 def main():
     parse_args()
     define_globals()
@@ -415,7 +402,8 @@ def main():
             with open(log_file, 'a') as file:
                 file.write("Exiting all...")
             break
-
+        
+        original_sequence_names = family_members
         write_family_fasta_file(family_members, mgnifams_pyfastx_obj)
 
         run_initial_msa(family_members, mgnifams_pyfastx_obj)
@@ -448,7 +436,7 @@ def main():
                     break
 
                 recruited_sequence_names, num_seqs_for_esl = run_hmmalign()
-                unmasked_recruited_sequence_names = [seq.split('/')[0] for seq in recruited_sequence_names]
+                unmasked_recruited_sequence_names = unmask_sequence_names(recruited_sequence_names)
                 if (num_seqs_for_esl > 70000): # TODO remove if using mmseqs instead
                     discard_flag = True
                     with open(log_file, 'a') as file:
@@ -466,16 +454,15 @@ def main():
             if exit_flag: # exit strategy branch
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
-                run_hmmbuild(tmp_seed_msa_path, hand=True)
+                run_hmmbuild(tmp_seed_msa_path, hand=True) # TODO debug consensus same length us RF
                 extract_RF()
+                exit()
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
                     break
 
-                # TODO
-                exit()
-                membership_percentage = check_seed_membership(original_sequence_names, filtered_seq_names)
+                membership_percentage = check_seed_membership(original_sequence_names, unmask_sequence_names(filtered_seq_names))
                 if (membership_percentage < 0.9): 
                     discard_flag = True
                     with open(log_file, 'a') as file:
@@ -485,7 +472,7 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                run_hmmalign()
+                run_hmmalign() # final full MSA, including smaller sequences
                 break
 
             # main strategy branch continue
