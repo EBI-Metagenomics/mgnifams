@@ -40,8 +40,12 @@ process GENERATE_FAMILIES {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        mafft: \$(mafft --version 2>&1 | sed 's/^v//' | sed 's/ (.*)//')
-        hmmer: \$(echo \$(hmmbuild -h | grep HMMER | sed 's/# HMMER //' | sed 's/ .*//' 2>&1))
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        pandas: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pandas'))")
+        pyfastx: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfastx'))")
+        pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
+        pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
+        biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
         easel: \$(esl-reformat -h | grep -o '^# Easel [0-9.]*' | sed 's/^# Easel *//')
     END_VERSIONS
     """
@@ -75,8 +79,12 @@ process GENERATE_FAMILIES {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        mafft: \$(mafft --version 2>&1 | sed 's/^v//' | sed 's/ (.*)//')
-        hmmer: \$(echo \$(hmmbuild -h | grep HMMER | sed 's/# HMMER //' | sed 's/ .*//' 2>&1))
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        pandas: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pandas'))")
+        pyfastx: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfastx'))")
+        pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
+        pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
+        biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
         easel: \$(esl-reformat -h | grep -o '^# Easel [0-9.]*' | sed 's/^# Easel *//')
     END_VERSIONS
     """
