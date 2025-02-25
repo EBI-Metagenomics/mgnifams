@@ -7,14 +7,14 @@ import time
 import pyfastx
 import pyfamsa
 import pyhmmer
-
-import subprocess
 import shutil
-import numpy as np
-from Bio.Seq import Seq # TODO remove
-from Bio.SeqRecord import SeqRecord
-from Bio import SeqIO
+import subprocess
+
 from Bio import AlignIO
+# from Bio import SeqIO # TODO try to remove
+
+# import numpy as np # TODO remove if not trimming with own method
+# from Bio.Seq import Seq # TODO probably remove
 
 
 def parse_args(args=None):
@@ -270,143 +270,9 @@ def run_hmmalign():
 
     return [name.decode() for name in hmmalign_res.names], num_seqs_result
 
-#=========================== UPDATED UP TO HERE ===========================================#
-
-def run_msa(family_size):
-    start_time = time.time()
-    
-    if (family_size > 1):
-        mafft_command = ["mafft", "--quiet", "--retree", "2", "--maxiterate", "2", "--thread", "-1", tmp_family_sequences_path]
-    else:
-        with open(log_file, 'a') as file:
-            file.write("Running 1-sequence version of mafft.\n")
-        mafft_command = ["mafft", "--quiet", "--retree", "2", "--thread", "-1", tmp_family_sequences_path]
-
-    with open(tmp_seed_msa_path, "w") as output_handle:
-        subprocess.run(mafft_command, stdout=output_handle)
-
-    with open(log_file, 'a') as file:
-        file.write("run_msa: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-def read_fasta_to_matrix(file_path):
-    records = list(SeqIO.parse(file_path, "fasta"))
-    max_length = max(len(record.seq) for record in records)
-    matrix = np.zeros((len(records), max_length), dtype=np.dtype('U1'))
-    original_names = []
-
-    for i, record in enumerate(records):
-        original_names.append(record.id)
-        matrix[i, :len(record.seq)] = list(str(record.seq))
-
-    return matrix, original_names
-
-def calculate_trim_positions(sequence_matrix, occupancy_threshold):
-    numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
-    num_rows = numeric_matrix.shape[0]
-    column_sums = np.sum(numeric_matrix, axis=0)
-    column_sums_percentage = column_sums / num_rows
-    start_position = np.argmax(column_sums_percentage > occupancy_threshold)
-    end_position = len(column_sums_percentage) - np.argmax(column_sums_percentage[::-1] > occupancy_threshold) - 1
-
-    return start_position, end_position
-
-def write_trimmed_sequences(sequence_matrix_trimmed, original_sequence_names):
-    trimmed_records = []
-    for i, sequence in enumerate(sequence_matrix_trimmed):
-        trimmed_sequence = ''.join(map(str, sequence))
-        original_name = original_sequence_names[i]
-        trimmed_record = SeqIO.SeqRecord(Seq(trimmed_sequence), id=original_name, description="")
-        trimmed_records.append(trimmed_record)
-
-    with open(tmp_seed_msa_path, "w") as output_fasta:
-        SeqIO.write(trimmed_records, output_fasta, "fasta")
-        
-def trim_seed_msa(occupancy_threshold=0.5):
-    start_time = time.time()
-
-    sequence_matrix, original_sequence_names = read_fasta_to_matrix(tmp_seed_msa_path)
-    start_position, end_position = calculate_trim_positions(sequence_matrix, occupancy_threshold)
-    sequence_matrix_trimmed = sequence_matrix[:, start_position:end_position+1]
-    write_trimmed_sequences(sequence_matrix_trimmed, original_sequence_names)
-    
-    with open(log_file, 'a') as file:
-        file.write("trim_seed_msa: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-    return original_sequence_names
-
-def run_hmmbuild_hmmer(msa_file, extra_args): # TODO remove
-    start_time = time.time()                    
-
-    hmmbuild_command = ["hmmbuild", "--cpu", arg_cpus] + extra_args + [tmp_hmm_path, msa_file]
-    subprocess.run(hmmbuild_command, stdout=subprocess.DEVNULL)
-    
-    with open(log_file, 'a') as file:
-        file.write("run_hmmbuild: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-def extract_sequence_names_from_domtblout():
-    sequence_names = []
-
-    with open(tmp_domtblout_path, 'r') as file:
-        for line in file:
-            if line.startswith('#') or line.strip() == '':
-                continue
-            columns = line.split()
-            sequence_name = columns[0]
-            sequence_names.append(sequence_name)
-
-    return sequence_names
-
-def filter_recruited(evalue_threshold, length_threshold, mgnifams_fasta_dict, exit_flag):
-    start_time = time.time()
-
-    os.remove(tmp_family_sequences_path)
-    filtered_sequences = []
-    with open(tmp_domtblout_path, 'r') as file:
-        for line in file:
-            if not line.startswith('#'):
-                columns = line.split()
-                evalue = float(columns[6])
-                qlen = float(columns[5])
-                env_from = int(columns[19])
-                env_to = int(columns[20])
-                env_length = env_to - env_from + 1
-                if evalue < evalue_threshold:
-                    if (exit_flag or env_length >= length_threshold * qlen): # only evalue filter when exiting, taking in shorter sequences
-                        sequence_name = columns[0]
-                        tlen = float(columns[2])
-                        if (env_length < tlen):
-                            sequence_name = mask_sequence_name(sequence_name, env_from, env_to, mgnifams_fasta_dict)
-                        else:
-                            write_fasta_sequences([mgnifams_fasta_dict[sequence_name]], tmp_family_sequences_path, "a")
-
-                        filtered_sequences.append(sequence_name)
-    
-    with open(log_file, 'a') as file:
-        file.write("filter_recruited: ")
-        file.write(str(time.time() - start_time) + "\n")
-
-    return filtered_sequences
-
-def check_seed_membership(original_sequence_names, filtered_seq_names):
-    def extract_first_part(sequence_name):
-        return sequence_name.split('/')[0]
-
-    original_first_parts = set(map(extract_first_part, original_sequence_names))
-    filtered_first_parts = set(map(extract_first_part, filtered_seq_names))
-    common_first_parts = original_first_parts & filtered_first_parts
-    common_count = len(common_first_parts)
-    percentage_membership = common_count / len(original_sequence_names)
-
-    return percentage_membership
-
-def get_sequences_from_stockholm(file): # TODO remove?
+def get_sequences_from_stockholm(file): # TODO remove and do with pyhmmer obj instead?
     with open(file, "r") as f:
-        alignment = AlignIO.read(f, "stockholm")
-
-    return alignment
+        return AlignIO.read(f, "stockholm")
 
 def run_esl_weight(threshold=0.8):
     start_time = time.time()
@@ -431,43 +297,14 @@ def run_esl_weight(threshold=0.8):
                 file.write("Rerunning esl_weight; ")
             shutil.copy(tmp_esl_weight_path, tmp_intermediate_esl_path)
 
-    with open(log_file, 'a') as file:
-        file.write("run_esl_weight: ")
-        file.write(str(time.time() - start_time) + "\n")
+    shutil.copy(tmp_esl_weight_path, tmp_family_sequences_path) # TODO update with extra logic after Alex strategy's implemented
 
-def extract_RF():
-    with open(tmp_seed_msa_sto_path, 'r') as file:
-        # Extract lines starting with "#=GC RF"
-        relevant_lines = [line.strip() for line in file if line.startswith("#=GC RF")]
+    log_time(start_time, "run_esl_weight: ")
 
-    # Keep only 'x's and '.'
-    cleaned_lines = [''.join(filter(lambda c: c == 'x' or c == '.', line)) for line in relevant_lines]
+# TODO in here
 
-    # Combine lines into a single sequence
-    combined_sequence = ''.join(cleaned_lines)
 
-    with open(tmp_rf_path, 'w') as output_file:
-        output_file.write(combined_sequence)
-        
-def filter_out_redundant():
-    # Step 1: Read identifiers from tmp_esl_weight_path using AlignIO
-    identifiers = set()
-    alignment = get_sequences_from_stockholm(tmp_esl_weight_path)
-    for record in alignment:
-        identifiers.add(record.id)
-
-    # Step 2: Read and filter sequences in tmp_family_sequences_path
-    filtered_sequences = []
-    kept_identifiers = [] 
-    for record in SeqIO.parse(tmp_family_sequences_path, "fasta"):
-        if record.id in identifiers:
-            filtered_sequences.append(record)
-            kept_identifiers.append(record.id.split('/')[0])
-
-    # Step 3: Write the filtered sequences back
-    write_fasta_sequences(filtered_sequences, tmp_family_sequences_path, "w")
-
-    return kept_identifiers
+#############
 
 def append_family_file(iteration, family_members):
     lines = [f"{iteration}\t{member}\n" for member in family_members]
@@ -526,6 +363,45 @@ def remove_tmp_files():
         item_path = os.path.join(tmp_folder, item)
         if os.path.isfile(item_path):
             os.remove(item_path)
+
+
+#=========================== UPDATED UP TO HERE ===========================================#
+
+def run_hmmbuild_hmmer(msa_file, extra_args): # TODO remove?
+    start_time = time.time()                    
+
+    hmmbuild_command = ["hmmbuild", "--cpu", arg_cpus] + extra_args + [tmp_hmm_path, msa_file]
+    subprocess.run(hmmbuild_command, stdout=subprocess.DEVNULL)
+    
+    with open(log_file, 'a') as file:
+        file.write("run_hmmbuild: ")
+        file.write(str(time.time() - start_time) + "\n")
+
+def check_seed_membership(original_sequence_names, filtered_seq_names):
+    def extract_first_part(sequence_name):
+        return sequence_name.split('/')[0]
+
+    original_first_parts = set(map(extract_first_part, original_sequence_names))
+    filtered_first_parts = set(map(extract_first_part, filtered_seq_names))
+    common_first_parts = original_first_parts & filtered_first_parts
+    common_count = len(common_first_parts)
+    percentage_membership = common_count / len(original_sequence_names)
+
+    return percentage_membership
+
+def extract_RF():
+    with open(tmp_seed_msa_sto_path, 'r') as file:
+        # Extract lines starting with "#=GC RF"
+        relevant_lines = [line.strip() for line in file if line.startswith("#=GC RF")]
+
+    # Keep only 'x's and '.'
+    cleaned_lines = [''.join(filter(lambda c: c == 'x' or c == '.', line)) for line in relevant_lines]
+
+    # Combine lines into a single sequence
+    combined_sequence = ''.join(cleaned_lines)
+
+    with open(tmp_rf_path, 'w') as output_file:
+        output_file.write(combined_sequence)
 
 def main():
     parse_args()
@@ -593,9 +469,9 @@ def main():
                     with open(converged_families_file, 'a') as file:
                         file.write(f"{iteration}\n")
 
-            # TODO from here
-            exit()
+            # TODO exit strategy from here
             if exit_flag: # exit strategy branch
+                exit()
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
                 run_hmmbuild(tmp_seed_msa_path, ["-O", tmp_seed_msa_sto_path])
@@ -624,20 +500,20 @@ def main():
             total_checked_sequences += list(new_recruited_sequences)
             with open(log_file, 'a') as file:
                 file.write("total_checked_sequences calculated and starting run_esl_weight\n")
-            run_esl_weight()
-            family_members = filter_out_redundant() # also writes in tmp_family_sequences_path
+            run_esl_weight() # removes redundant sequences
 
         # Exiting family loop
         if (discard_flag): # unsuccessfully
             with open(log_file, 'a') as file:
                 file.write("Discarding cluster " + family_rep + "\n")
             
-            with open(discarded_clusters_file, 'a') as outfile:
+            with open(discarded_clusters_file, 'a') as outfile:  # TODO + reason for multiqc
                 outfile.write(str(family_rep) + "\n")
-            iteration -= 1
+            iteration -= 1 # keep proper track of family ids
         else: # successfully
             with open(successful_clusters_file, 'a') as outfile:
                 outfile.write(str(family_rep) + "\n")
+            
             append_family_file(iteration, filtered_seq_names)
             append_family_metadata(iteration)
             move_produced_models(iteration)
