@@ -2,13 +2,15 @@
 
 import argparse
 import os
-import pandas as pd
 import time
+import shutil
+import subprocess
+
+import pandas as pd
 import pyfastx
 import pyfamsa
 import pyhmmer
-import shutil
-import subprocess
+
 from Bio import AlignIO
 
 def parse_args(args=None):
