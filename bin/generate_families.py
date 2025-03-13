@@ -277,27 +277,37 @@ def get_sequences_from_stockholm(file): # TODO remove and do with pyhmmer obj in
 def run_esl_weight(threshold=0.8):
     start_time = time.time()
 
-    shutil.copy(tmp_align_msa_path, tmp_intermediate_esl_path)
-    with open(log_file, 'a') as file:
-        file.write("Files moved to tmp_intermediate_esl_path; ")
+    alphabet = pyhmmer.easel.Alphabet.amino()
 
-    while True:
-        esl_weight_command = ["esl-weight", "--amino", "-f", "--idf", str(threshold), "-o", tmp_esl_weight_path, tmp_intermediate_esl_path]
-        subprocess.run(esl_weight_command, stdout=subprocess.DEVNULL)
-        with open(log_file, 'a') as file:
-            file.write("esl_weight_command subprocess finished.\n")
-        number_of_remaining_sequences = len(get_sequences_from_stockholm(tmp_esl_weight_path))
-        with open(log_file, 'a') as file:
-            file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
-        if (number_of_remaining_sequences <= 2000):
-            break
-        else:
-            threshold -= 0.1
-            with open(log_file, 'a') as file:
-                file.write("Rerunning esl_weight; ")
-            shutil.copy(tmp_esl_weight_path, tmp_intermediate_esl_path)
+    # with pyhmmer.easel.DigitalMSA(tmp_align_msa_path, digital=True, alphabet=alphabet) as msa_file:
+    #     msa = msa_file.read()
 
-    shutil.copy(tmp_esl_weight_path, tmp_seed_msa_path) # TODO update with extra logic after Alex strategy's implemented
+    with pyhmmer.easel.MSAFile(tmp_align_msa_path, digital=True, alphabet=alphabet) as msa_file:
+        msa = msa_file.read()
+    msa2 = msa.identity_filter(max_identity=0.8) # TODO debug
+    print(msa2)
+    exit()
+    # shutil.copy(tmp_align_msa_path, tmp_intermediate_esl_path)
+    # with open(log_file, 'a') as file:
+    #     file.write("Files moved to tmp_intermediate_esl_path; ")
+
+    # while True:
+    #     esl_weight_command = ["esl-weight", "--amino", "-f", "--idf", str(threshold), "-o", tmp_esl_weight_path, tmp_intermediate_esl_path]
+    #     subprocess.run(esl_weight_command, stdout=subprocess.DEVNULL)
+    #     with open(log_file, 'a') as file:
+    #         file.write("esl_weight_command subprocess finished.\n")
+    #     number_of_remaining_sequences = len(get_sequences_from_stockholm(tmp_esl_weight_path))
+    #     with open(log_file, 'a') as file:
+    #         file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
+    #     if (number_of_remaining_sequences <= 2000):
+    #         break
+    #     else:
+    #         threshold -= 0.1
+    #         with open(log_file, 'a') as file:
+    #             file.write("Rerunning esl_weight; ")
+    #         shutil.copy(tmp_esl_weight_path, tmp_intermediate_esl_path)
+
+    # shutil.copy(tmp_esl_weight_path, tmp_seed_msa_path) # TODO update with extra logic after Alex strategy's implemented
 
     log_time(start_time, "run_esl_weight: ")
 

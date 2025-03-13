@@ -5,8 +5,8 @@ process GENERATE_FAMILIES {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'quay.io/microbiome-informatics/mgnifams:3.0.0' :
-        'quay.io/microbiome-informatics/mgnifams:3.0.0' }"
+        'quay.io/microbiome-informatics/mgnifams:3.1.0' :
+        'quay.io/microbiome-informatics/mgnifams:3.1.0' }"
     
     input:
     tuple val(meta) , path(clusters_chunk)
@@ -46,7 +46,6 @@ process GENERATE_FAMILIES {
         pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
         pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
         biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
-        easel: \$(esl-reformat -h | grep -o '^# Easel [0-9.]*' | sed 's/^# Easel *//')
     END_VERSIONS
     """
 
@@ -85,7 +84,6 @@ process GENERATE_FAMILIES {
         pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
         pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
         biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
-        easel: \$(esl-reformat -h | grep -o '^# Easel [0-9.]*' | sed 's/^# Easel *//')
     END_VERSIONS
     """
 }
