@@ -257,10 +257,11 @@ def run_hmmalign():
             hmmalign_res = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
             with open(tmp_align_msa_path, "wb") as outfile:
                 hmmalign_res.write(outfile, format="stockholm") # TODO a2m here? (expected 'stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips')
-                # TODO manipulate the object below
-                # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
-                #     print(name.decode(), " ", aligned)
-                num_seqs_result = len(hmmalign_res.names)
+
+            # TODO manipulate the object below
+            # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
+            #     print(name.decode(), " ", aligned)
+            num_seqs_result = len(hmmalign_res.names)
 
     log_time(start_time, "run_hmmalign (pyhmmer): ")
 
