@@ -38,7 +38,6 @@ def define_globals():
         tmp_family_sequences_path, tmp_seed_msa_path, \
         tmp_seed_msa_sto_path, tmp_align_msa_path, \
         tmp_hmm_path, tmp_domtblout_path, \
-        tmp_intermediate_esl_path, tmp_esl_weight_path, \
         tmp_sequences_to_remove_path, tmp_rf_path
 
     logs_folder                = "logs"
@@ -69,8 +68,6 @@ def define_globals():
     tmp_align_msa_path           = os.path.join(tmp_folder, 'align_msa.sto')
     tmp_hmm_path                 = os.path.join(tmp_folder, 'model.hmm')
     tmp_domtblout_path           = os.path.join(tmp_folder, 'domtblout.txt')
-    tmp_intermediate_esl_path    = os.path.join(tmp_folder, 'intermediate_esl.fa')
-    tmp_esl_weight_path          = os.path.join(tmp_folder, 'esl_weight.fa')
     tmp_sequences_to_remove_path = os.path.join(tmp_folder, 'sequences_to_remove.txt')
     tmp_rf_path                  = os.path.join(tmp_folder, 'rf.txt')
 
@@ -244,7 +241,7 @@ def run_hmmsearch(pyhmmer_seqs, pyfastx_obj, exit_flag):
 
     return filtered_sequences
 
-def run_hmmalign():
+def run_hmmalign(format="afa"):
     """Runs HMMER's hmmalign using pyhmmer."""
     start_time = time.time()
 
@@ -256,7 +253,7 @@ def run_hmmalign():
             seqs = seq_file.read_block()
             hmmalign_res = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
             with open(tmp_align_msa_path, "wb") as outfile:
-                hmmalign_res.write(outfile, format="afa") # TODO stockholm, and then Bateman trim? (expected 'stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips')
+                hmmalign_res.write(outfile, format=format) # TODO stockholm, and then Bateman trim? (expected 'stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips')
 
             # TODO manipulate the object below
             # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
@@ -274,45 +271,33 @@ def get_sequences_from_stockholm(file): # TODO remove and do with pyhmmer obj in
     with open(file, "r") as f:
         return AlignIO.read(f, "stockholm")
 
-def run_esl_weight(threshold=0.8):
+def run_pytrimal(threshold=0.8):
     start_time = time.time()
 
-    # Load the MSA and remove redundant sequences
-    msa = pytrimal.Alignment.load(tmp_intermediate_esl_path)
+    # Load the MSA 
+    msa = pytrimal.Alignment.load(tmp_align_msa_path)
+    # and remove redundant sequences
+    while True:
+        # print(len(list(msa.names))) # debug
+        repTrimmer = pytrimal.RepresentativeTrimmer(identity_threshold=threshold)
+        msa = repTrimmer.trim(msa)
 
-    # TODO while True:
-    print(len(list(msa.names)))
-    # # baseTrimmer = pytrimal.BaseTrimmer()
-    repTrimmer = pytrimal.RepresentativeTrimmer(identity_threshold=threshold)
-    trimmed = repTrimmer.trim(msa)
-    print(len(list(trimmed.names)))
+        with open(log_file, 'a') as file:
+            file.write("run_pytrimal finished.\n")
+        number_of_remaining_sequences = len(list(msa.names))
+        with open(log_file, 'a') as file:
+            file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
 
-    # TODO write alignment to tmp_esl_weight_path
+        if (number_of_remaining_sequences <= 2000):
+            break
+        else:
+            threshold -= 0.1
+            with open(log_file, 'a') as file:
+                file.write("Rerunning run_pytrimal; ")
 
-    # shutil.copy(tmp_align_msa_path, tmp_intermediate_esl_path)
-    # with open(log_file, 'a') as file:
-    #     file.write("Files moved to tmp_intermediate_esl_path; ")
+    msa.dump(tmp_seed_msa_path)
 
-    # while True:
-    #     esl_weight_command = ["esl-weight", "--amino", "-f", "--idf", str(threshold), "-o", tmp_esl_weight_path, tmp_intermediate_esl_path]
-    #     subprocess.run(esl_weight_command, stdout=subprocess.DEVNULL)
-    #     with open(log_file, 'a') as file:
-    #         file.write("esl_weight_command subprocess finished.\n")
-    #     number_of_remaining_sequences = len(get_sequences_from_stockholm(tmp_esl_weight_path))
-    #     with open(log_file, 'a') as file:
-    #         file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
-    #     if (number_of_remaining_sequences <= 2000):
-    #         break
-    #     else:
-    #         threshold -= 0.1
-    #         with open(log_file, 'a') as file:
-    #             file.write("Rerunning esl_weight; ")
-    #         shutil.copy(tmp_esl_weight_path, tmp_intermediate_esl_path)
-
-    # shutil.copy(tmp_esl_weight_path, tmp_seed_msa_path) # TODO update with extra logic after Alex strategy's implemented
-
-    log_time(start_time, "run_esl_weight: ")
-    exit()
+    log_time(start_time, "run_pytrimal: ")
 
 def extract_RF():
     with open(tmp_seed_msa_path, 'r') as file: # TODO maybe change if .sto file is parsed or changed
@@ -480,15 +465,15 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                run_hmmalign() # final full MSA, including smaller sequences
+                run_hmmalign("stockholm") # final full MSA, including smaller sequences
                 break
 
             # main strategy branch continue
             total_checked_sequences += list(new_recruited_sequences)
             with open(log_file, 'a') as file:
-                file.write("total_checked_sequences calculated and starting run_esl_weight\n")
-            run_esl_weight() # removes redundant sequences
-            hand_flag = True # means the algorithm reached here at elast once, generating a stockholm format alignment
+                file.write("total_checked_sequences calculated and starting run_pytrimal\n")
+            run_pytrimal() # removes redundant sequences
+            hand_flag = False # TODO change to True for Stockholm alignment (will probably need to reforamt pytrimal) # means the algorithm reached here at least once, generating a stockholm format alignment
 
         # Exiting family loop
         if (discard_flag): # unsuccessfully

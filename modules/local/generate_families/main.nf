@@ -5,8 +5,8 @@ process GENERATE_FAMILIES {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'quay.io/microbiome-informatics/mgnifams:3.1.0' :
-        'quay.io/microbiome-informatics/mgnifams:3.1.0' }"
+        'quay.io/microbiome-informatics/mgnifams:3.2.0' :
+        'quay.io/microbiome-informatics/mgnifams:3.2.0' }"
     
     input:
     tuple val(meta) , path(clusters_chunk)
