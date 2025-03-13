@@ -4,12 +4,12 @@ import argparse
 import os
 import time
 import shutil
-import subprocess
 
 import pandas as pd
 import pyfastx
 import pyfamsa
 import pyhmmer
+import pytrimal
 
 from Bio import AlignIO
 
@@ -256,7 +256,7 @@ def run_hmmalign():
             seqs = seq_file.read_block()
             hmmalign_res = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
             with open(tmp_align_msa_path, "wb") as outfile:
-                hmmalign_res.write(outfile, format="stockholm") # TODO a2m here? (expected 'stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips')
+                hmmalign_res.write(outfile, format="afa") # TODO stockholm, and then Bateman trim? (expected 'stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips')
 
             # TODO manipulate the object below
             # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
@@ -277,16 +277,18 @@ def get_sequences_from_stockholm(file): # TODO remove and do with pyhmmer obj in
 def run_esl_weight(threshold=0.8):
     start_time = time.time()
 
-    alphabet = pyhmmer.easel.Alphabet.amino()
+    # Load the MSA and remove redundant sequences
+    msa = pytrimal.Alignment.load(tmp_intermediate_esl_path)
 
-    # with pyhmmer.easel.DigitalMSA(tmp_align_msa_path, digital=True, alphabet=alphabet) as msa_file:
-    #     msa = msa_file.read()
+    # TODO while True:
+    print(len(list(msa.names)))
+    # # baseTrimmer = pytrimal.BaseTrimmer()
+    repTrimmer = pytrimal.RepresentativeTrimmer(identity_threshold=threshold)
+    trimmed = repTrimmer.trim(msa)
+    print(len(list(trimmed.names)))
 
-    with pyhmmer.easel.MSAFile(tmp_align_msa_path, digital=True, alphabet=alphabet) as msa_file:
-        msa = msa_file.read()
-    msa2 = msa.identity_filter(max_identity=0.8) # TODO debug
-    print(msa2)
-    exit()
+    # TODO write alignment to tmp_esl_weight_path
+
     # shutil.copy(tmp_align_msa_path, tmp_intermediate_esl_path)
     # with open(log_file, 'a') as file:
     #     file.write("Files moved to tmp_intermediate_esl_path; ")
@@ -310,6 +312,7 @@ def run_esl_weight(threshold=0.8):
     # shutil.copy(tmp_esl_weight_path, tmp_seed_msa_path) # TODO update with extra logic after Alex strategy's implemented
 
     log_time(start_time, "run_esl_weight: ")
+    exit()
 
 def extract_RF():
     with open(tmp_seed_msa_path, 'r') as file: # TODO maybe change if .sto file is parsed or changed

@@ -8,5 +8,6 @@ dependencies:
     - pandas==2.2.3
     - biopython==1.85
     - pyfastx==2.2.0
-    - pyfamsa==0.5.3
-    - git+https://github.com/althonos/pyhmmer.git
+    - pyfamsa
+    - pyhmmer
+    - pytrimal
