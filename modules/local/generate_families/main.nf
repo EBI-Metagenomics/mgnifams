@@ -45,6 +45,7 @@ process GENERATE_FAMILIES {
         pyfastx: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfastx'))")
         pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
         pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
+        pytrimal: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pytrimal'))")
         biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
     END_VERSIONS
     """
@@ -83,6 +84,7 @@ process GENERATE_FAMILIES {
         pyfastx: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfastx'))")
         pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
         pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
+        pytrimal: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pytrimal'))")
         biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
     END_VERSIONS
     """

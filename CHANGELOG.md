@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update sqlite database subworkflow, for smooth subsequent version releases.
 
+### `Changed`
+
+- [#31](https://github.com/EBI-Metagenomics/mgnifams/pull/31) - Swapped all subprocess calls of `generate_families.py` to cythonised lib versions (pyfastx, pyfamsa, pyhmmer, pytrimal)
+
+### `Dependencies`
+
+| Tool     | Previous version | New version |
+| -------- | ---------------- | ----------- |
+| pytrimal |                  | 0.7.0       |
+| pyhmmer  |                  | 0.11.0      |
+| pyfamsa  |                  | 0.5.3.post1 |
+| pyfastx  |                  | 2.2.0       |
+
 ## v1.0.0 - [2024/10/01]
 
 Initial release of ebi-metagenomics/mgnifams.
