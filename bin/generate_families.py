@@ -30,7 +30,7 @@ def parse_args(args=None):
 def define_globals():
     global log_file, refined_families_tsv_file, \
         discarded_clusters_file, successful_clusters_file, \
-        converged_families_file, family_metadata_file, \
+        converged_families_file, family_metadata_file, family_reps_file, \
         tmp_folder, seed_msa_folder, \
         align_msa_folder, hmm_folder, \
         domtblout_folder, rf_folder, \
@@ -46,6 +46,7 @@ def define_globals():
     successful_clusters_folder = "successful_clusters"
     converged_families_folder  = "converged_families"
     family_metadata_folder     = "family_metadata"
+    family_reps_folder         = "family_reps"
     tmp_folder                 = "tmp"
     seed_msa_folder            = "seed_msa_sto"
     align_msa_folder           = "msa_sto"
@@ -57,7 +58,7 @@ def define_globals():
 
     for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder, rf_folder, \
         logs_folder, refined_families_folder, discarded_clusters_folder, \
-        successful_clusters_folder, converged_families_folder, family_metadata_folder
+        successful_clusters_folder, converged_families_folder, family_metadata_folder, family_reps_folder
     ]:
         if not os.path.exists(folder):
             os.makedirs(folder)
@@ -77,6 +78,7 @@ def define_globals():
     successful_clusters_file  = os.path.join(successful_clusters_folder, f'{arg_chunk_num}.txt')
     converged_families_file   = os.path.join(converged_families_folder , f'{arg_chunk_num}.txt')
     family_metadata_file      = os.path.join(family_metadata_folder    , f'{arg_chunk_num}.csv')
+    family_reps_file          = os.path.join(family_reps_folder        , f'{arg_chunk_num}.fasta')
 
 def create_empty_output_files():
     open(refined_families_tsv_file, 'w').close()
@@ -84,6 +86,7 @@ def create_empty_output_files():
     open(successful_clusters_file , 'w').close()
     open(converged_families_file  , 'w').close()
     open(family_metadata_file     , 'w').close()
+    open(family_reps_file         , 'w').close()
 
 def load_clusters_df():
     return pd.read_csv(arg_clusters_chunk, sep='\t', header=None, names=['representative', 'member'], dtype=str)
@@ -267,10 +270,6 @@ def run_hmmalign(format="afa"):
 def unmask_sequence_names(names):
     return [name.split('/')[0] for name in names]
 
-def get_sequences_from_stockholm(file): # TODO remove and do with pyhmmer obj instead?
-    with open(file, "r") as f:
-        return AlignIO.read(f, "stockholm")
-
 def run_pytrimal(threshold=0.8):
     start_time = time.time()
 
@@ -356,15 +355,20 @@ def parse_protein_region(protein_id):
     return protein_rep, region
 
 def extract_first_stockholm_sequence():
-    alignment = AlignIO.read(tmp_align_msa_path, "stockholm")
-    first_record = alignment[0]
-    protein_rep, region = parse_protein_region(first_record.id)
-    return len(alignment), protein_rep, region 
+    with open(tmp_align_msa_path) as handle:
+        alignment_iterator = AlignIO.parse(handle, "stockholm")
+        first_record = next(alignment_iterator)[0]  # Get only the first sequence
 
-def append_family_metadata(iteration):
-    family_size, protein_rep, region = extract_first_stockholm_sequence()
+    protein_rep, region = parse_protein_region(first_record.id)
+
+    return protein_rep, region, first_record.seq.replace("-", "").upper() # TODO map to correct slice from pyfastx obj?
+
+def append_family_metadata(iteration, full_msa_num_seqs):
+    protein_rep, region, sequence = extract_first_stockholm_sequence()
     with open(family_metadata_file, 'a') as file:
-        file.writelines(f"{iteration},{family_size},{protein_rep},{region}\n")
+        file.writelines(f"{iteration},{full_msa_num_seqs},{protein_rep},{region}\n")
+    with open(family_reps_file, 'a') as file:
+        file.writelines(f">{protein_rep}/{region}\t{arg_chunk_num}_{iteration}\n{sequence}\n")
 
 def move_produced_models(iteration):
     shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder,  f'{arg_chunk_num}_{iteration}.sto')) # TODO tmp_seed_msa_path is currently tmp_seed_msa_sto_path
@@ -406,6 +410,7 @@ def main():
 
         total_checked_sequences = family_members
         filtered_seq_names = []
+        full_msa_num_seqs = 0
         hand_flag = False
         discard_flag = False
         discard_reason = ""
@@ -434,7 +439,7 @@ def main():
                     discard_value = 0.0
                     break
 
-                recruited_sequence_names, num_seqs_for_esl = run_hmmalign() # TODO extra Bateman logic in this call only
+                recruited_sequence_names, num_seqs = run_hmmalign() # TODO extra Bateman logic in this call only
                 # if (num_seqs_for_esl > 70000): # TODO remove if using mmseqs instead
                 #     discard_flag = True
                 #     discard_reason = "too many sequences to calculate redundancy"
@@ -475,7 +480,7 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                run_hmmalign("stockholm") # final full MSA, including smaller sequences
+                full_msa_sequence_names, full_msa_num_seqs = run_hmmalign("stockholm") # final full MSA, including smaller sequences
                 break
 
             # main strategy branch continue
@@ -498,7 +503,7 @@ def main():
                 outfile.write(str(family_rep) + "\n")
             
             append_family_file(iteration, filtered_seq_names)
-            append_family_metadata(iteration)
+            append_family_metadata(iteration, full_msa_num_seqs)
             move_produced_models(iteration)
         
         remove_tmp_files()

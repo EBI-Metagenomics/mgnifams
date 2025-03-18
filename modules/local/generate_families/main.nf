@@ -24,6 +24,7 @@ process GENERATE_FAMILIES {
     tuple val(meta), path("converged_families/*") , emit: converged
     tuple val(meta), path("family_metadata/*")    , emit: metadata
     tuple val(meta), path("logs/*")               , emit: logs
+    tuple val(meta), path("family_reps/*")        , emit: fasta
     path("versions.yml")                          , emit: versions
 
     when:
@@ -76,6 +77,8 @@ process GENERATE_FAMILIES {
     cp ${prefix}.txt family_metadata/
     mkdir logs
     mv ${prefix}.txt logs/
+    mkdir family_reps
+    mv ${prefix}.fasta family_reps/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
