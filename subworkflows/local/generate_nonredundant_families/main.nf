@@ -19,13 +19,13 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     ch_hmm = ch_families.hmm
         .map { meta, files -> files }
         .collect()
-        .map { file -> [ [id:"hmm"], file ] }
+        .map { file -> [ [id:"pre_redundant"], file ] }
 
     ch_reps_fasta = ch_families.fasta
         .map { meta, files -> files }
         .collectFile(name: "pre_redundant_reps.fasta", storeDir: params.outdir)
         .map{ file ->
-            [[id: 'reps_fasta'], file]
+            [[id: 'pre_redundant'], file]
         }
     ch_reps_fasta.view()
 

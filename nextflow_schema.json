@@ -132,6 +132,11 @@
                     "type": "number",
                     "description": "Predicted transmembrane fraction of total length allowed for families"
                 },
+                "redundant_length_threshold": {
+                    "type": "number",
+                    "default": 0.9,
+                    "description": "Minimum length percentage of env hit against query HMM, to deem family redundant and add for removal"
+                },
                 "redundant_threshold": {
                     "type": "number",
                     "default": 0.95,
