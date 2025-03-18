@@ -431,11 +431,11 @@ def main():
                     break
 
                 recruited_sequence_names, num_seqs_for_esl = run_hmmalign() # TODO extra Bateman logic in this call only
-                if (num_seqs_for_esl > 70000): # TODO remove if using mmseqs instead
-                    discard_flag = True
-                    with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: {iteration} too many sequences for esl ({num_seqs_for_esl}).\n")
-                    break
+                # if (num_seqs_for_esl > 70000): # TODO remove if using mmseqs instead
+                #     discard_flag = True
+                #     with open(log_file, 'a') as file:
+                #         file.write(f"Discard-Warning: {iteration} too many sequences for esl ({num_seqs_for_esl}).\n")
+                #     break
 
                 new_recruited_sequences = set(unmask_sequence_names(recruited_sequence_names)) - set(total_checked_sequences)
                 if not new_recruited_sequences:
