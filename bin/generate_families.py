@@ -73,7 +73,7 @@ def define_globals():
 
     log_file                  = os.path.join(logs_folder               , f'{arg_chunk_num}.txt')
     refined_families_tsv_file = os.path.join(refined_families_folder   , f'{arg_chunk_num}.tsv')
-    discarded_clusters_file   = os.path.join(discarded_clusters_folder , f'{arg_chunk_num}.txt')
+    discarded_clusters_file   = os.path.join(discarded_clusters_folder , f'{arg_chunk_num}.csv')
     successful_clusters_file  = os.path.join(successful_clusters_folder, f'{arg_chunk_num}.txt')
     converged_families_file   = os.path.join(converged_families_folder , f'{arg_chunk_num}.txt')
     family_metadata_file      = os.path.join(family_metadata_folder    , f'{arg_chunk_num}.csv')
@@ -408,6 +408,8 @@ def main():
         filtered_seq_names = []
         hand_flag = False
         discard_flag = False
+        discard_reason = ""
+        discard_value = 0.0
         exit_flag = False
         family_iteration = 0
         while True:
@@ -428,11 +430,15 @@ def main():
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
+                    discard_reason = "low complexity model, confounding cluster"
+                    discard_value = 0.0
                     break
 
                 recruited_sequence_names, num_seqs_for_esl = run_hmmalign() # TODO extra Bateman logic in this call only
                 # if (num_seqs_for_esl > 70000): # TODO remove if using mmseqs instead
                 #     discard_flag = True
+                #     discard_reason = "too many sequences to calculate redundancy"
+                #     discard_value = num_seqs_for_esl
                 #     with open(log_file, 'a') as file:
                 #         file.write(f"Discard-Warning: {iteration} too many sequences for esl ({num_seqs_for_esl}).\n")
                 #     break
@@ -453,11 +459,15 @@ def main():
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
+                    discard_reason = "low complexity model, confounding cluster"
+                    discard_value = 0.0
                     break
 
                 membership_percentage = check_seed_membership(original_sequence_names, unmask_sequence_names(filtered_seq_names))
                 if (membership_percentage < 0.9): 
                     discard_flag = True
+                    discard_reason = "few seed sequences remained"
+                    discard_value = membership_percentage
                     with open(log_file, 'a') as file:
                         file.write(f"Discard-Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                     break
@@ -480,8 +490,8 @@ def main():
             with open(log_file, 'a') as file:
                 file.write("Discarding cluster " + family_rep + "\n")
             
-            with open(discarded_clusters_file, 'a') as outfile:  # TODO + reason for multiqc
-                outfile.write(str(family_rep) + "\n")
+            with open(discarded_clusters_file, 'a') as outfile:
+                outfile.write(str(family_rep) + "," + discard_reason + "," + discard_value + "\n")
             iteration -= 1 # keep proper track of family ids
         else: # successfully
             with open(successful_clusters_file, 'a') as outfile:
