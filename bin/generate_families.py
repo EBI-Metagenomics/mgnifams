@@ -177,7 +177,7 @@ def run_initial_msa(members, pyfastx_obj):
 
     log_time(start_time, "run_initial_msa (pyfamsa): ")
 
-def run_hmmbuild(msa_file, hand=False): # TODO remove msa_file arg if always called for same global file
+def run_hmmbuild(msa_file, iteration, hand=False): # TODO remove msa_file arg if always called for same global file
     """Runs HMMER's hmmbuild using pyhmmer."""
     start_time = time.time()                    
 
@@ -185,7 +185,7 @@ def run_hmmbuild(msa_file, hand=False): # TODO remove msa_file arg if always cal
 
     with pyhmmer.easel.MSAFile(msa_file, digital=True, alphabet=alphabet) as msa_file:
         msa = msa_file.read()
-    msa.name = f"protein_family_{arg_chunk_num}".encode()
+    msa.name = f"{arg_chunk_num}_{iteration}".encode()
 
     architecture = "hand" if hand else "fast"
     builder = pyhmmer.plan7.Builder(alphabet, architecture=architecture)
@@ -431,7 +431,7 @@ def main():
             # original_sequence_names = trim_seed_msa() # TODO remove from here?
 
             if not exit_flag: # main strategy branch
-                run_hmmbuild(tmp_seed_msa_path)
+                run_hmmbuild(tmp_seed_msa_path, iteration)
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
@@ -459,7 +459,7 @@ def main():
             if exit_flag: # exit strategy branch
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
-                run_hmmbuild(tmp_seed_msa_path, hand=hand_flag)
+                run_hmmbuild(tmp_seed_msa_path, iteration, hand=hand_flag)
                 extract_RF()
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next

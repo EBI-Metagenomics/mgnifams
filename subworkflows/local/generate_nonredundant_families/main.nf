@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
 include { GENERATE_FAMILIES  } from "../../../modules/local/generate_families/main"
-include { FLAG_TRANSMEMBRANE } from "../../../subworkflows/local/flag_transmembrane"
-include { MOVE_TO_DIR        } from "../../../modules/local/move_to_dir/main"
+// include { FLAG_TRANSMEMBRANE } from "../../../subworkflows/local/flag_transmembrane" // TODO remove?
+// include { MOVE_TO_DIR        } from "../../../modules/local/move_to_dir/main"
 include { REMOVE_REDUNDANCY  } from "../../../subworkflows/local/remove_redundancy"
 
 workflow GENERATE_NONREDUNDANT_FAMILIES {
@@ -16,7 +16,23 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     ch_families = GENERATE_FAMILIES( cluster_chunks, mgnifams_fa.first() )
     ch_versions = ch_versions.mix( GENERATE_FAMILIES.out.versions )
 
-    // TODO multiMap?
+    ch_hmm = ch_families.hmm
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"hmm"], file ] }
+
+    ch_reps_fasta = ch_families.fasta
+        .map { meta, files -> files }
+        .collectFile(name: "pre_redundant_reps.fasta", storeDir: params.outdir)
+        .map{ file ->
+            [[id: 'reps_fasta'], file]
+        }
+    ch_reps_fasta.view()
+
+    generated_families = REMOVE_REDUNDANCY( ch_hmm, ch_reps_fasta )
+    ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
+
+
     // ch_msa_sto = ch_families.msa_sto
     //     .map { meta, files ->
     //         files
@@ -45,14 +61,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     // seed_msa_sto_dir = MOVE_TO_DIR( ch_seed_msa_sto, "seed_msa_sto" )
     // // TODO ch_versions = ch_versions.mix( MOVE_TO_DIR.out.versions )
 
-    // ch_hmm = ch_families.hmm
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"hmm"], file ]
-    //     }
+    
 
     // ch_rf = ch_families.rf
     //     .map { meta, files ->
