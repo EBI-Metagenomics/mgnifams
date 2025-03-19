@@ -105,7 +105,7 @@ def filter_by_length(domtbl_df, length_threshold):
 
     return domtbl_df
 
-def IDENTIFY_REDUNDANT_FAMS(domtbl, metadata, length_threshold, out_file):
+def identify_redundant_fams(domtbl, metadata, length_threshold, out_file):
     redundant_fam_names = set()
 
     family_to_size = create_size_dict(metadata)
@@ -134,7 +134,7 @@ def IDENTIFY_REDUNDANT_FAMS(domtbl, metadata, length_threshold, out_file):
 
     # This method might deem redundant longer (super)families and keep shorter families with more members
     for _, row in domtbl_df.iterrows():
-        if row["query size"] < row["target size"]:
+        if int(row["query size"]) < int(row["target size"]):
             redundant_fam_names.add(row["query name"])
         else:
             redundant_fam_names.add(row["target name"])
@@ -146,7 +146,7 @@ def IDENTIFY_REDUNDANT_FAMS(domtbl, metadata, length_threshold, out_file):
 def main(args=None):
     args = parse_args(args)
 
-    IDENTIFY_REDUNDANT_FAMS(
+    identify_redundant_fams(
         args.domtbl,
         args.metadata,
         args.length_threshold,
