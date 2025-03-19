@@ -1,47 +1,37 @@
-#!/usr/bin/env nextflow
-
-include { CAT_CAT                 } from '../../../modules/nf-core/cat/cat'
-include { HMMER_HMMSEARCH         } from '../../../modules/nf-core/hmmer/hmmsearch/main'
-include { IDENTIFY_REDUNDANT_FAMS } from '../../../modules/local/identify_redundant_fams/main'
-
-// include { HHSUITE_REFORMAT                     } from "../../../modules/local/hhsuite/reformat/main"
-// include { HHSUITE_BUILDHHDB                    } from "../../../modules/local/hhsuite/buildhhdb/main"
-// include { HHSUITE_HHBLITS                      } from "../../../modules/local/hhsuite/hhblits/main"
-// include { COMBINE_HH_RESULTS                   } from "../../../modules/local/combine_hh_results/main"
-// include { MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID } from "../../../modules/local/map_first_a3m_sequences_to_family_id/main"
-// include { POOL_FAM_PROTEINS                    } from "../../../modules/local/pool_fam_proteins/main"
-// include { REMOVE_REDUNDANT_AND_TM              } from "../../../modules/local/remove_redundant_and_tm/main"
-// include { POOL_FAMILY_RESULTS                  } from "../../../modules/local/pool_family_results/main"
+include { CAT_CAT                    } from '../../../modules/nf-core/cat/cat'
+include { HMMER_HMMSEARCH            } from '../../../modules/nf-core/hmmer/hmmsearch/main'
+include { IDENTIFY_REDUNDANT_FAMS    } from '../../../modules/local/identify_redundant_fams/main'
+include { POOL_NONREDUNDANT_FAMILIES } from '../../../modules/local/pool_nonredundant_families/main'
 
 workflow REMOVE_REDUNDANCY {
     take:
     hmm
     reps_fasta
     metadata
-    // seed_msa_sto_dir
-    // seed_msa_sto_ch
-    // msa_sto_ch
-    // hmm_ch
-    // rf_ch
-    // domtblout_ch
-    // tsv_ch
-    // discarded_ch
-    // successful_ch
-    // converged_ch
-    // metadata_ch
-    // logs_ch
-    // tm_ids_ch
-    // prob_ids_ch
-    // rep_fa_ch
+    seed_msa_sto
+    msa_sto
+    rf
+    domtblout
+    tsv
+    discarded
+    successful
+    converged
+    logs
 
     main:
     ch_versions = Channel.empty()
+
+    ch_reps_fasta = reps_fasta
+        .map { meta, files -> files }
+        .flatten()
+        .collectFile(name: "pre_redundant_reps.fasta", storeDir: params.outdir)
+        .map { file -> [[id: 'pre_redundant'], file] }
 
     CAT_CAT( hmm )
     ch_versions = ch_versions.mix( CAT_CAT.out.versions )
 
     ch_input_for_hmmsearch = CAT_CAT.out.file_out
-        .combine(reps_fasta, by: 0)
+        .combine(ch_reps_fasta, by: 0)
         .map { meta, model, seqs -> [meta, model, seqs, false, false, true] }
 
     HMMER_HMMSEARCH( ch_input_for_hmmsearch )
@@ -49,6 +39,15 @@ workflow REMOVE_REDUNDANCY {
 
     IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, params.redundant_length_threshold )
     ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
+
+    pooled_families = POOL_NONREDUNDANT_FAMILIES( seed_msa_sto, \
+        msa_sto, hmm, rf, domtblout, tsv, \
+        discarded, successful, converged, \
+        metadata, reps_fasta, logs, IDENTIFY_REDUNDANT_FAMS.out.txt, params.starting_id )
+    ch_versions = ch_versions.mix( POOL_NONREDUNDANT_FAMILIES.out.versions )
+
+
+
 
     // a3m_ch = HHSUITE_REFORMAT(seed_msa_sto_dir, "sto", "a3m").fa
     // ch_versions = ch_versions.mix( HHSUITE_REFORMAT.out.versions )
@@ -86,11 +85,11 @@ workflow REMOVE_REDUNDANCY {
     // non_redundant_fam_ids = non_redundant.non_redundant_fam_ids
     // similarity_edgelist = non_redundant.similarity_edgelist
 
-    // pooled_families = POOL_FAMILY_RESULTS(seed_msa_sto_ch, \
+    // pooled_families = POOL_NONREDUNDANT_FAMILIES(seed_msa_sto_ch, \
     //     msa_sto_ch, hmm_ch, rf_ch, domtblout_ch, tsv_ch, \
     //     discarded_ch, successful_ch, converged_ch, \
     //     metadata_ch, logs_ch, non_redundant_fam_ids, similarity_edgelist, params.starting_id)
-    // // TODO ch_versions = ch_versions.mix( POOL_FAMILY_RESULTS.out.versions )
+    // // TODO ch_versions = ch_versions.mix( POOL_NONREDUNDANT_FAMILIES.out.versions )
 
     emit:
     versions     = ch_versions

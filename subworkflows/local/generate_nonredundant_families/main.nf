@@ -1,8 +1,4 @@
-#!/usr/bin/env nextflow
-
 include { GENERATE_FAMILIES  } from "../../../modules/local/generate_families/main"
-// include { FLAG_TRANSMEMBRANE } from "../../../subworkflows/local/flag_transmembrane" // TODO remove?
-// include { MOVE_TO_DIR        } from "../../../modules/local/move_to_dir/main"
 include { REMOVE_REDUNDANCY  } from "../../../subworkflows/local/remove_redundancy"
 
 workflow GENERATE_NONREDUNDANT_FAMILIES {
@@ -23,17 +19,62 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
 
     ch_reps_fasta = ch_families.fasta
         .map { meta, files -> files }
-        .collectFile(name: "pre_redundant_reps.fasta", storeDir: params.outdir)
-        .map{ file ->
-            [[id: 'pre_redundant'], file]
-        }
+        .collect()
+        .map{ file -> [[id: 'reps_fasta'], file] }
 
     ch_metadata = ch_families.metadata
         .map { meta, files -> files }
         .collect()
         .map { file -> [ [id:"metadata"], file ] }
 
-    generated_families = REMOVE_REDUNDANCY( ch_hmm, ch_reps_fasta, ch_metadata )
+    ch_seed_msa_sto = ch_families.seed_msa_sto
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"seed_msa_sto"], file ] }
+
+    ch_msa_sto = ch_families.msa_sto
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"msa_sto"], file ] }
+
+    ch_rf = ch_families.rf
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"rf"], file ] }
+
+    ch_domtblout = ch_families.domtblout
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"domtblout"], file ] }
+
+    ch_tsv = ch_families.tsv
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"tsv"], file ] }
+
+    ch_discarded = ch_families.discarded
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"discarded"], file ] }
+
+    ch_successful = ch_families.successful
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"successful"], file ] }
+
+    ch_converged = ch_families.converged
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"converged"], file ] }
+
+    ch_logs = ch_families.logs
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"logs"], file ] }
+
+    generated_families = REMOVE_REDUNDANCY( ch_hmm, ch_reps_fasta, ch_metadata, \
+        ch_seed_msa_sto, ch_msa_sto, ch_rf, ch_domtblout, ch_tsv, \
+        ch_discarded, ch_successful, ch_converged, ch_logs )
     ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
 
 
@@ -138,13 +179,6 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     //     .map { file ->
     //         [ [id:"logs"], file ]
     //     }
-
-    // generated_families = REMOVE_REDUNDANCY( seed_msa_sto_dir, ch_seed_msa_sto, \
-    //     ch_msa_sto, ch_hmm, \
-    //     ch_rf, ch_domtblout, ch_tsv, \
-    //     ch_discarded, ch_successful, ch_converged, \
-    //     ch_metadata, ch_logs, ch_tm_ids, prob_ids, ch_rep_fa )
-    // ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
 
     emit:
     versions     = ch_versions
