@@ -10,6 +10,7 @@ process REMOVE_REDUNDANT_FAMS {
     input:
     tuple val(meta), path(domtbl)
     tuple val(meta2), path(fasta)
+    tuple val(meta3), path(metadata, stageAs: "metadata/*")
     val(length_threshold)
 
     output:
@@ -24,6 +25,7 @@ process REMOVE_REDUNDANT_FAMS {
     remove_redundant_fams.py \\
         --domtbl ${domtbl} \\
         --fasta ${fasta} \\
+        --metadata metadata \\
         --length_threshold ${length_threshold} \\
         --out_file non_redundant.txt
 

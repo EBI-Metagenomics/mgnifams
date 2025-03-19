@@ -132,6 +132,11 @@
                     "type": "number",
                     "description": "Predicted transmembrane fraction of total length allowed for families"
                 },
+                "hmmsearch_evalue_cutoff": {
+                    "type": "number",
+                    "default": 0.001,
+                    "description": "hmmsearch e-value cutoff threshold for reported results"
+                },
                 "redundant_length_threshold": {
                     "type": "number",
                     "default": 0.9,

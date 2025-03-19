@@ -29,6 +29,14 @@ def parse_args(args=None):
         help="Name of the input file file with the pre-filtered reps fasta.",
     )
     parser.add_argument(
+        "-m",
+        "--metadata",
+        required=True,
+        metavar="FOLDER",
+        type=str,
+        help="Name of the input folder with metadata files to get family-rep mapping and sizes.",
+    )
+    parser.add_argument(
         "-l",
         "--length_threshold",
         required=True,
@@ -63,7 +71,8 @@ def filter_by_length(domtbl_df, length_threshold):
     return domtbl_df
 
 
-def remove_redundant_fams(domtbl, fasta, length_threshold, out_folder):
+def remove_redundant_fams(domtbl, fasta, metadata, length_threshold, out_folder):
+    pass
     # TODO create dictionary of reps.fasta of seq name -> family id
     # mapping_df = pd.read_csv(
     #     mapping, comment="#", usecols=["Family Id", "Size", "Representative Id"]
@@ -115,6 +124,7 @@ def main(args=None):
     remove_redundant_fams(
         args.domtbl,
         args.fasta,
+        args.metadata,
         args.length_threshold,
         args.out_file,
     )

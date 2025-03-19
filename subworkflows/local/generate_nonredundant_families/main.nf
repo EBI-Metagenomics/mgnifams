@@ -27,9 +27,13 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map{ file ->
             [[id: 'pre_redundant'], file]
         }
-    ch_reps_fasta.view()
 
-    generated_families = REMOVE_REDUNDANCY( ch_hmm, ch_reps_fasta )
+    ch_metadata = ch_families.metadata
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"metadata"], file ] }
+
+    generated_families = REMOVE_REDUNDANCY( ch_hmm, ch_reps_fasta, ch_metadata )
     ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
 
 

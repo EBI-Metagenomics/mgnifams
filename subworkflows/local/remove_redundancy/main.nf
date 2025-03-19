@@ -17,6 +17,7 @@ workflow REMOVE_REDUNDANCY {
     take:
     hmm
     reps_fasta
+    metadata
     // seed_msa_sto_dir
     // seed_msa_sto_ch
     // msa_sto_ch
@@ -46,7 +47,7 @@ workflow REMOVE_REDUNDANCY {
     HMMER_HMMSEARCH( ch_input_for_hmmsearch )
     ch_versions = ch_versions.mix( HMMER_HMMSEARCH.out.versions )
 
-    REMOVE_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, reps_fasta, params.redundant_length_threshold ) // TODO also pass metadata for sizes
+    REMOVE_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, reps_fasta, metadata, params.redundant_length_threshold ) // TODO also pass metadata for sizes
     ch_versions = ch_versions.mix( REMOVE_REDUNDANT_FAMS.out.versions )
 
     // a3m_ch = HHSUITE_REFORMAT(seed_msa_sto_dir, "sto", "a3m").fa
