@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 import argparse
 import os
 import shutil
@@ -140,24 +139,28 @@ def main(args=None):
     family_to_id      = create_mapping_dict()
 
     pool_directory("family_metadata", "family_metadata.csv", ",")
-    # pool_directory("family_reps", "family_reps.fasta", "")
-    # pool_directory("refined_families", "refined_families.tsv", "\t")
-    # pool_directory("converged_families", "converged_families.txt", "")
-    # pool_clusters_directory("successful_clusters", "successful_clusters.txt")
-    # pool_clusters_directory("discarded_clusters", "discarded_clusters.txt")
+    pool_directory("refined_families", "refined_families.tsv", "\t")
+    pool_directory("converged_families", "converged_families.txt", "")
+    pool_clusters_directory("successful_clusters", "successful_clusters.txt")
+    pool_clusters_directory("discarded_clusters", "discarded_clusters.txt")
 
-    # translate_directory('rf')
-    # translate_directory('hmm')
-    # translate_directory('msa_sto')
-    # translate_directory('seed_msa_sto')
-    # translate_directory('domtblout')
-    # # translate_edgelist(arg_similarity_edgelist, \
-    # #     os.path.join(arg_out_dir, 'similarity_edgelist.csv'))
+    translate_directory('rf')
+    translate_directory('hmm')
+    translate_directory('msa_sto')
+    translate_directory('seed_msa_sto')
+    translate_directory('domtblout')
+    # translate_edgelist(arg_similarity_edgelist, \
+    #     os.path.join(arg_out_dir, 'similarity_edgelist.csv'))
     
-    # json_mapping = 'family_to_id.json'
-    # output_file  = os.path.join(arg_out_dir, json_mapping)
-    # with open(output_file, 'w') as f:
-    #     json.dump(family_to_id, f)
+    json_mapping = 'family_to_id.json'
+    output_file  = os.path.join(arg_out_dir, json_mapping)
+    with open(output_file, 'w') as f:
+        json.dump(family_to_id, f)
+
+    # TODO read family_reps.fasta by line and write out those whose family id is not in redundant_fam_ids
+    # parse_out("family_reps", "family_reps.fasta", "")
+
+    # TODO rename HMMs
 
 if __name__ == "__main__":
     main()
