@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 
-include { CAT_CAT               } from '../../../modules/nf-core/cat/cat'
-include { HMMER_HMMSEARCH       } from '../../../modules/nf-core/hmmer/hmmsearch/main'
-include { REMOVE_REDUNDANT_FAMS } from '../../../modules/local/remove_redundant_fams/main'
+include { CAT_CAT                 } from '../../../modules/nf-core/cat/cat'
+include { HMMER_HMMSEARCH         } from '../../../modules/nf-core/hmmer/hmmsearch/main'
+include { IDENTIFY_REDUNDANT_FAMS } from '../../../modules/local/identify_redundant_fams/main'
 
 // include { HHSUITE_REFORMAT                     } from "../../../modules/local/hhsuite/reformat/main"
 // include { HHSUITE_BUILDHHDB                    } from "../../../modules/local/hhsuite/buildhhdb/main"
@@ -47,8 +47,8 @@ workflow REMOVE_REDUNDANCY {
     HMMER_HMMSEARCH( ch_input_for_hmmsearch )
     ch_versions = ch_versions.mix( HMMER_HMMSEARCH.out.versions )
 
-    REMOVE_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, reps_fasta, metadata, params.redundant_length_threshold ) // TODO also pass metadata for sizes
-    ch_versions = ch_versions.mix( REMOVE_REDUNDANT_FAMS.out.versions )
+    IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, params.redundant_length_threshold )
+    ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
 
     // a3m_ch = HHSUITE_REFORMAT(seed_msa_sto_dir, "sto", "a3m").fa
     // ch_versions = ch_versions.mix( HHSUITE_REFORMAT.out.versions )
