@@ -1,5 +1,6 @@
-include { GENERATE_FAMILIES  } from "../../../modules/local/generate_families/main"
-include { REMOVE_REDUNDANCY  } from "../../../subworkflows/local/remove_redundancy"
+include { GENERATE_FAMILIES          } from "../../../modules/local/generate_families/main"
+include { REMOVE_REDUNDANCY          } from "../../../subworkflows/local/remove_redundancy"
+include { PRESENT_DISCARDED_FAMILIES } from "../../../modules/local/present_discarded_families/main"
 
 workflow GENERATE_NONREDUNDANT_FAMILIES {
     take:
@@ -72,121 +73,23 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .collect()
         .map { file -> [ [id:"logs"], file ] }
 
-    generated_families = REMOVE_REDUNDANCY( ch_hmm, ch_reps_fasta, ch_metadata, \
+    REMOVE_REDUNDANCY( ch_hmm, ch_reps_fasta, ch_metadata, \
         ch_seed_msa_sto, ch_msa_sto, ch_rf, ch_domtblout, ch_tsv, \
         ch_discarded, ch_successful, ch_converged, ch_logs )
     ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
 
-
-    // ch_msa_sto = ch_families.msa_sto
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"msa_sto"], file ]
-    //     }
-    
-    // ch_tm = FLAG_TRANSMEMBRANE( ch_msa_sto )
-    // ch_versions = ch_versions.mix( FLAG_TRANSMEMBRANE.out.versions )
-
-    // ch_rep_fa = ch_tm.fasta
-    // ch_tm_ids = ch_tm.tm_ids
-    // prob_ids = ch_tm.prob_ids
-    
-    // ch_seed_msa_sto = ch_families.seed_msa_sto
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"seed_msa_sto"], file ]
-    //     }
-
-    // seed_msa_sto_dir = MOVE_TO_DIR( ch_seed_msa_sto, "seed_msa_sto" )
-    // // TODO ch_versions = ch_versions.mix( MOVE_TO_DIR.out.versions )
-
-    
-
-    // ch_rf = ch_families.rf
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"rf"], file ]
-    //     }
-
-    // ch_domtblout = ch_families.domtblout
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"domtblout"], file ]
-    //     }
-
-    // ch_tsv = ch_families.tsv
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"tsv"], file ]
-    //     }
-
-    // ch_discarded = ch_families.discarded
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"discarded"], file ]
-    //     }
-
-    // ch_successful = ch_families.successful
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"successful"], file ]
-    //     }
-
-    // ch_converged = ch_families.converged
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"converged"], file ]
-    //     }
-
-    // ch_metadata = ch_families.metadata
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"metadata"], file ]
-    //     }
-
-    // ch_logs = ch_families.logs
-    //     .map { meta, files ->
-    //         files
-    //     }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id:"logs"], file ]
-    //     }
+    PRESENT_DISCARDED_FAMILIES( REMOVE_REDUNDANCY.out.discarded )
+    ch_versions = ch_versions.mix( PRESENT_DISCARDED_FAMILIES.out.versions )
 
     emit:
-    versions     = ch_versions
-    // seed_msa_sto = generated_families.seed_msa_sto
-    // msa_sto      = generated_families.msa_sto
-    // metadata     = generated_families.metadata
-    // converged    = generated_families.converged
-    // tsv          = generated_families.tsv
-    // hmm          = generated_families.hmm
-    // rf           = generated_families.rf
+    versions      = ch_versions
+    seed_msa_sto  = REMOVE_REDUNDANCY.out.seed_msa_sto
+    msa_sto       = REMOVE_REDUNDANCY.out.msa_sto
+    hmm           = REMOVE_REDUNDANCY.out.hmm
+    rf            = REMOVE_REDUNDANCY.out.rf
+    tsv           = REMOVE_REDUNDANCY.out.tsv
+    converged     = REMOVE_REDUNDANCY.out.converged
+    metadata      = REMOVE_REDUNDANCY.out.metadata
+    family_reps   = REMOVE_REDUNDANCY.out.family_reps
+    discarded_mqc = PRESENT_DISCARDED_FAMILIES.out.mqc
 }

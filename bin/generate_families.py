@@ -435,7 +435,7 @@ def main():
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
-                    discard_reason = "low complexity model, confounding cluster"
+                    discard_reason = "low complexity model - confounding cluster"
                     discard_value = 0.0
                     break
 
@@ -464,12 +464,12 @@ def main():
                 filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
-                    discard_reason = "low complexity model, confounding cluster"
+                    discard_reason = "low complexity model - confounding cluster"
                     discard_value = 0.0
                     break
 
                 membership_percentage = check_seed_membership(original_sequence_names, unmask_sequence_names(filtered_seq_names))
-                if (membership_percentage < 0.9): 
+                if (membership_percentage < 0.9):
                     discard_flag = True
                     discard_reason = "few seed sequences remained"
                     discard_value = membership_percentage
@@ -496,7 +496,7 @@ def main():
                 file.write("Discarding cluster " + family_rep + "\n")
             
             with open(discarded_clusters_file, 'a') as outfile:
-                outfile.write(str(family_rep) + "," + discard_reason + "," + discard_value + "\n")
+                outfile.write(str(family_rep) + "," + discard_reason + "," + str(discard_value) + "\n")
             iteration -= 1 # keep proper track of family ids
         else: # successfully
             with open(successful_clusters_file, 'a') as outfile:
