@@ -24,19 +24,19 @@ process POOL_NONREDUNDANT_FAMILIES {
     val(starting_id)
 
     output:
-    tuple val(meta)  , path("families/seed_msa_sto/*")          , emit: seed_msa_sto
-    tuple val(meta2) , path("families/msa_sto/*")               , emit: msa_sto
-    tuple val(meta3) , path("families/hmm/*")                   , emit: hmm
-    tuple val(meta4) , path("families/rf/*")                    , emit: rf
-    tuple val(meta5) , path("families/domtblout/*")             , emit: domtblout
-    tuple val(meta6) , path("families/refined_families.tsv")    , emit: tsv
-    tuple val(meta7) , path("families/discarded_clusters.txt")  , emit: discarded
-    tuple val(meta8) , path("families/successful_clusters.txt") , emit: successful
-    tuple val(meta9) , path("families/converged_families.txt")  , emit: converged
-    tuple val(meta10), path("families/family_metadata.csv")     , emit: metadata
-    tuple val(meta11), path("families/family_family_reps.fasta"), emit: family_reps
-    tuple val(meta13), path("families/family_to_id.json")       , emit: id_mapping
-    path "versions.yml"                                         , emit: versions
+    tuple val(meta)  , path("families/seed_msa_sto/*")         , emit: seed_msa_sto
+    tuple val(meta2) , path("families/msa_sto/*")              , emit: msa_sto
+    tuple val(meta3) , path("families/hmm/*")                  , emit: hmm
+    tuple val(meta4) , path("families/rf/*")                   , emit: rf
+    tuple val(meta5) , path("families/domtblout/*")            , emit: domtblout
+    tuple val(meta6) , path("families/refined_families.tsv")   , emit: tsv
+    tuple val(meta7) , path("families/discarded_clusters.txt") , emit: discarded
+    tuple val(meta8) , path("families/successful_clusters.txt"), emit: successful
+    tuple val(meta9) , path("families/converged_families.txt") , emit: converged
+    tuple val(meta10), path("families/family_metadata.csv")    , emit: metadata
+    tuple val(meta11), path("families/family_reps.fasta")      , emit: family_reps
+    tuple val(meta13), path("families/family_to_id.json")      , emit: id_mapping
+    path "versions.yml"                                        , emit: versions
 
     script:
     """

@@ -4,6 +4,8 @@ import argparse
 import os
 import shutil
 import json
+import fileinput
+import re
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
@@ -47,7 +49,7 @@ def read_non_redundant_fam_ids(file_path):
     return lines
 
 def create_mapping_dict():
-    hmm_folder  = os.path.join(arg_families_dir, 'hmm')
+    hmm_folder = os.path.join(arg_families_dir, 'hmm')
     hmm_files = sorted([name for name in os.listdir(hmm_folder) if os.path.basename(name).split('.')[0] not in redundant_fam_ids])
 
     family_to_id = {os.path.basename(filename).split('.')[0]: idx + arg_starting_id for idx, filename in enumerate(hmm_files)}
@@ -87,19 +89,28 @@ def pool_clusters_directory(input_dir, output_filename):
     output_file    = os.path.join(arg_out_dir, output_filename)
     
     with open(output_file, 'w') as outfile:
-        for filename in os.listdir(path_to_folder):
+        for filename in sorted(os.listdir(path_to_folder)):
             filepath = os.path.join(path_to_folder, filename)
             with open(filepath, 'r') as infile:
                 content = infile.read().strip()  # Read and strip leading/trailing whitespace
                 if content:  # Only write if the file is not empty
                     outfile.write(content + '\n')
 
+def update_hmm_name_inplace(hmm_file):
+    for line in fileinput.input(hmm_file, inplace=True):
+        match = re.match(r'^(NAME\s+)(\S+)', line)
+        if match:
+            original_name = match.group(2)
+            if original_name in family_to_id:
+                line = f"{match.group(1)}{family_to_id[original_name]}\n"
+        print(line, end='') 
+
 def translate_directory(input_dir):
     input_folder  = os.path.join(arg_families_dir, input_dir)
     os.makedirs(os.path.join(arg_out_dir, input_dir), exist_ok=True)
     output_folder = os.path.join(arg_out_dir, input_dir)
 
-    filenames = os.listdir(input_folder)
+    filenames = sorted(os.listdir(input_folder))
     for filename in filenames:
         basename         = os.path.splitext(filename)[0]
         if (basename in redundant_fam_ids):
@@ -109,6 +120,28 @@ def translate_directory(input_dir):
         destination_path = os.path.join(output_folder, new_filename)
         
         shutil.copy(source_path, destination_path)
+
+        if (input_dir == 'hmm'):
+            update_hmm_name_inplace(destination_path)
+
+def pool_nonredundant_reps(input_folder, output_file):
+    path_to_folder = os.path.join(arg_families_dir, input_folder)
+    output_file    = os.path.join(arg_out_dir, output_file) 
+    with open(output_file, 'w') as out_f:
+        for filename in sorted(os.listdir(path_to_folder)):
+            file_path = os.path.join(path_to_folder, filename)
+            if not os.path.isfile(file_path) or not filename.endswith(('.fa', '.fasta', '.faa')):
+                continue
+            
+            with open(file_path, 'r') as fasta_file:
+                write_sequence = False
+                for line in fasta_file:
+                    if line.startswith('>'):
+                        seq_id = line.strip().split("\t")[1] if '\t' in line else None
+                        write_sequence = seq_id not in redundant_fam_ids
+                    
+                    if write_sequence:
+                        out_f.write(line)
 
 # def translate_edgelist(file_path, out_path):
 #     if os.path.getsize(file_path) == 0:
@@ -157,10 +190,7 @@ def main(args=None):
     with open(output_file, 'w') as f:
         json.dump(family_to_id, f)
 
-    # TODO read family_reps.fasta by line and write out those whose family id is not in redundant_fam_ids
-    # parse_out("family_reps", "family_reps.fasta", "")
-
-    # TODO rename HMMs
+    pool_nonredundant_reps("family_reps", "family_reps.fasta")
 
 if __name__ == "__main__":
     main()
