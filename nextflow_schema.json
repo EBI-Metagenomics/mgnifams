@@ -71,139 +71,6 @@
                 "outdir"
             ]
         },
-        "module_parameters": {
-            "title": "module_parameters",
-            "type": "object",
-            "description": "Input values for modules",
-            "default": "",
-            "properties": {
-                "compress_mode": {
-                    "type": "string",
-                    "default": "none",
-                    "description": "compression mode of starting CSV input"
-                },
-                "min_sequence_length": {
-                    "type": "integer",
-                    "default": 100,
-                    "description": "Sequence (and slice) length threshold to continue to clustering"
-                },
-                "linclust_seq_identity": {
-                    "type": "number",
-                    "default": 0.5,
-                    "description": "mmseqs/linclust parameter for minimum sequence identity"
-                },
-                "linclust_coverage": {
-                    "type": "number",
-                    "default": 0.9,
-                    "description": "mmseqs/linclust parameter for minimum sequence coverage ratio"
-                },
-                "linclust_cov_mode": {
-                    "type": "integer",
-                    "default": 0,
-                    "description": "mmseqs/linclust parameter for coverage mode: 0 for both, 1 for target and 2 for query sequence"
-                },
-                "input_csv_chunk_size": {
-                    "type": "integer",
-                    "default": 50000000,
-                    "description": "Chunk size for parallel slicing and filtering of sequence space"
-                },
-                "minimum_members": {
-                    "type": "integer",
-                    "default": 50,
-                    "description": "Minimum number of members a cluster is allowed to have to continue with family generation"
-                },
-                "clusters_chunk_size": {
-                    "type": "integer",
-                    "default": 30,
-                    "description": "Chunk size to break the MMseqs clustering into, to then feed family generation in parallel"
-                },
-                "starting_id": {
-                    "type": "integer",
-                    "default": 1,
-                    "description": "Integer id of the first family to be generated. The rest are iteratively incremented by one",
-                    "help_text": "Need to be manually update this parameter for subsequent releases of the db. E.g. the first version had 6096 families, so need to set this to 6097 in the v2 run"
-                },
-                "deeptmhmm_chunk_size": {
-                    "type": "integer",
-                    "default": 100,
-                    "description": "Chunk size for parallel tm prediction"
-                },
-                "tm_fraction_threshold": {
-                    "type": "number",
-                    "description": "Predicted transmembrane fraction of total length allowed for families"
-                },
-                "hmmsearch_evalue_cutoff": {
-                    "type": "number",
-                    "default": 0.001,
-                    "description": "hmmsearch e-value cutoff threshold for reported results"
-                },
-                "redundant_length_threshold": {
-                    "type": "number",
-                    "default": 0.9,
-                    "description": "Minimum length percentage of env hit against query HMM, to deem family redundant and add for removal"
-                },
-                "redundant_threshold": {
-                    "type": "number",
-                    "default": 0.95,
-                    "description": "AA Jaccard Index threshold to deem two families similar, hence removing one as redundant"
-                },
-                "similarity_threshold": {
-                    "type": "number",
-                    "default": 0.5,
-                    "description": "Family Jaccard Index threshold to deem two families similar, requiring further investigation at AA level"
-                },
-                "db_name": {
-                    "type": "string",
-                    "default": "pfam",
-                    "description": "db used in hhblits/hhsearch"
-                },
-                "hh_mode": {
-                    "type": "string",
-                    "default": "hhblits",
-                    "description": "hhblits (fast) or hhsearch (sensitive)"
-                },
-                "pdb_chunk_size": {
-                    "type": "integer",
-                    "default": 50,
-                    "description": "Chunk size for parallel structure prediction"
-                },
-                "pdb_chunk_size_long": {
-                    "type": "integer",
-                    "default": 10,
-                    "description": "Chunk size for parallel structure prediction for long sequences"
-                },
-                "compute_mode": {
-                    "type": "string",
-                    "default": "gpu",
-                    "description": "GPU or CPU mode, depending on sequence length"
-                },
-                "query_result_chunks": {
-                    "type": "integer",
-                    "default": 100,
-                    "description": "Chunk size for parallel data exporting (biomes and domains)"
-                }
-            }
-        },
-        "reference_databases": {
-            "title": "reference_databases",
-            "type": "object",
-            "description": "Paths to downloaded databases used by the pipeline.",
-            "default": "",
-            "properties": {
-                "hhdb_folder_path": {
-                    "type": "string",
-                    "description": "annotate_models"
-                },
-                "foldseek_db_path": {
-                    "type": "string",
-                    "description": "annotate_structures"
-                }
-            },
-            "required": [
-                "hhdb_folder_path",
-                "foldseek_db_path"
-            ]
-        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -382,6 +249,144 @@
                     "hidden": true
                 }
             }
+        },
+        "clustering_params": {
+            "title": "clustering_params",
+            "type": "object",
+            "description": "Parameters for setup_clusters subworkflow",
+            "properties": {
+                "compress_mode": {
+                    "type": "string",
+                    "default": "none",
+                    "description": "compression mode of starting CSV input"
+                },
+                "min_sequence_length": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Sequence (and slice) length threshold to continue to clustering"
+                },
+                "input_csv_chunk_size": {
+                    "type": "integer",
+                    "default": 50000000,
+                    "description": "Chunk size for parallel slicing and filtering of sequence space"
+                },
+                "linclust_seq_identity": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "mmseqs parameter for minimum sequence identity",
+                    "help_text": "Minimum sequence identity required for clustering. The mmseqs default is 0.9, but protein families contain way more diverse sequences."
+                },
+                "linclust_coverage": {
+                    "type": "number",
+                    "default": 0.9,
+                    "description": "mmseqs parameter for minimum sequence coverage ratio",
+                    "help_text": "Minimum sequence length coverage required for clustering"
+                },
+                "linclust_cov_mode": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "mmseqs parameter for coverage mode: 0 for both, 1 for target and 2 for query sequence",
+                    "help_text": "Defined by the number of aligned residue pairs divided by 0: the maximum of the length of query/centre and target/non-centre sequences, 1: the length of the target/non-centre sequence, 2: the length of the query/centre"
+                },
+                "minimum_members": {
+                    "type": "integer",
+                    "default": 25,
+                    "description": "Minimum clustering chunk size threshold to proceed with family generation.",
+                    "help_text": "This is an initial filter for the mmseqs clustering results. The lower the threshold, the more families will be generated."
+                },
+                "clusters_chunk_size": {
+                    "type": "integer",
+                    "default": 30,
+                    "description": "Chunk size to break the MMseqs clustering into, to then feed family generation in parallel"
+                }
+            }
+        },
+        "family_generation_params": {
+            "title": "family_generation_params",
+            "type": "object",
+            "description": "Parameters for generate_nonredundant_families subworkflow",
+            "properties": {
+                "hmmsearch_evalue_cutoff": {
+                    "type": "number",
+                    "default": 0.001,
+                    "description": "hmmsearch e-value cutoff threshold for reported results"
+                },
+                "redundant_length_threshold": {
+                    "type": "number",
+                    "default": 0.9,
+                    "description": "Minimum length percentage of env hit against query HMM, to deem family redundant and add for removal"
+                },
+                "starting_id": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Integer id of the first family to be generated. The rest are iteratively incremented by one",
+                    "help_text": "Need to be manually update this parameter for subsequent releases of the db. E.g. the first version had 6096 families, so need to set this to 6097 in the v2 run"
+                }
+            }
+        },
+        "annotation_params": {
+            "title": "annotation_params",
+            "type": "object",
+            "description": "Parameters for annotate_families subworkflow",
+            "properties": {
+                "hh_mode": {
+                    "type": "string",
+                    "default": "hhblits",
+                    "description": "hhblits (fast) or hhsearch (sensitive)"
+                },
+                "db_name": {
+                    "type": "string",
+                    "default": "pfam",
+                    "description": "db used in hhblits/hhsearch"
+                },
+                "pdb_chunk_size": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "Chunk size for parallel structure prediction"
+                },
+                "pdb_chunk_size_long": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Chunk size for parallel structure prediction for long sequences"
+                },
+                "compute_mode": {
+                    "type": "string",
+                    "default": "gpu",
+                    "description": "GPU or CPU mode, depending on sequence length"
+                }
+            }
+        },
+        "export_data_params": {
+            "title": "export_data_params",
+            "type": "object",
+            "description": "Parameters for export_data subworkflow",
+            "properties": {
+                "query_result_chunks": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Chunk size for parallel data exporting (biomes and domains)"
+                }
+            }
+        },
+        "reference_databases": {
+            "title": "reference_databases",
+            "type": "object",
+            "description": "Paths to downloaded databases used by the pipeline.",
+            "default": "",
+            "properties": {
+                "hhdb_folder_path": {
+                    "type": "string",
+                    "description": "annotate_models"
+                },
+                "foldseek_db_path": {
+                    "type": "string",
+                    "description": "annotate_structures"
+                }
+            },
+            "required": [
+                "hhdb_folder_path",
+                "foldseek_db_path"
+            ]
         }
     },
     "allOf": [
@@ -392,13 +397,22 @@
             "$ref": "#/defs/institutional_config_options"
         },
         {
-            "$ref": "#/defs/module_parameters"
+            "$ref": "#/defs/generic_options"
+        },
+        {
+            "$ref": "#/defs/clustering_params"
+        },
+        {
+            "$ref": "#/defs/family_generation_params"
+        },
+        {
+            "$ref": "#/defs/annotation_params"
+        },
+        {
+            "$ref": "#/defs/export_data_params"
         },
         {
             "$ref": "#/defs/reference_databases"
-        },
-        {
-            "$ref": "#/defs/generic_options"
         }
     ]
 }

@@ -24,7 +24,7 @@ workflow REMOVE_REDUNDANCY {
     ch_reps_fasta = reps_fasta
         .map { meta, files -> files }
         .flatten()
-        .collectFile(name: "pre_redundant_reps.fasta", storeDir: params.outdir)
+        .collectFile(name: "pre_redundant_reps.fasta", storeDir: params.outdir + "/generate_families")
         .map { file -> [[id: 'pre_redundant'], file] }
 
     CAT_CAT( hmm )
@@ -37,6 +37,7 @@ workflow REMOVE_REDUNDANCY {
     HMMER_HMMSEARCH( ch_input_for_hmmsearch )
     ch_versions = ch_versions.mix( HMMER_HMMSEARCH.out.versions )
 
+    // TODO cleverer way to remove instead of hmmsearch results, e.g. Jaccard indices
     IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, params.redundant_length_threshold )
     ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
 
