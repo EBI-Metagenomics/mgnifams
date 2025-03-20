@@ -55,10 +55,10 @@ def create_size_dict(folder_path):
             with open(file_path, newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
-                    if len(row) < 4:
+                    if len(row) < 6:
                         continue  # Skip malformed lines
                     
-                    id_col, size, _, _ = row  # Extract columns
+                    id_col, size, _, _, _, _ = row  # Extract columns
                     key = f"{base_name}_{id_col}"
                     family_to_size[key] = size
     
@@ -75,10 +75,10 @@ def create_rep_to_family_dict(folder_path, family_to_size, redundant_fam_names):
             with open(file_path, newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
-                    if len(row) < 4:
+                    if len(row) < 6:
                         continue  # Skip malformed lines
                     
-                    id_col, size, rep, region = row  # Extract columns
+                    id_col, size, rep, region, length, sequence = row  # Extract columns
                     key = f"{rep}/{region}" if region != "'-" else rep
                     value = f"{base_name}_{id_col}"
                     

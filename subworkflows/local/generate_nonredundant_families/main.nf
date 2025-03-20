@@ -1,6 +1,7 @@
 include { GENERATE_FAMILIES          } from "../../../modules/local/generate_families/main"
 include { REMOVE_REDUNDANCY          } from "../../../subworkflows/local/remove_redundancy"
 include { PRESENT_DISCARDED_FAMILIES } from "../../../modules/local/present_discarded_families/main"
+include { PRESENT_FAMILY_METADATA    } from "../../../modules/local/present_family_metadata/main"
 
 workflow GENERATE_NONREDUNDANT_FAMILIES {
     take:
@@ -81,6 +82,9 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     PRESENT_DISCARDED_FAMILIES( REMOVE_REDUNDANCY.out.discarded )
     ch_versions = ch_versions.mix( PRESENT_DISCARDED_FAMILIES.out.versions )
 
+    PRESENT_FAMILY_METADATA( REMOVE_REDUNDANCY.out.metadata )
+    ch_versions = ch_versions.mix( PRESENT_FAMILY_METADATA.out.versions )
+
     emit:
     versions      = ch_versions
     seed_msa_sto  = REMOVE_REDUNDANCY.out.seed_msa_sto
@@ -92,4 +96,5 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     metadata      = REMOVE_REDUNDANCY.out.metadata
     family_reps   = REMOVE_REDUNDANCY.out.family_reps
     discarded_mqc = PRESENT_DISCARDED_FAMILIES.out.mqc
+    metadata_mqc  = PRESENT_FAMILY_METADATA.out.mqc
 }

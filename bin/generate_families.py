@@ -324,14 +324,6 @@ def check_seed_membership(original_sequence_names, filtered_seq_names):
 
     return percentage_membership
 
-def append_family_file(iteration, family_members):
-    lines = [f"{iteration}\t{member}\n" for member in family_members]
-    with open(refined_families_tsv_file, 'a') as file:
-        file.writelines(lines)
-
-    with open(log_file, 'a') as file:
-        file.write(f"E: {iteration}, s: {len(family_members)}\n")
-
 def parse_protein_region(protein_id):
     number_of_underscores = protein_id.count('_')
     if (number_of_underscores == 0):
@@ -363,10 +355,17 @@ def extract_first_stockholm_sequence():
 
     return protein_rep, region, first_record.seq.replace("-", "").upper() # TODO map to correct slice from pyfastx obj?
 
-def append_family_metadata(iteration, full_msa_num_seqs):
-    protein_rep, region, sequence = extract_first_stockholm_sequence()
+def append_family_file(iteration, family_members):
+    lines = [f"{iteration}\t{member}\n" for member in family_members]
+    with open(refined_families_tsv_file, 'a') as file:
+        file.writelines(lines)
+
+    with open(log_file, 'a') as file:
+        file.write(f"E: {iteration}, s: {len(family_members)}\n")
+
+def append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs):
     with open(family_metadata_file, 'a') as file:
-        file.writelines(f"{iteration},{full_msa_num_seqs},{protein_rep},{region}\n")
+        file.writelines(f"{iteration},{full_msa_num_seqs},\"{protein_rep}\",{region},{len(sequence)},{sequence}\n")
     with open(family_reps_file, 'a') as file:
         file.writelines(f">{protein_rep}/{region}\t{arg_chunk_num}_{iteration}\n{sequence}\n")
 
@@ -416,6 +415,9 @@ def main():
         discard_reason = ""
         discard_value = 0.0
         exit_flag = False
+        protein_rep = ""
+        region = ""
+        sequence = ""
         family_iteration = 0
         while True:
             family_iteration += 1
@@ -481,6 +483,23 @@ def main():
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
                 full_msa_sequence_names, full_msa_num_seqs = run_hmmalign("stockholm") # final full MSA, including smaller sequences
+                protein_rep, region, sequence = extract_first_stockholm_sequence()
+                seq_length = len(sequence)
+                if (seq_length < 100):
+                    discard_flag = True
+                    discard_reason = "family representative length too small"
+                    discard_value = seq_length
+                    with open(log_file, 'a') as file:
+                        file.write(f"Discard-Warning: {iteration} rep length is only {seq_length}\n")
+                    break
+                elif (seq_length > 2000):
+                    discard_flag = True
+                    discard_reason = "family representative length too large"
+                    discard_value = seq_length
+                    with open(log_file, 'a') as file:
+                        file.write(f"Discard-Warning: {iteration} rep length is over {seq_length}\n")
+                    break
+
                 break
 
             # main strategy branch continue
@@ -503,7 +522,7 @@ def main():
                 outfile.write(str(family_rep) + "\n")
             
             append_family_file(iteration, filtered_seq_names)
-            append_family_metadata(iteration, full_msa_num_seqs)
+            append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs)
             move_produced_models(iteration)
         
         remove_tmp_files()
