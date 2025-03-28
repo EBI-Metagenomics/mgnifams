@@ -209,12 +209,12 @@ def mask_sequence(sequence, env_from, env_to):
 
     return sequence
 
-def run_hmmsearch(hmm, pyhmmer_seqs, pyfastx_obj, exit_flag):
+def run_hmmsearch(hmm, pyhmmer_seqs, pyfastx_obj, exit_flag): # hmm obj changes, pyhmmer_seqs is the same, whole protein library
     """Runs HMMER's hmmsearch using pyhmmer."""
     start_time = time.time()
 
     filtered_sequences = []
-    os.remove(tmp_family_sequences_path) # emptying initial MSA tmp file
+    os.remove(tmp_family_sequences_path) # emptying file
 
     for top_hits in pyhmmer.hmmer.hmmsearch(hmm, pyhmmer_seqs, cpus=int(arg_cpus), E=evalue_threshold):
         with open(tmp_domtblout_path, "wb") as fh:
@@ -249,7 +249,8 @@ def run_hmmalign(hmm):
     with pyhmmer.easel.SequenceFile(tmp_family_sequences_path, digital=True) as seq_file:
         seqs = seq_file.read_block()
         hmmalign_res = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
-        with open(tmp_align_msa_path, "wb") as outfile:
+
+        with open(tmp_align_msa_path, "wb") as outfile: # full MSA written out here
             hmmalign_res.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
 
         # TODO manipulate the object below, Bateman trim?
@@ -263,6 +264,22 @@ def run_hmmalign(hmm):
 
 def unmask_sequence_names(names):
     return [name.split('/')[0] for name in names]
+
+def write_filtered_sto_to_seed_msa_file(name_set):
+    with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
+        for line in infile:
+            # Split line by spaces
+            split_line = line.split()
+
+            # Check if the line meets any of the specified conditions
+            if not split_line or len(split_line) == 1:  # Line is empty or //
+                outfile.write(line)
+            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
+                outfile.write(line)
+            elif split_line[0] in name_set or split_line[1] in name_set:  # First or second split is in name_set
+                outfile.write(line)
+            elif split_line[0] == '#=GC':  # First split is '#=GC'
+                outfile.write(line)
 
 def run_pytrimal(threshold=0.8):
     start_time = time.time()
@@ -285,14 +302,16 @@ def run_pytrimal(threshold=0.8):
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
 
-        if (number_of_remaining_sequences <= 2000):
+        if (number_of_remaining_sequences <= 2000): # TODO pytrimal -clusters 2000 max once, if/when fixed
             break
         else:
             threshold -= 0.1
             with open(log_file, 'a') as file:
                 file.write("Rerunning run_pytrimal; ")
 
-    msa.dump(tmp_seed_msa_path) # TODO based on remaining names, filter stockholm and write that one as seed
+    name_set = {name.decode() for name in msa.names}
+
+    write_filtered_sto_to_seed_msa_file(name_set)
 
     log_time(start_time, "run_pytrimal: ")
 
@@ -438,7 +457,7 @@ def main():
                     discard_value = 0.0
                     break
 
-                recruited_sequence_names, num_seqs = run_hmmalign(hmm) # TODO extra Bateman logic in this call only
+                recruited_sequence_names, _ = run_hmmalign(hmm) # TODO extra Bateman logic in this call only
 
                 new_recruited_sequences = set(unmask_sequence_names(recruited_sequence_names)) - set(total_checked_sequences) # new_recruited_sequences always has something at first turn since total_checked_sequences starts empty []
 
@@ -452,9 +471,10 @@ def main():
             if exit_flag: # exit strategy branch
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
-                exit() # TODO pass stockholm instead and continue from here
-                consensus = run_hmmbuild(iteration, hand=hand_flag)
+
+                _, consensus = run_hmmbuild(iteration, hand=hand_flag)
                 extract_RF()
+
                 filtered_seq_names = run_hmmsearch(hmm, pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
@@ -474,7 +494,7 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                full_msa_sequence_names, full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
+                _, full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
                 protein_rep, region, sequence = extract_first_stockholm_sequence()
                 seq_length = len(sequence)
                 if (seq_length < 100):
@@ -484,7 +504,7 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Discard-Warning: {iteration} rep length is only {seq_length}\n")
                     break
-                elif (seq_length > 2000): # TODO pytrimal -clusters 2000 max once
+                elif (seq_length > 2000):
                     discard_flag = True
                     discard_reason = "family representative length too large"
                     discard_value = seq_length
