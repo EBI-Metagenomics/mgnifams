@@ -188,12 +188,13 @@ def run_hmmbuild(iteration, hand=False):
     background = pyhmmer.plan7.Background(alphabet)
     hmm, _, _ = builder.build_msa(msa, background)
 
-    with open(tmp_hmm_path, "wb") as output_file:
-        hmm.write(output_file)
+    if (architecture == "hand"): # only write to outfile if last iteration, else using the built object
+        with open(tmp_hmm_path, "wb") as output_file:
+            hmm.write(output_file)
 
     log_time(start_time, "run_hmmbuild (pyhmmer): ")
 
-    return hmm.consensus
+    return hmm, hmm.consensus
 
 def mask_sequence(sequence, env_from, env_to):
     # Unpack the tuple (header, seq)
@@ -208,57 +209,53 @@ def mask_sequence(sequence, env_from, env_to):
 
     return sequence
 
-def run_hmmsearch(pyhmmer_seqs, pyfastx_obj, exit_flag):
+def run_hmmsearch(hmm, pyhmmer_seqs, pyfastx_obj, exit_flag):
     """Runs HMMER's hmmsearch using pyhmmer."""
     start_time = time.time()
 
     filtered_sequences = []
     os.remove(tmp_family_sequences_path) # emptying initial MSA tmp file
 
-    with pyhmmer.plan7.HMMFile(tmp_hmm_path) as hmm_file:
-        hmm = hmm_file.read()
-        for top_hits in pyhmmer.hmmer.hmmsearch(hmm, pyhmmer_seqs, cpus=int(arg_cpus), E=evalue_threshold):
-            with open(tmp_domtblout_path, "wb") as fh:
-                top_hits.write(fh, format="domains") # --domtblout
-            qlen = top_hits.query.M
-            for hit in top_hits:
-                sequence_name = hit.name.decode()
-                # print(f"Target name: {hit.name.decode()}, Hit E-value: {hit.evalue}") # debug
-                tlen = hit.length
-                for subhit in hit.domains:
-                    # print(f"TARGET SEQUENCE: {subhit.alignment.target_sequence}") # debug, different than target_env_sequence that we want, not provided by pyhmmer
-                    env_length = subhit.env_to - subhit.env_from + 1
-                    # print(f"env from-to: {subhit.env_from}-{subhit.env_to}") # debug
-                    if (exit_flag or env_length >= length_threshold * qlen):
-                        sequence = get_fasta_sequences(pyfastx_obj, [sequence_name])
-                        if (env_length < tlen):
-                            sequence = mask_sequence(sequence, subhit.env_from, subhit.env_to)
-                        write_fasta_sequences(sequence, tmp_family_sequences_path, "a")
-                        filtered_sequences.append(sequence[0][0]) # [0][0] is the header (list of tuples)
-                        # print(f"ENV SEQUENCE: {sequence[0][1]}") # debug
+    for top_hits in pyhmmer.hmmer.hmmsearch(hmm, pyhmmer_seqs, cpus=int(arg_cpus), E=evalue_threshold):
+        with open(tmp_domtblout_path, "wb") as fh:
+            top_hits.write(fh, format="domains") # --domtblout
+        qlen = top_hits.query.M
+        for hit in top_hits:
+            sequence_name = hit.name.decode()
+            # print(f"Target name: {hit.name.decode()}, Hit E-value: {hit.evalue}") # debug
+            tlen = hit.length
+            for subhit in hit.domains:
+                # print(f"TARGET SEQUENCE: {subhit.alignment.target_sequence}") # debug, different than target_env_sequence that we want, not provided by pyhmmer
+                env_length = subhit.env_to - subhit.env_from + 1
+                # print(f"env from-to: {subhit.env_from}-{subhit.env_to}") # debug
+                if (exit_flag or env_length >= length_threshold * qlen):
+                    sequence = get_fasta_sequences(pyfastx_obj, [sequence_name])
+                    if (env_length < tlen):
+                        sequence = mask_sequence(sequence, subhit.env_from, subhit.env_to)
+                    write_fasta_sequences(sequence, tmp_family_sequences_path, "a")
+                    filtered_sequences.append(sequence[0][0]) # [0][0] is the header (list of tuples)
+                    # print(f"ENV SEQUENCE: {sequence[0][1]}") # debug
 
     log_time(start_time, "run_hmmsearch (pyhmmer): ")
 
     return filtered_sequences
 
-def run_hmmalign():
+def run_hmmalign(hmm):
     """Runs HMMER's hmmalign using pyhmmer."""
     start_time = time.time()
 
     num_seqs_result = 0
 
-    with pyhmmer.plan7.HMMFile(tmp_hmm_path) as hmm_file:
-        hmm = hmm_file.read()
-        with pyhmmer.easel.SequenceFile(tmp_family_sequences_path, digital=True) as seq_file:
-            seqs = seq_file.read_block()
-            hmmalign_res = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
-            with open(tmp_align_msa_path, "wb") as outfile:
-                hmmalign_res.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
+    with pyhmmer.easel.SequenceFile(tmp_family_sequences_path, digital=True) as seq_file:
+        seqs = seq_file.read_block()
+        hmmalign_res = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
+        with open(tmp_align_msa_path, "wb") as outfile:
+            hmmalign_res.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
 
-            # TODO manipulate the object below, Bateman trim?
-            # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
-            #     print(name.decode(), " ", aligned)
-            num_seqs_result = len(hmmalign_res.names)
+        # TODO manipulate the object below, Bateman trim?
+        # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
+        #     print(name.decode(), " ", aligned)
+        num_seqs_result = len(hmmalign_res.names)
 
     log_time(start_time, "run_hmmalign (pyhmmer): ")
 
@@ -414,10 +411,11 @@ def main():
         discard_reason = ""
         discard_value = 0.0
         exit_flag = False
+        hmm = ""
+        consensus = ""
         protein_rep = ""
         region = ""
         sequence = ""
-        consensus = ""
         family_iteration = 0
         while True:
             family_iteration += 1
@@ -430,16 +428,17 @@ def main():
                 file.write(str(family_iteration) + "\n")
 
             if not exit_flag: # main strategy branch
-                run_hmmbuild(iteration)
+                hmm, _ = run_hmmbuild(iteration)
 
-                filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
+                filtered_seq_names = run_hmmsearch(hmm, pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
+
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
                     discard_reason = "low complexity model - confounding cluster"
                     discard_value = 0.0
                     break
 
-                recruited_sequence_names, num_seqs = run_hmmalign() # TODO extra Bateman logic in this call only
+                recruited_sequence_names, num_seqs = run_hmmalign(hmm) # TODO extra Bateman logic in this call only
 
                 new_recruited_sequences = set(unmask_sequence_names(recruited_sequence_names)) - set(total_checked_sequences) # new_recruited_sequences always has something at first turn since total_checked_sequences starts empty []
 
@@ -456,7 +455,7 @@ def main():
                 exit() # TODO pass stockholm instead and continue from here
                 consensus = run_hmmbuild(iteration, hand=hand_flag)
                 extract_RF()
-                filtered_seq_names = run_hmmsearch(pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
+                filtered_seq_names = run_hmmsearch(hmm, pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
                     discard_reason = "low complexity model - confounding cluster"
@@ -475,7 +474,7 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                full_msa_sequence_names, full_msa_num_seqs = run_hmmalign() # final full MSA, including smaller sequences
+                full_msa_sequence_names, full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
                 protein_rep, region, sequence = extract_first_stockholm_sequence()
                 seq_length = len(sequence)
                 if (seq_length < 100):
