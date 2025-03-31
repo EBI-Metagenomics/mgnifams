@@ -325,9 +325,11 @@ def run_pytrimal(msa, threshold=0.8):
 
     name_set = {name.decode() for name in msa.names}
 
-    write_filtered_sto_to_seed_msa_file(name_set)
+    write_filtered_sto_to_seed_msa_file(name_set) # TODO only final
 
     log_time(start_time, "run_pytrimal: ")
+
+    # return(digital_msa) # TODO need to return DigitalMSA here, too much extra processing, leaving until more itnerfacing between libs available
 
 def extract_RF():
     with open(tmp_seed_msa_path, 'r') as file:
@@ -533,7 +535,7 @@ def main():
             total_checked_sequences += list(new_recruited_sequences)
             with open(log_file, 'a') as file:
                 file.write("total_checked_sequences calculated and starting run_pytrimal\n")
-            run_pytrimal(msa) # removes redundant sequences
+            msa = run_pytrimal(msa) # removes redundant sequences
             hand_flag = True
 
         # Exiting family loop
