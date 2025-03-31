@@ -189,6 +189,8 @@ def run_hmmbuild(msa, hand=False):
     """Runs HMMER's hmmbuild using pyhmmer."""
     start_time = time.time()                    
 
+    # msa2 = msa.textize() # debug
+    # print(msa2.names, [seq.sequence.encode() for seq in msa2.sequences])
     architecture = "hand" if hand else "fast"
     builder = pyhmmer.plan7.Builder(alphabet, architecture=architecture)
     background = pyhmmer.plan7.Background(alphabet)
@@ -292,7 +294,7 @@ def write_filtered_sto_to_seed_msa_file(name_set):
             elif split_line[0] == '#=GC':  # First split is '#=GC'
                 outfile.write(line)
 
-def run_pytrimal(msa, threshold=0.8):
+def run_pytrimal(msa, iteration, threshold=0.8):
     start_time = time.time()
 
     # Currently need to write sto msa to output file, cannot directly feed DigitalMSA to Pytrimal: https://github.com/althonos/pytrimal/issues/4
@@ -325,11 +327,14 @@ def run_pytrimal(msa, threshold=0.8):
 
     name_set = {name.decode() for name in msa.names}
 
-    write_filtered_sto_to_seed_msa_file(name_set) # TODO only final
+    write_filtered_sto_to_seed_msa_file(name_set) # TODO only final -
 
+    msa = msa.to_pyhmmer().digitize(alphabet)
+    msa.name = f"{arg_chunk_num}_{iteration}".encode()
+    
     log_time(start_time, "run_pytrimal: ")
 
-    # return(digital_msa) # TODO need to return DigitalMSA here, too much extra processing, leaving until more itnerfacing between libs available
+    return(msa) 
 
 def extract_RF():
     with open(tmp_seed_msa_path, 'r') as file:
@@ -535,7 +540,7 @@ def main():
             total_checked_sequences += list(new_recruited_sequences)
             with open(log_file, 'a') as file:
                 file.write("total_checked_sequences calculated and starting run_pytrimal\n")
-            msa = run_pytrimal(msa) # removes redundant sequences
+            msa = run_pytrimal(msa, iteration) # removes redundant sequences
             hand_flag = True
 
         # Exiting family loop
