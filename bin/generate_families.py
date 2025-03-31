@@ -33,7 +33,7 @@ def define_globals():
         converged_families_file, family_metadata_file, family_reps_file, \
         tmp_folder, seed_msa_folder, \
         align_msa_folder, hmm_folder, \
-        domtblout_folder, rf_folder, \
+        domtblout_folder, rf_folder, alphabet, \
         evalue_threshold, length_threshold, \
         tmp_family_sequences_path, tmp_seed_msa_path, tmp_align_msa_path, \
         tmp_hmm_path, tmp_domtblout_path, \
@@ -52,6 +52,7 @@ def define_globals():
     hmm_folder                 = "hmm"
     domtblout_folder           = "domtblout"
     rf_folder                  = "rf"
+    alphabet                   = pyhmmer.easel.Alphabet.amino()
     evalue_threshold           = 0.001
     length_threshold           = 0.8
 
@@ -151,7 +152,7 @@ def write_family_fasta_file(members, pyfastx_obj):
 
     log_time(start_time, "write_family_fasta_file (pyfastx): ")
 
-def run_initial_msa(members, pyfastx_obj):
+def run_initial_msa(members, iteration, pyfastx_obj):
     """Aligns sequences using pyfamsa and writes the result to a FASTA file."""
     start_time = time.time()
     
@@ -166,22 +167,27 @@ def run_initial_msa(members, pyfastx_obj):
     # Perform the multiple sequence alignment
     alignment = aligner.align(sequences)
 
-    # Write the aligned sequences to a FASTA file
-    with open(tmp_seed_msa_path, "w") as output_handle:
-        for gapped_seq in alignment:
-            output_handle.write(f">{gapped_seq.id.decode()}\n{gapped_seq.sequence.decode()}\n")
+    # # Write the aligned sequences to a FASTA file # Debug
+    # with open(tmp_seed_msa_path, "w") as output_handle:
+    #     for gapped_seq in alignment:
+    #         output_handle.write(f">{gapped_seq.id.decode()}\n{gapped_seq.sequence.decode()}\n")
+    msa = pyhmmer.easel.TextMSA(
+        name=f"{arg_chunk_num}_{iteration}".encode(),
+        sequences=[
+            pyhmmer.easel.TextSequence(name=row.id, sequence=row.sequence.decode())
+            for row in alignment
+        ]
+    )
+
+    msa = msa.digitize(alphabet)
 
     log_time(start_time, "run_initial_msa (pyfamsa): ")
 
-def run_hmmbuild(iteration, hand=False):
+    return(msa)
+
+def run_hmmbuild(msa, hand=False):
     """Runs HMMER's hmmbuild using pyhmmer."""
     start_time = time.time()                    
-
-    alphabet = pyhmmer.easel.Alphabet.amino()
-
-    with pyhmmer.easel.MSAFile(tmp_seed_msa_path, digital=True, alphabet=alphabet) as msa_file:
-        msa = msa_file.read()
-    msa.name = f"{arg_chunk_num}_{iteration}".encode()
 
     architecture = "hand" if hand else "fast"
     builder = pyhmmer.plan7.Builder(alphabet, architecture=architecture)
@@ -240,7 +246,7 @@ def run_hmmsearch(hmm, pyhmmer_seqs, pyfastx_obj, exit_flag): # hmm obj changes,
 
     return filtered_sequences
 
-def run_hmmalign(hmm):
+def run_hmmalign(hmm, iteration, final=False):
     """Runs HMMER's hmmalign using pyhmmer."""
     start_time = time.time()
 
@@ -248,19 +254,24 @@ def run_hmmalign(hmm):
 
     with pyhmmer.easel.SequenceFile(tmp_family_sequences_path, digital=True) as seq_file:
         seqs = seq_file.read_block()
-        hmmalign_res = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
+        msa = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
 
-        with open(tmp_align_msa_path, "wb") as outfile: # full MSA written out here
-            hmmalign_res.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
+        if final:
+            with open(tmp_align_msa_path, "wb") as outfile: # full MSA written out here
+                msa.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
+        else:
+            msa = msa.digitize(alphabet)
+            msa.name = f"{arg_chunk_num}_{iteration}".encode()
 
         # TODO manipulate the object below, Bateman trim?
-        # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
+        # for name, aligned in zip(msa.names, msa.alignment):
         #     print(name.decode(), " ", aligned)
-        num_seqs_result = len(hmmalign_res.names)
+
+        num_seqs_result = len(msa.names)
 
     log_time(start_time, "run_hmmalign (pyhmmer): ")
 
-    return [name.decode() for name in hmmalign_res.names], num_seqs_result
+    return msa, [name.decode() for name in msa.names], num_seqs_result
 
 def unmask_sequence_names(names):
     return [name.split('/')[0] for name in names]
@@ -281,14 +292,17 @@ def write_filtered_sto_to_seed_msa_file(name_set):
             elif split_line[0] == '#=GC':  # First split is '#=GC'
                 outfile.write(line)
 
-def run_pytrimal(threshold=0.8):
+def run_pytrimal(msa, threshold=0.8):
     start_time = time.time()
 
+    # Currently need to write sto msa to output file, cannot directly feed DigitalMSA to Pytrimal: https://github.com/althonos/pytrimal/issues/4
+    with open(tmp_align_msa_path, "wb") as outfile: # need to write full MSA here, before loading to pytrimal
+        msa.write(outfile, format="stockholm")
     # Load the MSA
     bio_ali = AlignIO.read(tmp_align_msa_path, "stockholm")
     names = [record.id.encode() for record in bio_ali]
-    sequence = [bytes(record.seq) for record in bio_ali]
-    msa = pytrimal.Alignment(names, sequence)
+    sequences = [bytes(record.seq) for record in bio_ali]
+    msa = pytrimal.Alignment(names, sequences)
 
     # and remove redundant sequences
     while True:
@@ -387,11 +401,11 @@ def append_family_metadata(protein_rep, region, sequence, iteration, full_msa_nu
         file.writelines(f">{protein_rep}/{region}\t{arg_chunk_num}_{iteration}\n{sequence}\n")
 
 def move_produced_models(iteration):
-    shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder,  f'{arg_chunk_num}_{iteration}.sto'))
-    shutil.move(tmp_align_msa_path,    os.path.join(align_msa_folder, f'{arg_chunk_num}_{iteration}.sto'))
-    shutil.move(tmp_hmm_path,          os.path.join(hmm_folder,       f'{arg_chunk_num}_{iteration}.hmm'))
-    shutil.move(tmp_domtblout_path,    os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
-    shutil.move(tmp_rf_path,           os.path.join(rf_folder,        f'{arg_chunk_num}_{iteration}.txt'))
+    shutil.move(tmp_seed_msa_path,  os.path.join(seed_msa_folder,  f'{arg_chunk_num}_{iteration}.sto'))
+    shutil.move(tmp_align_msa_path, os.path.join(align_msa_folder, f'{arg_chunk_num}_{iteration}.sto'))
+    shutil.move(tmp_hmm_path,       os.path.join(hmm_folder,       f'{arg_chunk_num}_{iteration}.hmm'))
+    shutil.move(tmp_domtblout_path, os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
+    shutil.move(tmp_rf_path,        os.path.join(rf_folder,        f'{arg_chunk_num}_{iteration}.txt'))
 
 def remove_tmp_files():
     for item in os.listdir(tmp_folder):
@@ -420,7 +434,7 @@ def main():
         original_sequence_names = family_members
         write_family_fasta_file(family_members, mgnifams_pyfastx_obj)
 
-        run_initial_msa(family_members, mgnifams_pyfastx_obj)
+        msa = run_initial_msa(family_members, iteration, mgnifams_pyfastx_obj)
 
         total_checked_sequences = []
         filtered_seq_names = []
@@ -447,7 +461,7 @@ def main():
                 file.write(str(family_iteration) + "\n")
 
             if not exit_flag: # main strategy branch
-                hmm, _ = run_hmmbuild(iteration)
+                hmm, _ = run_hmmbuild(msa)
 
                 filtered_seq_names = run_hmmsearch(hmm, pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
 
@@ -457,7 +471,7 @@ def main():
                     discard_value = 0.0
                     break
 
-                recruited_sequence_names, _ = run_hmmalign(hmm) # TODO extra Bateman logic in this call only
+                msa, recruited_sequence_names, _ = run_hmmalign(hmm, iteration) # TODO extra Bateman logic in this call only
 
                 new_recruited_sequences = set(unmask_sequence_names(recruited_sequence_names)) - set(total_checked_sequences) # new_recruited_sequences always has something at first turn since total_checked_sequences starts empty []
 
@@ -472,7 +486,7 @@ def main():
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
 
-                _, consensus = run_hmmbuild(iteration, hand=hand_flag)
+                _, consensus = run_hmmbuild(msa, hand=hand_flag)
                 extract_RF()
 
                 filtered_seq_names = run_hmmsearch(hmm, pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
@@ -494,7 +508,8 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                _, full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
+                _, _, full_msa_num_seqs = run_hmmalign(hmm, iteration, final=True) # final full MSA, including smaller sequences
+
                 protein_rep, region, sequence = extract_first_stockholm_sequence()
                 seq_length = len(sequence)
                 if (seq_length < 100):
@@ -518,7 +533,7 @@ def main():
             total_checked_sequences += list(new_recruited_sequences)
             with open(log_file, 'a') as file:
                 file.write("total_checked_sequences calculated and starting run_pytrimal\n")
-            run_pytrimal() # removes redundant sequences
+            run_pytrimal(msa) # removes redundant sequences
             hand_flag = True
 
         # Exiting family loop
