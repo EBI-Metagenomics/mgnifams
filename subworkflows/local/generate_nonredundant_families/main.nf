@@ -1,3 +1,4 @@
+include { BUILD_PYFASTX_INDEX        } from "../../../modules/local/build_pyfastx_index/main"
 include { GENERATE_FAMILIES          } from "../../../modules/local/generate_families/main"
 include { REMOVE_REDUNDANCY          } from "../../../subworkflows/local/remove_redundancy"
 include { PRESENT_DISCARDED_FAMILIES } from "../../../modules/local/present_discarded_families/main"
@@ -11,7 +12,10 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     main:
     ch_versions = Channel.empty()
 
-    ch_families = GENERATE_FAMILIES( cluster_chunks, mgnifams_fa.first() )
+    ch_pyfastx = BUILD_PYFASTX_INDEX( mgnifams_fa )
+    ch_versions = ch_versions.mix( BUILD_PYFASTX_INDEX.out.versions )
+
+    ch_families = GENERATE_FAMILIES( cluster_chunks, mgnifams_fa.first(), ch_pyfastx.index.first() )
     ch_versions = ch_versions.mix( GENERATE_FAMILIES.out.versions )
 
     ch_hmm = ch_families.hmm

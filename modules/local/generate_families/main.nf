@@ -11,6 +11,7 @@ process GENERATE_FAMILIES {
     input:
     tuple val(meta) , path(clusters_chunk)
     tuple val(meta2), path(mgnifams_fasta)
+    tuple val(meta3), path(pyfastx_index)
 
     output:
     tuple val(meta), path("seed_msa_sto/*")       , emit: seed_msa_sto

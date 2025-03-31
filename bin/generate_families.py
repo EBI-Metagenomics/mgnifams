@@ -97,7 +97,7 @@ def log_time(start_time, text, mode='a'):
 def create_mgnifams_pyfastx_obj():
     start_time = time.time()
 
-    mgnifams_pyfastx_obj = pyfastx.Fasta(arg_mgnifams_input_fasta_file, key_func=str)
+    mgnifams_pyfastx_obj = pyfastx.Fasta(arg_mgnifams_input_fasta_file)
 
     log_time(start_time, "create_mgnifams_fasta_dict: ", 'w')
 
