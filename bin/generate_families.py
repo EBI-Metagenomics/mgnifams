@@ -4,6 +4,7 @@ import argparse
 import os
 import time
 import shutil
+import re
 
 import pandas as pd
 import pyfastx
@@ -259,31 +260,8 @@ def run_hmmalign(hmm):
 
     return num_seqs_result
 
-def run_pytrimal_terminalonly():
-    pass
-
-    # TODO manipulate the object below, Bateman trim?
-    # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
-    #     print(name.decode(), " ", aligned)
-
 def unmask_sequence_names(names):
     return [name.split('/')[0] for name in names]
-
-def write_filtered_sto_to_seed_msa_file(name_set):
-    with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
-        for line in infile:
-            # Split line by spaces
-            split_line = line.split()
-
-            # Check if the line meets any of the specified conditions
-            if not split_line or len(split_line) == 1:  # Line is empty or //
-                outfile.write(line)
-            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
-                outfile.write(line)
-            elif split_line[0] in name_set or split_line[1] in name_set:  # First or second split is in name_set
-                outfile.write(line)
-            elif split_line[0] == '#=GC':  # First split is '#=GC'
-                outfile.write(line)
 
 def run_pytrimal_reps(threshold=0.8):
     start_time = time.time()
@@ -313,11 +291,55 @@ def run_pytrimal_reps(threshold=0.8):
             with open(log_file, 'a') as file:
                 file.write("Rerunning run_pytrimal_reps; ")
 
-    name_set = {name.decode() for name in msa.names}
-
-    write_filtered_sto_to_seed_msa_file(name_set)
-
     log_time(start_time, "run_pytrimal_reps: ")
+
+    return msa
+
+def get_anchor_points(main_seq, sub_seq):
+    match = re.search(sub_seq, main_seq) # TODO be careful if there is ever a multiple match, will get wrong anchor points for the MSA (try re.finditer)
+    start_pos, end_pos = match.span()
+
+    return start_pos, end_pos
+
+def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
+    with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
+        for line in infile:
+            # Split line by spaces
+            split_line = line.split()
+
+            # Check if the line meets any of the specified conditions
+            if not split_line or len(split_line) == 1:  # Line is empty or //
+                outfile.write(line)
+            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
+                outfile.write(line)
+            elif split_line[0] in name_set:  # First split is in name_set
+                original_substring = split_line[1]  # The part to modify
+                modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+                line = line.replace(original_substring, modified_substring, 1)
+                outfile.write(line)
+            elif split_line[1] in name_set:  # Second split is in name_set
+                original_substring = split_line[3]  # The part to modify
+                modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+                line = line.replace(original_substring, modified_substring, 1)
+                outfile.write(line)
+            elif split_line[0] == '#=GC':  # First split is '#=GC'
+                original_substring = split_line[2]  # The part to modify
+                modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+                line = line.replace(original_substring, modified_substring, 1)
+                outfile.write(line)
+
+def run_pytrimal_terminalonly(msa):
+    trimmer = pytrimal.ManualTrimmer(gap_threshold=0.5)
+    trimmed_alignment = trimmer.trim(msa).terminal_only() # trim ends only
+
+    start_pos, end_pos = get_anchor_points(msa.sequences[0], trimmed_alignment.sequences[0])
+
+    name_set = {name.decode() for name in trimmed_alignment.names}
+    write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos)
+
+    # TODO manipulate the object below, Bateman trim?
+    # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
+    #     print(name.decode(), " ", aligned)
 
 def extract_RF():
     with open(tmp_seed_msa_path, 'r') as file:
@@ -517,8 +539,8 @@ def main():
 
             # main strategy continue, if not converged
             run_hmmalign(hmm)
-            run_pytrimal_reps() # removes redundant sequences
-            run_pytrimal_terminalonly() # removes gaps above threshold at ends
+            msa = run_pytrimal_reps() # removes redundant sequences
+            run_pytrimal_terminalonly(msa) # removes gaps above threshold at ends
 
         # Exiting family loop
         if (discard_flag): # unsuccessfully
