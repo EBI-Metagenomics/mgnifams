@@ -258,9 +258,13 @@ def run_hmmalign(hmm, iteration, final=False):
         seqs = seq_file.read_block()
         msa = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
 
+        with open(tmp_align_msa_path, "wb") as outfile: # full MSA written out here, need file, to be parsed by pytrimal result, to keep hand
+            msa.write(outfile, format="stockholm")
+
         if final:
-            with open(tmp_align_msa_path, "wb") as outfile: # full MSA written out here
-                msa.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
+            pass
+            # with open(tmp_align_msa_path, "wb") as outfile: # full MSA written out here
+            #     msa.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
         else:
             msa = msa.digitize(alphabet)
             msa.name = f"{arg_chunk_num}_{iteration}".encode()
@@ -278,7 +282,7 @@ def run_hmmalign(hmm, iteration, final=False):
 def unmask_sequence_names(names):
     return [name.split('/')[0] for name in names]
 
-def write_filtered_sto_to_seed_msa_file(name_set):
+def rewrite_filtered_sto_to_seed_msa_file(name_set):
     with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
         for line in infile:
             # Split line by spaces
@@ -297,14 +301,15 @@ def write_filtered_sto_to_seed_msa_file(name_set):
 def run_pytrimal(msa, iteration, threshold=0.8):
     start_time = time.time()
 
-    # Currently need to write sto msa to output file, cannot directly feed DigitalMSA to Pytrimal: https://github.com/althonos/pytrimal/issues/4
-    with open(tmp_align_msa_path, "wb") as outfile: # need to write full MSA here, before loading to pytrimal
-        msa.write(outfile, format="stockholm")
-    # Load the MSA
-    bio_ali = AlignIO.read(tmp_align_msa_path, "stockholm")
-    names = [record.id.encode() for record in bio_ali]
-    sequences = [bytes(record.seq) for record in bio_ali]
-    msa = pytrimal.Alignment(names, sequences)
+    # # Currently need to write sto msa to output file, cannot directly feed DigitalMSA to Pytrimal: https://github.com/althonos/pytrimal/issues/4
+    # with open(tmp_align_msa_path, "wb") as outfile: # need to write full MSA here, before loading to pytrimal
+    #     msa.write(outfile, format="stockholm")
+    # # Load the MSA
+    # bio_ali = AlignIO.read(tmp_align_msa_path, "stockholm")
+    # names = [record.id.encode() for record in bio_ali]
+    # sequences = [bytes(record.seq) for record in bio_ali]
+    msa = msa.textize()
+    msa = pytrimal.Alignment(msa.names, msa.alignment)
 
     # and remove redundant sequences
     while True:
@@ -325,13 +330,15 @@ def run_pytrimal(msa, iteration, threshold=0.8):
             with open(log_file, 'a') as file:
                 file.write("Rerunning run_pytrimal; ")
 
+    # msa = msa.to_pyhmmer().digitize(alphabet) # doesn't work with Stockholm format, for hand
+    # msa.name = f"{arg_chunk_num}_{iteration}".encode()
     name_set = {name.decode() for name in msa.names}
-
-    write_filtered_sto_to_seed_msa_file(name_set) # TODO only final -
-
-    msa = msa.to_pyhmmer().digitize(alphabet)
-    msa.name = f"{arg_chunk_num}_{iteration}".encode()
+    rewrite_filtered_sto_to_seed_msa_file(name_set) # should only do when final, but can't know when + hmmbuild hand bug that needs file
     
+    with pyhmmer.easel.MSAFile(tmp_seed_msa_path, digital=True, alphabet=alphabet) as msa_file:
+        msa = msa_file.read()
+        msa.name = f"{arg_chunk_num}_{iteration}".encode()
+
     log_time(start_time, "run_pytrimal: ")
 
     return(msa) 
