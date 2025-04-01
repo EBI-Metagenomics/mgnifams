@@ -295,8 +295,6 @@ def run_pytrimal_reps(threshold=0.8):
 
     return msa
 
-
-
 def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
     with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
         for line in infile:
@@ -323,6 +321,9 @@ def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
                 modified_substring = original_substring[start_pos:end_pos]  # Extract substring
                 line = line.replace(original_substring, modified_substring, 1)
                 outfile.write(line)
+                if split_line[1] == 'RF':
+                    start_pos = 0
+                    end_pos = end_pos - 200 # multi-line sto MSA, 200 aa per line
 
 def calculate_trim_positions(sequence_matrix, occupancy_threshold):
     numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
