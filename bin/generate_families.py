@@ -4,13 +4,13 @@ import argparse
 import os
 import time
 import shutil
-import re
 
 import pandas as pd
 import pyfastx
 import pyfamsa
 import pyhmmer
 import pytrimal
+import numpy as np
 
 from Bio import AlignIO
 
@@ -295,11 +295,7 @@ def run_pytrimal_reps(threshold=0.8):
 
     return msa
 
-def get_anchor_points(main_seq, sub_seq):
-    match = re.search(sub_seq, main_seq) # TODO be careful if there is ever a multiple match, will get wrong anchor points for the MSA (try re.finditer)
-    start_pos, end_pos = match.span()
 
-    return start_pos, end_pos
 
 def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
     with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
@@ -328,18 +324,41 @@ def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
                 line = line.replace(original_substring, modified_substring, 1)
                 outfile.write(line)
 
-def run_pytrimal_terminalonly(msa):
-    trimmer = pytrimal.ManualTrimmer(gap_threshold=0.5)
-    trimmed_alignment = trimmer.trim(msa).terminal_only() # trim ends only
+def calculate_trim_positions(sequence_matrix, occupancy_threshold):
+    numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
+    num_rows = numeric_matrix.shape[0]
+    column_sums = np.sum(numeric_matrix, axis=0)
+    column_sums_percentage = column_sums / num_rows
+    start_position = np.argmax(column_sums_percentage > occupancy_threshold)
+    end_position = len(column_sums_percentage) - np.argmax(column_sums_percentage[::-1] > occupancy_threshold) - 1
 
-    start_pos, end_pos = get_anchor_points(msa.sequences[0], trimmed_alignment.sequences[0])
+    return start_position, end_position
 
-    name_set = {name.decode() for name in trimmed_alignment.names}
-    write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos)
+def clip_ends(msa, occupancy_threshold=0.5):
+    sequence_matrix = np.array([list(seq) for seq in msa.sequences])
+    start_position, end_position = calculate_trim_positions(sequence_matrix, occupancy_threshold)
+    
+    name_set = {name.decode() for name in msa.names}
+    write_filtered_sto_to_seed_msa_file(name_set, start_position, end_position)
 
-    # TODO manipulate the object below, Bateman trim?
-    # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
-    #     print(name.decode(), " ", aligned)
+# def get_anchor_points(main_seq, sub_seq):
+#     match = re.search(sub_seq, main_seq) # TODO be careful if there is ever a multiple match, will get wrong anchor points for the MSA (try re.finditer)
+#     start_position, end_position = match.span()
+
+#     return start_position, end_position
+
+# def run_pytrimal_terminalonly(msa): # TODO switch to this when and if terminal_only bug fixed
+#     trimmer = pytrimal.ManualTrimmer(gap_threshold=0.5)
+#     trimmed_alignment = trimmer.trim(msa).terminal_only() # trim ends only
+
+#     start_position, end_position = get_anchor_points(msa.sequences[0], trimmed_alignment.sequences[0])
+
+#     name_set = {name.decode() for name in trimmed_alignment.names}
+#     write_filtered_sto_to_seed_msa_file(name_set, start_position, end_position)
+
+#     # TODO manipulate the object below, Bateman trim?
+#     # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
+#     #     print(name.decode(), " ", aligned)
 
 def extract_RF():
     with open(tmp_seed_msa_path, 'r') as file:
@@ -540,7 +559,8 @@ def main():
             # main strategy continue, if not converged
             run_hmmalign(hmm)
             msa = run_pytrimal_reps() # removes redundant sequences
-            run_pytrimal_terminalonly(msa) # removes gaps above threshold at ends
+            clip_ends(msa) # removes gaps above threshold at ends
+            # run_pytrimal_terminalonly(msa) # removes gaps above threshold at ends
 
         # Exiting family loop
         if (discard_flag): # unsuccessfully
