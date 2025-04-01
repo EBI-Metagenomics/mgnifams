@@ -253,14 +253,18 @@ def run_hmmalign(hmm):
         with open(tmp_align_msa_path, "wb") as outfile: # full MSA written out here
             hmmalign_res.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
 
-        # TODO manipulate the object below, Bateman trim?
-        # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
-        #     print(name.decode(), " ", aligned)
         num_seqs_result = len(hmmalign_res.names)
 
     log_time(start_time, "run_hmmalign (pyhmmer): ")
 
-    return [name.decode() for name in hmmalign_res.names], num_seqs_result
+    return num_seqs_result
+
+def run_pytrimal_terminalonly():
+    pass
+
+    # TODO manipulate the object below, Bateman trim?
+    # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
+    #     print(name.decode(), " ", aligned)
 
 def unmask_sequence_names(names):
     return [name.split('/')[0] for name in names]
@@ -281,7 +285,7 @@ def write_filtered_sto_to_seed_msa_file(name_set):
             elif split_line[0] == '#=GC':  # First split is '#=GC'
                 outfile.write(line)
 
-def run_pytrimal(threshold=0.8):
+def run_pytrimal_reps(threshold=0.8):
     start_time = time.time()
 
     # Load the MSA
@@ -297,7 +301,7 @@ def run_pytrimal(threshold=0.8):
         msa = repTrimmer.trim(msa)
 
         with open(log_file, 'a') as file:
-            file.write("run_pytrimal finished.\n")
+            file.write("run_pytrimal_reps finished.\n")
         number_of_remaining_sequences = len(list(msa.names))
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
@@ -307,13 +311,13 @@ def run_pytrimal(threshold=0.8):
         else:
             threshold -= 0.1
             with open(log_file, 'a') as file:
-                file.write("Rerunning run_pytrimal; ")
+                file.write("Rerunning run_pytrimal_reps; ")
 
     name_set = {name.decode() for name in msa.names}
 
     write_filtered_sto_to_seed_msa_file(name_set)
 
-    log_time(start_time, "run_pytrimal: ")
+    log_time(start_time, "run_pytrimal_reps: ")
 
 def extract_RF():
     with open(tmp_seed_msa_path, 'r') as file:
@@ -425,7 +429,6 @@ def main():
         total_checked_sequences = []
         filtered_seq_names = []
         full_msa_num_seqs = 0
-        hand_flag = False
         discard_flag = False
         discard_reason = ""
         discard_value = 0.0
@@ -450,16 +453,14 @@ def main():
                 hmm, _ = run_hmmbuild(iteration)
 
                 filtered_seq_names = run_hmmsearch(hmm, pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
-
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
                     discard_reason = "low complexity model - confounding cluster"
                     discard_value = 0.0
                     break
 
-                recruited_sequence_names, _ = run_hmmalign(hmm) # TODO extra Bateman logic in this call only
-
-                new_recruited_sequences = set(unmask_sequence_names(recruited_sequence_names)) - set(total_checked_sequences) # new_recruited_sequences always has something at first turn since total_checked_sequences starts empty []
+                new_recruited_sequences = set(unmask_sequence_names(filtered_seq_names)) - set(total_checked_sequences) # new_recruited_sequences always has something at first turn since total_checked_sequences starts empty []
+                total_checked_sequences += list(new_recruited_sequences)
 
                 if not new_recruited_sequences:
                     exit_flag = True
@@ -472,7 +473,7 @@ def main():
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
 
-                _, consensus = run_hmmbuild(iteration, hand=hand_flag)
+                _, consensus = run_hmmbuild(iteration, hand=True)
                 extract_RF()
 
                 filtered_seq_names = run_hmmsearch(hmm, pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
@@ -494,7 +495,7 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                _, full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
+                full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
                 protein_rep, region, sequence = extract_first_stockholm_sequence()
                 seq_length = len(sequence)
                 if (seq_length < 100):
@@ -512,14 +513,12 @@ def main():
                         file.write(f"Discard-Warning: {iteration} rep length is over {seq_length}\n")
                     break
 
-                break
+                break # break from main strategy
 
-            # main strategy branch continue
-            total_checked_sequences += list(new_recruited_sequences)
-            with open(log_file, 'a') as file:
-                file.write("total_checked_sequences calculated and starting run_pytrimal\n")
-            run_pytrimal() # removes redundant sequences
-            hand_flag = True
+            # main strategy continue, if not converged
+            run_hmmalign(hmm)
+            run_pytrimal_reps() # removes redundant sequences
+            run_pytrimal_terminalonly() # removes gaps above threshold at ends
 
         # Exiting family loop
         if (discard_flag): # unsuccessfully
@@ -533,6 +532,7 @@ def main():
             with open(successful_clusters_file, 'a') as outfile:
                 outfile.write(str(family_rep) + "\n")
             
+            # TODO renumber slices based on trim + pyfastx obj original input sequences (both metadata and MSA files?)
             append_family_file(iteration, filtered_seq_names)
             append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs, consensus)
             move_produced_models(iteration)
