@@ -409,7 +409,7 @@ def parse_protein_region(protein_id):
 
     return protein_rep, region
 
-def extract_first_stockholm_sequence():
+def extract_first_stockholm_sequence(): # TODO 1st from family_members
     with open(tmp_align_msa_path) as handle:
         alignment_iterator = AlignIO.parse(handle, "stockholm")
         first_record = next(alignment_iterator)[0]  # Get only the first sequence
@@ -419,7 +419,9 @@ def extract_first_stockholm_sequence():
     return protein_rep, region, first_record.seq.replace("-", "").upper() # TODO map to correct slice from pyfastx obj?
 
 def append_family_file(iteration, family_members):
-    lines = [f"{iteration}\t{member}\n" for member in family_members]
+    lines = [f"{iteration}\t{protein_rep}\n" if region == "-" else f"{iteration}\t{protein_rep}/{region}\n"
+        for member in family_members 
+        for protein_rep, region in [parse_protein_region(member)]]
     with open(refined_families_tsv_file, 'a') as file:
         file.writelines(lines)
 

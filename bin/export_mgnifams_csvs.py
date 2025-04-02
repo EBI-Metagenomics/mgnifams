@@ -69,7 +69,7 @@ def write_mgnifam(family_id, mgnifams_out_dir, output_dir, family_metadata_df, s
         writer.writerow([family_id, family_size, protein_rep, region, rep_length, plddt, ptm, converged,
             cif_file, seed_msa_file, msa_file, hmm_file, rf_file, biomes_file, domain_architecture_file]) 
 
-def parse_protein_region(protein_id):
+def parse_protein_region(protein_id): # TODO remove from here, now done in family generation
     number_of_underscores = protein_id.count('_')
     if (number_of_underscores == 0):
         protein = protein_id
