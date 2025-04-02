@@ -1,12 +1,11 @@
 process GENERATE_FAMILIES {
     tag "$meta.id"
     label 'process_high'
-    maxForks 30 // TODO from config
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'quay.io/microbiome-informatics/mgnifams:3.2.0' :
-        'quay.io/microbiome-informatics/mgnifams:3.2.0' }"
+        'quay.io/microbiome-informatics/mgnifams:3.2.1' :
+        'quay.io/microbiome-informatics/mgnifams:3.2.1' }"
     
     input:
     tuple val(meta) , path(clusters_chunk)
@@ -48,6 +47,7 @@ process GENERATE_FAMILIES {
         pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
         pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
         pytrimal: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pytrimal'))")
+        numpy: \$(python -c "import importlib.metadata; print(importlib.metadata.version('numpy'))")
         biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
     END_VERSIONS
     """
@@ -89,6 +89,7 @@ process GENERATE_FAMILIES {
         pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
         pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
         pytrimal: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pytrimal'))")
+        numpy: \$(python -c "import importlib.metadata; print(importlib.metadata.version('numpy'))")
         biopython: \$(python -c "import importlib.metadata; print(importlib.metadata.version('biopython'))")
     END_VERSIONS
     """

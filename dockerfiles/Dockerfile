@@ -12,10 +12,10 @@ RUN conda config --add channels conda-forge \
 RUN apt-get update && apt-get install -y build-essential
 
 # Install Python dependencies using pip
-RUN pip install pandas pyfastx pyfamsa pyhmmer pytrimal biopython
+RUN pip install pandas pyfastx pyfamsa pyhmmer pytrimal biopython numpy
 
 # Set environment variable to ensure Conda is properly configured
-ENV PATH /opt/conda/bin:$PATH
+ENV PATH=/opt/conda/bin:$PATH
 
 # Set default shell
 SHELL ["/bin/bash", "-c"]

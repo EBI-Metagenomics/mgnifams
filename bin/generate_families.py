@@ -10,6 +10,7 @@ import pyfastx
 import pyfamsa
 import pyhmmer
 import pytrimal
+import numpy as np
 
 from Bio import AlignIO
 
@@ -253,35 +254,16 @@ def run_hmmalign(hmm):
         with open(tmp_align_msa_path, "wb") as outfile: # full MSA written out here
             hmmalign_res.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
 
-        # TODO manipulate the object below, Bateman trim?
-        # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
-        #     print(name.decode(), " ", aligned)
         num_seqs_result = len(hmmalign_res.names)
 
     log_time(start_time, "run_hmmalign (pyhmmer): ")
 
-    return [name.decode() for name in hmmalign_res.names], num_seqs_result
+    return num_seqs_result
 
 def unmask_sequence_names(names):
     return [name.split('/')[0] for name in names]
 
-def write_filtered_sto_to_seed_msa_file(name_set):
-    with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
-        for line in infile:
-            # Split line by spaces
-            split_line = line.split()
-
-            # Check if the line meets any of the specified conditions
-            if not split_line or len(split_line) == 1:  # Line is empty or //
-                outfile.write(line)
-            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
-                outfile.write(line)
-            elif split_line[0] in name_set or split_line[1] in name_set:  # First or second split is in name_set
-                outfile.write(line)
-            elif split_line[0] == '#=GC':  # First split is '#=GC'
-                outfile.write(line)
-
-def run_pytrimal(threshold=0.8):
+def run_pytrimal_reps(threshold=0.8):
     start_time = time.time()
 
     # Load the MSA
@@ -297,7 +279,7 @@ def run_pytrimal(threshold=0.8):
         msa = repTrimmer.trim(msa)
 
         with open(log_file, 'a') as file:
-            file.write("run_pytrimal finished.\n")
+            file.write("run_pytrimal_reps finished.\n")
         number_of_remaining_sequences = len(list(msa.names))
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
@@ -307,13 +289,77 @@ def run_pytrimal(threshold=0.8):
         else:
             threshold -= 0.1
             with open(log_file, 'a') as file:
-                file.write("Rerunning run_pytrimal; ")
+                file.write("Rerunning run_pytrimal_reps; ")
 
+    log_time(start_time, "run_pytrimal_reps: ")
+
+    return msa
+
+def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
+    with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
+        for line in infile:
+            # Split line by spaces
+            split_line = line.split()
+
+            # Check if the line meets any of the specified conditions
+            if not split_line or len(split_line) == 1:  # Line is empty or //
+                outfile.write(line)
+            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
+                outfile.write(line)
+            elif split_line[0] in name_set:  # First split is in name_set
+                original_substring = split_line[1]  # The part to modify
+                modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+                line = line.replace(original_substring, modified_substring, 1)
+                outfile.write(line)
+            elif split_line[1] in name_set:  # Second split is in name_set
+                original_substring = split_line[3]  # The part to modify
+                modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+                line = line.replace(original_substring, modified_substring, 1)
+                outfile.write(line)
+            elif split_line[0] == '#=GC':  # First split is '#=GC'
+                original_substring = split_line[2]  # The part to modify
+                modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+                line = line.replace(original_substring, modified_substring, 1)
+                outfile.write(line)
+                if split_line[1] == 'RF':
+                    start_pos = 0
+                    end_pos = end_pos - 200 # multi-line sto MSA, 200 aa per line
+
+def calculate_trim_positions(sequence_matrix, occupancy_threshold):
+    numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
+    num_rows = numeric_matrix.shape[0]
+    column_sums = np.sum(numeric_matrix, axis=0)
+    column_sums_percentage = column_sums / num_rows
+    start_position = np.argmax(column_sums_percentage > occupancy_threshold)
+    end_position = len(column_sums_percentage) - np.argmax(column_sums_percentage[::-1] > occupancy_threshold) - 1
+
+    return start_position, end_position
+
+def clip_ends(msa, occupancy_threshold=0.5):
+    sequence_matrix = np.array([list(seq) for seq in msa.sequences])
+    start_position, end_position = calculate_trim_positions(sequence_matrix, occupancy_threshold)
+    
     name_set = {name.decode() for name in msa.names}
+    write_filtered_sto_to_seed_msa_file(name_set, start_position, end_position)
 
-    write_filtered_sto_to_seed_msa_file(name_set)
+# def get_anchor_points(main_seq, sub_seq):
+#     match = re.search(sub_seq, main_seq) # TODO be careful if there is ever a multiple match, will get wrong anchor points for the MSA (try re.finditer)
+#     start_position, end_position = match.span()
 
-    log_time(start_time, "run_pytrimal: ")
+#     return start_position, end_position
+
+# def run_pytrimal_terminalonly(msa): # TODO switch to this when and if terminal_only bug fixed
+#     trimmer = pytrimal.ManualTrimmer(gap_threshold=0.5)
+#     trimmed_alignment = trimmer.trim(msa).terminal_only() # trim ends only
+
+#     start_position, end_position = get_anchor_points(msa.sequences[0], trimmed_alignment.sequences[0])
+
+#     name_set = {name.decode() for name in trimmed_alignment.names}
+#     write_filtered_sto_to_seed_msa_file(name_set, start_position, end_position)
+
+#     # TODO manipulate the object below, Bateman trim?
+#     # for name, aligned in zip(hmmalign_res.names, hmmalign_res.alignment):
+#     #     print(name.decode(), " ", aligned)
 
 def extract_RF():
     with open(tmp_seed_msa_path, 'r') as file:
@@ -363,17 +409,20 @@ def parse_protein_region(protein_id):
 
     return protein_rep, region
 
-def extract_first_stockholm_sequence():
-    with open(tmp_align_msa_path) as handle:
-        alignment_iterator = AlignIO.parse(handle, "stockholm")
-        first_record = next(alignment_iterator)[0]  # Get only the first sequence
+def extract_first_family_sequence():
+    with open(tmp_family_sequences_path) as f:
+        header = f.readline().strip()
+        sequence = f.readline().strip()
 
-    protein_rep, region = parse_protein_region(first_record.id)
+    # Extract protein name from header (remove '>' character)
+    protein_rep, region = parse_protein_region(header[1:])
 
-    return protein_rep, region, first_record.seq.replace("-", "").upper() # TODO map to correct slice from pyfastx obj?
+    return protein_rep, region, sequence
 
 def append_family_file(iteration, family_members):
-    lines = [f"{iteration}\t{member}\n" for member in family_members]
+    lines = [f"{iteration}\t{protein_rep}\n" if region == "-" else f"{iteration}\t{protein_rep}/{region}\n"
+        for member in family_members 
+        for protein_rep, region in [parse_protein_region(member)]]
     with open(refined_families_tsv_file, 'a') as file:
         file.writelines(lines)
 
@@ -384,7 +433,11 @@ def append_family_metadata(protein_rep, region, sequence, iteration, full_msa_nu
     with open(family_metadata_file, 'a') as file:
         file.writelines(f"{iteration},{full_msa_num_seqs},\"{protein_rep}\",{region},{len(sequence)},{sequence},{consensus}\n")
     with open(family_reps_file, 'a') as file:
-        file.writelines(f">{protein_rep}/{region}\t{arg_chunk_num}_{iteration}\n{sequence}\n")
+        file.writelines(
+        f">{protein_rep}\t{arg_chunk_num}_{iteration}\n{sequence}\n"
+        if region == "-" 
+        else f">{protein_rep}/{region}\t{arg_chunk_num}_{iteration}\n{sequence}\n"
+    )
 
 def move_produced_models(iteration):
     shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder,  f'{arg_chunk_num}_{iteration}.sto'))
@@ -425,7 +478,6 @@ def main():
         total_checked_sequences = []
         filtered_seq_names = []
         full_msa_num_seqs = 0
-        hand_flag = False
         discard_flag = False
         discard_reason = ""
         discard_value = 0.0
@@ -450,16 +502,14 @@ def main():
                 hmm, _ = run_hmmbuild(iteration)
 
                 filtered_seq_names = run_hmmsearch(hmm, pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
-
                 if (len(filtered_seq_names) == 0): # low complexity sequence, confounding cluster, discard and move on to the next
                     discard_flag = True
                     discard_reason = "low complexity model - confounding cluster"
                     discard_value = 0.0
                     break
 
-                recruited_sequence_names, _ = run_hmmalign(hmm) # TODO extra Bateman logic in this call only
-
-                new_recruited_sequences = set(unmask_sequence_names(recruited_sequence_names)) - set(total_checked_sequences) # new_recruited_sequences always has something at first turn since total_checked_sequences starts empty []
+                new_recruited_sequences = set(unmask_sequence_names(filtered_seq_names)) - set(total_checked_sequences) # new_recruited_sequences always has something at first turn since total_checked_sequences starts empty []
+                total_checked_sequences += list(new_recruited_sequences)
 
                 if not new_recruited_sequences:
                     exit_flag = True
@@ -472,7 +522,7 @@ def main():
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
 
-                _, consensus = run_hmmbuild(iteration, hand=hand_flag)
+                _, consensus = run_hmmbuild(iteration, hand=True)
                 extract_RF()
 
                 filtered_seq_names = run_hmmsearch(hmm, pyhmmer_seqs, mgnifams_pyfastx_obj, exit_flag)
@@ -494,8 +544,8 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                _, full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
-                protein_rep, region, sequence = extract_first_stockholm_sequence()
+                full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
+                protein_rep, region, sequence = extract_first_family_sequence()
                 seq_length = len(sequence)
                 if (seq_length < 100):
                     discard_flag = True
@@ -512,14 +562,13 @@ def main():
                         file.write(f"Discard-Warning: {iteration} rep length is over {seq_length}\n")
                     break
 
-                break
+                break # break from main strategy
 
-            # main strategy branch continue
-            total_checked_sequences += list(new_recruited_sequences)
-            with open(log_file, 'a') as file:
-                file.write("total_checked_sequences calculated and starting run_pytrimal\n")
-            run_pytrimal() # removes redundant sequences
-            hand_flag = True
+            # main strategy continue, if not converged
+            run_hmmalign(hmm)
+            msa = run_pytrimal_reps() # removes redundant sequences
+            clip_ends(msa) # removes gaps above threshold at ends
+            # run_pytrimal_terminalonly(msa) # removes gaps above threshold at ends
 
         # Exiting family loop
         if (discard_flag): # unsuccessfully
@@ -532,7 +581,7 @@ def main():
         else: # successfully
             with open(successful_clusters_file, 'a') as outfile:
                 outfile.write(str(family_rep) + "\n")
-            
+
             append_family_file(iteration, filtered_seq_names)
             append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs, consensus)
             move_produced_models(iteration)
