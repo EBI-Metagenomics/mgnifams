@@ -1,7 +1,6 @@
 process GENERATE_FAMILIES {
     tag "$meta.id"
     label 'process_high'
-    maxForks 30 // TODO from config
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

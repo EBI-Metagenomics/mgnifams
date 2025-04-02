@@ -409,14 +409,15 @@ def parse_protein_region(protein_id):
 
     return protein_rep, region
 
-def extract_first_stockholm_sequence(): # TODO 1st from family_members
-    with open(tmp_align_msa_path) as handle:
-        alignment_iterator = AlignIO.parse(handle, "stockholm")
-        first_record = next(alignment_iterator)[0]  # Get only the first sequence
+def extract_first_family_sequence():
+    with open(tmp_family_sequences_path) as f:
+        header = f.readline().strip()
+        sequence = f.readline().strip()
 
-    protein_rep, region = parse_protein_region(first_record.id)
+    # Extract protein name from header (remove '>' character)
+    protein_rep, region = parse_protein_region(header[1:])
 
-    return protein_rep, region, first_record.seq.replace("-", "").upper() # TODO map to correct slice from pyfastx obj?
+    return protein_rep, region, sequence
 
 def append_family_file(iteration, family_members):
     lines = [f"{iteration}\t{protein_rep}\n" if region == "-" else f"{iteration}\t{protein_rep}/{region}\n"
@@ -432,7 +433,11 @@ def append_family_metadata(protein_rep, region, sequence, iteration, full_msa_nu
     with open(family_metadata_file, 'a') as file:
         file.writelines(f"{iteration},{full_msa_num_seqs},\"{protein_rep}\",{region},{len(sequence)},{sequence},{consensus}\n")
     with open(family_reps_file, 'a') as file:
-        file.writelines(f">{protein_rep}/{region}\t{arg_chunk_num}_{iteration}\n{sequence}\n")
+        file.writelines(
+        f">{protein_rep}\t{arg_chunk_num}_{iteration}\n{sequence}\n"
+        if region == "-" 
+        else f">{protein_rep}/{region}\t{arg_chunk_num}_{iteration}\n{sequence}\n"
+    )
 
 def move_produced_models(iteration):
     shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder,  f'{arg_chunk_num}_{iteration}.sto'))
@@ -540,7 +545,7 @@ def main():
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
                 full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
-                protein_rep, region, sequence = extract_first_stockholm_sequence()
+                protein_rep, region, sequence = extract_first_family_sequence()
                 seq_length = len(sequence)
                 if (seq_length < 100):
                     discard_flag = True
@@ -576,8 +581,7 @@ def main():
         else: # successfully
             with open(successful_clusters_file, 'a') as outfile:
                 outfile.write(str(family_rep) + "\n")
-            
-            # TODO renumber slices based on trim + pyfastx obj original input sequences (both metadata and MSA files?)
+
             append_family_file(iteration, filtered_seq_names)
             append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs, consensus)
             move_produced_models(iteration)
