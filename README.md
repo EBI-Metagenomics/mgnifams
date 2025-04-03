@@ -109,9 +109,6 @@ wormhole receive code-id (e.g., wormhole receive 8-saturday-endorse)
 
 chmod 775 mgnifams.sqlite3 after moving the db there
 
-## Anti bus-factor 1 measures
-Currently, extra documentation can be found in the google doc: https://docs.google.com/document/d/1eeglnQb9M-D0iK9AFbTypLYvvKHeUg6XtzmlKN874k4/edit
-
 ## External usage
 The pipeline is also useable outside the MGnify team, given a protein fasta file as input.
 The **--input** parameter denotes the fasta file and the **--fasta_input_mode** flag parameter must be set to true.
