@@ -390,30 +390,7 @@ def check_seed_membership(original_sequence_names, filtered_seq_names):
 
     return percentage_membership
 
-def parse_protein_region(protein_id): # TODO check if works, update or remove
-    number_of_underscores = protein_id.count('_')
-    if (number_of_underscores == 0):
-        protein_rep = protein_id
-        region      = "-"
-    elif (number_of_underscores == 1):
-        parts       = protein_id.split('/')
-        protein_rep = parts[0]
-        region      = parts[1].replace("_", "-")
-    elif (number_of_underscores == 2):
-        parts       = protein_id.split('_')
-        protein_rep = parts[0]
-        region      = f"{parts[1]}-{parts[2]}"
-    elif (number_of_underscores == 3):
-        parts        = protein_id.split('_')
-        protein_rep  = parts[0]
-        start        = int(parts[1])
-        region_parts = protein_id.split('/')[1].split('_')
-        region       = f"{start + int(region_parts[0]) - 1}-{start + int(region_parts[1]) - 1}"
-
-    return protein_rep, region
-
 def parse_protein_name(seq_name, seq_length, seq_whole_name, original_length, start, end):
-
     if ( (end-start) == original_length):
         return seq_name
     else:
@@ -494,16 +471,6 @@ def renumber_full_sto_msa_and_write_tsv_metadata(in_sto_file, pyfastx_obj, arg_c
             elif split_line[0] == '#=GR':
                 line = line.replace(split_line[1], previous_seq_name, 1)
                 outfile.write(line)
-
-def append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs, consensus):  # TODO maybe along with full MSA
-    with open(family_metadata_file, 'a') as file:
-        file.writelines(f"{iteration},{full_msa_num_seqs},\"{protein_rep}\",{region},{len(sequence)},{sequence},{consensus}\n")
-    with open(family_reps_file, 'a') as file:
-        file.writelines(
-        f">{protein_rep}\t{arg_chunk_num}_{iteration}\n{sequence}\n"
-        if region == "-" 
-        else f">{protein_rep}/{region}\t{arg_chunk_num}_{iteration}\n{sequence}\n"
-    )
 
 def move_produced_models(iteration):
     shutil.move(tmp_hmm_path,      os.path.join(hmm_folder,       f'{arg_chunk_num}_{iteration}.hmm'))
