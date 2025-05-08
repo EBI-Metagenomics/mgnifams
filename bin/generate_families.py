@@ -486,7 +486,9 @@ def renumber_full_sto_msa_and_write_tsv_metadata(in_sto_file, pyfastx_obj, arg_c
                 outfile.write(line)
                 familyfile.write(f"{iteration}\t{previous_seq_name}\n")
                 if (rep_flag):
-                    metadatafile.write(f"{iteration},{full_msa_num_seqs},\"{previous_seq_name.strip()}\",{len(seq)},{seq},{consensus}\n")
+                    splits = previous_seq_name.split("/")
+                    region = splits[1].strip() if "/" in previous_seq_name else "-"
+                    metadatafile.write(f"{iteration},{full_msa_num_seqs},\"{splits[0]}\",{region},{len(seq)},{seq},{consensus}\n")
                     repsfile.write(f">{previous_seq_name.strip()}\t{arg_chunk_num}_{iteration}\n{seq}\n")
                     rep_flag = False
             elif split_line[0] == '#=GR':
