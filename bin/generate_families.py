@@ -257,7 +257,7 @@ def run_hmmalign(hmm):
             hmmalign_res.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
 
         num_seqs_result = len(hmmalign_res.names)
-        non_gap_seq_length = len(re.sub(r"[._]", "", hmmalign_res.alignment[0]))
+        non_gap_seq_length = len(re.sub(r"[.-]", "", hmmalign_res.alignment[0]))
 
     log_time(start_time, "run_hmmalign (pyhmmer): ")
 
@@ -422,41 +422,48 @@ def extract_first_family_sequence():
 
     return protein_rep, region, sequence
 
-def renumber_sto_msa(in_sto_file, out_msa_folder, out_sto_file, pyfastx_obj):
+def renumber_sto_msa(in_sto_file, out_sto_file, pyfastx_obj):
     # TODO NEXT
     print(in_sto_file)
-    print(out_msa_folder)
     print(out_sto_file)
     print(pyfastx_obj)
 
-    # with open(in_sto_file, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
-    #     for line in infile:
-    #         # Split line by spaces
-    #         split_line = line.split()
+    with open(in_sto_file, 'r') as infile, open(out_sto_file, 'w') as outfile:
+        for line in infile:
+            # Split line by spaces
+            split_line = line.split()
 
-    #         # Check if the line meets any of the specified conditions
-    #         if not split_line or len(split_line) == 1:  # Line is empty or //
-    #             outfile.write(line)
-    #         elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
-    #             outfile.write(line)
-    #         elif split_line[0] in name_set:  # First split is in name_set
-    #             original_substring = split_line[1]  # The part to modify
-    #             modified_substring = original_substring[start_pos:end_pos]  # Extract substring
-    #             line = line.replace(original_substring, modified_substring, 1)
-    #             outfile.write(line)
-    #         elif split_line[1] in name_set:  # Second split is in name_set
-    #             original_substring = split_line[3]  # The part to modify
-    #             modified_substring = original_substring[start_pos:end_pos]  # Extract substring
-    #             line = line.replace(original_substring, modified_substring, 1)
-    #             outfile.write(line)
-    #         elif split_line[0] == '#=GC':  # First split is '#=GC'
-    #             original_substring = split_line[2]  # The part to modify
-    #             modified_substring = original_substring[start_pos:end_pos]  # Extract substring
-    #             line = line.replace(original_substring, modified_substring, 1)
-    #             outfile.write(line)
-    #             if split_line[1] == 'RF':
-    #                 start_pos = 0
-    #                 end_pos = end_pos - 200 # multi-line sto MSA, 200 aa per line
+            # Check if the line meets any of the specified conditions
+            if not split_line or len(split_line) == 1:  # Line is empty or //
+                outfile.write(line)
+            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
+                outfile.write(line)
+            elif split_line[0] != '#=GR' and split_line[0] != '#=GC':  # First split is first protein encounter
+                seq_name = split_line[0].split("/")[0]
+                seq = re.sub(r"[.-]", "", split_line[1]).upper()
+                original_seq = get_fasta_sequences(pyfastx_obj, [seq_name])[0][1]
+                start = original_seq.find(seq)
+                end = start + len(seq)
+
+
+                
+            #     original_substring = split_line[1]  # The part to modify
+            #     modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+            #     line = line.replace(original_substring, modified_substring, 1)
+            #     outfile.write(line)
+            # elif split_line[1] in name_set:  # Second split is in name_set
+            #     original_substring = split_line[3]  # The part to modify
+            #     modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+            #     line = line.replace(original_substring, modified_substring, 1)
+            #     outfile.write(line)
+            # elif split_line[0] == '#=GC':  # First split is '#=GC'
+            #     original_substring = split_line[2]  # The part to modify
+            #     modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+            #     line = line.replace(original_substring, modified_substring, 1)
+            #     outfile.write(line)
+            #     if split_line[1] == 'RF':
+            #         start_pos = 0
+            #         end_pos = end_pos - 200 # multi-line sto MSA, 200 aa per line
 
     exit()
 
@@ -623,9 +630,9 @@ def main():
             
             # TODO remove renumbering of slices before this point
             # TODO renumber slices here
-            renumber_sto_msa(tmp_seed_msa_path, seed_msa_folder, f'{arg_chunk_num}_{iteration}.sto', mgnifams_pyfastx_obj) # move to final location while parsing
+            renumber_sto_msa(tmp_seed_msa_path, os.path.join(seed_msa_folder, f'{arg_chunk_num}_{iteration}.sto'), mgnifams_pyfastx_obj) # move to final location while parsing
             exit()
-            renumber_sto_msa(tmp_align_msa_path, align_msa_folder, f'{arg_chunk_num}_{iteration}.sto', mgnifams_pyfastx_obj)
+            renumber_sto_msa(tmp_align_msa_path, os.path.join(align_msa_folder, f'{arg_chunk_num}_{iteration}.sto'), mgnifams_pyfastx_obj)
             append_family_file(iteration, filtered_seq_names) # TODO together with full alignment parsing
             append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs, consensus) # TODO together with full alignment parsing
             move_produced_models(iteration)
