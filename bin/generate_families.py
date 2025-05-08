@@ -3,6 +3,7 @@
 import argparse
 import os
 import time
+import re
 import shutil
 
 import pandas as pd
@@ -246,6 +247,7 @@ def run_hmmalign(hmm):
     start_time = time.time()
 
     num_seqs_result = 0
+    non_gap_seq_length = 0
 
     with pyhmmer.easel.SequenceFile(tmp_family_sequences_path, digital=True) as seq_file:
         seqs = seq_file.read_block()
@@ -255,10 +257,11 @@ def run_hmmalign(hmm):
             hmmalign_res.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
 
         num_seqs_result = len(hmmalign_res.names)
+        non_gap_seq_length = len(re.sub(r"[.-]", "", hmmalign_res.alignment[0]))
 
     log_time(start_time, "run_hmmalign (pyhmmer): ")
 
-    return num_seqs_result
+    return num_seqs_result, non_gap_seq_length
 
 def unmask_sequence_names(names):
     return [name.split('/')[0] for name in names]
@@ -387,7 +390,7 @@ def check_seed_membership(original_sequence_names, filtered_seq_names):
 
     return percentage_membership
 
-def parse_protein_region(protein_id):
+def parse_protein_region(protein_id): # TODO check if works, update or remove
     number_of_underscores = protein_id.count('_')
     if (number_of_underscores == 0):
         protein_rep = protein_id
@@ -409,27 +412,90 @@ def parse_protein_region(protein_id):
 
     return protein_rep, region
 
-def extract_first_family_sequence():
-    with open(tmp_family_sequences_path) as f:
-        header = f.readline().strip()
-        sequence = f.readline().strip()
+def parse_protein_name(seq_name, seq_length, seq_whole_name, original_length, start, end):
 
-    # Extract protein name from header (remove '>' character)
-    protein_rep, region = parse_protein_region(header[1:])
+    if ( (end-start) == original_length):
+        return seq_name
+    else:
+        splits = seq_name.split('_')
+        old_length = len(seq_whole_name)
+        if (len(splits) == 3):
+            new_start = start + int(splits[1])
+            new_end = new_start + seq_length -1
+            new_name = splits[0] + "/" + str(new_start) + "-" + str(new_end)
+        else:
+            new_name = splits[0] + "/" + str(start + 1) + "-" + str(end)
 
-    return protein_rep, region, sequence
+        new_name = new_name.ljust(old_length)  # Pad with spaces to match original length
 
-def append_family_file(iteration, family_members):
-    lines = [f"{iteration}\t{protein_rep}\n" if region == "-" else f"{iteration}\t{protein_rep}/{region}\n"
-        for member in family_members 
-        for protein_rep, region in [parse_protein_region(member)]]
-    with open(refined_families_tsv_file, 'a') as file:
-        file.writelines(lines)
+        return new_name
 
-    with open(log_file, 'a') as file:
-        file.write(f"E: {iteration}, s: {len(family_members)}\n")
+def renumber_seed_sto_msa(in_sto_file, out_sto_file, pyfastx_obj):
+    with open(in_sto_file, 'r') as infile, open(out_sto_file, 'w') as outfile:
 
-def append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs, consensus):
+        previous_seq_name = ""
+        for line in infile:
+            # Split line by spaces
+            split_line = line.split()
+
+            # Check if the line meets any of the specified conditions
+            if not split_line or len(split_line) == 1 or split_line[0] == '#=GC':  # Line is empty or // or '#=GC'
+                outfile.write(line)
+            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
+                outfile.write(line)
+            elif split_line[0] != '#=GR' and split_line[0] != '#=GC':  # First split is first protein encounter
+                seq_name = split_line[0].split("/")[0]
+                seq = re.sub(r"[.-]", "", split_line[1]).upper()
+                original_seq = get_fasta_sequences(pyfastx_obj, [seq_name])[0][1]
+                start = original_seq.find(seq)
+                end = start + len(seq)
+                previous_seq_name = parse_protein_name(seq_name, len(seq), split_line[0], len(original_seq), start, end)
+                line = line.replace(split_line[0], previous_seq_name, 1)
+                outfile.write(line)
+            elif split_line[0] == '#=GR':
+                line = line.replace(split_line[1], previous_seq_name, 1)
+                outfile.write(line)
+
+def renumber_full_sto_msa_and_write_tsv_metadata(in_sto_file, pyfastx_obj, arg_chunk_num, iteration, \
+                                                full_msa_num_seqs, consensus):
+    
+    out_sto_file = os.path.join(align_msa_folder, f'{arg_chunk_num}_{iteration}.sto')
+    with open(in_sto_file, 'r') as infile, open(refined_families_tsv_file, 'a') as familyfile, \
+        open(family_metadata_file, 'a') as metadatafile, open(family_reps_file, 'a') as repsfile, \
+        open(out_sto_file, 'w') as outfile:
+
+        previous_seq_name = ""
+        rep_flag = True
+        for line in infile:
+            # Split line by spaces
+            split_line = line.split()
+
+            # Check if the line meets any of the specified conditions
+            if not split_line or len(split_line) == 1 or split_line[0] == '#=GC':  # Line is empty or // or '#=GC'
+                outfile.write(line)
+            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
+                outfile.write(line)
+            elif split_line[0] != '#=GR' and split_line[0] != '#=GC':  # First split is first protein encounter
+                seq_name = split_line[0].split("/")[0]
+                seq = re.sub(r"[.-]", "", split_line[1]).upper()
+                original_seq = get_fasta_sequences(pyfastx_obj, [seq_name])[0][1]
+                start = original_seq.find(seq)
+                end = start + len(seq)
+                previous_seq_name = parse_protein_name(seq_name, len(seq), split_line[0], len(original_seq), start, end)
+                line = line.replace(split_line[0], previous_seq_name, 1)
+                outfile.write(line)
+                familyfile.write(f"{iteration}\t{previous_seq_name}\n")
+                if (rep_flag):
+                    splits = previous_seq_name.split("/")
+                    region = splits[1].strip() if "/" in previous_seq_name else "-"
+                    metadatafile.write(f"{iteration},{full_msa_num_seqs},\"{splits[0]}\",{region},{len(seq)},{seq},{consensus}\n")
+                    repsfile.write(f">{previous_seq_name.strip()}\t{arg_chunk_num}_{iteration}\n{seq}\n")
+                    rep_flag = False
+            elif split_line[0] == '#=GR':
+                line = line.replace(split_line[1], previous_seq_name, 1)
+                outfile.write(line)
+
+def append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs, consensus):  # TODO maybe along with full MSA
     with open(family_metadata_file, 'a') as file:
         file.writelines(f"{iteration},{full_msa_num_seqs},\"{protein_rep}\",{region},{len(sequence)},{sequence},{consensus}\n")
     with open(family_reps_file, 'a') as file:
@@ -440,11 +506,9 @@ def append_family_metadata(protein_rep, region, sequence, iteration, full_msa_nu
     )
 
 def move_produced_models(iteration):
-    shutil.move(tmp_seed_msa_path, os.path.join(seed_msa_folder,  f'{arg_chunk_num}_{iteration}.sto'))
-    shutil.move(tmp_align_msa_path,    os.path.join(align_msa_folder, f'{arg_chunk_num}_{iteration}.sto'))
-    shutil.move(tmp_hmm_path,          os.path.join(hmm_folder,       f'{arg_chunk_num}_{iteration}.hmm'))
-    shutil.move(tmp_domtblout_path,    os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
-    shutil.move(tmp_rf_path,           os.path.join(rf_folder,        f'{arg_chunk_num}_{iteration}.txt'))
+    shutil.move(tmp_hmm_path,      os.path.join(hmm_folder,       f'{arg_chunk_num}_{iteration}.hmm'))
+    shutil.move(tmp_domtblout_path,os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
+    shutil.move(tmp_rf_path,       os.path.join(rf_folder,        f'{arg_chunk_num}_{iteration}.txt'))
 
 def remove_tmp_files():
     for item in os.listdir(tmp_folder):
@@ -484,9 +548,6 @@ def main():
         exit_flag = False
         hmm = ""
         consensus = ""
-        protein_rep = ""
-        region = ""
-        sequence = ""
         family_iteration = 0
         while True:
             family_iteration += 1
@@ -544,22 +605,20 @@ def main():
                     with open(log_file, 'a') as file:
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
-                full_msa_num_seqs = run_hmmalign(hmm) # final full MSA, including smaller sequences
-                protein_rep, region, sequence = extract_first_family_sequence()
-                seq_length = len(sequence)
-                if (seq_length < 100):
+                full_msa_num_seqs, non_gap_seq_length = run_hmmalign(hmm) # final full MSA, including smaller sequences
+                if (non_gap_seq_length < 100):
                     discard_flag = True
                     discard_reason = "family representative length too small"
-                    discard_value = seq_length
+                    discard_value = non_gap_seq_length
                     with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: {iteration} rep length is only {seq_length}\n")
+                        file.write(f"Discard-Warning: {iteration} rep length is only {non_gap_seq_length}\n")
                     break
-                elif (seq_length > 2000):
+                elif (non_gap_seq_length > 2000):
                     discard_flag = True
                     discard_reason = "family representative length too large"
-                    discard_value = seq_length
+                    discard_value = non_gap_seq_length
                     with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: {iteration} rep length is over {seq_length}\n")
+                        file.write(f"Discard-Warning: {iteration} rep length is over {non_gap_seq_length}\n")
                     break
 
                 break # break from main strategy
@@ -581,9 +640,10 @@ def main():
         else: # successfully
             with open(successful_clusters_file, 'a') as outfile:
                 outfile.write(str(family_rep) + "\n")
-
-            append_family_file(iteration, filtered_seq_names)
-            append_family_metadata(protein_rep, region, sequence, iteration, full_msa_num_seqs, consensus)
+            
+            renumber_seed_sto_msa(tmp_seed_msa_path, os.path.join(seed_msa_folder, f'{arg_chunk_num}_{iteration}.sto'), mgnifams_pyfastx_obj)
+            renumber_full_sto_msa_and_write_tsv_metadata(tmp_align_msa_path, mgnifams_pyfastx_obj, \
+                                                        arg_chunk_num, iteration, full_msa_num_seqs, consensus)
             move_produced_models(iteration)
 
         remove_tmp_files()
