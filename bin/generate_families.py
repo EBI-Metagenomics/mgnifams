@@ -300,6 +300,7 @@ def run_pytrimal_reps(threshold=0.8):
 
 def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
     with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
+        emptied_flag = False #  for very rare cases that protein is split into multiple lines, but following modified_substring splits are empty
         for line in infile:
             # Split line by spaces
             split_line = line.split()
@@ -310,23 +311,29 @@ def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
             elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
                 outfile.write(line)
             elif split_line[0] in name_set:  # First split is in name_set
-                original_substring = split_line[1]  # The part to modify
-                modified_substring = original_substring[start_pos:end_pos]  # Extract substring
-                line = line.replace(original_substring, modified_substring, 1)
-                outfile.write(line)
+                if not emptied_flag:
+                    original_substring = split_line[1]  # The part to modify
+                    modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+                    if modified_substring.strip() == "": # Only empty sequence splits from here on, ignore
+                        emptied_flag = True
+                        continue
+                    line = line.replace(original_substring, modified_substring, 1)
+                    outfile.write(line)
             elif split_line[1] in name_set:  # Second split is in name_set
-                original_substring = split_line[3]  # The part to modify
-                modified_substring = original_substring[start_pos:end_pos]  # Extract substring
-                line = line.replace(original_substring, modified_substring, 1)
-                outfile.write(line)
+                if not emptied_flag:
+                    original_substring = split_line[3]  # The part to modify
+                    modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+                    line = line.replace(original_substring, modified_substring, 1)
+                    outfile.write(line)
             elif split_line[0] == '#=GC':  # First split is '#=GC'
-                original_substring = split_line[2]  # The part to modify
-                modified_substring = original_substring[start_pos:end_pos]  # Extract substring
-                line = line.replace(original_substring, modified_substring, 1)
-                outfile.write(line)
-                if split_line[1] == 'RF':
-                    start_pos = 0
-                    end_pos = end_pos - 200 # multi-line sto MSA, 200 aa per line
+                if not emptied_flag:
+                    original_substring = split_line[2]  # The part to modify
+                    modified_substring = original_substring[start_pos:end_pos]  # Extract substring
+                    line = line.replace(original_substring, modified_substring, 1)
+                    outfile.write(line)
+                    if split_line[1] == 'RF':
+                        start_pos = 0
+                        end_pos = end_pos - 200 # multi-line sto MSA, 200 aa per line
 
 def calculate_trim_positions(sequence_matrix, occupancy_threshold):
     numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
