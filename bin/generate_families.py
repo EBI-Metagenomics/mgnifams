@@ -177,7 +177,7 @@ def run_initial_msa(members, pyfastx_obj):
 
 def run_hmmbuild(iteration, hand=False):
     """Runs HMMER's hmmbuild using pyhmmer."""
-    start_time = time.time()                    
+    start_time = time.time()
 
     alphabet = pyhmmer.easel.Alphabet.amino()
 

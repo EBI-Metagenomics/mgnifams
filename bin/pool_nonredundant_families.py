@@ -68,6 +68,7 @@ def pool_directory(input_dir, output_filename, splitChar):
                 for line in infile:
                     value = line.strip()
                     if value:  # Check if the line is not empty
+                        converged_but_discarded = False
                         if splitChar != "":
                             first_element       = value.split(splitChar)[0]
                             fam_id              = base_filename + '_' + first_element
@@ -80,9 +81,13 @@ def pool_directory(input_dir, output_filename, splitChar):
                             fam_id              = base_filename + '_' + value
                             if (fam_id in redundant_fam_ids):
                                 continue
+                            if fam_id not in family_to_id:
+                                converged_but_discarded = True
+                                continue
                             concatenated_string = str(family_to_id[fam_id])
 
-                        outfile.write(f"{concatenated_string}\n")
+                        if not converged_but_discarded:
+                            outfile.write(f"{concatenated_string}\n")
 
 def pool_clusters_directory(input_dir, output_filename):
     path_to_folder = os.path.join(arg_families_dir, input_dir)
