@@ -42,7 +42,8 @@ workflow REMOVE_REDUNDANCY {
     ch_versions = ch_versions.mix( POOL_PREREDUNDANT_FAMILIES_TSV.out.versions )
 
     IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, \
-        POOL_PREREDUNDANT_FAMILIES_TSV.out.tsv, params.redundant_length_threshold )
+        POOL_PREREDUNDANT_FAMILIES_TSV.out.tsv, params.redundant_length_threshold, \
+        params.redundant_score_threshold, params.similarity_score_threshold )
     ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
 
     pooled_families = POOL_NONREDUNDANT_FAMILIES( seed_msa_sto, \

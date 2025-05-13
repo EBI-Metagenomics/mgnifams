@@ -12,10 +12,13 @@ process IDENTIFY_REDUNDANT_FAMS {
     tuple val(meta2), path(metadata, stageAs: "metadata/*")
     tuple val(meta3), path(edgelist)
     val(length_threshold)
+    val(redundant_score_threshold)
+    val(similarity_score_threshold)
 
     output:
-    tuple val(meta), path("redundant.txt"), emit: txt
-    path "versions.yml"                   , emit: versions
+    tuple val(meta), path("redundant.txt")   , emit: txt
+    tuple val(meta), path("similarities.csv"), emit: csv
+    path "versions.yml"                      , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -27,7 +30,10 @@ process IDENTIFY_REDUNDANT_FAMS {
         --metadata metadata \\
         --edgelist ${edgelist} \\
         --length_threshold ${length_threshold} \\
-        --out_file redundant.txt
+        --redundant_score_threshold ${redundant_score_threshold} \\
+        --similarity_score_threshold ${similarity_score_threshold} \\
+        --out_file redundant.txt \\
+        --similarities_file similarities.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

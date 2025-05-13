@@ -316,6 +316,16 @@
                     "default": 0.9,
                     "description": "Minimum length percentage of env hit against query HMM, to deem family redundant and add for removal"
                 },
+                "redundant_score_threshold": {
+                    "type": "number",
+                    "default": 0.95,
+                    "description": "Minimum Jaccard Score between family proteins, to decide if one (the one with fewer members) will be considered redundant"
+                },
+                "similarity_score_threshold": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "Minimum Jaccard Score between family proteins, to decide if they will be annotated as similar"
+                },
                 "starting_id": {
                     "type": "integer",
                     "default": 1,
