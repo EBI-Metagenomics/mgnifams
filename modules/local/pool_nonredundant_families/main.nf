@@ -37,7 +37,7 @@ process POOL_NONREDUNDANT_FAMILIES {
     tuple val(meta10), path("families/family_metadata.csv")    , emit: metadata
     tuple val(meta11), path("families/family_reps.fasta")      , emit: family_reps
     tuple val(meta13), path("families/family_to_id.json")      , emit: id_mapping
-    tuple val(meta14), path("families/similarity_edgelist.csv"), emit: similarity_csv
+    tuple val(meta14), path("families/similarity_mqc.csv")     , emit: similarity_mqc
     path "versions.yml"                                        , emit: versions
 
     script:

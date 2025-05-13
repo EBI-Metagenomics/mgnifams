@@ -163,15 +163,24 @@ def translate_edgelist(file_path, out_path):
         return
 
     with open(file_path, newline='') as infile, open(out_path, 'w', newline='') as outfile:
-        reader = csv.reader(infile)
-        writer = csv.writer(outfile)
+        for line in infile:
+            if line.startswith("#") or line.startswith("Row"):
+                # Write comment or header lines as-is
+                outfile.write(line)
+            else:
+                row = next(csv.reader([line]))
+                if len(row) < 4:
+                    continue  # Skip malformed lines
+                row_num = row[0]
+                fam1 = row[1].strip('"')
+                fam2 = row[2].strip('"')
+                score = row[3]
 
-        for row in reader:
-            if len(row) < 3:
-                continue  # Skip malformed lines if needed
-            col1 = family_to_id.get(row[0], row[0])
-            col2 = family_to_id.get(row[1], row[1])
-            writer.writerow([col1, col2, row[2]])
+                mapped_fam1 = family_to_id.get(fam1, fam1)
+                mapped_fam2 = family_to_id.get(fam2, fam2)
+
+                # Preserve quotes in output
+                outfile.write(f'{row_num},"{mapped_fam1}","{mapped_fam2}",{score}\n')
 
 def main(args=None):
     args = parse_args(args)
@@ -203,7 +212,7 @@ def main(args=None):
     translate_directory('seed_msa_sto')
     translate_directory('domtblout')
     translate_edgelist(arg_similarity_edgelist, \
-        os.path.join(arg_out_dir, 'similarity_edgelist.csv'))
+        os.path.join(arg_out_dir, 'similarity_mqc.csv'))
     
     json_mapping = 'family_to_id.json'
     output_file  = os.path.join(arg_out_dir, json_mapping)

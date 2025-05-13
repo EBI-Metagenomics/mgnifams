@@ -99,6 +99,25 @@ def jaccard_index(set1, set2):
     union = len(set1 | set2)
     return intersection / union if union > 0 else 0.0
 
+def write_similarity_csv(similarity_csv, similarity_rows):
+    with open(similarity_csv, "w", newline='') as out_csv:
+
+        if similarity_rows:
+            # Write the comment lines manually
+            out_csv.write(
+                "# id: \"family_similarities\"\n"
+                "# section_name: \"Inter-family Jaccard scores\"\n"
+                "# description: \"Table of similar, but non-redundant protein families.\"\n"
+                "# format: \"csv\"\n"
+                "# plot_type: \"table\"\n"
+                "Row,Family Id 1,Family Id 2,Jaccard Score\n"
+            )
+
+            for i, (fam1, fam2, score) in enumerate(similarity_rows, start=1):
+                out_csv.write(f'{i},"{fam1}","{fam2}",{score}\n')
+        else:
+            pass
+
 def identify_redundant_fams(domtbl, metadata, edgelist, length_threshold,
                             redundant_score_threshold, similarity_score_threshold,
                             out_file, similarity_csv):
@@ -153,10 +172,7 @@ def identify_redundant_fams(domtbl, metadata, edgelist, length_threshold,
             similarity_rows.append((fam1, fam2, score))
     print("✅ Jaccard scores calculated")
 
-    with open(similarity_csv, "w", newline='') as out_csv:
-        writer = csv.writer(out_csv)
-        writer.writerow(["family_1", "family_2", "jaccard_score"])
-        writer.writerows(similarity_rows)
+    write_similarity_csv(similarity_csv, similarity_rows)
     print("✅ Similarity CSV written")
 
     with open(out_file, "w") as f:

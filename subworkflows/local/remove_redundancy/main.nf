@@ -55,17 +55,18 @@ workflow REMOVE_REDUNDANCY {
     ch_versions = ch_versions.mix( POOL_NONREDUNDANT_FAMILIES.out.versions )
 
     emit:
-    versions     = ch_versions
-    seed_msa_sto = pooled_families.seed_msa_sto
-    msa_sto      = pooled_families.msa_sto
-    hmm          = pooled_families.hmm
-    rf           = pooled_families.rf
-    domtblout    = pooled_families.domtblout
-    tsv          = pooled_families.tsv
-    discarded    = pooled_families.discarded
-    successful   = pooled_families.successful
-    converged    = pooled_families.converged
-    metadata     = pooled_families.metadata
-    family_reps  = pooled_families.family_reps
-    id_mapping   = pooled_families.id_mapping
+    versions       = ch_versions
+    seed_msa_sto   = pooled_families.seed_msa_sto
+    msa_sto        = pooled_families.msa_sto
+    hmm            = pooled_families.hmm
+    rf             = pooled_families.rf
+    domtblout      = pooled_families.domtblout
+    tsv            = pooled_families.tsv
+    discarded      = pooled_families.discarded
+    successful     = pooled_families.successful
+    converged      = pooled_families.converged
+    metadata       = pooled_families.metadata
+    family_reps    = pooled_families.family_reps
+    id_mapping     = pooled_families.id_mapping
+    similarity_mqc = POOL_NONREDUNDANT_FAMILIES.out.similarity_mqc
 }
