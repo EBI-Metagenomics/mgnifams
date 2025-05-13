@@ -21,6 +21,7 @@ process POOL_NONREDUNDANT_FAMILIES {
     tuple val(meta11), path(family_reps_ch , stageAs: "families_prepooled/family_reps/*")
     tuple val(meta12), path(logs_ch        , stageAs: "families_prepooled/logs/*")
     tuple val(meta13), path(redundant_family_ids)
+    tuple val(meta14), path(similarity_csv)
     val(starting_id)
 
     output:
@@ -36,6 +37,7 @@ process POOL_NONREDUNDANT_FAMILIES {
     tuple val(meta10), path("families/family_metadata.csv")    , emit: metadata
     tuple val(meta11), path("families/family_reps.fasta")      , emit: family_reps
     tuple val(meta13), path("families/family_to_id.json")      , emit: id_mapping
+    tuple val(meta14), path("families/similarity_mqc.csv")     , emit: similarity_mqc
     path "versions.yml"                                        , emit: versions
 
     script:
@@ -44,6 +46,7 @@ process POOL_NONREDUNDANT_FAMILIES {
         --input_dir families_prepooled \\
         --output_dir families \\
         --redundant ${redundant_family_ids} \\
+        --similarity_csv ${similarity_csv} \\
         --iter ${starting_id}
 
     cat <<-END_VERSIONS > versions.yml

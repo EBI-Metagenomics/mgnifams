@@ -6,6 +6,7 @@ import shutil
 import json
 import fileinput
 import re
+import csv
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
@@ -32,6 +33,14 @@ def parse_args(args=None):
         metavar="FILE",
         type=str,
         help="File with redundant family ids.",
+    )
+    parser.add_argument(
+        "-c",
+        "--similarity_csv",
+        required=True,
+        metavar="FILE",
+        type=str,
+        help="File with similarity edgelist between families.",
     )
     parser.add_argument(
         "-i",
@@ -148,16 +157,30 @@ def pool_nonredundant_reps(input_folder, output_file):
                     if write_sequence:
                         out_f.write(line)
 
-# def translate_edgelist(file_path, out_path):
-#     if os.path.getsize(file_path) == 0:
-#         shutil.copy(file_path, out_path)
-#         return
+def translate_edgelist(file_path, out_path):
+    if os.path.getsize(file_path) == 0:
+        shutil.copy(file_path, out_path)
+        return
 
-#     df = pd.read_csv(file_path, header=None)
-#     df.columns = ['Col1', 'Col2', 'Col3']
-#     df['Col1'] = df['Col1'].map(family_to_id)
-#     df['Col2'] = df['Col2'].map(family_to_id)
-#     df.to_csv(out_path, index=False, header=False)
+    with open(file_path, newline='') as infile, open(out_path, 'w', newline='') as outfile:
+        for line in infile:
+            if line.startswith("#") or line.startswith("Row"):
+                # Write comment or header lines as-is
+                outfile.write(line)
+            else:
+                row = next(csv.reader([line]))
+                if len(row) < 4:
+                    continue  # Skip malformed lines
+                row_num = row[0]
+                fam1 = row[1].strip('"')
+                fam2 = row[2].strip('"')
+                score = row[3]
+
+                mapped_fam1 = family_to_id.get(fam1, fam1)
+                mapped_fam2 = family_to_id.get(fam2, fam2)
+
+                # Preserve quotes in output
+                outfile.write(f'{row_num},"{mapped_fam1}","{mapped_fam2}",{score}\n')
 
 def main(args=None):
     args = parse_args(args)
@@ -170,6 +193,7 @@ def main(args=None):
     arg_out_dir = args.output_dir
     arg_non_redundant_fam_ids_file = args.redundant
     arg_starting_id = args.iter
+    arg_similarity_edgelist = args.similarity_csv
 
     os.makedirs(arg_out_dir, exist_ok=True)
 
@@ -187,8 +211,8 @@ def main(args=None):
     translate_directory('msa_sto')
     translate_directory('seed_msa_sto')
     translate_directory('domtblout')
-    # translate_edgelist(arg_similarity_edgelist, \
-    #     os.path.join(arg_out_dir, 'similarity_edgelist.csv'))
+    translate_edgelist(arg_similarity_edgelist, \
+        os.path.join(arg_out_dir, 'similarity_mqc.csv'))
     
     json_mapping = 'family_to_id.json'
     output_file  = os.path.join(arg_out_dir, json_mapping)

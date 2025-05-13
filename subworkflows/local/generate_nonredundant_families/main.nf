@@ -90,15 +90,16 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     ch_versions = ch_versions.mix( PRESENT_FAMILY_METADATA.out.versions )
 
     emit:
-    versions      = ch_versions
-    seed_msa_sto  = REMOVE_REDUNDANCY.out.seed_msa_sto
-    msa_sto       = REMOVE_REDUNDANCY.out.msa_sto
-    hmm           = REMOVE_REDUNDANCY.out.hmm
-    rf            = REMOVE_REDUNDANCY.out.rf
-    tsv           = REMOVE_REDUNDANCY.out.tsv
-    converged     = REMOVE_REDUNDANCY.out.converged
-    metadata      = REMOVE_REDUNDANCY.out.metadata
-    family_reps   = REMOVE_REDUNDANCY.out.family_reps
-    discarded_mqc = PRESENT_DISCARDED_FAMILIES.out.mqc
-    metadata_mqc  = PRESENT_FAMILY_METADATA.out.mqc
+    versions       = ch_versions
+    seed_msa_sto   = REMOVE_REDUNDANCY.out.seed_msa_sto
+    msa_sto        = REMOVE_REDUNDANCY.out.msa_sto
+    hmm            = REMOVE_REDUNDANCY.out.hmm
+    rf             = REMOVE_REDUNDANCY.out.rf
+    tsv            = REMOVE_REDUNDANCY.out.tsv
+    converged      = REMOVE_REDUNDANCY.out.converged
+    metadata       = REMOVE_REDUNDANCY.out.metadata
+    family_reps    = REMOVE_REDUNDANCY.out.family_reps
+    discarded_mqc  = PRESENT_DISCARDED_FAMILIES.out.mqc
+    metadata_mqc   = PRESENT_FAMILY_METADATA.out.mqc
+    similarity_mqc = REMOVE_REDUNDANCY.out.similarity_mqc
 }

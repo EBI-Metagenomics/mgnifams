@@ -11,8 +11,8 @@ process PRESENT_FAMILY_METADATA {
     tuple val(meta), path(metadata)
 
     output:
-    tuple val(meta), path("${prefix}_metadata_mqc.csv"), emit: mqc
-    path "versions.yml"                                , emit: versions
+    tuple val(meta), path("${prefix}_mqc.csv"), emit: mqc
+    path "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,7 +20,7 @@ process PRESENT_FAMILY_METADATA {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    cat <<EOF > ${prefix}_metadata_mqc.csv
+    cat <<EOF > ${prefix}_mqc.csv
     # id: "family_metadata"
     # section_name: "Family metadata"
     # description: "Generated family metadata."
@@ -29,7 +29,7 @@ process PRESENT_FAMILY_METADATA {
     Family Id,Size,Representative Id,Region,Representative Length,Sequence,HMM consensus
     EOF
 
-    cat ${metadata} >> ${prefix}_metadata_mqc.csv
+    cat ${metadata} >> ${prefix}_mqc.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -40,7 +40,7 @@ process PRESENT_FAMILY_METADATA {
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}_metadata_mqc.csv
+    touch ${prefix}_mqc.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
