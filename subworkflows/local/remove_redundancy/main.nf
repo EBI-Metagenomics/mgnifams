@@ -1,7 +1,8 @@
-include { CAT_CAT                    } from '../../../modules/nf-core/cat/cat'
-include { HMMER_HMMSEARCH            } from '../../../modules/nf-core/hmmer/hmmsearch/main'
-include { IDENTIFY_REDUNDANT_FAMS    } from '../../../modules/local/identify_redundant_fams/main'
-include { POOL_NONREDUNDANT_FAMILIES } from '../../../modules/local/pool_nonredundant_families/main'
+include { CAT_CAT                        } from '../../../modules/nf-core/cat/cat'
+include { HMMER_HMMSEARCH                } from '../../../modules/nf-core/hmmer/hmmsearch/main'
+include { POOL_PREREDUNDANT_FAMILIES_TSV } from '../../../modules/local/pool_preredundant_families_tsv/main'
+include { IDENTIFY_REDUNDANT_FAMS        } from '../../../modules/local/identify_redundant_fams/main'
+include { POOL_NONREDUNDANT_FAMILIES     } from '../../../modules/local/pool_nonredundant_families/main'
 
 workflow REMOVE_REDUNDANCY {
     take:
@@ -37,8 +38,11 @@ workflow REMOVE_REDUNDANCY {
     HMMER_HMMSEARCH( ch_input_for_hmmsearch )
     ch_versions = ch_versions.mix( HMMER_HMMSEARCH.out.versions )
 
-    // TODO cleverer way to remove instead of hmmsearch results, e.g. Jaccard indices
-    IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, params.redundant_length_threshold )
+    POOL_PREREDUNDANT_FAMILIES_TSV( tsv )
+    ch_versions = ch_versions.mix( POOL_PREREDUNDANT_FAMILIES_TSV.out.versions )
+
+    IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, \
+        POOL_PREREDUNDANT_FAMILIES_TSV.out.tsv, params.redundant_length_threshold )
     ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
 
     pooled_families = POOL_NONREDUNDANT_FAMILIES( seed_msa_sto, \

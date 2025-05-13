@@ -27,6 +27,14 @@ def parse_args(args=None):
         help="Name of the input folder with metadata files to get family-rep mapping and sizes.",
     )
     parser.add_argument(
+        "-e",
+        "--edgelist",
+        required=True,
+        metavar="FILE",
+        type=str,
+        help="Generated family TSV (rep\tmember)).",
+    )
+    parser.add_argument(
         "-l",
         "--length_threshold",
         required=True,
@@ -58,7 +66,6 @@ def create_size_dict(folder_path):
                     if len(row) < 7:
                         continue  # Skip malformed lines
                     
-                    print(row)
                     id_col, size, _, _, _, _, _ = row  # Extract columns
                     key = f"{base_name}_{id_col}"
                     family_to_size[key] = size

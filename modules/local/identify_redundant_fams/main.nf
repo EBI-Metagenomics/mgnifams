@@ -10,6 +10,7 @@ process IDENTIFY_REDUNDANT_FAMS {
     input:
     tuple val(meta), path(domtbl)
     tuple val(meta2), path(metadata, stageAs: "metadata/*")
+    tuple val(meta3), path(edgelist)
     val(length_threshold)
 
     output:
@@ -24,6 +25,7 @@ process IDENTIFY_REDUNDANT_FAMS {
     identify_redundant_fams.py \\
         --domtbl ${domtbl} \\
         --metadata metadata \\
+        --edgelist ${edgelist} \\
         --length_threshold ${length_threshold} \\
         --out_file redundant.txt
 
