@@ -580,14 +580,14 @@ def main():
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
                 full_msa_num_seqs, non_gap_seq_length = run_hmmalign(hmm) # final full MSA, including smaller sequences
-                if (non_gap_seq_length < 100):
+                if (non_gap_seq_length < 100): # TODO pass with parameter
                     discard_flag = True
                     discard_reason = "family representative length too small"
                     discard_value = non_gap_seq_length
                     with open(log_file, 'a') as file:
                         file.write(f"Discard-Warning: {iteration} rep length is only {non_gap_seq_length}\n")
                     break
-                elif (non_gap_seq_length > 2000):
+                elif (non_gap_seq_length > 2000): # TODO pass with parameter
                     discard_flag = True
                     discard_reason = "family representative length too large"
                     discard_value = non_gap_seq_length
