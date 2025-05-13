@@ -49,7 +49,9 @@ workflow REMOVE_REDUNDANCY {
     pooled_families = POOL_NONREDUNDANT_FAMILIES( seed_msa_sto, \
         msa_sto, hmm, rf, domtblout, tsv, \
         discarded, successful, converged, \
-        metadata, reps_fasta, logs, IDENTIFY_REDUNDANT_FAMS.out.txt, params.starting_id )
+        metadata, reps_fasta, logs, \
+        IDENTIFY_REDUNDANT_FAMS.out.txt, IDENTIFY_REDUNDANT_FAMS.out.csv, \
+        params.starting_id )
     ch_versions = ch_versions.mix( POOL_NONREDUNDANT_FAMILIES.out.versions )
 
     emit:
