@@ -1,21 +1,30 @@
-# Use an official Miniconda3 base image
-FROM continuumio/miniconda3:latest
+FROM mambaorg/micromamba:2.1.1
 
-# Set the working directory
+USER root
 WORKDIR /app
 
-RUN conda config --add channels conda-forge \
-    && conda config --add channels bioconda \
-    && conda config --set channel_priority strict
+ENV PATH="/opt/conda/bin:$PATH"
+ENV CONDA_ENV=base
 
-# Install build tools
-RUN apt-get update && apt-get install -y build-essential
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    libeigen3-dev \
+    wget \
+    unzip \
+    git
 
-# Install Python dependencies using pip
-RUN pip install pandas pyfastx pyfamsa pyhmmer pytrimal biopython numpy
+RUN micromamba install -y -n base -c conda-forge \
+    python=3.12.9 \
+    pip \
+    pandas=2.2.3 \
+    biopython=1.85 \
+    numpy=2.2.4
 
-# Set environment variable to ensure Conda is properly configured
-ENV PATH=/opt/conda/bin:$PATH
+RUN pip install \
+    pyfastx==2.2.0 \
+    pyfamsa==0.5.3.post1 \
+    pyhmmer==0.11.1 \
+    pytrimal==0.7.0
 
-# Set default shell
 SHELL ["/bin/bash", "-c"]
