@@ -33,7 +33,7 @@ process IDENTIFY_REDUNDANT_FAMS {
         --redundant_score_threshold ${redundant_score_threshold} \\
         --similarity_score_threshold ${similarity_score_threshold} \\
         --out_file redundant.txt \\
-        --similarities_file similarities.csv
+        --similarity_csv similarities.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
