@@ -1,4 +1,4 @@
-process CHUNK_CLUSTERS {
+process PRESENT_FAMILY_METADATA {
     tag "$meta.id"
     label 'process_single'
 
@@ -8,17 +8,28 @@ process CHUNK_CLUSTERS {
         'nf-core/ubuntu:20.04' }"
 
     input:
-    tuple val(meta) , path(reps)
-    tuple val(meta2), path(clusters)
+    tuple val(meta), path(metadata)
 
     output:
-    tuple val(meta), path("${prefix}.tsv"), emit: tsv
-    path "versions.yml"                   , emit: versions
+    tuple val(meta), path("${prefix}_mqc.csv"), emit: mqc
+    path "versions.yml"                       , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    awk -F'\t' 'NR==FNR {names[\$1]; next} \$1 in names' ${reps} ${clusters} > ${prefix}.tsv
+    cat <<EOF > ${prefix}_mqc.csv
+    # id: "family_metadata"
+    # section_name: "Family metadata"
+    # description: "Generated family metadata."
+    # format: "csv"
+    # plot_type: "table"
+    Family Id,Size,Representative Id,Region,Representative Length,Sequence,HMM consensus
+    EOF
+
+    cat ${metadata} >> ${prefix}_mqc.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -29,7 +40,7 @@ process CHUNK_CLUSTERS {
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.tsv
+    touch ${prefix}_mqc.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

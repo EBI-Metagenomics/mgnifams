@@ -7,7 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- [#37](https://github.com/EBI-Metagenomics/mgnifams/pull/37) - `BUILD_PYFASTX_INDEX` module added before main family generation, to calculate the `pyfastx` fasta index once, for the parallel chunks to run with.
+  Added various custom MultiQC reports; family metadata, discarded clusters, family similarities.
 - Update sqlite database subworkflow, for smooth subsequent version releases.
+
+### `Fixed`
+
+[#37](https://github.com/EBI-Metagenomics/mgnifams/pull/37) - MGYP protein slices for MGnifams seed MSAs, full MSAs, reps fasta and metadata are now calculated properly in the `generate_families.py` script.
+
+### `Changed`
+
+- [#37](https://github.com/EBI-Metagenomics/mgnifams/pull/37) - Added protein set Jaccard score calculation in `identify_redundant_fams.py`, for better estimation of family similarities, in addition to `hmmsearch` among families.
+  Pipeline `params` moved to root `main.nf` file, and are being passed downstream to subworkflows.
+  MGnifams Dockerfile building from micromamba.
+- [#31](https://github.com/EBI-Metagenomics/mgnifams/pull/31) - Swapped all subprocess calls of `generate_families.py` to cythonised lib versions (pyfastx, pyfamsa, pyhmmer, pytrimal).
+Benchmark results: CPU usage decrease 37.6% - Memory decrease 0.36% - Job duration decrease 37.5% - I/O read decrease 90% - I/O write decrease 77.7%
+
+### `Dependencies`
+
+| Tool     | Previous version | New version |
+| -------- | ---------------- | ----------- |
+| pytrimal |                  | 0.7.0       |
+| pyhmmer  |                  | 0.11.0      |
+| pyfamsa  |                  | 0.5.3.post1 |
+| pyfastx  |                  | 2.2.0       |
 
 ## v1.0.0 - [2024/10/01]
 

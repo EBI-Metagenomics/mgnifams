@@ -2,4 +2,4 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - conda-forge::sed=4.7
+  - conda-forge::bzip2=1.0.8

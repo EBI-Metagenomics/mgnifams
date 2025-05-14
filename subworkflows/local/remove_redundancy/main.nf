@@ -1,88 +1,75 @@
-#!/usr/bin/env nextflow
-
-include { HHSUITE_REFORMAT                     } from "../../../modules/local/hhsuite/reformat/main"
-include { HHSUITE_BUILDHHDB                    } from "../../../modules/local/hhsuite/buildhhdb/main"
-include { HHSUITE_HHBLITS                      } from "../../../modules/local/hhsuite/hhblits/main"
-include { COMBINE_HH_RESULTS                   } from "../../../modules/local/combine_hh_results/main"
-include { MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID } from "../../../modules/local/map_first_a3m_sequences_to_family_id/main"
-include { POOL_FAM_PROTEINS                    } from "../../../modules/local/pool_fam_proteins/main"
-include { REMOVE_REDUNDANT_AND_TM              } from "../../../modules/local/remove_redundant_and_tm/main"
-include { POOL_FAMILY_RESULTS                  } from "../../../modules/local/pool_family_results/main"
+include { CAT_CAT                        } from '../../../modules/nf-core/cat/cat'
+include { HMMER_HMMSEARCH                } from '../../../modules/nf-core/hmmer/hmmsearch/main'
+include { POOL_PREREDUNDANT_FAMILIES_TSV } from '../../../modules/local/pool_preredundant_families_tsv/main'
+include { IDENTIFY_REDUNDANT_FAMS        } from '../../../modules/local/identify_redundant_fams/main'
+include { POOL_NONREDUNDANT_FAMILIES     } from '../../../modules/local/pool_nonredundant_families/main'
 
 workflow REMOVE_REDUNDANCY {
     take:
-    seed_msa_sto_dir
-    seed_msa_sto_ch
-    msa_sto_ch
-    hmm_ch
-    rf_ch
-    domtblout_ch
-    tsv_ch
-    discarded_ch
-    successful_ch
-    converged_ch
-    metadata_ch
-    logs_ch
-    tm_ids_ch
-    prob_ids_ch
-    rep_fa_ch
+    reps_fasta
+    outdir
+    hmm
+    metadata
+    seed_msa_sto
+    msa_sto
+    rf
+    domtblout
+    tsv
+    redundant_length_threshold
+    redundant_score_threshold
+    similarity_score_threshold
+    discarded
+    successful
+    converged
+    logs
+    starting_id
 
     main:
     ch_versions = Channel.empty()
 
-    a3m_ch = HHSUITE_REFORMAT(seed_msa_sto_dir, "sto", "a3m").fa
-    ch_versions = ch_versions.mix( HHSUITE_REFORMAT.out.versions )
+    ch_reps_fasta = reps_fasta
+        .map { meta, files -> files }
+        .flatten()
+        .collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families")
+        .map { file -> [[id: 'pre_redundant'], file] }
 
-    db_name = a3m_ch.map { meta, folderpath ->
-        def path_str = folderpath.toString()
-        def parts = path_str.split('/')
-        parts[-1]
-    }
+    CAT_CAT( hmm )
+    ch_versions = ch_versions.mix( CAT_CAT.out.versions )
 
-    hh_db_ch = HHSUITE_BUILDHHDB(a3m_ch).hh_db
-    ch_versions = ch_versions.mix( HHSUITE_BUILDHHDB.out.versions )
+    ch_input_for_hmmsearch = CAT_CAT.out.file_out
+        .combine(ch_reps_fasta, by: 0)
+        .map { meta, model, seqs -> [meta, model, seqs, false, false, true] }
 
-    hh_db_ch
-        .map { meta, folderpath ->
-            return folderpath
-        }
-        .set { hh_db_path_ch }
+    HMMER_HMMSEARCH( ch_input_for_hmmsearch )
+    ch_versions = ch_versions.mix( HMMER_HMMSEARCH.out.versions )
 
-    hhr_ch = HHSUITE_HHBLITS(a3m_ch, hh_db_path_ch, db_name).hhr
-    ch_versions = ch_versions.mix( HHSUITE_HHBLITS.out.versions )
+    POOL_PREREDUNDANT_FAMILIES_TSV( tsv )
+    ch_versions = ch_versions.mix( POOL_PREREDUNDANT_FAMILIES_TSV.out.versions )
 
-    hhr_all_ch = COMBINE_HH_RESULTS(hhr_ch)
-    // TODO ch_versions = ch_versions.mix( COMBINE_HH_RESULTS.out.versions )
+    IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, \
+        POOL_PREREDUNDANT_FAMILIES_TSV.out.tsv, redundant_length_threshold, \
+        redundant_score_threshold, similarity_score_threshold )
+    ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
 
-    mapping = MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID(a3m_ch)
-    // TODO ch_versions = ch_versions.mix( MAP_FIRST_A3M_SEQUENCES_TO_FAMILY_ID.out.versions )
-
-    refined_fam_proteins = POOL_FAM_PROTEINS(tsv_ch.collect())
-    // TODO ch_versions = ch_versions.mix( POOL_FAM_PROTEINS.out.versions )
-
-    non_redundant = REMOVE_REDUNDANT_AND_TM(hhr_all_ch, mapping, tm_ids_ch, prob_ids_ch, refined_fam_proteins, rep_fa_ch, params.redundant_threshold, params.similarity_threshold)
-    // TODO ch_versions = ch_versions.mix( REMOVE_REDUNDANT_AND_TM.out.versions )
-
-    non_redundant_fam_ids = non_redundant.non_redundant_fam_ids
-    similarity_edgelist = non_redundant.similarity_edgelist
-
-    pooled_families = POOL_FAMILY_RESULTS(seed_msa_sto_ch, \
-        msa_sto_ch, hmm_ch, rf_ch, domtblout_ch, tsv_ch, \
-        discarded_ch, successful_ch, converged_ch, \
-        metadata_ch, logs_ch, non_redundant_fam_ids, similarity_edgelist, params.starting_id)
-    // TODO ch_versions = ch_versions.mix( POOL_FAMILY_RESULTS.out.versions )
+    pooled_families = POOL_NONREDUNDANT_FAMILIES( seed_msa_sto, \
+        msa_sto, hmm, rf, domtblout, tsv, discarded, successful, \
+        converged, metadata, reps_fasta, logs, IDENTIFY_REDUNDANT_FAMS.out.txt, \
+        IDENTIFY_REDUNDANT_FAMS.out.csv, starting_id )
+    ch_versions = ch_versions.mix( POOL_NONREDUNDANT_FAMILIES.out.versions )
 
     emit:
-    versions     = ch_versions
-    seed_msa_sto = pooled_families.seed_msa_sto
-    msa_sto      = pooled_families.msa_sto
-    hmm          = pooled_families.hmm
-    rf           = pooled_families.rf
-    domtblout    = pooled_families.domtblout
-    tsv          = pooled_families.tsv
-    discarded    = pooled_families.discarded
-    successful   = pooled_families.successful
-    converged    = pooled_families.converged
-    metadata     = pooled_families.metadata
-    id_mapping   = pooled_families.id_mapping
+    versions       = ch_versions
+    seed_msa_sto   = pooled_families.seed_msa_sto
+    msa_sto        = pooled_families.msa_sto
+    hmm            = pooled_families.hmm
+    rf             = pooled_families.rf
+    domtblout      = pooled_families.domtblout
+    tsv            = pooled_families.tsv
+    discarded      = pooled_families.discarded
+    successful     = pooled_families.successful
+    converged      = pooled_families.converged
+    metadata       = pooled_families.metadata
+    family_reps    = pooled_families.family_reps
+    id_mapping     = pooled_families.id_mapping
+    similarity_mqc = POOL_NONREDUNDANT_FAMILIES.out.similarity_mqc
 }
