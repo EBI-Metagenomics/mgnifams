@@ -10,16 +10,27 @@ process POOL_PREREDUNDANT_FAMILIES_TSV {
     input:
     tuple val(meta), path(tsv_ch, stageAs: "refined_families/*")
 
-
     output:
-    tuple val(meta), path("preredundant_families.tsv"), emit: tsv
-    path "versions.yml"                               , emit: versions
+    tuple val(meta), path("${prefix}_preredundant_families.tsv"), emit: tsv
+    path "versions.yml"                                         , emit: versions
 
     script:
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     pool_preredundant_families_tsv.py \\
         --input_dir refined_families \\
-        --output_file preredundant_families.tsv
+        --output_file ${prefix}_preredundant_families.tsv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+    END_VERSIONS
+    """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}_preredundant_families.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

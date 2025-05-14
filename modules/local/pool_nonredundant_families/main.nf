@@ -54,4 +54,32 @@ process POOL_NONREDUNDANT_FAMILIES {
         python: \$(python --version 2>&1 | sed 's/Python //g')
     END_VERSIONS
     """
+
+    stub:
+    """
+    mkdir families
+    touch families/refined_families.tsv
+    touch families/discarded_clusters.txt
+    touch families/successful_clusters.txt
+    touch families/converged_families.txt
+    touch families/family_metadata.csv
+    touch families/family_reps.fasta
+    touch families/family_to_id.json
+    touch families/similarity_mqc.csv
+
+    touch test.txt
+    mkdir families/msa_sto
+    cp test.txt families/msa_sto/
+    mkdir families/hmm
+    cp test.txt families/hmm/
+    mkdir families/rf
+    cp test.txt families/rf/
+    mkdir families/domtblout
+    cp test.txt families/domtblout/
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+    END_VERSIONS
+    """
 }

@@ -16,14 +16,15 @@ process IDENTIFY_REDUNDANT_FAMS {
     val(similarity_score_threshold)
 
     output:
-    tuple val(meta), path("redundant.txt")   , emit: txt
-    tuple val(meta), path("similarities.csv"), emit: csv
-    path "versions.yml"                      , emit: versions
+    tuple val(meta), path("${prefix}_redundant.txt")   , emit: txt
+    tuple val(meta), path("${prefix}_similarities.csv"), emit: csv
+    path "versions.yml"                                , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     identify_redundant_fams.py \\
         --domtbl ${domtbl} \\
@@ -32,8 +33,21 @@ process IDENTIFY_REDUNDANT_FAMS {
         --length_threshold ${length_threshold} \\
         --redundant_score_threshold ${redundant_score_threshold} \\
         --similarity_score_threshold ${similarity_score_threshold} \\
-        --out_file redundant.txt \\
-        --similarity_csv similarities.csv
+        --out_file ${prefix}_redundant.txt \\
+        --similarity_csv ${prefix}_similarities.csv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: \$(python --version 2>&1 | sed 's/Python //g')
+        pandas: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pandas'))")
+    END_VERSIONS
+    """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}_redundant.txt
+    touch ${prefix}_similarities.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
