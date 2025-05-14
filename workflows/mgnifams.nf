@@ -35,10 +35,13 @@ workflow MGNIFAMS {
         params.minimum_members, params.clusters_chunk_size )
     ch_versions = ch_versions.mix( SETUP_CLUSTERS.out.versions )
 
-    generated_families = GENERATE_NONREDUNDANT_FAMILIES(  SETUP_CLUSTERS.out.cluster_chunks, \
-        SETUP_CLUSTERS.out.mgnifams_input_fa, params.outdir, params.redundant_length_threshold, \
+    generated_families = GENERATE_NONREDUNDANT_FAMILIES( SETUP_CLUSTERS.out.cluster_chunks, \
+        SETUP_CLUSTERS.out.mgnifams_input_fa,  params.mgnifams_discard_min_rep_length, \
+        params.mgnifams_discard_max_rep_length, params.mgnifams_discard_min_starting_membership, \
+        params.mgnifams_max_seq_identity, params.mgnifams_max_seed_seqs, params.mgnifams_max_gap_occupancy, \
+        params.mgnifams_recruit_evalue_cutoff, params.mgnifams_recruit_hit_length_percentage, \
+        params.outdir, params.redundant_length_threshold, \
         params.redundant_score_threshold, params.similarity_score_threshold, params.starting_id )
-
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
     // TODO

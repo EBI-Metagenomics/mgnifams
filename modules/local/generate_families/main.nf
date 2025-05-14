@@ -11,6 +11,14 @@ process GENERATE_FAMILIES {
     tuple val(meta) , path(clusters_chunk)
     tuple val(meta2), path(mgnifams_fasta)
     tuple val(meta3), path(pyfastx_index)
+    val(discard_min_rep_length)
+    val(discard_max_rep_length)
+    val(discard_min_starting_membership)
+    val(max_seq_identity)
+    val(max_seed_seqs)
+    val(max_gap_occupancy)
+    val(recruit_evalue_cutoff)
+    val(recruit_hit_length_percentage)
 
     output:
     tuple val(meta), path("seed_msa_sto/*")       , emit: seed_msa_sto
@@ -37,7 +45,15 @@ process GENERATE_FAMILIES {
         --clusters_chunk ${clusters_chunk} \\
         --fasta_file ${mgnifams_fasta} \\
         --cpus ${task.cpus} \\
-        --chunk_num ${prefix}
+        --chunk_num ${prefix} \\
+        --discard_min_rep_length ${discard_min_rep_length} \\
+        --discard_max_rep_length ${discard_max_rep_length} \\
+        --discard_min_starting_membership ${discard_min_starting_membership} \\
+        --max_seq_identity ${max_seq_identity} \\
+        --max_seed_seqs ${max_seed_seqs} \\
+        --max_gap_occupancy ${max_gap_occupancy} \\
+        --recruit_evalue_cutoff ${recruit_evalue_cutoff} \\
+        --recruit_hit_length_percentage ${recruit_hit_length_percentage}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

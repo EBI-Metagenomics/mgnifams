@@ -16,18 +16,40 @@ import numpy as np
 from Bio import AlignIO
 
 def parse_args(args=None):
-    global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus, arg_chunk_num
+    global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus, arg_chunk_num, \
+        arg_discard_min_rep_length, arg_discard_max_rep_length, arg_discard_min_starting_membership, \
+        arg_max_seq_identity, arg_max_seed_seqs, arg_max_gap_occupancy, \
+        arg_recruit_evalue_cutoff, arg_recruit_hit_length_percentage
+
     parser = argparse.ArgumentParser(description="Process clustering data and extract sequences.")
+    
     parser.add_argument("-c", "--clusters_chunk", required=True, type=str, help="Path to the clusters chunk file.")
     parser.add_argument("-f", "--fasta_file", required=True, type=str, help="Path to the MGnifams input FASTA file.")
-    parser.add_argument("-p", "--cpus", required=True, type=str, help="Number of CPUs to use.")
+    parser.add_argument("-p", "--cpus", required=True, type=int, help="Number of CPUs to use.")
     parser.add_argument("-n", "--chunk_num", required=True, type=str, help="Chunk number used for naming output files.")
+    parser.add_argument("--discard_min_rep_length", required=True, type=int, help="Minimum allowed representative sequence length, to keep family.")
+    parser.add_argument("--discard_max_rep_length", required=True, type=int, help="Maximum allowed representative sequence length, to keep family.")
+    parser.add_argument("--discard_min_starting_membership", required=True, type=float, help="Minimum allowed recruited initial cluster sequence membership percentage, to keep family.")
+    parser.add_argument("--max_seq_identity", required=True, type=float, help="Maximum sequence identity, to filter out sequences from an alignment.")
+    parser.add_argument("--max_seed_seqs", required=True, type=int, help="Maximum number of allowed seed MSA sequences.")
+    parser.add_argument("--max_gap_occupancy", required=True, type=float, help="Maximum allowed gap occupancy for trimming.")
+    parser.add_argument("--recruit_evalue_cutoff", required=True, type=float, help="E-value cutoff for sequence recruitment.")
+    parser.add_argument("--recruit_hit_length_percentage", required=True, type=float, help="Minimum allowed recruited sequence env hit length percentage with family HMM.")
+
     args = parser.parse_args(args)
-    
+
     arg_clusters_chunk = args.clusters_chunk
     arg_mgnifams_input_fasta_file = args.fasta_file
     arg_cpus = args.cpus
     arg_chunk_num = args.chunk_num
+    arg_discard_min_rep_length = args.discard_min_rep_length
+    arg_discard_max_rep_length = args.discard_max_rep_length
+    arg_discard_min_starting_membership = args.discard_min_starting_membership
+    arg_max_seq_identity = args.max_seq_identity
+    arg_max_seed_seqs = args.max_seed_seqs
+    arg_max_gap_occupancy = args.max_gap_occupancy
+    arg_recruit_evalue_cutoff = args.recruit_evalue_cutoff
+    arg_recruit_hit_length_percentage = args.recruit_hit_length_percentage
 
 def define_globals():
     global log_file, refined_families_tsv_file, \
@@ -36,7 +58,6 @@ def define_globals():
         tmp_folder, seed_msa_folder, \
         align_msa_folder, hmm_folder, \
         domtblout_folder, rf_folder, \
-        evalue_threshold, length_threshold, \
         tmp_family_sequences_path, tmp_seed_msa_path, tmp_align_msa_path, \
         tmp_hmm_path, tmp_domtblout_path, \
         tmp_sequences_to_remove_path, tmp_rf_path
@@ -54,8 +75,6 @@ def define_globals():
     hmm_folder                 = "hmm"
     domtblout_folder           = "domtblout"
     rf_folder                  = "rf"
-    evalue_threshold           = 0.001
-    length_threshold           = 0.8
 
     for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder, rf_folder, \
         logs_folder, refined_families_folder, discarded_clusters_folder, \
@@ -218,7 +237,7 @@ def run_hmmsearch(hmm, pyhmmer_seqs, pyfastx_obj, exit_flag): # hmm obj changes,
     filtered_sequences = []
     os.remove(tmp_family_sequences_path) # emptying file
 
-    for top_hits in pyhmmer.hmmer.hmmsearch(hmm, pyhmmer_seqs, cpus=int(arg_cpus), E=evalue_threshold):
+    for top_hits in pyhmmer.hmmer.hmmsearch(hmm, pyhmmer_seqs, cpus=int(arg_cpus), E=arg_recruit_evalue_cutoff):
         with open(tmp_domtblout_path, "wb") as fh:
             top_hits.write(fh, format="domains") # --domtblout
         qlen = top_hits.query.M
@@ -230,7 +249,7 @@ def run_hmmsearch(hmm, pyhmmer_seqs, pyfastx_obj, exit_flag): # hmm obj changes,
                 # print(f"TARGET SEQUENCE: {subhit.alignment.target_sequence}") # debug, different than target_env_sequence that we want, not provided by pyhmmer
                 env_length = subhit.env_to - subhit.env_from + 1
                 # print(f"env from-to: {subhit.env_from}-{subhit.env_to}") # debug
-                if (exit_flag or env_length >= length_threshold * qlen):
+                if (exit_flag or env_length >= arg_recruit_hit_length_percentage * qlen):
                     sequence = get_fasta_sequences(pyfastx_obj, [sequence_name])
                     if (env_length < tlen):
                         sequence = mask_sequence(sequence, subhit.env_from, subhit.env_to)
@@ -266,7 +285,7 @@ def run_hmmalign(hmm):
 def unmask_sequence_names(names):
     return [name.split('/')[0] for name in names]
 
-def run_pytrimal_reps(threshold=0.8):
+def run_pytrimal_reps(threshold):
     start_time = time.time()
 
     # Load the MSA
@@ -287,7 +306,7 @@ def run_pytrimal_reps(threshold=0.8):
         with open(log_file, 'a') as file:
             file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
 
-        if (number_of_remaining_sequences <= 2000): # TODO pytrimal -clusters 2000 max once, if/when fixed
+        if (number_of_remaining_sequences <= arg_max_seed_seqs): # TODO pytrimal -clusters arg_max_seed_seqs max once, if/when fixed
             break
         else:
             threshold -= 0.1
@@ -345,7 +364,7 @@ def calculate_trim_positions(sequence_matrix, occupancy_threshold):
 
     return start_position, end_position
 
-def clip_ends(msa, occupancy_threshold=0.5):
+def clip_ends(msa, occupancy_threshold):
     sequence_matrix = np.array([list(seq) for seq in msa.sequences])
     start_position, end_position = calculate_trim_positions(sequence_matrix, occupancy_threshold)
     
@@ -568,7 +587,7 @@ def main():
                     break
 
                 membership_percentage = check_seed_membership(original_sequence_names, unmask_sequence_names(filtered_seq_names))
-                if (membership_percentage < 0.9):
+                if (membership_percentage < arg_discard_min_starting_membership):
                     discard_flag = True
                     discard_reason = "few seed sequences remained"
                     discard_value = membership_percentage
@@ -580,14 +599,14 @@ def main():
                         file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
                 
                 full_msa_num_seqs, non_gap_seq_length = run_hmmalign(hmm) # final full MSA, including smaller sequences
-                if (non_gap_seq_length < 100): # TODO pass with parameter
+                if (non_gap_seq_length < arg_discard_min_rep_length):
                     discard_flag = True
                     discard_reason = "family representative length too small"
                     discard_value = non_gap_seq_length
                     with open(log_file, 'a') as file:
                         file.write(f"Discard-Warning: {iteration} rep length is only {non_gap_seq_length}\n")
                     break
-                elif (non_gap_seq_length > 2000): # TODO pass with parameter
+                elif (non_gap_seq_length > arg_discard_max_rep_length):
                     discard_flag = True
                     discard_reason = "family representative length too large"
                     discard_value = non_gap_seq_length
@@ -599,8 +618,8 @@ def main():
 
             # main strategy continue, if not converged
             run_hmmalign(hmm)
-            msa = run_pytrimal_reps() # removes redundant sequences
-            clip_ends(msa) # removes gaps above threshold at ends
+            msa = run_pytrimal_reps(arg_max_seq_identity) # removes redundant sequences
+            clip_ends(msa, arg_max_gap_occupancy) # removes gaps above threshold at ends
             # run_pytrimal_terminalonly(msa) # removes gaps above threshold at ends
 
         # Exiting family loop

@@ -306,6 +306,54 @@
             "type": "object",
             "description": "Parameters for generate_nonredundant_families subworkflow",
             "properties": {
+                "mgnifams_discard_min_rep_length": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Minimum allowed representative sequence length, to keep family",
+                    "help_text": "After iteratively refining the family, make sure its representative sequence does not drop below this many amino acids"
+                },
+                "mgnifams_discard_max_rep_length": {
+                    "type": "integer",
+                    "default": 2000,
+                    "description": "Maximum allowed representative sequence length, to keep family",
+                    "help_text": "After iteratively refining the family, make sure its representative sequence does not exceed this many amino acids"
+                },
+                "mgnifams_discard_min_starting_membership": {
+                    "type": "number",
+                    "default": 0.9,
+                    "description": "Minimum allowed recruited initial cluster sequence membership percentage, to keep family",
+                    "help_text": "The iterative family model refinement, should recruit at least this percentage of the initial MMseqs cluster sequences"
+                },
+                "mgnifams_max_seq_identity": {
+                    "type": "number",
+                    "default": 0.8,
+                    "description": "Maximum sequence identity, to filter out sequences from an alignment",
+                    "help_text": "This is a starting threshold and works in combination with the mgnifams_max_seed_seqs parameter below"
+                },
+                "mgnifams_max_seed_seqs": {
+                    "type": "integer",
+                    "default": 2000,
+                    "description": "Maximum number of allowed seed MSA sequences",
+                    "help_text": "If that is not the case with the first attempt, the value of mgnifams_max_seq_identity will keep decreasing (-0.1), removing redundant sequences at lower similarities until this number is met"
+                },
+                "mgnifams_max_gap_occupancy": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "Maximum allowed gap occupancy for trimming",
+                    "help_text": "If a column at both ends of an alignment that is going to be refined, exceeds this value, it gets trimmed off"
+                },
+                "mgnifams_recruit_evalue_cutoff": {
+                    "type": "number",
+                    "default": 0.001,
+                    "description": "E-value cutoff for sequence recruitment",
+                    "help_text": "The max allowed E-value for the iterative hmmsearch sequence recruiting during the mgnifams algorithm"
+                },
+                "mgnifams_recruit_hit_length_percentage": {
+                    "type": "number",
+                    "default": 0.9,
+                    "description": "Minimum allowed recruited sequence env hit length percentage with family HMM",
+                    "help_text": "The minimum allowed envelope length percentage, against the family query HMM length"
+                },
                 "hmmsearch_evalue_cutoff": {
                     "type": "number",
                     "default": 0.001,

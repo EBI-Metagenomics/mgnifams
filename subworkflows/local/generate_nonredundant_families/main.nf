@@ -8,6 +8,14 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     take:
     cluster_chunks
     mgnifams_fa
+    mgnifams_discard_min_rep_length
+    mgnifams_discard_max_rep_length
+    mgnifams_discard_min_starting_membership
+    mgnifams_max_seq_identity
+    mgnifams_max_seed_seqs
+    mgnifams_max_gap_occupancy
+    mgnifams_recruit_evalue_cutoff
+    mgnifams_recruit_hit_length_percentage
     outdir
     redundant_length_threshold
     redundant_score_threshold
@@ -20,7 +28,10 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     ch_pyfastx = BUILD_PYFASTX_INDEX( mgnifams_fa )
     ch_versions = ch_versions.mix( BUILD_PYFASTX_INDEX.out.versions )
 
-    ch_families = GENERATE_FAMILIES( cluster_chunks, mgnifams_fa.first(), ch_pyfastx.index.first() )
+    ch_families = GENERATE_FAMILIES( cluster_chunks, mgnifams_fa.first(), ch_pyfastx.index.first(), \
+        mgnifams_discard_min_rep_length, mgnifams_discard_max_rep_length, mgnifams_discard_min_starting_membership, \
+        mgnifams_max_seq_identity, mgnifams_max_seed_seqs, mgnifams_max_gap_occupancy, \
+        mgnifams_recruit_evalue_cutoff, mgnifams_recruit_hit_length_percentage )
     ch_versions = ch_versions.mix( GENERATE_FAMILIES.out.versions )
 
     ch_hmm = ch_families.hmm
