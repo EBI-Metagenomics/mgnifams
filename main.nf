@@ -42,7 +42,15 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     //
     if (params.mode == "run_mgnifams_pipeline") {
         MGNIFAMS( 
-            samplesheet
+            samplesheet, params.fasta_input_mode, params.compress_mode, \
+            params.input_csv_chunk_size, params.min_sequence_length, params.outdir, \
+            params.minimum_members, params.clusters_chunk_size, params.mgnifams_discard_min_rep_length, \
+            params.mgnifams_discard_max_rep_length, params.mgnifams_discard_min_starting_membership, \
+            params.mgnifams_max_seq_identity, params.mgnifams_max_seed_seqs, params.mgnifams_max_gap_occupancy, \
+            params.mgnifams_recruit_evalue_cutoff, params.mgnifams_recruit_hit_length_percentage, \
+            params.redundant_length_threshold, params.redundant_score_threshold, \
+            params.similarity_score_threshold, params.starting_id, params.multiqc_config, \
+            params.multiqc_logo, params.multiqc_methods_description
         )
         ch_multiqc = MGNIFAMS.out.multiqc_report
     }

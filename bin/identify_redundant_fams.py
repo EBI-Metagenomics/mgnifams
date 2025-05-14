@@ -101,18 +101,17 @@ def jaccard_index(set1, set2):
 
 def write_similarity_csv(similarity_csv, similarity_rows):
     with open(similarity_csv, "w", newline='') as out_csv:
+        # Write the comment lines manually
+        out_csv.write(
+            "# id: \"family_similarities\"\n"
+            "# section_name: \"Inter-family Jaccard scores\"\n"
+            "# description: \"Table of similar, but non-redundant protein families.\"\n"
+            "# format: \"csv\"\n"
+            "# plot_type: \"table\"\n"
+            "Row,Family Id 1,Family Id 2,Jaccard Score\n"
+        )
 
         if similarity_rows:
-            # Write the comment lines manually
-            out_csv.write(
-                "# id: \"family_similarities\"\n"
-                "# section_name: \"Inter-family Jaccard scores\"\n"
-                "# description: \"Table of similar, but non-redundant protein families.\"\n"
-                "# format: \"csv\"\n"
-                "# plot_type: \"table\"\n"
-                "Row,Family Id 1,Family Id 2,Jaccard Score\n"
-            )
-
             for i, (fam1, fam2, score) in enumerate(similarity_rows, start=1):
                 out_csv.write(f'{i},"{fam1}","{fam2}",{score}\n')
         else:
