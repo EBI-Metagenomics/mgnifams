@@ -8,6 +8,11 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     take:
     cluster_chunks
     mgnifams_fa
+    outdir
+    redundant_length_threshold
+    redundant_score_threshold
+    similarity_score_threshold
+    starting_id
 
     main:
     ch_versions = Channel.empty()
@@ -78,9 +83,11 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .collect()
         .map { file -> [ [id:"logs"], file ] }
 
-    REMOVE_REDUNDANCY( ch_hmm, ch_reps_fasta, ch_metadata, \
+    REMOVE_REDUNDANCY( ch_reps_fasta, outdir, ch_hmm, ch_metadata, \
         ch_seed_msa_sto, ch_msa_sto, ch_rf, ch_domtblout, ch_tsv, \
-        ch_discarded, ch_successful, ch_converged, ch_logs )
+        redundant_length_threshold, redundant_score_threshold, \
+        similarity_score_threshold, ch_discarded, ch_successful, \
+        ch_converged, ch_logs, starting_id )
     ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
 
     PRESENT_DISCARDED_FAMILIES( REMOVE_REDUNDANCY.out.discarded )

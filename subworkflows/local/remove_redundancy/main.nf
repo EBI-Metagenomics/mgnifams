@@ -6,18 +6,23 @@ include { POOL_NONREDUNDANT_FAMILIES     } from '../../../modules/local/pool_non
 
 workflow REMOVE_REDUNDANCY {
     take:
-    hmm
     reps_fasta
+    outdir
+    hmm
     metadata
     seed_msa_sto
     msa_sto
     rf
     domtblout
     tsv
+    redundant_length_threshold
+    redundant_score_threshold
+    similarity_score_threshold
     discarded
     successful
     converged
     logs
+    starting_id
 
     main:
     ch_versions = Channel.empty()
@@ -25,7 +30,7 @@ workflow REMOVE_REDUNDANCY {
     ch_reps_fasta = reps_fasta
         .map { meta, files -> files }
         .flatten()
-        .collectFile(name: "pre_redundant_reps.fasta", storeDir: params.outdir + "/generate_families")
+        .collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families")
         .map { file -> [[id: 'pre_redundant'], file] }
 
     CAT_CAT( hmm )
@@ -42,16 +47,14 @@ workflow REMOVE_REDUNDANCY {
     ch_versions = ch_versions.mix( POOL_PREREDUNDANT_FAMILIES_TSV.out.versions )
 
     IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, \
-        POOL_PREREDUNDANT_FAMILIES_TSV.out.tsv, params.redundant_length_threshold, \
-        params.redundant_score_threshold, params.similarity_score_threshold )
+        POOL_PREREDUNDANT_FAMILIES_TSV.out.tsv, redundant_length_threshold, \
+        redundant_score_threshold, similarity_score_threshold )
     ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
 
     pooled_families = POOL_NONREDUNDANT_FAMILIES( seed_msa_sto, \
-        msa_sto, hmm, rf, domtblout, tsv, \
-        discarded, successful, converged, \
-        metadata, reps_fasta, logs, \
-        IDENTIFY_REDUNDANT_FAMS.out.txt, IDENTIFY_REDUNDANT_FAMS.out.csv, \
-        params.starting_id )
+        msa_sto, hmm, rf, domtblout, tsv, discarded, successful, \
+        converged, metadata, reps_fasta, logs, IDENTIFY_REDUNDANT_FAMS.out.txt, \
+        IDENTIFY_REDUNDANT_FAMS.out.csv, starting_id )
     ch_versions = ch_versions.mix( POOL_NONREDUNDANT_FAMILIES.out.versions )
 
     emit:

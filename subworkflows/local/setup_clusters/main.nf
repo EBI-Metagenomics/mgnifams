@@ -11,12 +11,20 @@ include { CHUNK_CLUSTERS                 } from "../../../modules/local/chunk_cl
 workflow SETUP_CLUSTERS {
     take:
     input
+    fasta_input_mode
+    compress_mode
+    input_csv_chunk_size
+    min_sequence_length
+    outdir
+    minimum_members
+    clusters_chunk_size
 
     main:
     ch_versions = Channel.empty()
 
-    if (!params.fasta_input_mode) {
-        ch_mgnifams_input_fa = EXTRACT_UNANNOTATED_FASTA( input ).fasta
+    if (!fasta_input_mode) {
+        ch_mgnifams_input_fa = EXTRACT_UNANNOTATED_FASTA( input, compress_mode, \
+            input_csv_chunk_size, min_sequence_length, outdir ).fasta
         ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_FASTA.out.versions )
     } else {
         ch_mgnifams_input_fa = channel.fromPath(input)
@@ -27,11 +35,11 @@ workflow SETUP_CLUSTERS {
     CALCULATE_CLUSTER_DISTRIBUTION( EXECUTE_CLUSTERING.out.clusters_tsv )
     ch_versions = ch_versions.mix( CALCULATE_CLUSTER_DISTRIBUTION.out.versions )
 
-    EXTRACT_UNIQUE_CLUSTER_REPS( EXECUTE_CLUSTERING.out.clusters_tsv, params.minimum_members )
+    EXTRACT_UNIQUE_CLUSTER_REPS( EXECUTE_CLUSTERING.out.clusters_tsv, minimum_members )
     ch_versions = ch_versions.mix( EXTRACT_UNIQUE_CLUSTER_REPS.out.versions )
 
     ch_cluster_reps_chunks = EXTRACT_UNIQUE_CLUSTER_REPS.out.reps
-        .splitText(file:true, by: params.clusters_chunk_size)
+        .splitText(file:true, by: clusters_chunk_size)
         .map { meta, file ->
             [[id: meta.id, chunk: file.getBaseName(1).split('\\.')[-1]], file]
         }
