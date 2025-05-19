@@ -2,6 +2,7 @@
     SEQUENCE CLUSTERING
 */
 
+include { SEQKIT_STATS                   } from '../../../modules/nf-core/seqkit/stats/main'
 include { EXTRACT_UNANNOTATED_FASTA      } from "../../../subworkflows/local/extract_unannotated_fasta"
 include { EXECUTE_CLUSTERING             } from "../../../subworkflows/local/execute_clustering"
 include { CALCULATE_CLUSTER_DISTRIBUTION } from "../../../modules/local/calculate_cluster_distribution/main"
@@ -29,6 +30,10 @@ workflow SETUP_CLUSTERS {
     } else {
         ch_mgnifams_input_fa = channel.fromPath(input)
     }
+
+    SEQKIT_STATS( ch_mgnifams_input_fa )
+    ch_versions = ch_versions.mix( SEQKIT_STATS.out.versions )
+
     EXECUTE_CLUSTERING( ch_mgnifams_input_fa )
     ch_versions = ch_versions.mix( EXECUTE_CLUSTERING.out.versions )
 
