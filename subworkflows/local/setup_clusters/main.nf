@@ -2,7 +2,8 @@
     SEQUENCE CLUSTERING
 */
 
-include { SEQKIT_STATS                   } from '../../../modules/nf-core/seqkit/stats/main'
+include { SEQKIT_STATS                   } from "../../../modules/nf-core/seqkit/stats/main"
+include { SEQKIT_STATS_TO_MQC            } from "../../../modules/local/seqkit_stats_to_mqc/main"
 include { EXTRACT_UNANNOTATED_FASTA      } from "../../../subworkflows/local/extract_unannotated_fasta"
 include { EXECUTE_CLUSTERING             } from "../../../subworkflows/local/execute_clustering"
 include { CALCULATE_CLUSTER_DISTRIBUTION } from "../../../modules/local/calculate_cluster_distribution/main"
@@ -34,6 +35,9 @@ workflow SETUP_CLUSTERS {
     SEQKIT_STATS( ch_mgnifams_input_fa )
     ch_versions = ch_versions.mix( SEQKIT_STATS.out.versions )
 
+    SEQKIT_STATS_TO_MQC( SEQKIT_STATS.out.stats )
+    ch_versions = ch_versions.mix( SEQKIT_STATS_TO_MQC.out.versions )
+
     EXECUTE_CLUSTERING( ch_mgnifams_input_fa )
     ch_versions = ch_versions.mix( EXECUTE_CLUSTERING.out.versions )
 
@@ -55,6 +59,7 @@ workflow SETUP_CLUSTERS {
     emit:
     versions          = ch_versions
     mgnifams_input_fa = ch_mgnifams_input_fa
+    seqkit_stats_mqc  = SEQKIT_STATS_TO_MQC.out.mqc
     cluster_distr_mqc = CALCULATE_CLUSTER_DISTRIBUTION.out.mqc
     cluster_chunks    = CHUNK_CLUSTERS.out.tsv
 }

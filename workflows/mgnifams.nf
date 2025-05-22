@@ -116,6 +116,7 @@ workflow MGNIFAMS {
         )
     )
 
+    ch_multiqc_files = ch_multiqc_files.mix(SETUP_CLUSTERS.out.seqkit_stats_mqc.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(SETUP_CLUSTERS.out.cluster_distr_mqc.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.discarded_mqc.collect{it[1]}.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.metadata_mqc.collect{it[1]}.ifEmpty([]))
