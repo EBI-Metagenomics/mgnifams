@@ -10,11 +10,6 @@
             "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
             "installed_by": ["modules"]
           },
-          "deeptmhmm": {
-            "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-            "installed_by": ["modules"]
-          },
           "foldseek/createdb": {
             "branch": "master",
             "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
@@ -54,6 +49,11 @@
           "pigz/uncompress": {
             "branch": "master",
             "git_sha": "db63f85c5ad0cea2a5e21b79a3851d0dabe9d351",
+            "installed_by": ["modules"]
+          },
+          "seqkit/stats": {
+            "branch": "master",
+            "git_sha": "9fe7867a4f012db581d7bd560228ded1074eb0e5",
             "installed_by": ["modules"]
           }
         }
