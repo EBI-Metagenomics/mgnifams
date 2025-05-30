@@ -35,7 +35,7 @@ def pyfamsa_to_pyhmmer(ali: pyfamsa.Alignment) -> pyhmmer.easel.DigitalMSA:
         ]
     ).digitize(ALPHABET)
 
-def pytrimal_to_pyhmmer(ali: pytrimal.Alignment) -> pyhmmer.easel.DigitalMSA:
+def pytrimal_to_pyhmmer(ali: pytrimal.Alignment) -> pyhmmer.easel.TextMSA:
     return pyhmmer.easel.TextMSA(
         sequences=[
             pyhmmer.easel.TextSequence(name=name, sequence=sequence) 
@@ -152,7 +152,7 @@ def log_time(start_time, text, mode='a'):
 #     log_time(start_time, "create_mgnifams_fasta_dict: ", 'w')
 #     return mgnifams_pyfastx_obj
 
-def get_next_family(clusters_df):
+def get_next_family(clusters_df: pd.DataFrame) -> typing.Tuple[typing.Optional[str], typing.Optional[typing.List[str]]]:
     start_time = time.time()
 
     if clusters_df.empty:
@@ -248,7 +248,7 @@ def run_hmmbuild(chunk: int, iteration: int, seed_msa: pyhmmer.easel.DigitalMSA,
     #     msa = msa_file.read()
     seed_msa.name = f"{chunk}_{iteration}".encode()
 
-    architecture = "hand" if hand else "fast"
+    architecture: typing.Literal["hand", "fast"] = "hand" if hand else "fast"
     builder = pyhmmer.plan7.Builder(ALPHABET, architecture=architecture)
     background = pyhmmer.plan7.Background(ALPHABET)
     hmm, _, _ = builder.build_msa(seed_msa, background)
@@ -312,7 +312,7 @@ def run_hmmsearch(
 
     return filtered_sequences
 
-def run_hmmalign(hmm: pyhmmer.plan7.HMM, family_sequences: typing.Iterable[Sequence]) -> pyhmmer.easel.TextMSA:
+def run_hmmalign(hmm: pyhmmer.plan7.HMM, family_sequences: typing.Iterable[Sequence]) -> typing.Tuple[pyhmmer.easel.TextMSA, int, int]:
     """Runs HMMER's hmmalign using pyhmmer."""
     start_time = time.time()
 
@@ -327,7 +327,7 @@ def run_hmmalign(hmm: pyhmmer.plan7.HMM, family_sequences: typing.Iterable[Seque
     # with pyhmmer.easel.SequenceFile(tmp_family_sequences_path, digital=True) as seq_file:
         # seqs = seq_file.read_block()
     
-    hmmalign_res = pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True)
+    hmmalign_res = typing.cast(pyhmmer.easel.TextMSA, pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True))
 
         # with open(tmp_align_msa_path, "wb") as outfile: # full MSA written out here
         #     hmmalign_res.write(outfile, format="stockholm") # expected ['stockholm', 'pfam', 'a2m', 'psiblast', 'selex', 'afa', 'clustal', 'clustallike', 'phylip' or 'phylips']
@@ -339,7 +339,7 @@ def run_hmmalign(hmm: pyhmmer.plan7.HMM, family_sequences: typing.Iterable[Seque
 
     return hmmalign_res, num_seqs_result, non_gap_seq_length
 
-def extract_first_part(sequence_name):
+def extract_first_part(sequence_name: str) -> str:
     return sequence_name.split('/')[0]
 
 def unmask_sequence_names(sequences: typing.Iterable[Sequence]) -> typing.List[str]:
@@ -349,6 +349,7 @@ def run_pytrimal_reps(align_msa: pyhmmer.easel.TextMSA, threshold: float, max_se
     start_time = time.time()
 
     # keep reference line
+    assert align_msa.reference is not None
     rf = np.array(list(align_msa.reference.decode()))
 
     # Load the MSA
@@ -381,7 +382,7 @@ def run_pytrimal_reps(align_msa: pyhmmer.easel.TextMSA, threshold: float, max_se
     out_msa.reference = ''.join(rf).encode()
     return out_msa
 
-def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
+def write_filtered_sto_to_seed_msa_file(name_set: typing.Set[str], start_pos: int, end_pos: int) -> None:
     with open(tmp_align_msa_path, 'r') as infile, open(tmp_seed_msa_path, 'w') as outfile:
         emptied_flag = False #  for very rare cases that protein is split into multiple lines, but following modified_substring splits are empty
         for line in infile:
@@ -418,7 +419,7 @@ def write_filtered_sto_to_seed_msa_file(name_set, start_pos, end_pos):
                         start_pos = 0
                         end_pos = end_pos - 200 # multi-line sto MSA, 200 aa per line
 
-def calculate_trim_positions(sequence_matrix, occupancy_threshold):
+def calculate_trim_positions(sequence_matrix: np.ndarray, occupancy_threshold: float):
     numeric_matrix = np.where(sequence_matrix == '-', 0, 1)
     num_rows = numeric_matrix.shape[0]
     column_sums = np.sum(numeric_matrix, axis=0)
@@ -565,7 +566,7 @@ def renumber_full_sto_msa_and_write_tsv_metadata(in_sto_file, pyhmmer_seqs, arg_
 #     shutil.move(tmp_domtblout_path,os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
 #     shutil.move(tmp_rf_path,       os.path.join(rf_folder,        f'{arg_chunk_num}_{iteration}.txt'))
 
-def remove_tmp_files():
+def remove_tmp_files() -> None:
     for item in os.listdir(tmp_folder):
         item_path = os.path.join(tmp_folder, item)
         if os.path.isfile(item_path):
