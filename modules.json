@@ -51,6 +51,12 @@
             "git_sha": "db63f85c5ad0cea2a5e21b79a3851d0dabe9d351",
             "installed_by": ["modules"]
           },
+          "s4pred/runmodel": {
+            "branch": "master",
+            "git_sha": "712d3f4d6c1b430c6a3eab7c1f92c8df63ad9a35",
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/s4pred/runmodel/s4pred-runmodel.diff"
+          },
           "seqkit/stats": {
             "branch": "master",
             "git_sha": "9fe7867a4f012db581d7bd560228ded1074eb0e5",

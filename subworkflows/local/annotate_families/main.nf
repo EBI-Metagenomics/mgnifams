@@ -1,10 +1,12 @@
 #!/usr/bin/env nextflow
 
-include { REFORMAT_MSA as REFORMAT_SEED_MSA     } from "../../../subworkflows/local/reformat_msa"
-include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA } from "../../../subworkflows/local/reformat_msa"
-include { ANNOTATE_MODELS                       } from "../../../subworkflows/local/annotate_models"
-include { PREDICT_STRUCTURES                    } from "../../../subworkflows/local/predict_structures"
-include { ANNOTATE_STRUCTURES                   } from "../../../subworkflows/local/annotate_structures"
+include { ANNOTATE_REPS } from '../../../subworkflows/local/annotate_reps'
+
+// include { REFORMAT_MSA as REFORMAT_SEED_MSA     } from '../../../subworkflows/local/reformat_msa'
+// include { REFORMAT_MSA as REFORMAT_HMMALIGN_MSA } from '../../../subworkflows/local/reformat_msa'
+// include { ANNOTATE_MODELS                       } from '../../../subworkflows/local/annotate_models'
+// include { PREDICT_STRUCTURES                    } from '../../../subworkflows/local/predict_structures'
+// include { ANNOTATE_STRUCTURES                   } from '../../../subworkflows/local/annotate_structures'
 
 workflow ANNOTATE_FAMILIES {
     take:
@@ -15,9 +17,11 @@ workflow ANNOTATE_FAMILIES {
     main:
     ch_versions = Channel.empty()
 
-    reps.view()
-    seed_msa_sto.view()
-    full_msa_sto.view()
+    ANNOTATE_REPS( reps )
+    ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
+
+    ANNOTATE_REPS.out.s4preds.view()
+
     // seed_msa_sto
     //     .map { meta, files ->
     //         String filePath = files[0]
