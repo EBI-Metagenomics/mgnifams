@@ -84,52 +84,51 @@ def parse_args(args=None):
     # arg_recruit_hit_length_percentage = args.recruit_hit_length_percentage
 
 def define_globals(args):
-#     global log_file, refined_families_tsv_file, \
-#         discarded_clusters_file, successful_clusters_file, \
-#         converged_families_file, family_metadata_file, family_reps_file, \
-#         tmp_folder, seed_msa_folder, \
-#         align_msa_folder, hmm_folder, \
-#         domtblout_folder, rf_folder, \
-#         tmp_family_sequences_path, tmp_seed_msa_path, tmp_align_msa_path, \
-#         tmp_hmm_path, tmp_domtblout_path, \
-#         tmp_sequences_to_remove_path, tmp_rf_path
-    global log_file, logs_folder
+    global log_file, refined_families_tsv_file, \
+        discarded_clusters_file, successful_clusters_file, \
+        converged_families_file, family_metadata_file, family_reps_file, \
+        tmp_folder, seed_msa_folder, \
+        align_msa_folder, hmm_folder, \
+        domtblout_folder, rf_folder, \
+        tmp_family_sequences_path, tmp_seed_msa_path, tmp_align_msa_path, \
+        tmp_hmm_path, tmp_domtblout_path, \
+        tmp_sequences_to_remove_path, tmp_rf_path
     logs_folder                = "logs"
-#     refined_families_folder    = "refined_families"
-#     discarded_clusters_folder  = "discarded_clusters"
-#     successful_clusters_folder = "successful_clusters"
-#     converged_families_folder  = "converged_families"
-#     family_metadata_folder     = "family_metadata"
-#     family_reps_folder         = "family_reps"
-#     tmp_folder                 = "tmp"
-#     seed_msa_folder            = "seed_msa_sto"
-#     align_msa_folder           = "msa_sto"
-#     hmm_folder                 = "hmm"
-#     domtblout_folder           = "domtblout"
-#     rf_folder                  = "rf"
+    refined_families_folder    = "refined_families"
+    discarded_clusters_folder  = "discarded_clusters"
+    successful_clusters_folder = "successful_clusters"
+    converged_families_folder  = "converged_families"
+    family_metadata_folder     = "family_metadata"
+    family_reps_folder         = "family_reps"
+    tmp_folder                 = "tmp"
+    seed_msa_folder            = "seed_msa_sto"
+    align_msa_folder           = "msa_sto"
+    hmm_folder                 = "hmm"
+    domtblout_folder           = "domtblout"
+    rf_folder                  = "rf"
 
-#     for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder, rf_folder, \
-#         logs_folder, refined_families_folder, discarded_clusters_folder, \
-#         successful_clusters_folder, converged_families_folder, family_metadata_folder, family_reps_folder
-#     ]:
-#         if not os.path.exists(folder):
-#             os.makedirs(folder)
+    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder, rf_folder, \
+        logs_folder, refined_families_folder, discarded_clusters_folder, \
+        successful_clusters_folder, converged_families_folder, family_metadata_folder, family_reps_folder
+    ]:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
 #     tmp_family_sequences_path    = os.path.join(tmp_folder, 'family_sequences.fa')
-#     tmp_seed_msa_path            = os.path.join(tmp_folder, 'seed_msa.sto')
-#     tmp_align_msa_path           = os.path.join(tmp_folder, 'align_msa.sto')
+    tmp_seed_msa_path            = os.path.join(tmp_folder, 'seed_msa.sto')
+    tmp_align_msa_path           = os.path.join(tmp_folder, 'align_msa.sto')
 #     tmp_hmm_path                 = os.path.join(tmp_folder, 'model.hmm')
 #     tmp_domtblout_path           = os.path.join(tmp_folder, 'domtblout.txt')
 #     tmp_sequences_to_remove_path = os.path.join(tmp_folder, 'sequences_to_remove.txt')
 #     tmp_rf_path                  = os.path.join(tmp_folder, 'rf.txt')
 
     log_file                  = os.path.join(logs_folder               , f'{args.chunk_num}.txt')
-#     refined_families_tsv_file = os.path.join(refined_families_folder   , f'{arg_chunk_num}.tsv')
-#     discarded_clusters_file   = os.path.join(discarded_clusters_folder , f'{arg_chunk_num}.csv')
-#     successful_clusters_file  = os.path.join(successful_clusters_folder, f'{arg_chunk_num}.txt')
-#     converged_families_file   = os.path.join(converged_families_folder , f'{arg_chunk_num}.txt')
-#     family_metadata_file      = os.path.join(family_metadata_folder    , f'{arg_chunk_num}.csv')
-#     family_reps_file          = os.path.join(family_reps_folder        , f'{arg_chunk_num}.fasta')
+    refined_families_tsv_file = os.path.join(refined_families_folder   , f'{args.chunk_num}.tsv')
+    discarded_clusters_file   = os.path.join(discarded_clusters_folder , f'{args.chunk_num}.csv')
+    successful_clusters_file  = os.path.join(successful_clusters_folder, f'{args.chunk_num}.txt')
+    converged_families_file   = os.path.join(converged_families_folder , f'{args.chunk_num}.txt')
+    family_metadata_file      = os.path.join(family_metadata_folder    , f'{args.chunk_num}.csv')
+    family_reps_file          = os.path.join(family_reps_folder        , f'{args.chunk_num}.fasta')
 
 # def create_empty_output_files():
 #     open(refined_families_tsv_file, 'w').close()
@@ -496,7 +495,7 @@ def parse_protein_name(seq_name, seq_length, seq_whole_name, original_length, st
 
         return new_name
 
-def renumber_seed_sto_msa(in_sto_file, out_sto_file, pyfastx_obj):
+def renumber_seed_sto_msa(in_sto_file, out_sto_file, pyhmmer_seqs):
     with open(in_sto_file, 'r') as infile, open(out_sto_file, 'w') as outfile:
 
         previous_seq_name = ""
@@ -509,10 +508,10 @@ def renumber_seed_sto_msa(in_sto_file, out_sto_file, pyfastx_obj):
                 outfile.write(line)
             elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
                 outfile.write(line)
-            elif split_line[0] != '#=GR' and split_line[0] != '#=GC':  # First split is first protein encounter
+            elif not split_line[0].startswith("#="): # First split is first protein encounter
                 seq_name = split_line[0].split("/")[0]
                 seq = re.sub(r"[.-]", "", split_line[1]).upper()
-                original_seq = get_fasta_sequences(pyfastx_obj, [seq_name])[0][1]
+                original_seq = get_fasta_sequences(pyhmmer_seqs, [seq_name])[0][1]
                 start = original_seq.find(seq)
                 end = start + len(seq)
                 previous_seq_name = parse_protein_name(seq_name, len(seq), split_line[0], len(original_seq), start, end)
@@ -522,7 +521,7 @@ def renumber_seed_sto_msa(in_sto_file, out_sto_file, pyfastx_obj):
                 line = line.replace(split_line[1], previous_seq_name, 1)
                 outfile.write(line)
 
-def renumber_full_sto_msa_and_write_tsv_metadata(in_sto_file, pyfastx_obj, arg_chunk_num, iteration, \
+def renumber_full_sto_msa_and_write_tsv_metadata(in_sto_file, pyhmmer_seqs, arg_chunk_num, iteration, \
                                                 full_msa_num_seqs, consensus):
     
     out_sto_file = os.path.join(align_msa_folder, f'{arg_chunk_num}_{iteration}.sto')
@@ -544,7 +543,7 @@ def renumber_full_sto_msa_and_write_tsv_metadata(in_sto_file, pyfastx_obj, arg_c
             elif split_line[0] != '#=GR' and split_line[0] != '#=GC':  # First split is first protein encounter
                 seq_name = split_line[0].split("/")[0]
                 seq = re.sub(r"[.-]", "", split_line[1]).upper()
-                original_seq = get_fasta_sequences(pyfastx_obj, [seq_name])[0][1]
+                original_seq = get_fasta_sequences(pyhmmer_seqs, [seq_name])[0][1]
                 start = original_seq.find(seq)
                 end = start + len(seq)
                 previous_seq_name = parse_protein_name(seq_name, len(seq), split_line[0], len(original_seq), start, end)
@@ -561,16 +560,16 @@ def renumber_full_sto_msa_and_write_tsv_metadata(in_sto_file, pyfastx_obj, arg_c
                 line = line.replace(split_line[1], previous_seq_name, 1)
                 outfile.write(line)
 
-def move_produced_models(iteration):
-    shutil.move(tmp_hmm_path,      os.path.join(hmm_folder,       f'{arg_chunk_num}_{iteration}.hmm'))
-    shutil.move(tmp_domtblout_path,os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
-    shutil.move(tmp_rf_path,       os.path.join(rf_folder,        f'{arg_chunk_num}_{iteration}.txt'))
+# def move_produced_models(iteration):
+#     shutil.move(tmp_hmm_path,      os.path.join(hmm_folder,       f'{arg_chunk_num}_{iteration}.hmm'))
+#     shutil.move(tmp_domtblout_path,os.path.join(domtblout_folder, f'{arg_chunk_num}_{iteration}.domtblout'))
+#     shutil.move(tmp_rf_path,       os.path.join(rf_folder,        f'{arg_chunk_num}_{iteration}.txt'))
 
-# def remove_tmp_files():
-#     for item in os.listdir(tmp_folder):
-#         item_path = os.path.join(tmp_folder, item)
-#         if os.path.isfile(item_path):
-#             os.remove(item_path)
+def remove_tmp_files():
+    for item in os.listdir(tmp_folder):
+        item_path = os.path.join(tmp_folder, item)
+        if os.path.isfile(item_path):
+            os.remove(item_path)
 
 def main():
     args = parse_args()
@@ -596,7 +595,7 @@ def main():
         seed_msa = run_initial_msa(family_members, pyhmmer_seqs, cpus=args.cpus)
 
         total_checked_sequences = []
-        filtered_seq_names = []
+        # filtered_seq_names = []
         full_msa_num_seqs = 0
         discard_flag = False
         discard_reason = ""
@@ -647,8 +646,7 @@ def main():
                 with open(log_file, 'a') as file:
                     file.write("Exiting branch strategy:\n")
 
-                _hmm = run_hmmbuild(args.chunk_num, iteration, seed_msa, hand=True)
-                consensus = _hmm.consensus
+                final_hmm = run_hmmbuild(args.chunk_num, iteration, seed_msa, hand=True)
 
                 filtered_seqs = run_hmmsearch(
                     hmm, 
@@ -665,7 +663,7 @@ def main():
                     discard_value = 0.0
                     break
 
-                membership_percentage = check_seed_membership(original_sequence_names, unmask_sequence_names(filtered_seq_names))
+                membership_percentage = check_seed_membership(original_sequence_names, unmask_sequence_names(filtered_seqs))
                 if (membership_percentage < args.discard_min_starting_membership):
                     discard_flag = True
                     discard_reason = "few seed sequences remained"
@@ -706,20 +704,30 @@ def main():
         if (discard_flag): # unsuccessfully
             with open(log_file, 'a') as file:
                 file.write("Discarding cluster " + family_rep + "\n")
-            
-            # with open(discarded_clusters_file, 'a') as outfile:
-            #     outfile.write(str(family_rep) + "," + discard_reason + "," + str(discard_value) + "\n")
+            with open(discarded_clusters_file, 'a') as outfile:
+                outfile.write(str(family_rep) + "," + discard_reason + "," + str(discard_value) + "\n")
             iteration -= 1 # keep proper track of family ids
         else: # successfully
+            # write successful cluster
             with open(successful_clusters_file, 'a') as outfile:
                 outfile.write(str(family_rep) + "\n")
-            
-            renumber_seed_sto_msa(tmp_seed_msa_path, os.path.join(seed_msa_folder, f'{arg_chunk_num}_{iteration}.sto'), mgnifams_pyfastx_obj)
-            renumber_full_sto_msa_and_write_tsv_metadata(tmp_align_msa_path, mgnifams_pyfastx_obj, \
-                                                        arg_chunk_num, iteration, full_msa_num_seqs, consensus)
-            move_produced_models(iteration)
+            # write reference line
+            with open(os.path.join(rf_folder, f'{args.chunk_num}_{iteration}.txt'), "w") as f:
+                f.write(seed_msa.reference.decode())
+            # write HMM
+            with open(os.path.join(hmm_folder, f'{args.chunk_num}_{iteration}.hmm'), "wb") as f:
+                final_hmm.write(f)
+            # write alignments
+            with open(tmp_seed_msa_path, "wb") as dst:
+                seed_msa.write(dst, "stockholm")
+            with open(tmp_align_msa_path, "wb") as dst:
+                align_msa.write(dst, "stockholm")
+            renumber_seed_sto_msa(tmp_seed_msa_path, os.path.join(seed_msa_folder, f'{args.chunk_num}_{iteration}.sto'), pyhmmer_seqs)
+            renumber_full_sto_msa_and_write_tsv_metadata(tmp_align_msa_path, pyhmmer_seqs, args.chunk_num, iteration, full_msa_num_seqs, final_hmm.consensus)
+            # move_produced_models(iteration)
 
-        # remove_tmp_files()
+
+        remove_tmp_files()
 
     # # End of all families
     with open(log_file, 'a') as file:
