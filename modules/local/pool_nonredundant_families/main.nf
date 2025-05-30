@@ -9,7 +9,7 @@ process POOL_NONREDUNDANT_FAMILIES {
 
     input:
     tuple val(meta)  , path(seed_msa_sto_ch, stageAs: "families_prepooled/seed_msa_sto/*")
-    tuple val(meta2) , path(msa_sto_ch     , stageAs: "families_prepooled/msa_sto/*")
+    tuple val(meta2) , path(msa_sto_ch     , stageAs: "families_prepooled/full_msa_sto/*")
     tuple val(meta3) , path(hmm_ch         , stageAs: "families_prepooled/hmm/*")
     tuple val(meta4) , path(rf_ch          , stageAs: "families_prepooled/rf/*")
     tuple val(meta5) , path(domtblout_ch   , stageAs: "families_prepooled/domtblout/*")
@@ -26,7 +26,7 @@ process POOL_NONREDUNDANT_FAMILIES {
 
     output:
     tuple val(meta)  , path("families/seed_msa_sto/*")         , emit: seed_msa_sto
-    tuple val(meta2) , path("families/msa_sto/*")              , emit: msa_sto
+    tuple val(meta2) , path("families/full_msa_sto/*")         , emit: full_msa_sto
     tuple val(meta3) , path("families/hmm/*")                  , emit: hmm
     tuple val(meta4) , path("families/rf/*")                   , emit: rf
     tuple val(meta5) , path("families/domtblout/*")            , emit: domtblout
@@ -68,8 +68,8 @@ process POOL_NONREDUNDANT_FAMILIES {
     touch families/similarity_mqc.csv
 
     touch test.txt
-    mkdir families/msa_sto
-    cp test.txt families/msa_sto/
+    mkdir families/full_msa_sto
+    cp test.txt families/full_msa_sto/
     mkdir families/hmm
     cp test.txt families/hmm/
     mkdir families/rf

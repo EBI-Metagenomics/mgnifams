@@ -54,10 +54,10 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .collect()
         .map { file -> [ [id:"seed_msa_sto"], file ] }
 
-    ch_msa_sto = ch_families.msa_sto
+    ch_full_msa_sto = ch_families.full_msa_sto
         .map { meta, files -> files }
         .collect()
-        .map { file -> [ [id:"msa_sto"], file ] }
+        .map { file -> [ [id:"full_msa_sto"], file ] }
 
     ch_rf = ch_families.rf
         .map { meta, files -> files }
@@ -95,7 +95,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file -> [ [id:"logs"], file ] }
 
     REMOVE_REDUNDANCY( ch_reps_fasta, outdir, ch_hmm, ch_metadata, \
-        ch_seed_msa_sto, ch_msa_sto, ch_rf, ch_domtblout, ch_tsv, \
+        ch_seed_msa_sto, ch_full_msa_sto, ch_rf, ch_domtblout, ch_tsv, \
         redundant_length_threshold, redundant_score_threshold, \
         similarity_score_threshold, ch_discarded, ch_successful, \
         ch_converged, ch_logs, starting_id )
@@ -110,7 +110,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     emit:
     versions       = ch_versions
     seed_msa_sto   = REMOVE_REDUNDANCY.out.seed_msa_sto
-    msa_sto        = REMOVE_REDUNDANCY.out.msa_sto
+    full_msa_sto   = REMOVE_REDUNDANCY.out.full_msa_sto
     hmm            = REMOVE_REDUNDANCY.out.hmm
     rf             = REMOVE_REDUNDANCY.out.rf
     tsv            = REMOVE_REDUNDANCY.out.tsv

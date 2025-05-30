@@ -22,7 +22,7 @@ process GENERATE_FAMILIES {
 
     output:
     tuple val(meta), path("seed_msa_sto/*")       , emit: seed_msa_sto
-    tuple val(meta), path("msa_sto/*")            , emit: msa_sto
+    tuple val(meta), path("full_msa_sto/*")       , emit: full_msa_sto
     tuple val(meta), path("hmm/*")                , emit: hmm
     tuple val(meta), path("rf/*")                 , emit: rf
     tuple val(meta), path("domtblout/*")          , emit: domtblout
@@ -74,8 +74,8 @@ process GENERATE_FAMILIES {
     touch ${prefix}.txt
     mkdir seed_msa_sto
     cp ${prefix}.txt seed_msa_sto/
-    mkdir msa_sto
-    cp ${prefix}.txt msa_sto/
+    mkdir full_msa_sto
+    cp ${prefix}.txt full_msa_sto/
     mkdir hmm
     cp ${prefix}.txt hmm/
     mkdir rf

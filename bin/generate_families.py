@@ -71,7 +71,7 @@ def define_globals():
     family_reps_folder         = "family_reps"
     tmp_folder                 = "tmp"
     seed_msa_folder            = "seed_msa_sto"
-    align_msa_folder           = "msa_sto"
+    align_msa_folder           = "full_msa_sto"
     hmm_folder                 = "hmm"
     domtblout_folder           = "domtblout"
     rf_folder                  = "rf"

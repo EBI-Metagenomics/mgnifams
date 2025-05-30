@@ -57,7 +57,7 @@ workflow MGNIFAMS {
         minimum_members, clusters_chunk_size )
     ch_versions = ch_versions.mix( SETUP_CLUSTERS.out.versions )
 
-    generated_families = GENERATE_NONREDUNDANT_FAMILIES( SETUP_CLUSTERS.out.cluster_chunks, \
+    GENERATE_NONREDUNDANT_FAMILIES( SETUP_CLUSTERS.out.cluster_chunks, \
         SETUP_CLUSTERS.out.mgnifams_input_fa,  mgnifams_discard_min_rep_length, \
         mgnifams_discard_max_rep_length, mgnifams_discard_min_starting_membership, \
         mgnifams_max_seq_identity, mgnifams_max_seed_seqs, mgnifams_max_gap_occupancy, \
@@ -66,12 +66,14 @@ workflow MGNIFAMS {
         similarity_score_threshold, starting_id )
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
-    // TODO
-    // annotated_families = ANNOTATE_FAMILIES( generated_families.seed_msa_sto, generated_families.msa_sto )
-    // ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
+    ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, \
+        GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa_sto, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa_sto )
+    ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
-    // EXPORT_DATA( generated_families.metadata, generated_families.converged, generated_families.tsv, \
-    //     annotated_families.pfam_hits, annotated_families.foldseek_hits, annotated_families.scores )
+    // TODO
+    // EXPORT_DATA( GENERATE_NONREDUNDANT_FAMILIES.out.metadata, GENERATE_NONREDUNDANT_FAMILIES.out.converged, \
+    //    GENERATE_NONREDUNDANT_FAMILIES.out.tsv, ANNOTATE_FAMILIES.out.pfam_hits, \
+    //    ANNOTATE_FAMILIES.out.foldseek_hits, ANNOTATE_FAMILIES.out.scores )
     // ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
 
     //
