@@ -47,10 +47,10 @@ def pytrimal_to_pyhmmer(ali: pytrimal.Alignment) -> pyhmmer.easel.DigitalMSA:
 # ---- Process -----------------------------------------------------------------
 
 def parse_args(args=None):
-    global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus, arg_chunk_num, \
-        arg_discard_min_rep_length, arg_discard_max_rep_length, arg_discard_min_starting_membership, \
-        arg_max_seq_identity, arg_max_seed_seqs, arg_max_gap_occupancy, \
-        arg_recruit_evalue_cutoff, arg_recruit_hit_length_percentage
+    # global arg_clusters_chunk, arg_mgnifams_input_fasta_file, arg_cpus, arg_chunk_num, \
+    #     arg_discard_min_rep_length, arg_discard_max_rep_length, arg_discard_min_starting_membership, \
+    #     arg_max_seq_identity, arg_max_seed_seqs, arg_max_gap_occupancy, \
+    #     arg_recruit_evalue_cutoff, arg_recruit_hit_length_percentage
 
     parser = argparse.ArgumentParser(description="Process clustering data and extract sequences.")
     
