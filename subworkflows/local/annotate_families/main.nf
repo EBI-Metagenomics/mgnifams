@@ -22,6 +22,8 @@ workflow ANNOTATE_FAMILIES {
 
     ANNOTATE_REPS.out.s4preds.view()
 
+    // TODO continue
+
     // seed_msa_sto
     //     .map { meta, files ->
     //         String filePath = files[0]

@@ -22,8 +22,9 @@ process S4PRED_RUNMODEL {
     prefix      = task.ext.prefix ?: "${meta.id}"
     def VERSION = '1.2.1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
-    sed '/^>/ s|[/-]|_|g' ${fasta} > cleaned.fasta
-    
+    # Replace fasta protein names with family IDs (description)
+    sed -E 's/^>([^[:space:]]+)[[:space:]]+(.+)/>\\2/' ${fasta} > cleaned.fasta
+
     mkdir ${prefix}
 
     run_model \\
