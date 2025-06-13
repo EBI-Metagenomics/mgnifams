@@ -93,9 +93,9 @@ process GENERATE_FAMILIES {
     mkdir family_metadata
     cp ${prefix}.txt family_metadata/
     mkdir logs
-    mv ${prefix}.txt logs/
+    cp ${prefix}.txt logs/
     mkdir family_reps
-    mv ${prefix}.fasta family_reps/
+    mv ${prefix}.txt family_reps/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

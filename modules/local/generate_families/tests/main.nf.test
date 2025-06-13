@@ -1,0 +1,94 @@
+nextflow_process {
+
+    name "Test Process GENERATE_FAMILIES"
+    script "../main.nf"
+    process "GENERATE_FAMILIES"
+
+    test("mgnifam") {
+
+        when {
+            process {
+                """
+                input[0] = Channel.of([
+                    [ id: 'clustering', chunk: 'test' ],
+                    file("$moduleDir/tests/fixtures/clustering.tsv", checkIfExists: true)
+                ])
+                input[1] = Channel.of([
+                    [ id: 'fasta' ],
+                    file(params.pipelines_testdata_base_path + 'test_data/mgnifams_input_small.fa', checkIfExists: true)
+                ])
+                input[2] = Channel.of([
+                    [ id: 'pyfastx_idx' ],
+                    file("$moduleDir/tests/fixtures/mgnifams_v2.fa.fxi", checkIfExists: true)
+                ])
+                input[3]  = 100   // discard_min_rep_length
+                input[4]  = 2000  // discard_max_rep_length
+                input[5]  = 0.9   // discard_min_starting_membership
+                input[6]  = 0.8   // max_seq_identity
+                input[7]  = 2000  // max_seed_seqs
+                input[8]  = 0.5   // max_gap_occupancy
+                input[9]  = 0.001 // recruit_evalue_cutoff
+                input[10] = 0.9   // recruit_hit_length_percentage
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(
+                    process.out.seed_msa_sto,
+                    process.out.full_msa_sto,
+                    process.out.rf,
+                    process.out.domtblout,
+                    process.out.tsv,
+                    process.out.successful,
+                    process.out.converged,
+                    process.out.metadata,
+                    process.out.fasta,
+                    process.out.versions.collect { path(it).yaml }
+                    ).match()}
+            )
+        }
+    }
+
+    test("mgnifam - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = Channel.of([
+                    [ id: 'test', chunk: 'test' ],
+                    file("$moduleDir/tests/fixtures/clustering.tsv", checkIfExists: true)
+                ])
+                input[1] = Channel.of([
+                    [ id: 'fasta' ],
+                    file(params.pipelines_testdata_base_path + 'test_data/mgnifams_input_small.fa', checkIfExists: true)
+                ])
+                input[2] = Channel.of([
+                    [ id: 'pyfastx_idx' ],
+                    file("$moduleDir/tests/fixtures/mgnifams_v2.fa.fxi", checkIfExists: true)
+                ])
+                input[3]  = 100   // discard_min_rep_length
+                input[4]  = 2000  // discard_max_rep_length
+                input[5]  = 0.9   // discard_min_starting_membership
+                input[6]  = 0.8   // max_seq_identity
+                input[7]  = 2000  // max_seed_seqs
+                input[8]  = 0.5   // max_gap_occupancy
+                input[9]  = 0.001 // recruit_evalue_cutoff
+                input[10] = 0.9   // recruit_hit_length_percentage
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+}
