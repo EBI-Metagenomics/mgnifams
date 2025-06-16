@@ -162,8 +162,7 @@ def get_fasta_sequences(
     ]
 
 def run_initial_msa(
-    members: typing.Iterable[str], 
-    # pyfastx_obj: pyfastx.Fasta
+    members: typing.Iterable[str],
     seqs: pyhmmer.easel.DigitalSequenceBlock,
     cpus: int = 0,
 ) -> pyhmmer.easel.DigitalMSA:
@@ -492,8 +491,7 @@ def main():
 
                 filtered_seqs = run_hmmsearch(
                     hmm, 
-                    pyhmmer_seqs, 
-                    # mgnifams_pyfastx_obj, 
+                    pyhmmer_seqs,
                     exit_flag, 
                     args.recruit_evalue_cutoff, 
                     args.recruit_hit_length_percentage, 

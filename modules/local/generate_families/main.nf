@@ -77,8 +77,6 @@ process GENERATE_FAMILIES {
     cp ${prefix}.txt hmm/
     mkdir rf
     cp ${prefix}.txt rf/
-    mkdir domtblout
-    cp ${prefix}.txt domtblout/
     mkdir refined_families
     cp ${prefix}.txt refined_families/
     mkdir discarded_clusters
@@ -98,7 +96,6 @@ process GENERATE_FAMILIES {
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')
         pandas: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pandas'))")
-        pyfastx: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfastx'))")
         pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
         pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
         pytrimal: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pytrimal'))")

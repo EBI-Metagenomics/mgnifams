@@ -13,7 +13,6 @@ workflow REMOVE_REDUNDANCY {
     seed_msa_sto
     full_msa_sto
     rf
-    domtblout
     tsv
     redundant_length_threshold
     redundant_score_threshold
@@ -52,7 +51,7 @@ workflow REMOVE_REDUNDANCY {
     ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
 
     pooled_families = POOL_NONREDUNDANT_FAMILIES( seed_msa_sto, \
-        full_msa_sto, hmm, rf, domtblout, tsv, discarded, successful, \
+        full_msa_sto, hmm, rf, tsv, discarded, successful, \
         converged, metadata, reps_fasta, logs, IDENTIFY_REDUNDANT_FAMS.out.txt, \
         IDENTIFY_REDUNDANT_FAMS.out.csv, starting_id )
     ch_versions = ch_versions.mix( POOL_NONREDUNDANT_FAMILIES.out.versions )
@@ -63,7 +62,6 @@ workflow REMOVE_REDUNDANCY {
     full_msa_sto   = pooled_families.full_msa_sto
     hmm            = pooled_families.hmm
     rf             = pooled_families.rf
-    domtblout      = pooled_families.domtblout
     tsv            = pooled_families.tsv
     discarded      = pooled_families.discarded
     successful     = pooled_families.successful

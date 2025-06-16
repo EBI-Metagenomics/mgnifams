@@ -15,16 +15,14 @@ RUN apt-get update && apt-get install -y \
     git
 
 RUN micromamba install -y -n base -c conda-forge \
-    python=3.12.9 \
-    pip \
-    pandas=2.2.3 \
-    biopython=1.85 \
-    numpy=2.2.4
+    python=3.13.5 \
+    pip
 
 RUN pip install \
-    pyfastx==2.2.0 \
+    biopython==1.85 \
     pyfamsa==0.5.3.post1 \
     pyhmmer==0.11.1 \
-    pytrimal==0.7.0
+    pytrimal==0.8.1 \
+    numpy==2.3.0
 
 SHELL ["/bin/bash", "-c"]
