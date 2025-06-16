@@ -210,7 +210,6 @@ def main(args=None):
     translate_directory('hmm')
     translate_directory('full_msa_sto')
     translate_directory('seed_msa_sto')
-    translate_directory('domtblout')
     translate_edgelist(arg_similarity_edgelist, \
         os.path.join(arg_out_dir, 'similarity_mqc.csv'))
     

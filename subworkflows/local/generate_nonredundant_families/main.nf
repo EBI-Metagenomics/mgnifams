@@ -1,4 +1,3 @@
-include { BUILD_PYFASTX_INDEX        } from "../../../modules/local/build_pyfastx_index/main"
 include { GENERATE_FAMILIES          } from "../../../modules/local/generate_families/main"
 include { REMOVE_REDUNDANCY          } from "../../../subworkflows/local/remove_redundancy"
 include { PRESENT_DISCARDED_FAMILIES } from "../../../modules/local/present_discarded_families/main"
@@ -25,10 +24,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     main:
     ch_versions = Channel.empty()
 
-    ch_pyfastx = BUILD_PYFASTX_INDEX( mgnifams_fa )
-    ch_versions = ch_versions.mix( BUILD_PYFASTX_INDEX.out.versions )
-
-    ch_families = GENERATE_FAMILIES( cluster_chunks, mgnifams_fa.first(), ch_pyfastx.index.first(), \
+    ch_families = GENERATE_FAMILIES( cluster_chunks, mgnifams_fa.first(), \
         mgnifams_discard_min_rep_length, mgnifams_discard_max_rep_length, mgnifams_discard_min_starting_membership, \
         mgnifams_max_seq_identity, mgnifams_max_seed_seqs, mgnifams_max_gap_occupancy, \
         mgnifams_recruit_evalue_cutoff, mgnifams_recruit_hit_length_percentage )
@@ -64,11 +60,6 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .collect()
         .map { file -> [ [id:"rf"], file ] }
 
-    ch_domtblout = ch_families.domtblout
-        .map { meta, files -> files }
-        .collect()
-        .map { file -> [ [id:"domtblout"], file ] }
-
     ch_tsv = ch_families.tsv
         .map { meta, files -> files }
         .collect()
@@ -95,7 +86,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { file -> [ [id:"logs"], file ] }
 
     REMOVE_REDUNDANCY( ch_reps_fasta, outdir, ch_hmm, ch_metadata, \
-        ch_seed_msa_sto, ch_full_msa_sto, ch_rf, ch_domtblout, ch_tsv, \
+        ch_seed_msa_sto, ch_full_msa_sto, ch_rf, ch_tsv, \
         redundant_length_threshold, redundant_score_threshold, \
         similarity_score_threshold, ch_discarded, ch_successful, \
         ch_converged, ch_logs, starting_id )
