@@ -5,7 +5,7 @@
                 "0": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -14,7 +14,7 @@
                 "1": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -23,28 +23,19 @@
                 "10": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "11": [
-                    [
-                        {
-                            "id": "test",
-                            "chunk": "test"
-                        },
-                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
-                    ]
-                ],
-                "12": [
-                    "versions.yml:md5,11cfca8d5fbffbcb68a301a88b8ed9c5"
+                    "versions.yml:md5,350cd72f669b2cf3c9a9e9508a0e9ea5"
                 ],
                 "2": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -53,7 +44,7 @@
                 "3": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -62,7 +53,7 @@
                 "4": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -71,7 +62,7 @@
                 "5": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -80,7 +71,7 @@
                 "6": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -89,7 +80,7 @@
                 "7": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -98,7 +89,7 @@
                 "8": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -107,7 +98,7 @@
                 "9": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -116,7 +107,7 @@
                 "converged": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -125,16 +116,7 @@
                 "discarded": [
                     [
                         {
-                            "id": "test",
-                            "chunk": "test"
-                        },
-                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
-                    ]
-                ],
-                "domtblout": [
-                    [
-                        {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -143,7 +125,7 @@
                 "fasta": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -152,7 +134,7 @@
                 "full_msa_sto": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -161,7 +143,7 @@
                 "hmm": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -170,7 +152,7 @@
                 "logs": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -179,7 +161,7 @@
                 "metadata": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -188,7 +170,7 @@
                 "rf": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -197,7 +179,7 @@
                 "seed_msa_sto": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -206,7 +188,7 @@
                 "successful": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
@@ -215,22 +197,22 @@
                 "tsv": [
                     [
                         {
-                            "id": "test",
+                            "id": "clustering",
                             "chunk": "test"
                         },
                         "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "versions": [
-                    "versions.yml:md5,11cfca8d5fbffbcb68a301a88b8ed9c5"
+                    "versions.yml:md5,350cd72f669b2cf3c9a9e9508a0e9ea5"
                 ]
             }
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.6"
+            "nextflow": "25.04.3"
         },
-        "timestamp": "2025-06-13T13:34:52.299110766"
+        "timestamp": "2025-06-16T14:25:03.957269881"
     },
     "mgnifam": {
         "content": [
@@ -241,9 +223,9 @@
                         "chunk": "test"
                     },
                     [
-                        "test_1.sto:md5,9ccd40faf0ef889121c72abe77514cec",
-                        "test_2.sto:md5,7253214a85e4c0f9c5d100f04131f6f2",
-                        "test_3.sto:md5,59a2e9714d4cde0a62e40b4107b67976"
+                        "test_1.sto:md5,b24f8d49a3743045c941265962865c6e",
+                        "test_2.sto:md5,7ee7777ee660d37908fdee703be9f7ea",
+                        "test_3.sto:md5,bbee9af91b1a433815cb18780f9e9a81"
                     ]
                 ]
             ],
@@ -254,9 +236,9 @@
                         "chunk": "test"
                     },
                     [
-                        "test_1.sto:md5,b919869e127e39b371f1d0509dea7034",
-                        "test_2.sto:md5,54b5601cbc5690dfc462a55d836c57f3",
-                        "test_3.sto:md5,be57159eb2d5a54ebd84c8b3ed8f62ec"
+                        "test_1.sto:md5,e9879383e352b3a598689381bf718fbe",
+                        "test_2.sto:md5,9e8ce1fe9391726423d1f3688555d91a",
+                        "test_3.sto:md5,20156d5702170552f528f315081b205a"
                     ]
                 ]
             ],
@@ -269,30 +251,18 @@
                     [
                         "test_1.txt:md5,d443c6cd68c1fd967087df53f0d1a6ec",
                         "test_2.txt:md5,87d34de222811c59e8ad4914a716346f",
-                        "test_3.txt:md5,20e937f71f075695d28f6a0bca88ae21"
+                        "test_3.txt:md5,be417c27c7b151f8ca034b2e591bc598"
                     ]
                 ]
             ],
+            null,
             [
                 [
                     {
                         "id": "clustering",
                         "chunk": "test"
                     },
-                    [
-                        "test_1.domtblout:md5,703bf92e4791e25b31f7ae32e3038988",
-                        "test_2.domtblout:md5,c2f87a73b62986da1a27e908eea46a7f",
-                        "test_3.domtblout:md5,731cf3b7dd793cb3b3a7fb443e3394c5"
-                    ]
-                ]
-            ],
-            [
-                [
-                    {
-                        "id": "clustering",
-                        "chunk": "test"
-                    },
-                    "test.tsv:md5,b9f26918972953d171ce53ca4eb4a383"
+                    "test.tsv:md5,8d7af6e69c7c75fc95c24247ce971842"
                 ]
             ],
             [
@@ -319,7 +289,7 @@
                         "id": "clustering",
                         "chunk": "test"
                     },
-                    "test.csv:md5,e1c0aa6cc331871e49cf21a6968b568e"
+                    "test.csv:md5,16013a886e29aaf986f6e97123208dae"
                 ]
             ],
             [
@@ -328,28 +298,27 @@
                         "id": "clustering",
                         "chunk": "test"
                     },
-                    "test.fasta:md5,c49a022d323caa3ed2a6b39f1284fb46"
+                    "test.fasta:md5,e17ebd6d43d594b418a170e021168b22"
                 ]
             ],
             [
                 {
                     "GENERATE_FAMILIES": {
-                        "python": "3.10.8",
-                        "pandas": "2.0.2",
-                        "pyfastx": "2.2.0",
+                        "python": "3.13.5",
+                        "pandas": "2.3.0",
                         "pyfamsa": "0.5.3.post1",
-                        "pyhmmer": "0.11.0",
-                        "pytrimal": "0.8.0",
-                        "numpy": "1.26.4",
-                        "biopython": 1.84
+                        "pyhmmer": "0.11.1",
+                        "pytrimal": "0.8.1",
+                        "numpy": "2.3.0",
+                        "biopython": 1.85
                     }
                 }
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "24.10.6"
+            "nextflow": "25.04.3"
         },
-        "timestamp": "2025-06-13T13:59:06.734602369"
+        "timestamp": "2025-06-16T14:24:57.679800359"
     }
 }

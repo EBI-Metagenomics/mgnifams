@@ -2,13 +2,12 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python=3.12.9
+  - python=3.13.5
   - pip
   - pip:
-    - pandas==2.2.3
+    - pandas==2.3.0
     - biopython==1.85
-    - pyfastx==2.2.0
     - pyfamsa==0.5.3.post1
     - pyhmmer==0.11.1
-    - pytrimal==0.7.0
-    - numpy==2.2.4
+    - pytrimal==0.8.1
+    - numpy==2.3.0
