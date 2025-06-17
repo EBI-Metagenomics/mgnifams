@@ -2,9 +2,11 @@
 
 import argparse
 import os
+import logging
 import time
 import re
 import typing
+import shutil
 
 import pandas as pd
 import pyfamsa
@@ -16,6 +18,14 @@ import numpy as np
 
 # use a singleton protein alphabet
 ALPHABET = pyhmmer.easel.Alphabet.amino()
+
+# logger
+logging.basicConfig(
+    filename="execution.log",
+    filemode="a",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # --- Data handling utilities --------------------------------------------------
 
@@ -114,10 +124,9 @@ def create_empty_output_files():
 def load_clusters_df(clusters_chunk: str) -> pd.DataFrame:
     return pd.read_csv(clusters_chunk, sep='\t', header=None, names=['representative', 'member'], dtype=str)
 
-def log_time(start_time, text, mode='a'):
-    with open(log_file, mode) as file:
-        file.write(text)
-        file.write(str(time.time() - start_time) + "\n")
+def log_time(start_time, text: str):
+    duration = time.time() - start_time
+    logging.info(f"{text} took {duration:.6f} seconds")
 
 def get_next_family(clusters_df: pd.DataFrame) -> typing.Tuple[typing.Optional[str], typing.Optional[typing.List[str]]]:
     start_time = time.time()
@@ -133,9 +142,8 @@ def get_next_family(clusters_df: pd.DataFrame) -> typing.Tuple[typing.Optional[s
     clusters_df.drop(clusters_df[clusters_df['representative'] == next_family_rep].index, inplace=True)
 
     # Logging execution time and results
-    with open(log_file, 'a') as file:
-        file.write(f"\nget_next_family: {time.time() - start_time}\n")
-        file.write(f"S: {next_family_rep}, s: {len(next_family_members)}\n")
+    logging.info(f"get_next_family: {time.time() - start_time}")
+    logging.info(f"S: {next_family_rep}, s: {len(next_family_members)}")
     
     return next_family_rep, next_family_members
 
@@ -286,18 +294,15 @@ def run_pytrimal_reps(align_msa: pyhmmer.easel.TextMSA, threshold: float, max_se
         ali = repTrimmer.trim(ali)
         rf = rf[ali.residues_mask]
 
-        with open(log_file, 'a') as file:
-            file.write("run_pytrimal_reps finished.\n")
+        logging.info("run_pytrimal_reps finished.")
         number_of_remaining_sequences = len(list(ali.names))
-        with open(log_file, 'a') as file:
-            file.write("Remaining sequences: " + str(number_of_remaining_sequences) + "\n")
+        logging.info(f"Remaining sequences: {str(number_of_remaining_sequences)}")
 
         if (number_of_remaining_sequences <= max_seed_seqs): # TODO pytrimal -clusters arg_max_seed_seqs max once, if/when fixed
             break
         else:
             threshold -= 0.1
-            with open(log_file, 'a') as file:
-                file.write("Rerunning run_pytrimal_reps; ")
+            logging.info("Rerunning run_pytrimal_reps; ")
 
     log_time(start_time, "run_pytrimal_reps: ")
 
@@ -430,8 +435,7 @@ def main():
         iteration += 1
         family_rep, family_members = get_next_family(clusters_df)
         if not family_members:
-            with open(log_file, 'a') as file:
-                file.write("Exiting all...")
+            logging.info("Exiting all...")
             break
         
         original_sequence_names = family_members
@@ -451,10 +455,9 @@ def main():
             if (family_iteration > 3):
                 exit_flag = True
 
-            with open(log_file, 'a') as file:
-                if (exit_flag):
-                    file.write("Exiting-3 loops.\n")
-                file.write(str(family_iteration) + "\n")
+            if (exit_flag):
+                logging.info("Exiting-3 loops.")
+            logging.info(f"{str(family_iteration)}")
 
             if not exit_flag: # main strategy branch
                 hmm = run_hmmbuild(args.chunk_num, iteration, seed_msa)
@@ -478,14 +481,12 @@ def main():
 
                 if not new_recruited_sequences:
                     exit_flag = True
-                    with open(log_file, 'a') as file:
-                        file.write("Exiting-CONVERGED: no new sequences recruited.\n")
+                    logging.info("Exiting-CONVERGED: no new sequences recruited.")
                     with open(converged_families_file, 'a') as file:
                         file.write(f"{iteration}\n")
 
             if exit_flag: # exit strategy branch
-                with open(log_file, 'a') as file:
-                    file.write("Exiting branch strategy:\n")
+                logging.info("Exiting branch strategy:")
 
                 final_hmm = run_hmmbuild(args.chunk_num, iteration, seed_msa, hand=True)
 
@@ -508,27 +509,23 @@ def main():
                     discard_flag = True
                     discard_reason = "few seed sequences remained"
                     discard_value = membership_percentage
-                    with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
+                    logging.info(f"Discard-Warning: {iteration} seed percentage in MSA is {membership_percentage}")
                     break
                 elif (membership_percentage < 1):
-                    with open(log_file, 'a') as file:
-                        file.write(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}\n")
-                
+                    logging.info(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}")
+
                 full_msa, full_msa_num_seqs, non_gap_seq_length = run_hmmalign(hmm, filtered_seqs) # final full MSA, including smaller sequences
                 if (non_gap_seq_length < args.discard_min_rep_length):
                     discard_flag = True
                     discard_reason = "family representative length too small"
                     discard_value = non_gap_seq_length
-                    with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: {iteration} rep length is only {non_gap_seq_length}\n")
+                    logging.info(f"Discard-Warning: {iteration} rep length is only {non_gap_seq_length}")
                     break
                 elif (non_gap_seq_length > args.discard_max_rep_length):
                     discard_flag = True
                     discard_reason = "family representative length too large"
                     discard_value = non_gap_seq_length
-                    with open(log_file, 'a') as file:
-                        file.write(f"Discard-Warning: {iteration} rep length is over {non_gap_seq_length}\n")
+                    logging.info(f"Discard-Warning: {iteration} rep length is over {non_gap_seq_length}")
                     break
 
                 break # break from main strategy
@@ -541,8 +538,7 @@ def main():
 
         # Exiting family loop
         if (discard_flag): # unsuccessfully
-            with open(log_file, 'a') as file:
-                file.write("Discarding cluster " + family_rep + "\n")
+            logging.info(f"Discarding cluster {family_rep}")
             with open(discarded_clusters_file, 'a') as outfile:
                 outfile.write(str(family_rep) + "," + discard_reason + "," + str(discard_value) + "\n")
             iteration -= 1 # keep proper track of family ids
@@ -567,8 +563,9 @@ def main():
         remove_tmp_files()
 
     # # End of all families
-    with open(log_file, 'a') as file:
-        file.write("DONE.")
+    logging.info("DONE.")
+    logging.shutdown()
+    shutil.move("execution.log", log_file)
 
 if __name__ == "__main__":
     main()
