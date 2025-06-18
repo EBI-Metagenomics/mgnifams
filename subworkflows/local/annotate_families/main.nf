@@ -11,16 +11,15 @@ include { ANNOTATE_REPS } from '../../../subworkflows/local/annotate_reps'
 workflow ANNOTATE_FAMILIES {
     take:
     reps
+    funfams_path
     seed_msa_sto
     full_msa_sto
 
     main:
     ch_versions = Channel.empty()
 
-    ANNOTATE_REPS( reps )
+    ANNOTATE_REPS( reps, funfams_path )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
-
-    ANNOTATE_REPS.out.s4preds.view()
 
     // TODO continue
 
