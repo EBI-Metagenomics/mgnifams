@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- [#41](https://github.com/EBI-Metagenomics/mgnifams/pull/41) - Added funfams annotations for family representatives
 - [#37](https://github.com/EBI-Metagenomics/mgnifams/pull/37) - Added various custom MultiQC reports; family metadata, discarded clusters, family similarities.
 - Updated sqlite database subworkflow, for smooth subsequent version releases.
 
