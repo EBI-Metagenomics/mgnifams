@@ -11,14 +11,15 @@ process PARSE_S4PRED_TO_FEATURE_VIEWER {
     tuple val(meta), path(preds) 
 
     output:
-    tuple val(meta), path("output_${preds}"), emit: features
-    path "versions.yml"                     , emit: versions
+    tuple val(meta), path("${prefix}"), emit: features
+    path "versions.yml"               , emit: versions
 
     script:
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     parse_s4pred_to_feature_viewer.py \\
         ${preds} \\
-        output_${preds}
+        ${prefix}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -27,9 +28,10 @@ process PARSE_S4PRED_TO_FEATURE_VIEWER {
     """
 
     stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mkdir -p output_${preds}
-        touch output_${preds}/output.horiz
+    mkdir -p ${prefix}
+    touch ${prefix}/${prefix}.json
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

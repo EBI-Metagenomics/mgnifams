@@ -68,7 +68,7 @@ workflow MGNIFAMS {
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, funfams_path, \
-        GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa_sto, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa_sto )
+        GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
     // TODO

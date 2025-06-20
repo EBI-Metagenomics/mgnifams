@@ -1,9 +1,9 @@
-include { GENERATE_FAMILIES                 } from '../../../modules/local/generate_families/main'
-include { REMOVE_REDUNDANCY                 } from '../../../subworkflows/local/remove_redundancy'
-include { REFORMAT_MSA as REFORMAT_SEED_MSA } from '../../../subworkflows/local/reformat_msa'
-include { REFORMAT_MSA as REFORMAT_FULL_MSA } from '../../../subworkflows/local/reformat_msa'
-include { PRESENT_DISCARDED_FAMILIES        } from '../../../modules/local/present_discarded_families/main'
-include { PRESENT_FAMILY_METADATA           } from '../../../modules/local/present_family_metadata/main'
+include { GENERATE_FAMILIES                     } from '../../../modules/local/generate_families/main'
+include { REMOVE_REDUNDANCY                     } from '../../../subworkflows/local/remove_redundancy'
+include { HHSUITE_REFORMAT as REFORMAT_SEED_MSA } from '../../../modules/nf-core/hhsuite/reformat/main'
+include { HHSUITE_REFORMAT as REFORMAT_FULL_MSA } from '../../../modules/nf-core/hhsuite/reformat/main'
+include { PRESENT_DISCARDED_FAMILIES            } from '../../../modules/local/present_discarded_families/main'
+include { PRESENT_FAMILY_METADATA               } from '../../../modules/local/present_family_metadata/main'
 
 workflow GENERATE_NONREDUNDANT_FAMILIES {
     take:
@@ -99,7 +99,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { meta, file ->
             [[id: meta.id, chunk: file.getSimpleName()], file]
         }
-    REFORMAT_SEED_MSA(ch_input_for_reformat_seed).fasta
+    REFORMAT_SEED_MSA(ch_input_for_reformat_seed, "sto", "fas")
     ch_versions = ch_versions.mix( REFORMAT_SEED_MSA.out.versions )
 
     ch_input_for_reformat_full = REMOVE_REDUNDANCY.out.full_msa_sto
@@ -107,7 +107,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
         .map { meta, file ->
             [[id: meta.id, chunk: file.getSimpleName()], file]
         }
-    REFORMAT_FULL_MSA(ch_input_for_reformat_full).fasta
+    REFORMAT_FULL_MSA(ch_input_for_reformat_full, "sto", "fas")
     ch_versions = ch_versions.mix( REFORMAT_FULL_MSA.out.versions )
 
     PRESENT_DISCARDED_FAMILIES( REMOVE_REDUNDANCY.out.discarded )
@@ -126,8 +126,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     converged      = REMOVE_REDUNDANCY.out.converged
     metadata       = REMOVE_REDUNDANCY.out.metadata
     family_reps    = REMOVE_REDUNDANCY.out.family_reps
-    seed_msa       = REFORMAT_SEED_MSA.out.fasta
-    full_msa       = REFORMAT_FULL_MSA.out.fasta
+    seed_msa       = REFORMAT_SEED_MSA.out.msa
+    full_msa       = REFORMAT_FULL_MSA.out.msa
     discarded_mqc  = PRESENT_DISCARDED_FAMILIES.out.mqc
     metadata_mqc   = PRESENT_FAMILY_METADATA.out.mqc
     similarity_mqc = REMOVE_REDUNDANCY.out.similarity_mqc
