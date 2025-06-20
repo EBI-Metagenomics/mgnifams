@@ -78,6 +78,7 @@ def define_globals(args):
         tmp_folder, seed_msa_folder, \
         align_msa_folder, hmm_folder, rf_folder, \
         tmp_family_sequences_path, tmp_seed_msa_path, tmp_full_msa_path, \
+        tmp_seed_msa_path_single_line, tmp_full_msa_path_single_line, \
         tmp_hmm_path, tmp_sequences_to_remove_path, tmp_rf_path
     logs_folder                = "logs"
     refined_families_folder    = "refined_families"
@@ -101,6 +102,8 @@ def define_globals(args):
 
     tmp_seed_msa_path = os.path.join(tmp_folder, 'seed_msa.sto')
     tmp_full_msa_path = os.path.join(tmp_folder, 'full_msa.sto')
+    tmp_seed_msa_path_single_line = os.path.join(tmp_folder, 'seed_msa_single_line.sto')
+    tmp_full_msa_path_single_line = os.path.join(tmp_folder, 'full_msa_single_line.sto')
 
     log_file                  = os.path.join(logs_folder               , f'{args.chunk_num}.txt')
     refined_families_tsv_file = os.path.join(refined_families_folder   , f'{args.chunk_num}.tsv')
@@ -332,20 +335,129 @@ def check_seed_membership(original_sequence_names, filtered_seq_names):
 
     return percentage_membership
 
+def concatenate_stockholm_blocks(infile, outfile):
+    with open(infile, 'r') as fin:
+        lines = fin.readlines()
+
+    # Find the index of the first sequence line (skip comments and blank lines)
+    first_seq_line_index = None
+    for i, line in enumerate(lines):
+        if line.strip() == '' or line.startswith('# STOCKHOLM'):
+            continue
+        if line.startswith('#'):
+            # skip #=GC RF for now
+            if line.startswith('#=GC RF'):
+                continue
+            else:
+                continue
+        # Assume sequence line: has name and sequence separated by spaces
+        if line.strip() and not line.startswith('#'):
+            first_seq_line_index = i
+            break
+
+    if first_seq_line_index is None:
+        raise ValueError("No sequence lines found in input")
+
+    # Determine sequence start col by first sequence line
+    first_seq_line = lines[first_seq_line_index]
+    # Sequence name ends at first non-space after initial non-space block
+    name_part, seq_part = first_seq_line[:].split(maxsplit=1)
+    seq_start_col = first_seq_line.index(seq_part)
+
+    # Prepare containers for sequences and RF lines keyed by sequence name
+    seqs = {}
+    rf_lines = {}
+
+    # Store blank line index after STOCKHOLM header to preserve spacing
+    stockholm_header_index = None
+    for i, line in enumerate(lines):
+        if line.startswith('# STOCKHOLM'):
+            stockholm_header_index = i
+
+    # Parse blocks: sequence lines and RF lines
+    # We have 3 types of lines:
+    # 1) sequence lines: name + seq string
+    # 2) RF lines: #=GC RF + seq string (no spaces in seq part)
+    # 3) others: comments, blank lines, // end line
+
+    for line in lines:
+        if line.strip() == '' or line.startswith('# STOCKHOLM') or line.startswith('//'):
+            continue
+
+        if line.startswith('#=GC RF'):
+            # Format: "#=GC RF" + spaces + RF sequence (no name)
+            # Extract RF sequence by splitting at seq_start_col (to remove any spaces)
+            rf_seq = line[seq_start_col:].rstrip('\n')
+            rf_lines.setdefault('RF', []).append(rf_seq)
+        elif line.startswith('#'):
+            # other comment lines ignore
+            continue
+        else:
+            # sequence line
+            parts = line.rstrip('\n').split(maxsplit=1)
+            if len(parts) != 2:
+                # skip malformed lines
+                continue
+            name, seq = parts
+            if name not in seqs:
+                seqs[name] = []
+            seqs[name].append(seq)
+
+    # Concatenate sequences and RF sequences per name
+    for name in seqs:
+        seqs[name] = ''.join(seqs[name])
+    rf_concat = ''.join(rf_lines.get('RF', []))
+
+    # Write output file
+    with open(outfile, 'w') as fout:
+        # Write # STOCKHOLM 1.0 and blank line after it (if present)
+        for i, line in enumerate(lines):
+            fout.write(line)
+            if i == stockholm_header_index:
+                # write next blank line if exists (don't write it twice)
+                if (i + 1 < len(lines)) and lines[i + 1].strip() == '':
+                    fout.write('\n')
+                break
+
+        # Write sequences and RF line in one block
+        # Use the seq_start_col from above to align sequences
+        for name, full_seq in seqs.items():
+            # Pad name with spaces so sequence starts at seq_start_col
+            padding = ' ' * (seq_start_col - len(name))
+            fout.write(f"{name}{padding}{full_seq}\n")
+
+        # Write concatenated RF line
+        rf_prefix = '#=GC RF'
+        padding = ' ' * (seq_start_col - len(rf_prefix))
+        fout.write(f"{rf_prefix}{padding}{rf_concat}\n")
+
+        # Write closing //
+        fout.write("//\n")
+
 def parse_protein_name(seq_name, seq_length, seq_whole_name, original_length, start, end):
-    if ( (end-start) == original_length):
+    if (end - start) == original_length:
         return seq_name
     else:
         splits = seq_name.split('_')
         old_length = len(seq_whole_name)
-        if (len(splits) == 3):
+        if len(splits) == 3:
             new_start = start + int(splits[1])
-            new_end = new_start + seq_length -1
-            new_name = splits[0] + "/" + str(new_start) + "-" + str(new_end)
+            new_end = new_start + seq_length - 1
+            new_name = f"{splits[0]}/{new_start}-{new_end}"
         else:
-            new_name = splits[0] + "/" + str(start + 1) + "-" + str(end)
+            new_name = f"{splits[0]}/{start + 1}-{end}"
 
-        new_name = new_name.ljust(old_length)  # Pad with spaces to match original length
+        # Pad or trim new_name to match old_length exactly
+        if len(new_name) < old_length:
+            new_name = new_name.ljust(old_length)
+        elif len(new_name) > old_length:
+            # If longer, trim spaces at the end to fit old_length
+            # Trim only trailing spaces, but if still too long, hard cut
+            new_name = new_name.rstrip()
+            if len(new_name) > old_length:
+                new_name = new_name[:old_length]
+            else:
+                new_name = new_name.ljust(old_length)
 
         return new_name
 
@@ -554,8 +666,11 @@ def main():
                 seed_msa.write(dst, "stockholm")
             with open(tmp_full_msa_path, "wb") as dst:
                 align_msa.write(dst, "stockholm")
-            renumber_seed_sto_msa(tmp_seed_msa_path, os.path.join(seed_msa_folder, f'{args.chunk_num}_{iteration}.sto'), pyhmmer_seqs)
-            renumber_full_sto_msa_and_write_tsv_metadata(tmp_full_msa_path, pyhmmer_seqs, args.chunk_num, iteration, full_msa_num_seqs, final_hmm.consensus)
+                
+            concatenate_stockholm_blocks(tmp_seed_msa_path, tmp_seed_msa_path_single_line)
+            concatenate_stockholm_blocks(tmp_full_msa_path, tmp_full_msa_path_single_line)
+            renumber_seed_sto_msa(tmp_seed_msa_path_single_line, os.path.join(seed_msa_folder, f'{args.chunk_num}_{iteration}.sto'), pyhmmer_seqs)
+            renumber_full_sto_msa_and_write_tsv_metadata(tmp_full_msa_path_single_line, pyhmmer_seqs, args.chunk_num, iteration, full_msa_num_seqs, final_hmm.consensus)
 
         remove_tmp_files()
 
