@@ -76,11 +76,9 @@ def define_globals(args):
         discarded_clusters_file, successful_clusters_file, \
         converged_families_file, family_metadata_file, family_reps_file, \
         tmp_folder, seed_msa_folder, \
-        align_msa_folder, hmm_folder, \
-        domtblout_folder, rf_folder, \
+        align_msa_folder, hmm_folder, rf_folder, \
         tmp_family_sequences_path, tmp_seed_msa_path, tmp_full_msa_path, \
-        tmp_hmm_path, tmp_domtblout_path, \
-        tmp_sequences_to_remove_path, tmp_rf_path
+        tmp_hmm_path, tmp_sequences_to_remove_path, tmp_rf_path
     logs_folder                = "logs"
     refined_families_folder    = "refined_families"
     discarded_clusters_folder  = "discarded_clusters"
@@ -92,10 +90,9 @@ def define_globals(args):
     seed_msa_folder            = "seed_msa_sto"
     align_msa_folder           = "full_msa_sto"
     hmm_folder                 = "hmm"
-    domtblout_folder           = "domtblout"
     rf_folder                  = "rf"
 
-    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, domtblout_folder, rf_folder, \
+    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, rf_folder, \
         logs_folder, refined_families_folder, discarded_clusters_folder, \
         successful_clusters_folder, converged_families_folder, family_metadata_folder, family_reps_folder
     ]:

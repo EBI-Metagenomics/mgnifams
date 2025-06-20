@@ -20,6 +20,11 @@
             "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
             "installed_by": ["modules"]
           },
+          "hhsuite/reformat": {
+            "branch": "master",
+            "git_sha": "810bcdae8c7667a5c61dcef6289bbb1e9c78c51e",
+            "installed_by": ["modules"]
+          },
           "hmmer/hmmsearch": {
             "branch": "master",
             "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",

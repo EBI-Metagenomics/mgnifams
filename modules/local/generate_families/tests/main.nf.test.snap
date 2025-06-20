@@ -210,9 +210,9 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.4"
         },
-        "timestamp": "2025-06-16T15:13:16.808512711"
+        "timestamp": "2025-06-20T14:14:44.314538588"
     },
     "mgnifam": {
         "content": [
@@ -255,7 +255,6 @@
                     ]
                 ]
             ],
-            null,
             [
                 [
                     {
@@ -317,8 +316,102 @@
         ],
         "meta": {
             "nf-test": "0.9.2",
-            "nextflow": "25.04.3"
+            "nextflow": "25.04.4"
         },
-        "timestamp": "2025-06-16T15:13:09.30177302"
+        "timestamp": "2025-06-20T14:14:31.212263205"
+    },
+    "mgnifam - long (>200aa)": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test_1.sto:md5,669ec481a8027426c823c1d98ca755f1"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test_1.sto:md5,17f686c3c624134cb5126a47f8e48e5b"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test_1.txt:md5,1de9d5ab9537b080ccea7fe0e30dfd38"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.tsv:md5,aed7cf2822e0f096a1c052527b5b4693"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.txt:md5,48edcb49e52eadb29ce70076f6d5aa30"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.txt:md5,b026324c6904b2a9cb4b88d6d61c81d1"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.csv:md5,c9070b5ebc36f00ea8ead0f11181d340"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.fasta:md5,c3e0c76d0e3a93f455f95820532728a9"
+                ]
+            ],
+            [
+                {
+                    "GENERATE_FAMILIES": {
+                        "python": "3.13.5",
+                        "pandas": "2.3.0",
+                        "pyfamsa": "0.5.3.post1",
+                        "pyhmmer": "0.11.1",
+                        "pytrimal": "0.8.1",
+                        "numpy": "2.3.0",
+                        "biopython": 1.85
+                    }
+                }
+            ]
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "25.04.4"
+        },
+        "timestamp": "2025-06-20T14:14:39.186593335"
     }
 }
