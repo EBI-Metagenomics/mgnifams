@@ -75,8 +75,7 @@ def define_globals(args):
     global log_file, refined_families_tsv_file, \
         discarded_clusters_file, successful_clusters_file, \
         converged_families_file, family_metadata_file, family_reps_file, \
-        tmp_folder, seed_msa_folder, \
-        align_msa_folder, hmm_folder, rf_folder, \
+        tmp_folder, seed_msa_folder, full_msa_folder, hmm_folder, rf_folder, \
         tmp_family_sequences_path, tmp_seed_msa_path, tmp_full_msa_path, \
         tmp_seed_msa_path_single_line, tmp_full_msa_path_single_line, \
         tmp_hmm_path, tmp_sequences_to_remove_path, tmp_rf_path
@@ -89,11 +88,11 @@ def define_globals(args):
     family_reps_folder         = "family_reps"
     tmp_folder                 = "tmp"
     seed_msa_folder            = "seed_msa_sto"
-    align_msa_folder           = "full_msa_sto"
+    full_msa_folder            = "full_msa_sto"
     hmm_folder                 = "hmm"
     rf_folder                  = "rf"
 
-    for folder in [tmp_folder, seed_msa_folder, align_msa_folder, hmm_folder, rf_folder, \
+    for folder in [tmp_folder, seed_msa_folder, full_msa_folder, hmm_folder, rf_folder, \
         logs_folder, refined_families_folder, discarded_clusters_folder, \
         successful_clusters_folder, converged_families_folder, family_metadata_folder, family_reps_folder
     ]:
@@ -335,105 +334,6 @@ def check_seed_membership(original_sequence_names, filtered_seq_names):
 
     return percentage_membership
 
-def concatenate_stockholm_blocks(infile, outfile):
-    with open(infile, 'r') as fin:
-        lines = fin.readlines()
-
-    # Find the index of the first sequence line (skip comments and blank lines)
-    first_seq_line_index = None
-    for i, line in enumerate(lines):
-        if line.strip() == '' or line.startswith('# STOCKHOLM'):
-            continue
-        if line.startswith('#'):
-            # skip #=GC RF for now
-            if line.startswith('#=GC RF'):
-                continue
-            else:
-                continue
-        # Assume sequence line: has name and sequence separated by spaces
-        if line.strip() and not line.startswith('#'):
-            first_seq_line_index = i
-            break
-
-    if first_seq_line_index is None:
-        raise ValueError("No sequence lines found in input")
-
-    # Determine sequence start col by first sequence line
-    first_seq_line = lines[first_seq_line_index]
-    # Sequence name ends at first non-space after initial non-space block
-    name_part, seq_part = first_seq_line[:].split(maxsplit=1)
-    seq_start_col = first_seq_line.index(seq_part)
-
-    # Prepare containers for sequences and RF lines keyed by sequence name
-    seqs = {}
-    rf_lines = {}
-
-    # Store blank line index after STOCKHOLM header to preserve spacing
-    stockholm_header_index = None
-    for i, line in enumerate(lines):
-        if line.startswith('# STOCKHOLM'):
-            stockholm_header_index = i
-
-    # Parse blocks: sequence lines and RF lines
-    # We have 3 types of lines:
-    # 1) sequence lines: name + seq string
-    # 2) RF lines: #=GC RF + seq string (no spaces in seq part)
-    # 3) others: comments, blank lines, // end line
-
-    for line in lines:
-        if line.strip() == '' or line.startswith('# STOCKHOLM') or line.startswith('//'):
-            continue
-
-        if line.startswith('#=GC RF'):
-            # Format: "#=GC RF" + spaces + RF sequence (no name)
-            # Extract RF sequence by splitting at seq_start_col (to remove any spaces)
-            rf_seq = line[seq_start_col:].rstrip('\n')
-            rf_lines.setdefault('RF', []).append(rf_seq)
-        elif line.startswith('#'):
-            # other comment lines ignore
-            continue
-        else:
-            # sequence line
-            parts = line.rstrip('\n').split(maxsplit=1)
-            if len(parts) != 2:
-                # skip malformed lines
-                continue
-            name, seq = parts
-            if name not in seqs:
-                seqs[name] = []
-            seqs[name].append(seq)
-
-    # Concatenate sequences and RF sequences per name
-    for name in seqs:
-        seqs[name] = ''.join(seqs[name])
-    rf_concat = ''.join(rf_lines.get('RF', []))
-
-    # Write output file
-    with open(outfile, 'w') as fout:
-        # Write # STOCKHOLM 1.0 and blank line after it (if present)
-        for i, line in enumerate(lines):
-            fout.write(line)
-            if i == stockholm_header_index:
-                # write next blank line if exists (don't write it twice)
-                if (i + 1 < len(lines)) and lines[i + 1].strip() == '':
-                    fout.write('\n')
-                break
-
-        # Write sequences and RF line in one block
-        # Use the seq_start_col from above to align sequences
-        for name, full_seq in seqs.items():
-            # Pad name with spaces so sequence starts at seq_start_col
-            padding = ' ' * (seq_start_col - len(name))
-            fout.write(f"{name}{padding}{full_seq}\n")
-
-        # Write concatenated RF line
-        rf_prefix = '#=GC RF'
-        padding = ' ' * (seq_start_col - len(rf_prefix))
-        fout.write(f"{rf_prefix}{padding}{rf_concat}\n")
-
-        # Write closing //
-        fout.write("//\n")
-
 def parse_protein_name(seq_name, seq_length, seq_whole_name, original_length, start, end):
     if (end - start) == original_length:
         return seq_name
@@ -461,70 +361,60 @@ def parse_protein_name(seq_name, seq_length, seq_whole_name, original_length, st
 
         return new_name
 
-def renumber_seed_sto_msa(in_sto_file, out_sto_file, pyhmmer_seqs):
+def renumber_sto_msa(
+    in_sto_file,
+    out_sto_file,
+    pyhmmer_seqs,
+    write_metadata=False,
+    iteration=None,
+    chunk_num=None,
+    full_msa_num_seqs=None,
+    consensus=None
+):
+    if write_metadata:
+        assert iteration is not None and chunk_num is not None
+
+        familyfile = open(refined_families_tsv_file, 'a')
+        metadatafile = open(family_metadata_file, 'a')
+        repsfile = open(family_reps_file, 'a')
+
     with open(in_sto_file, 'r') as infile, open(out_sto_file, 'w') as outfile:
-
-        previous_seq_name = ""
-        for line in infile:
-            # Split line by spaces
-            split_line = line.split()
-
-            # Check if the line meets any of the specified conditions
-            if not split_line or len(split_line) == 1 or split_line[0] == '#=GC':  # Line is empty or // or '#=GC'
-                outfile.write(line)
-            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
-                outfile.write(line)
-            elif not split_line[0].startswith("#="): # First split is first protein encounter
-                seq_name = split_line[0].split("/")[0]
-                seq = re.sub(r"[.-]", "", split_line[1]).upper()
-                original_seq = get_fasta_sequences(pyhmmer_seqs, [seq_name])[0][1]
-                start = original_seq.find(seq)
-                end = start + len(seq)
-                previous_seq_name = parse_protein_name(seq_name, len(seq), split_line[0], len(original_seq), start, end)
-                line = line.replace(split_line[0], previous_seq_name, 1)
-                outfile.write(line)
-            elif split_line[0] == '#=GR':
-                line = line.replace(split_line[1], previous_seq_name, 1)
-                outfile.write(line)
-
-def renumber_full_sto_msa_and_write_tsv_metadata(in_sto_file, pyhmmer_seqs, arg_chunk_num, iteration, \
-                                                full_msa_num_seqs, consensus):
-    
-    out_sto_file = os.path.join(align_msa_folder, f'{arg_chunk_num}_{iteration}.sto')
-    with open(in_sto_file, 'r') as infile, open(refined_families_tsv_file, 'a') as familyfile, \
-        open(family_metadata_file, 'a') as metadatafile, open(family_reps_file, 'a') as repsfile, \
-        open(out_sto_file, 'w') as outfile:
-
-        previous_seq_name = ""
+        seq_name = ""
         rep_flag = True
         for line in infile:
-            # Split line by spaces
             split_line = line.split()
 
-            # Check if the line meets any of the specified conditions
-            if not split_line or len(split_line) == 1 or split_line[0] == '#=GC':  # Line is empty or // or '#=GC'
-                outfile.write(line)
-            elif split_line[1] == 'STOCKHOLM':  # The second split is 'STOCKHOLM'
-                outfile.write(line)
-            elif split_line[0] != '#=GR' and split_line[0] != '#=GC':  # First split is first protein encounter
-                seq_name = split_line[0].split("/")[0]
-                seq = re.sub(r"[.-]", "", split_line[1]).upper()
-                original_seq = get_fasta_sequences(pyhmmer_seqs, [seq_name])[0][1]
-                start = original_seq.find(seq)
-                end = start + len(seq)
-                previous_seq_name = parse_protein_name(seq_name, len(seq), split_line[0], len(original_seq), start, end)
-                line = line.replace(split_line[0], previous_seq_name, 1)
-                outfile.write(line)
-                familyfile.write(f"{iteration}\t{previous_seq_name}\n")
-                if (rep_flag):
-                    splits = previous_seq_name.split("/")
-                    region = splits[1].strip() if "/" in previous_seq_name else "-"
-                    metadatafile.write(f"{iteration},{full_msa_num_seqs},\"{splits[0]}\",{region},{len(seq)},{seq},{consensus}\n")
-                    repsfile.write(f">{previous_seq_name.strip()}\t{arg_chunk_num}_{iteration}\n{seq}\n")
-                    rep_flag = False
-            elif split_line[0] == '#=GR':
-                line = line.replace(split_line[1], previous_seq_name, 1)
-                outfile.write(line)
+            if split_line: # If not empty
+                if split_line[0] == '//' or split_line[0] == '#=GC':
+                    outfile.write(line)
+                elif split_line[1] == 'STOCKHOLM':
+                    outfile.write(f'{line}\n')
+                elif split_line[0] != '#=GF' and split_line[0] != '#=GS':
+                    seq_name = split_line[0].split("/")[0]
+                    seq = re.sub(r"[.-]", "", split_line[1]).upper()
+                    original_seq = get_fasta_sequences(pyhmmer_seqs, [seq_name])[0][1]
+                    start = original_seq.find(seq)
+                    end = start + len(seq)
+                    seq_name = parse_protein_name(seq_name, len(seq), split_line[0], len(original_seq), start, end)
+                    line = line.replace(split_line[0], seq_name, 1)
+                    outfile.write(line)
+
+                    if write_metadata:
+                        familyfile.write(f"{iteration}\t{seq_name}\n")
+                        if rep_flag:
+                            splits = seq_name.split("/")
+                            region = splits[1].strip() if "/" in seq_name else "-"
+                            metadatafile.write(f"{iteration},{full_msa_num_seqs},\"{splits[0]}\",{region},{len(seq)},{seq},{consensus}\n")
+                            repsfile.write(f">{seq_name.strip()}\t{chunk_num}_{iteration}\n{seq}\n")
+                            rep_flag = False
+                elif split_line[0] == '#=GR':
+                    line = line.replace(split_line[1], seq_name, 1)
+                    outfile.write(line)
+
+    if write_metadata:
+        familyfile.close()
+        metadatafile.close()
+        repsfile.close()
 
 def remove_tmp_files() -> None:
     for item in os.listdir(tmp_folder):
@@ -663,14 +553,25 @@ def main():
                 final_hmm.write(f)
             # write alignments
             with open(tmp_seed_msa_path, "wb") as dst:
-                seed_msa.write(dst, "stockholm")
+                seed_msa.write(dst, format="pfam")
             with open(tmp_full_msa_path, "wb") as dst:
-                align_msa.write(dst, "stockholm")
-                
-            concatenate_stockholm_blocks(tmp_seed_msa_path, tmp_seed_msa_path_single_line)
-            concatenate_stockholm_blocks(tmp_full_msa_path, tmp_full_msa_path_single_line)
-            renumber_seed_sto_msa(tmp_seed_msa_path_single_line, os.path.join(seed_msa_folder, f'{args.chunk_num}_{iteration}.sto'), pyhmmer_seqs)
-            renumber_full_sto_msa_and_write_tsv_metadata(tmp_full_msa_path_single_line, pyhmmer_seqs, args.chunk_num, iteration, full_msa_num_seqs, final_hmm.consensus)
+                align_msa.write(dst, format="pfam")
+
+            renumber_sto_msa(
+                in_sto_file=tmp_seed_msa_path,
+                out_sto_file=os.path.join(seed_msa_folder, f'{args.chunk_num}_{iteration}.sto'),
+                pyhmmer_seqs=pyhmmer_seqs
+            )
+            renumber_sto_msa(
+                in_sto_file=tmp_full_msa_path,
+                out_sto_file=os.path.join(full_msa_folder, f'{args.chunk_num}_{iteration}.sto'),
+                pyhmmer_seqs=pyhmmer_seqs,
+                write_metadata=True,
+                iteration=iteration,
+                chunk_num=args.chunk_num,
+                full_msa_num_seqs=full_msa_num_seqs,
+                consensus=final_hmm.consensus
+            )
 
         remove_tmp_files()
 
