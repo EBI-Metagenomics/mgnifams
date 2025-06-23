@@ -9,6 +9,8 @@ workflow ANNOTATE_MODELS {
     take:
     seed_msa
     hh_mode
+    hhdb_path
+    hhdb_name
     
     main:
     ch_versions = Channel.empty()
@@ -16,15 +18,15 @@ workflow ANNOTATE_MODELS {
     HHSUITE_REFORMAT( seed_msa, "fas", "a3m" )
     ch_versions = ch_versions.mix( HHSUITE_REFORMAT.out.versions )
 
-    // if (hh_mode == "hhblits") {
-    //     hhr_ch = HHSUITE_HHBLITS( HHSUITE_REFORMAT.out.msa, params.hhdb_folder_path, params.db_name ).hhr
-    //     ch_versions = ch_versions.mix( HHSUITE_HHBLITS.out.versions )
-    // } else if (hh_mode == "hhsearch") {
-    //     hhr_ch = HHSUITE_HHSEARCH( HHSUITE_REFORMAT.out.msa, params.hhdb_folder_path, params.db_name ).hhr
-    //     ch_versions = ch_versions.mix( HHSUITE_HHSEARCH.out.versions )
-    // } else {
-    //     throw new Exception("Invalid hh_mode value. Should be 'hhblits' or 'hhsearch'.")
-    // }
+    if (hh_mode == "hhblits") {
+        hhr_ch = HHSUITE_HHBLITS( HHSUITE_REFORMAT.out.msa, hhdb_path, hhdb_name ).hhr
+        ch_versions = ch_versions.mix( HHSUITE_HHBLITS.out.versions )
+    } else if (hh_mode == "hhsearch") {
+        hhr_ch = HHSUITE_HHSEARCH( HHSUITE_REFORMAT.out.msa, hhdb_path, hhdb_name ).hhr
+        ch_versions = ch_versions.mix( HHSUITE_HHSEARCH.out.versions )
+    } else {
+        throw new Exception("Invalid hh_mode value. Should be 'hhblits' or 'hhsearch'.")
+    }
     // ch_pfam_hits = FILTER_HH_RESULTS(hhr_ch).pfam_hits
     // TODO ch_versions = ch_versions.mix( FILTER_HH_RESULTS.out.versions )
 

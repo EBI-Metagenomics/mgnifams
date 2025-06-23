@@ -45,6 +45,8 @@ workflow MGNIFAMS {
     starting_id
     funfams_path
     hh_mode
+    hhdb_path
+    hhdb_name
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -70,7 +72,7 @@ workflow MGNIFAMS {
 
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, funfams_path, \
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
-        hh_mode )
+        hh_mode, hhdb_path, hhdb_name )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
     // TODO
