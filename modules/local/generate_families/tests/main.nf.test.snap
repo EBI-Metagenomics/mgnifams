@@ -212,7 +212,7 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.4"
         },
-        "timestamp": "2025-06-20T15:36:17.49334226"
+        "timestamp": "2025-06-23T12:22:17.478230787"
     },
     "mgnifam": {
         "content": [
@@ -223,9 +223,9 @@
                         "chunk": "test"
                     },
                     [
-                        "test_1.sto:md5,952a110896ca1e6d48e5a048d0efd6d2",
-                        "test_2.sto:md5,bb45b471d5407fbf5872801376491803",
-                        "test_3.sto:md5,9b15f5a48681a6fdc3dfe8f18a15561c"
+                        "test_1.sto:md5,e9879383e352b3a598689381bf718fbe",
+                        "test_2.sto:md5,62f820c2af7b62794d0863de5e8fc724",
+                        "test_3.sto:md5,22cf1a0e10bdb682fe136ffc8f18f6bc"
                     ]
                 ]
             ],
@@ -236,9 +236,9 @@
                         "chunk": "test"
                     },
                     [
-                        "test_1.sto:md5,e9879383e352b3a598689381bf718fbe",
-                        "test_2.sto:md5,62f820c2af7b62794d0863de5e8fc724",
-                        "test_3.sto:md5,22cf1a0e10bdb682fe136ffc8f18f6bc"
+                        "test_1.sto:md5,d5dc02beda0afc8bc491aad7b7905b6d",
+                        "test_2.sto:md5,ba62aa128345bd62ca0770fe39eb031b",
+                        "test_3.sto:md5,777445cdd969ca578d0003e336cafef8"
                     ]
                 ]
             ],
@@ -261,7 +261,7 @@
                         "id": "clustering",
                         "chunk": "test"
                     },
-                    "test.tsv:md5,d116c6002825c79643692bdfc93bd3bb"
+                    "test.tsv:md5,0d8812fe3b677324f09742e25a23aed4"
                 ]
             ],
             [
@@ -288,7 +288,7 @@
                         "id": "clustering",
                         "chunk": "test"
                     },
-                    "test.csv:md5,16013a886e29aaf986f6e97123208dae"
+                    "test.csv:md5,dc15a28247b15f397cb40f728b23a03c"
                 ]
             ],
             [
@@ -297,7 +297,7 @@
                         "id": "clustering",
                         "chunk": "test"
                     },
-                    "test.fasta:md5,e17ebd6d43d594b418a170e021168b22"
+                    "test.fasta:md5,c49a022d323caa3ed2a6b39f1284fb46"
                 ]
             ],
             [
@@ -318,7 +318,7 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.4"
         },
-        "timestamp": "2025-06-20T15:36:04.431263014"
+        "timestamp": "2025-06-23T12:22:00.500429381"
     },
     "mgnifam - long (>200aa)": {
         "content": [
@@ -328,7 +328,7 @@
                         "id": "cluster_long",
                         "chunk": "test"
                     },
-                    "test_1.sto:md5,ad2ed53d32d1bf1fb4fef501c3524711"
+                    "test_1.sto:md5,b3bab4ba8c273651cc062c1b8b1941fb"
                 ]
             ],
             [
@@ -337,7 +337,7 @@
                         "id": "cluster_long",
                         "chunk": "test"
                     },
-                    "test_1.sto:md5,b3bab4ba8c273651cc062c1b8b1941fb"
+                    "test_1.sto:md5,f56d53736819d50ba0708c313d281c63"
                 ]
             ],
             [
@@ -355,7 +355,7 @@
                         "id": "cluster_long",
                         "chunk": "test"
                     },
-                    "test.tsv:md5,a6e55eb6603adbd899ceefed0bf9ffc6"
+                    "test.tsv:md5,3b4a1a56ad1982721859823afc52602d"
                 ]
             ],
             [
@@ -382,7 +382,7 @@
                         "id": "cluster_long",
                         "chunk": "test"
                     },
-                    "test.csv:md5,83107957d459e202a33d5e32d64c7f72"
+                    "test.csv:md5,4cdde5a114e730be010778f6a2c19261"
                 ]
             ],
             [
@@ -391,7 +391,7 @@
                         "id": "cluster_long",
                         "chunk": "test"
                     },
-                    "test.fasta:md5,60f64ca394e2383f2bef061251498e03"
+                    "test.fasta:md5,03aae1592c190b70c76c4d708a5dbd3a"
                 ]
             ],
             [
@@ -412,6 +412,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.4"
         },
-        "timestamp": "2025-06-20T15:36:12.52242233"
+        "timestamp": "2025-06-23T12:22:08.983326219"
     }
 }

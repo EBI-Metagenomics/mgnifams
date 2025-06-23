@@ -77,7 +77,6 @@ def define_globals(args):
         converged_families_file, family_metadata_file, family_reps_file, \
         tmp_folder, seed_msa_folder, full_msa_folder, hmm_folder, rf_folder, \
         tmp_family_sequences_path, tmp_seed_msa_path, tmp_full_msa_path, \
-        tmp_seed_msa_path_single_line, tmp_full_msa_path_single_line, \
         tmp_hmm_path, tmp_sequences_to_remove_path, tmp_rf_path
     logs_folder                = "logs"
     refined_families_folder    = "refined_families"
@@ -101,8 +100,6 @@ def define_globals(args):
 
     tmp_seed_msa_path = os.path.join(tmp_folder, 'seed_msa.sto')
     tmp_full_msa_path = os.path.join(tmp_folder, 'full_msa.sto')
-    tmp_seed_msa_path_single_line = os.path.join(tmp_folder, 'seed_msa_single_line.sto')
-    tmp_full_msa_path_single_line = os.path.join(tmp_folder, 'full_msa_single_line.sto')
 
     log_file                  = os.path.join(logs_folder               , f'{args.chunk_num}.txt')
     refined_families_tsv_file = os.path.join(refined_families_folder   , f'{args.chunk_num}.tsv')
@@ -276,16 +273,16 @@ def extract_first_part(sequence_name: str) -> str:
 def unmask_sequence_names(sequences: typing.Iterable[Sequence]) -> typing.List[str]:
     return [extract_first_part(name) for name, _ in sequences]
 
-def run_pytrimal_reps(align_msa: pyhmmer.easel.TextMSA, threshold: float, max_seed_seqs: int) -> pyhmmer.easel.TextMSA:
+def run_pytrimal_reps(full_msa: pyhmmer.easel.TextMSA, threshold: float, max_seed_seqs: int) -> pyhmmer.easel.TextMSA:
     start_time = time.time()
 
     # keep reference line
-    assert align_msa.reference is not None
-    rf = np.array(list(align_msa.reference.decode()))
+    assert full_msa.reference is not None
+    rf = np.array(list(full_msa.reference.decode()))
 
     # Load the MSA
-    sequences = [seq.upper().replace('.', '-') for seq in align_msa.alignment]
-    ali = pytrimal.Alignment(align_msa.names, sequences)
+    sequences = [seq.upper().replace('.', '-') for seq in full_msa.alignment]
+    ali = pytrimal.Alignment(full_msa.names, sequences)
 
     # and remove redundant sequences
     while True:
@@ -385,11 +382,12 @@ def renumber_sto_msa(
             split_line = line.split()
 
             if split_line: # If not empty
-                if split_line[0] == '//' or split_line[0] == '#=GC':
+                if split_line[0] == '//' or split_line[1] == 'RF':
                     outfile.write(line)
                 elif split_line[1] == 'STOCKHOLM':
                     outfile.write(f'{line}\n')
-                elif split_line[0] != '#=GF' and split_line[0] != '#=GS':
+                elif split_line[0] != '#=GF' and split_line[0] != '#=GS' \
+                    and split_line[0] != '#=GC' and split_line[0] != '#=GR':
                     seq_name = split_line[0].split("/")[0]
                     seq = re.sub(r"[.-]", "", split_line[1]).upper()
                     original_seq = get_fasta_sequences(pyhmmer_seqs, [seq_name])[0][1]
@@ -407,9 +405,6 @@ def renumber_sto_msa(
                             metadatafile.write(f"{iteration},{full_msa_num_seqs},\"{splits[0]}\",{region},{len(seq)},{seq},{consensus}\n")
                             repsfile.write(f">{seq_name.strip()}\t{chunk_num}_{iteration}\n{seq}\n")
                             rep_flag = False
-                elif split_line[0] == '#=GR':
-                    line = line.replace(split_line[1], seq_name, 1)
-                    outfile.write(line)
 
     if write_metadata:
         familyfile.close()
@@ -531,9 +526,9 @@ def main():
 
             # main strategy continue, if not converged
             hmmalign_res, _, _ = run_hmmalign(hmm, filtered_seqs)
-            align_msa = run_pytrimal_reps(hmmalign_res, args.max_seq_identity, args.max_seed_seqs) # removes redundant sequences
-            align_msa = clip_ends(align_msa, args.max_gap_occupancy) # removes gaps above threshold at ends
-            seed_msa = align_msa.digitize(ALPHABET)
+            full_msa = run_pytrimal_reps(hmmalign_res, args.max_seq_identity, args.max_seed_seqs) # removes redundant sequences
+            full_msa = clip_ends(full_msa, args.max_gap_occupancy) # removes gaps above threshold at ends
+            seed_msa = full_msa.digitize(ALPHABET)
 
         # Exiting family loop
         if (discard_flag): # unsuccessfully
@@ -555,7 +550,7 @@ def main():
             with open(tmp_seed_msa_path, "wb") as dst:
                 seed_msa.write(dst, format="pfam")
             with open(tmp_full_msa_path, "wb") as dst:
-                align_msa.write(dst, format="pfam")
+                full_msa.write(dst, format="pfam")
 
             renumber_sto_msa(
                 in_sto_file=tmp_seed_msa_path,
