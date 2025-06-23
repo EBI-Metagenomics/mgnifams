@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-include { ANNOTATE_REPS } from '../../../subworkflows/local/annotate_reps'
-// include { ANNOTATE_MODELS     } from '../../../subworkflows/local/annotate_models'
+include { ANNOTATE_REPS   } from '../../../subworkflows/local/annotate_reps'
+include { ANNOTATE_MODELS } from '../../../subworkflows/local/annotate_models'
 // include { PREDICT_STRUCTURES  } from '../../../subworkflows/local/predict_structures'
 // include { ANNOTATE_STRUCTURES } from '../../../subworkflows/local/annotate_structures'
 
@@ -11,6 +11,7 @@ workflow ANNOTATE_FAMILIES {
     funfams_path
     seed_msa
     full_msa
+    hh_mode
 
     main:
     ch_versions = Channel.empty()
@@ -38,8 +39,8 @@ workflow ANNOTATE_FAMILIES {
     //     }
     //     .set { hmmalign_msa_ch }
 
-    // ch_pfam_hits = ANNOTATE_MODELS(seed_msa_ch).pfam_hits
-    // ch_versions = ch_versions.mix( ANNOTATE_MODELS.out.versions )
+    ANNOTATE_MODELS( seed_msa, hh_mode )
+    ch_versions = ch_versions.mix( ANNOTATE_MODELS.out.versions )
     
     // ch_structures = PREDICT_STRUCTURES(hmmalign_msa_ch)
     // ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
@@ -53,7 +54,7 @@ workflow ANNOTATE_FAMILIES {
 
     emit:
     versions      = ch_versions
-    // pfam_hits     = ch_pfam_hits
+    // pfam_hits     = ANNOTATE_MODELS.out.pfam_hits
     // foldseek_hits = ch_foldseek_hits
     // scores        = ch_scores
     // cif           = ch_cif

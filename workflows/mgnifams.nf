@@ -44,6 +44,7 @@ workflow MGNIFAMS {
     similarity_score_threshold
     starting_id
     funfams_path
+    hh_mode
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -68,7 +69,8 @@ workflow MGNIFAMS {
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, funfams_path, \
-        GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa )
+        GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
+        hh_mode )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
     // TODO
