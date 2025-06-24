@@ -392,11 +392,6 @@
                     "default": "hhblits",
                     "description": "hhblits (fast) or hhsearch (sensitive)"
                 },
-                "hhdb_name": {
-                    "type": "string",
-                    "default": "pfam",
-                    "description": "db used in hhblits/hhsearch"
-                },
                 "pdb_chunk_size": {
                     "type": "integer",
                     "default": 50,

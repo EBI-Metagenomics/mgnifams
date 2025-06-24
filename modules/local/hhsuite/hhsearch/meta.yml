@@ -1,12 +1,11 @@
----
-# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
 name: "hhsuite_hhsearch"
-description: search an HHsuite database with a query sequence or MSA
+description: Sensitive protein sequence searching based on the pairwise alignment
+  of hidden Markov models (HMMs)
 keywords:
+  - sensitive search
   - HMM
-  - search
-  - comparison
-  - MSA
+  - alignment
 tools:
   - "hhsuite":
       description: "HH-suite3 for fast remote homology detection and deep protein annotation"
@@ -15,36 +14,47 @@ tools:
       tool_dev_url: "https://github.com/soedinglab/hh-suite"
       doi: "10.1371/journal.pone.0082138"
       licence: ["GPL v3"]
+      identifier: biotools:hh-suite
 input:
-  - meta:
-      type: map
-      description: |
-        Groovy Map containing sample information
-        e.g. `[ id:'test', single_end:false ]`
-  - a3m:
-      type: file
-      description: Multiple sequence alignment file in a3m format
-      pattern: "*.a3m"
-  - hmm_db:
-      type: directory
-      description: Directory containing HH specific database files
-      pattern: "*"
-  - db_name:
-      type: string
-      description: Prefix of the database files in hmm_db folder (e.g. pfam)
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'sample1' ]`
+    - aln:
+        type: file
+        description: Input multiple sequence alignment file in a2m or a3m format
+        pattern: "*.{a2m,a2m.gz,a3m,a3m.gz}"
+        ontologies:
+          - edam: "http://edamontology.org/format_3281" # A2M
+  - - meta2:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'sample1' ]`
+    - hh_db:
+        type: directory
+        description: Input hhsuite formatted database
+        pattern: "*/"
 output:
-  - meta:
-      type: map
-      description: |
-        Groovy Map containing sample information
-        e.g. `[ id:'test', single_end:false ]`
   - hhr:
-      type: file
-      description: File containing the result hits of the MSA input against the database of HH hmm models
-      pattern: "*.hhr"
+      - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "*.hhr":
+          type: file
+          description: Human-readable result file in a custom text format designed by the HH-suite
+          pattern: "*.hhr"
   - versions:
-      type: file
-      description: File containing software versions
-      pattern: "versions.yml"
+      - versions.yml:
+          type: file
+          description: File containing software versions
+          pattern: "versions.yml"
+          ontologies:
+            - edam: http://edamontology.org/format_3750 # YAML
 authors:
+  - "@vagkaratzas"
+maintainers:
   - "@vagkaratzas"

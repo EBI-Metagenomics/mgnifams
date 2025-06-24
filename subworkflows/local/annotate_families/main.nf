@@ -13,7 +13,6 @@ workflow ANNOTATE_FAMILIES {
     full_msa
     hh_mode
     hhdb_path
-    hhdb_name
 
     main:
     ch_versions = Channel.empty()
@@ -41,7 +40,7 @@ workflow ANNOTATE_FAMILIES {
     //     }
     //     .set { hmmalign_msa_ch }
 
-    ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path, hhdb_name )
+    ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path )
     ch_versions = ch_versions.mix( ANNOTATE_MODELS.out.versions )
     
     // ch_structures = PREDICT_STRUCTURES(hmmalign_msa_ch)
