@@ -3,7 +3,7 @@
         "content": [
             [
                 {
-                    "HHSUITE_HHBLITS": {
+                    "HHSUITE_HHSEARCH": {
                         "hh-suite": "3.3.0"
                     }
                 }
@@ -13,7 +13,7 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.4"
         },
-        "timestamp": "2025-06-24T10:38:48.008591861"
+        "timestamp": "2025-06-24T17:00:28.364875958"
     },
     "multiplesequencealign - setoxin - a3m - stub": {
         "content": [
@@ -27,7 +27,7 @@
                     ]
                 ],
                 "1": [
-                    "versions.yml:md5,fd681533d725c041db71d10567cabaea"
+                    "versions.yml:md5,df43f8a583474e309ea0897b5bc95afc"
                 ],
                 "hhr": [
                     [
@@ -38,7 +38,7 @@
                     ]
                 ],
                 "versions": [
-                    "versions.yml:md5,fd681533d725c041db71d10567cabaea"
+                    "versions.yml:md5,df43f8a583474e309ea0897b5bc95afc"
                 ]
             }
         ],
@@ -46,6 +46,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.4"
         },
-        "timestamp": "2025-06-24T10:38:56.32982718"
+        "timestamp": "2025-06-24T17:00:36.433732721"
     }
 }

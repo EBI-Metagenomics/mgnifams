@@ -7,12 +7,12 @@
         "nf-core": {
           "cat/cat": {
             "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "foldseek/createdb": {
             "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "foldseek/easysearch": {
@@ -25,9 +25,14 @@
             "git_sha": "ec969dbd5a778b5b2c1204f14d5622edc064b805",
             "installed_by": ["modules"]
           },
+          "hhsuite/hhsearch": {
+            "branch": "master",
+            "git_sha": "b3c8ac6683cbb871ec8ab4bd83a9bb7974681d85",
+            "installed_by": ["modules"]
+          },
           "hhsuite/reformat": {
             "branch": "master",
-            "git_sha": "810bcdae8c7667a5c61dcef6289bbb1e9c78c51e",
+            "git_sha": "42a304570b75122f9948dde6c34182e4d6bb22b3",
             "installed_by": ["modules"]
           },
           "hmmer/hmmsearch": {
@@ -53,12 +58,12 @@
           },
           "multiqc": {
             "branch": "master",
-            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+            "git_sha": "e594e9dfaffa7572afc11bafc634984fd4cbd87b",
             "installed_by": ["modules"]
           },
           "pigz/uncompress": {
             "branch": "master",
-            "git_sha": "db63f85c5ad0cea2a5e21b79a3851d0dabe9d351",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "s4pred/runmodel": {
