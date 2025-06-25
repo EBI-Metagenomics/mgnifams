@@ -389,7 +389,7 @@
             "properties": {
                 "hh_mode": {
                     "type": "string",
-                    "default": "hhblits",
+                    "default": "hhsearch",
                     "description": "hhblits (fast) or hhsearch (sensitive)"
                 },
                 "pdb_chunk_size": {
