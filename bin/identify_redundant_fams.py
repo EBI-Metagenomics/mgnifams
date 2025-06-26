@@ -165,8 +165,10 @@ def identify_redundant_fams(domtbl, metadata, edgelist, length_threshold,
         if score >= redundant_score_threshold:
             if int(row["query size"]) < int(row["target size"]):
                 redundant_fam_names.add(fam1)
-            else:
+            elif int(row["query size"]) > int(row["target size"]):
                 redundant_fam_names.add(fam2)
+            else: # sizes equal, keep alphabetically first as non-redundant to avoid triangular deletions
+                redundant_fam_names.add(max(fam1, fam2))
         elif score >= similarity_score_threshold:
             similarity_rows.append((fam1, fam2, score))
     print("✅ Jaccard scores calculated")

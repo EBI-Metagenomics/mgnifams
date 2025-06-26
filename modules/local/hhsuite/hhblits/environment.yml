@@ -1,6 +1,0 @@
-name: hhsuite_hhblits
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - bioconda::hhsuite=3.3.0

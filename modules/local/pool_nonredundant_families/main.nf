@@ -9,10 +9,9 @@ process POOL_NONREDUNDANT_FAMILIES {
 
     input:
     tuple val(meta)  , path(seed_msa_sto_ch, stageAs: "families_prepooled/seed_msa_sto/*")
-    tuple val(meta2) , path(msa_sto_ch     , stageAs: "families_prepooled/msa_sto/*")
+    tuple val(meta2) , path(msa_sto_ch     , stageAs: "families_prepooled/full_msa_sto/*")
     tuple val(meta3) , path(hmm_ch         , stageAs: "families_prepooled/hmm/*")
     tuple val(meta4) , path(rf_ch          , stageAs: "families_prepooled/rf/*")
-    tuple val(meta5) , path(domtblout_ch   , stageAs: "families_prepooled/domtblout/*")
     tuple val(meta6) , path(tsv_ch         , stageAs: "families_prepooled/refined_families/*")
     tuple val(meta7) , path(discarded_ch   , stageAs: "families_prepooled/discarded_clusters/*")
     tuple val(meta8) , path(successful_ch  , stageAs: "families_prepooled/successful_clusters/*")
@@ -26,10 +25,9 @@ process POOL_NONREDUNDANT_FAMILIES {
 
     output:
     tuple val(meta)  , path("families/seed_msa_sto/*")         , emit: seed_msa_sto
-    tuple val(meta2) , path("families/msa_sto/*")              , emit: msa_sto
+    tuple val(meta2) , path("families/full_msa_sto/*")         , emit: full_msa_sto
     tuple val(meta3) , path("families/hmm/*")                  , emit: hmm
     tuple val(meta4) , path("families/rf/*")                   , emit: rf
-    tuple val(meta5) , path("families/domtblout/*")            , emit: domtblout
     tuple val(meta6) , path("families/refined_families.tsv")   , emit: tsv
     tuple val(meta7) , path("families/discarded_clusters.txt") , emit: discarded
     tuple val(meta8) , path("families/successful_clusters.txt"), emit: successful
@@ -68,14 +66,12 @@ process POOL_NONREDUNDANT_FAMILIES {
     touch families/similarity_mqc.csv
 
     touch test.txt
-    mkdir families/msa_sto
-    cp test.txt families/msa_sto/
+    mkdir families/full_msa_sto
+    cp test.txt families/full_msa_sto/
     mkdir families/hmm
     cp test.txt families/hmm/
     mkdir families/rf
     cp test.txt families/rf/
-    mkdir families/domtblout
-    cp test.txt families/domtblout/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

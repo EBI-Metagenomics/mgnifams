@@ -138,25 +138,6 @@ def translate_directory(input_dir):
         if (input_dir == 'hmm'):
             update_hmm_name_inplace(destination_path)
 
-def pool_nonredundant_reps(input_folder, output_file):
-    path_to_folder = os.path.join(arg_families_dir, input_folder)
-    output_file    = os.path.join(arg_out_dir, output_file) 
-    with open(output_file, 'w') as out_f:
-        for filename in sorted(os.listdir(path_to_folder)):
-            file_path = os.path.join(path_to_folder, filename)
-            if not os.path.isfile(file_path) or not filename.endswith(('.fa', '.fasta', '.faa')):
-                continue
-            
-            with open(file_path, 'r') as fasta_file:
-                write_sequence = False
-                for line in fasta_file:
-                    if line.startswith('>'):
-                        seq_id = line.strip().split("\t")[1] if '\t' in line else None
-                        write_sequence = seq_id not in redundant_fam_ids
-                    
-                    if write_sequence:
-                        out_f.write(line)
-
 def translate_edgelist(file_path, out_path):
     if os.path.getsize(file_path) == 0:
         shutil.copy(file_path, out_path)
@@ -181,6 +162,34 @@ def translate_edgelist(file_path, out_path):
 
                 # Preserve quotes in output
                 outfile.write(f'{row_num},"{mapped_fam1}","{mapped_fam2}",{score}\n')
+
+def pool_nonredundant_reps(input_folder, output_file):
+    path_to_folder = os.path.join(arg_families_dir, input_folder)
+    output_file    = os.path.join(arg_out_dir, output_file) 
+
+    with open(output_file, 'w') as out_f:
+        for filename in sorted(os.listdir(path_to_folder)):
+            file_path = os.path.join(path_to_folder, filename)
+            if not os.path.isfile(file_path) or not filename.endswith(('.fa', '.fasta', '.faa')):
+                continue
+            
+            with open(file_path, 'r') as fasta_file:
+                write_sequence = False
+                for line in fasta_file:
+                    if line.startswith('>'):
+                        parts = line.strip().split('\t')
+                        seq_id = parts[0]
+                        fam_id = parts[1] if len(parts) > 1 else None
+
+                        # Skip if description is missing or marked redundant
+                        write_sequence = fam_id and fam_id not in redundant_fam_ids
+                        
+                        if write_sequence:
+                            # Map description to new ID
+                            mapped_id = family_to_id.get(fam_id, fam_id)
+                            out_f.write(f"{seq_id}\t{mapped_id}\n")
+                    elif write_sequence:
+                        out_f.write(line)
 
 def main(args=None):
     args = parse_args(args)
@@ -208,9 +217,8 @@ def main(args=None):
 
     translate_directory('rf')
     translate_directory('hmm')
-    translate_directory('msa_sto')
+    translate_directory('full_msa_sto')
     translate_directory('seed_msa_sto')
-    translate_directory('domtblout')
     translate_edgelist(arg_similarity_edgelist, \
         os.path.join(arg_out_dir, 'similarity_mqc.csv'))
     

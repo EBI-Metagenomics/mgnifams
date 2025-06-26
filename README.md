@@ -148,7 +148,7 @@ Example usage:
 nextflow run main.nf -c path/to/local.config -profile test,local,conda,singularity --input assets/test_data/mgnifams_input.fa  --fasta_input_mode true
 ```
 **
-The HHsuite Pfam database (https://wwwuser.gwdguser.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/pfamA_35.0.tar.gz) and the respective foldseek databases (foldseek downloads command for PDB and optionally AlphaFold and ESMAtlas, https://github.com/steineggerlab/foldseek) must be downloaded by the user and the parameters **hhdb_folder_path** and **foldseek_db_path** must be set accordingly. A working conda environment for esm-fold must be also set manually, and the **esm_conda_path** parameter must be updated with that path.
+The HHsuite Pfam database (https://wwwuser.gwdguser.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/pfamA_35.0.tar.gz) and the respective foldseek databases (foldseek downloads command for PDB and optionally AlphaFold and ESMAtlas, https://github.com/steineggerlab/foldseek) must be downloaded by the user and the parameters **hhdb_path** and **foldseek_db_path** must be set accordingly. A working conda environment for esm-fold must be also set manually, and the **esm_conda_path** parameter must be updated with that path.
 
 <details>
   <summary>Show conda env recipe</summary>

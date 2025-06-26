@@ -1,0 +1,417 @@
+{
+    "mgnifam - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "10": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "11": [
+                    "versions.yml:md5,57a15826dc5606e666123e004f7a4ad6"
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "4": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "5": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "6": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "7": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "8": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "9": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "converged": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "discarded": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "fasta": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "full_msa_sto": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "hmm": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "logs": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "metadata": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "rf": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "seed_msa_sto": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "successful": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "tsv": [
+                    [
+                        {
+                            "id": "clustering",
+                            "chunk": "test"
+                        },
+                        "test.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,57a15826dc5606e666123e004f7a4ad6"
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "25.04.4"
+        },
+        "timestamp": "2025-06-23T12:22:17.478230787"
+    },
+    "mgnifam": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "clustering",
+                        "chunk": "test"
+                    },
+                    [
+                        "test_1.sto:md5,e9879383e352b3a598689381bf718fbe",
+                        "test_2.sto:md5,62f820c2af7b62794d0863de5e8fc724",
+                        "test_3.sto:md5,22cf1a0e10bdb682fe136ffc8f18f6bc"
+                    ]
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "clustering",
+                        "chunk": "test"
+                    },
+                    [
+                        "test_1.sto:md5,d5dc02beda0afc8bc491aad7b7905b6d",
+                        "test_2.sto:md5,ba62aa128345bd62ca0770fe39eb031b",
+                        "test_3.sto:md5,777445cdd969ca578d0003e336cafef8"
+                    ]
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "clustering",
+                        "chunk": "test"
+                    },
+                    [
+                        "test_1.txt:md5,d443c6cd68c1fd967087df53f0d1a6ec",
+                        "test_2.txt:md5,87d34de222811c59e8ad4914a716346f",
+                        "test_3.txt:md5,be417c27c7b151f8ca034b2e591bc598"
+                    ]
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "clustering",
+                        "chunk": "test"
+                    },
+                    "test.tsv:md5,0d8812fe3b677324f09742e25a23aed4"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "clustering",
+                        "chunk": "test"
+                    },
+                    "test.txt:md5,fecb9bcd7d54480c4134f38e7d18ed3f"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "clustering",
+                        "chunk": "test"
+                    },
+                    "test.txt:md5,26ab0db90d72e28ad0ba1e22ee510510"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "clustering",
+                        "chunk": "test"
+                    },
+                    "test.csv:md5,dc15a28247b15f397cb40f728b23a03c"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "clustering",
+                        "chunk": "test"
+                    },
+                    "test.fasta:md5,c49a022d323caa3ed2a6b39f1284fb46"
+                ]
+            ],
+            [
+                {
+                    "GENERATE_FAMILIES": {
+                        "python": "3.13.5",
+                        "pandas": "2.3.0",
+                        "pyfamsa": "0.5.3.post1",
+                        "pyhmmer": "0.11.1",
+                        "pytrimal": "0.8.1",
+                        "numpy": "2.3.0",
+                        "biopython": 1.85
+                    }
+                }
+            ]
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "25.04.4"
+        },
+        "timestamp": "2025-06-23T12:22:00.500429381"
+    },
+    "mgnifam - long (>200aa)": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test_1.sto:md5,b3bab4ba8c273651cc062c1b8b1941fb"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test_1.sto:md5,f56d53736819d50ba0708c313d281c63"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test_1.txt:md5,1de9d5ab9537b080ccea7fe0e30dfd38"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.tsv:md5,3b4a1a56ad1982721859823afc52602d"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.txt:md5,48edcb49e52eadb29ce70076f6d5aa30"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.txt:md5,b026324c6904b2a9cb4b88d6d61c81d1"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.csv:md5,4cdde5a114e730be010778f6a2c19261"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "cluster_long",
+                        "chunk": "test"
+                    },
+                    "test.fasta:md5,03aae1592c190b70c76c4d708a5dbd3a"
+                ]
+            ],
+            [
+                {
+                    "GENERATE_FAMILIES": {
+                        "python": "3.13.5",
+                        "pandas": "2.3.0",
+                        "pyfamsa": "0.5.3.post1",
+                        "pyhmmer": "0.11.1",
+                        "pytrimal": "0.8.1",
+                        "numpy": "2.3.0",
+                        "biopython": 1.85
+                    }
+                }
+            ]
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "25.04.4"
+        },
+        "timestamp": "2025-06-23T12:22:08.983326219"
+    }
+}

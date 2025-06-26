@@ -4,13 +4,12 @@ process GENERATE_FAMILIES {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'quay.io/microbiome-informatics/mgnifams:3.2.2' :
-        'quay.io/microbiome-informatics/mgnifams:3.2.2' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e2/e26ce00244b6cc71edc451bb368f0e4e6ad2cf497f152337177ea0bff7d5cba1/data' :
+        'community.wave.seqera.io/library/python_pip_biopython_numpy_pruned:dd4bec78b7f08a4e' }"
     
     input:
     tuple val(meta) , path(clusters_chunk)
     tuple val(meta2), path(mgnifams_fasta)
-    tuple val(meta3), path(pyfastx_index)
     val(discard_min_rep_length)
     val(discard_max_rep_length)
     val(discard_min_starting_membership)
@@ -22,10 +21,9 @@ process GENERATE_FAMILIES {
 
     output:
     tuple val(meta), path("seed_msa_sto/*")       , emit: seed_msa_sto
-    tuple val(meta), path("msa_sto/*")            , emit: msa_sto
+    tuple val(meta), path("full_msa_sto/*")       , emit: full_msa_sto
     tuple val(meta), path("hmm/*")                , emit: hmm
     tuple val(meta), path("rf/*")                 , emit: rf
-    tuple val(meta), path("domtblout/*")          , emit: domtblout
     tuple val(meta), path("refined_families/*")   , emit: tsv
     tuple val(meta), path("discarded_clusters/*") , emit: discarded
     tuple val(meta), path("successful_clusters/*"), emit: successful
@@ -59,7 +57,6 @@ process GENERATE_FAMILIES {
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')
         pandas: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pandas'))")
-        pyfastx: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfastx'))")
         pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
         pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
         pytrimal: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pytrimal'))")
@@ -74,14 +71,12 @@ process GENERATE_FAMILIES {
     touch ${prefix}.txt
     mkdir seed_msa_sto
     cp ${prefix}.txt seed_msa_sto/
-    mkdir msa_sto
-    cp ${prefix}.txt msa_sto/
+    mkdir full_msa_sto
+    cp ${prefix}.txt full_msa_sto/
     mkdir hmm
     cp ${prefix}.txt hmm/
     mkdir rf
     cp ${prefix}.txt rf/
-    mkdir domtblout
-    cp ${prefix}.txt domtblout/
     mkdir refined_families
     cp ${prefix}.txt refined_families/
     mkdir discarded_clusters
@@ -93,15 +88,14 @@ process GENERATE_FAMILIES {
     mkdir family_metadata
     cp ${prefix}.txt family_metadata/
     mkdir logs
-    mv ${prefix}.txt logs/
+    cp ${prefix}.txt logs/
     mkdir family_reps
-    mv ${prefix}.fasta family_reps/
+    mv ${prefix}.txt family_reps/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')
         pandas: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pandas'))")
-        pyfastx: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfastx'))")
         pyfamsa: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyfamsa'))")
         pyhmmer: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pyhmmer'))")
         pytrimal: \$(python -c "import importlib.metadata; print(importlib.metadata.version('pytrimal'))")

@@ -389,13 +389,8 @@
             "properties": {
                 "hh_mode": {
                     "type": "string",
-                    "default": "hhblits",
+                    "default": "hhsearch",
                     "description": "hhblits (fast) or hhsearch (sensitive)"
-                },
-                "db_name": {
-                    "type": "string",
-                    "default": "pfam",
-                    "description": "db used in hhblits/hhsearch"
                 },
                 "pdb_chunk_size": {
                     "type": "integer",
@@ -432,7 +427,11 @@
             "description": "Paths to downloaded databases used by the pipeline.",
             "default": "",
             "properties": {
-                "hhdb_folder_path": {
+                "funfams_path": {
+                    "type": "string",
+                    "description": "For functional annotation of family representative sequences",
+                },
+                "hhdb_path": {
                     "type": "string",
                     "description": "annotate_models"
                 },
@@ -442,7 +441,8 @@
                 }
             },
             "required": [
-                "hhdb_folder_path",
+                "funfams_path",
+                "hhdb_path",
                 "foldseek_db_path"
             ]
         }

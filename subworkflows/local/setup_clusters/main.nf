@@ -28,7 +28,7 @@ workflow SETUP_CLUSTERS {
             input_csv_chunk_size, min_sequence_length, outdir ).fasta
         ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_FASTA.out.versions )
     } else {
-        ch_mgnifams_input_fa = channel.fromPath(input)
+        ch_mgnifams_input_fa = input
     }
 
     CHECK_QUALITY( ch_mgnifams_input_fa )
