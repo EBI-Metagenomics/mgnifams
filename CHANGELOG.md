@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
-- [#xx](https://github.com/EBI-Metagenomics/mgnifams/pull/xx) - Replaced in house `hhsuite/reformat` module with the nf-core one.
+- [#42](https://github.com/EBI-Metagenomics/mgnifams/pull/42) - Replaced in house `hhsuite/reformat`, `hhsuite/hhblits` and `hhsuite/hhsearch` modules with the nf-core ones.
 - [#39](https://github.com/EBI-Metagenomics/mgnifams/pull/39) - Further optimizations for MGnifams main algorithm, removing unnecessary I/O operations, by @althonos
 - [#37](https://github.com/EBI-Metagenomics/mgnifams/pull/37) - Added protein set Jaccard score calculation in `identify_redundant_fams.py`, for better estimation of family similarities, in addition to `hmmsearch` among families.
   Pipeline `params` moved to root `main.nf` file, and are being passed downstream to subworkflows.
@@ -38,7 +38,7 @@ Benchmark results: CPU usage decrease 37.6% - Memory decrease 0.36% - Job durati
 
 ### `Removed`
 
-- [#xx](https://github.com/EBI-Metagenomics/mgnifams/pull/xx) - Removed obsolete `reformat_msa` subworkflow, since sequence regions are now calculated inside the MGnifam algorithm.
+- [#42](https://github.com/EBI-Metagenomics/mgnifams/pull/42) - Removed obsolete `reformat_msa` subworkflow, since sequence regions are now calculated inside the MGnifam algorithm.
 
 ## v1.0.0 - [2024/10/01]
 
