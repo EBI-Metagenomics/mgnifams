@@ -9,10 +9,11 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
-include { SETUP_CLUSTERS                 } from "../subworkflows/local/setup_clusters"
-include { GENERATE_NONREDUNDANT_FAMILIES } from "../subworkflows/local/generate_nonredundant_families"
-include { ANNOTATE_FAMILIES              } from "../subworkflows/local/annotate_families"
-include { EXPORT_DATA                    } from "../subworkflows/local/export_data"
+include { SETUP_CLUSTERS                 } from '../subworkflows/local/setup_clusters'
+include { GENERATE_NONREDUNDANT_FAMILIES } from '../subworkflows/local/generate_nonredundant_families'
+include { PREDICT_STRUCTURES             } from '../subworkflows/local/predict_structures'
+include { ANNOTATE_FAMILIES              } from '../subworkflows/local/annotate_families'
+include { EXPORT_DATA                    } from '../subworkflows/local/export_data'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,9 +44,13 @@ workflow MGNIFAMS {
     redundant_score_threshold
     similarity_score_threshold
     starting_id
+    pdb_chunk_size
+    compute_mode
+    pdb_chunk_size_long
     funfams_path
     hh_mode
     hhdb_path
+    foldseek_db_path
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -69,12 +74,16 @@ workflow MGNIFAMS {
         similarity_score_threshold, starting_id )
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
+    PREDICT_STRUCTURES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, \
+        pdb_chunk_size, compute_mode, pdb_chunk_size_long, outdir )
+    ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
+    
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, funfams_path, \
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
-        hh_mode, hhdb_path )
+        hh_mode, hhdb_path ) //, PREDICT_STRUCTURES.out.pdb, foldseek_db_path, outdir
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
-    // TODO
+    // TODO update vs remove
     // EXPORT_DATA( GENERATE_NONREDUNDANT_FAMILIES.out.metadata, GENERATE_NONREDUNDANT_FAMILIES.out.converged, \
     //    GENERATE_NONREDUNDANT_FAMILIES.out.tsv, ANNOTATE_FAMILIES.out.pfam_hits, \
     //    ANNOTATE_FAMILIES.out.foldseek_hits, ANNOTATE_FAMILIES.out.scores )

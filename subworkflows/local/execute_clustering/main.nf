@@ -1,6 +1,6 @@
-include { MMSEQS_CREATEDB  } from "../../../modules/nf-core/mmseqs/createdb/main"
-include { MMSEQS_LINCLUST  } from "../../../modules/nf-core/mmseqs/linclust/main"
-include { MMSEQS_CREATETSV } from "../../../modules/nf-core/mmseqs/createtsv/main"
+include { MMSEQS_CREATEDB  } from '../../../modules/nf-core/mmseqs/createdb/main'
+include { MMSEQS_LINCLUST  } from '../../../modules/nf-core/mmseqs/linclust/main'
+include { MMSEQS_CREATETSV } from '../../../modules/nf-core/mmseqs/createtsv/main'
 
 workflow EXECUTE_CLUSTERING {
     take:

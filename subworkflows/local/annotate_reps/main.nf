@@ -1,5 +1,3 @@
-#!/usr/bin/env nextflow
-
 include { S4PRED_RUNMODEL                } from '../../../modules/nf-core/s4pred/runmodel/main'
 include { PARSE_S4PRED_TO_FEATURE_VIEWER } from '../../../modules/local/parse_s4pred_to_feature_viewer/main'
 include { HMMER_HMMSEARCH                } from '../../../modules/nf-core/hmmer/hmmsearch/main'

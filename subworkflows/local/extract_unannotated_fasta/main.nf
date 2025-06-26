@@ -1,6 +1,6 @@
-include { PIGZ_UNCOMPRESS            } from "../../../modules/nf-core/pigz/uncompress/main"
-include { BZ2_UNCOMPRESS             } from "../../../modules/local/bz2_uncompress/main"
-include { EXTRACT_UNANNOTATED_SLICES } from "../../../modules/local/extract_unannotated_slices/main"
+include { PIGZ_UNCOMPRESS            } from '../../../modules/nf-core/pigz/uncompress/main'
+include { BZ2_UNCOMPRESS             } from '../../../modules/local/bz2_uncompress/main'
+include { EXTRACT_UNANNOTATED_SLICES } from '../../../modules/local/extract_unannotated_slices/main'
 
 workflow EXTRACT_UNANNOTATED_FASTA {
     take:

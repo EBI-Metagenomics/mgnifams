@@ -1,5 +1,5 @@
-include { SEQKIT_STATS        } from "../../../modules/nf-core/seqkit/stats/main"
-include { SEQKIT_STATS_TO_MQC } from "../../../modules/local/seqkit_stats_to_mqc/main"
+include { SEQKIT_STATS        } from '../../../modules/nf-core/seqkit/stats/main'
+include { SEQKIT_STATS_TO_MQC } from '../../../modules/local/seqkit_stats_to_mqc/main'
 
 workflow CHECK_QUALITY {
     take:
