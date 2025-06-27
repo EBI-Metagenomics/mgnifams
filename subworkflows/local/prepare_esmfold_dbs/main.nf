@@ -55,6 +55,6 @@ workflow PREPARE_ESMFOLD_DBS {
     }
 
     emit:
-    params   = ch_params
     versions = ch_versions
+    params   = ch_params
 }

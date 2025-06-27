@@ -423,6 +423,15 @@
                     "default": "https://dl.fbaipublicfiles.com/fair-esm/regression/esm2_t36_3B_UR50D-contact-regression.pt",
                     "description": "Link to the ESMFold t36-3B-UR50D-contact-regression model",
                     "fa_icon": "fas fa-link"
+                },
+                "num_recycles_esmfold": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Specifies the number of recycles used by ESMFold",
+                    "fa_icon": "fas fa-server",
+                    "minimum": 1,
+                    "maximum": 20,
+                    "errorMessage": "Number of recycles must be a whole number between 1 and 20"
                 }
             }
         },

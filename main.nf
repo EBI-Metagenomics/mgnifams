@@ -52,6 +52,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.similarity_score_threshold, params.starting_id, \
             params.pdb_chunk_size, params.esmfold_db, params.esmfold_params_path, \
             params.esmfold_3B_v1, params.esm2_t36_3B_UR50D, params.esm2_t36_3B_UR50D_contact_regression, \
+            params.num_recycles_esmfold, \
             params.funfams_path, params.hh_mode, params.hhdb_path, params.foldseek_db_path, \
             params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
         ) // params.compute_mode, params.pdb_chunk_size_long, \
