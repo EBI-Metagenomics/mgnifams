@@ -20,10 +20,10 @@ process GENERATE_FAMILIES {
     val(recruit_hit_length_percentage)
 
     output:
-    tuple val(meta), path("seed_msa_sto/*")       , emit: seed_msa_sto
-    tuple val(meta), path("full_msa_sto/*")       , emit: full_msa_sto
-    tuple val(meta), path("hmm/*")                , emit: hmm
-    tuple val(meta), path("rf/*")                 , emit: rf
+    tuple val(meta), path("seed_msa_sto/*")       , emit: seed_msa_sto, optional: true
+    tuple val(meta), path("full_msa_sto/*")       , emit: full_msa_sto, optional: true
+    tuple val(meta), path("hmm/*")                , emit: hmm         , optional: true
+    tuple val(meta), path("rf/*")                 , emit: rf          , optional: true
     tuple val(meta), path("refined_families/*")   , emit: tsv
     tuple val(meta), path("discarded_clusters/*") , emit: discarded
     tuple val(meta), path("successful_clusters/*"), emit: successful

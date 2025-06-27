@@ -1,4 +1,4 @@
-// include { ESMFOLD                } from '../../../modules/local/esmfold/esmfold/main'
+include { ESMFOLD                } from '../../../modules/local/esmfold/esmfold/main'
 // include { EXTRACT_LONG_FA        } from '../../../modules/local/extract_long_fa/main'
 // include { ESMFOLD_CPU            } from '../../../modules/local/esmfold/esmfold_cpu/main'
 // include { EXTRACT_ESMFOLD_SCORES } from '../../../modules/local/extract_esmfold_scores/main'
@@ -24,10 +24,8 @@ workflow PREDICT_STRUCTURES {
             [ [id: meta.id, chunk: file(file_path, checkIfExists: true).getBaseName().split('\\.')[-1]], file_path ]
         }
 
-    ch_fasta.view()
-
-    // esmfold_result = ESMFOLD(fa_ch, compute_mode)
-    // ch_versions = ch_versions.mix( ESMFOLD.out.versions )
+    esmfold_result = ESMFOLD( ch_fasta, compute_mode )
+    ch_versions = ch_versions.mix( ESMFOLD.out.versions )
     
     // // Long sequences that cannot be run on GPU
     // fa_ch
