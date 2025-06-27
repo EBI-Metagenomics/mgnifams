@@ -1,4 +1,9 @@
-include { ESMFOLD                } from '../../../modules/local/esmfold/esmfold/main'
+include { PREPARE_ESMFOLD_DBS } from '../../../subworkflows/local/prepare_esmfold_dbs'
+// include { ESMFOLD             } from '../../../subworkflows/local/esmfold'
+
+// include { RUN_ESMFOLD_CONDA } from '../../../modules/local/run_esmfold_conda/main'
+// include { RUN_ESMFOLD       } from '../../../modules/local/run_esmfold/main'
+
 // include { EXTRACT_LONG_FA        } from '../../../modules/local/extract_long_fa/main'
 // include { ESMFOLD_CPU            } from '../../../modules/local/esmfold/esmfold_cpu/main'
 // include { EXTRACT_ESMFOLD_SCORES } from '../../../modules/local/extract_esmfold_scores/main'
@@ -8,9 +13,16 @@ workflow PREDICT_STRUCTURES {
     take:
     fasta
     pdb_chunk_size
-    compute_mode
-    pdb_chunk_size_long
-    outdir
+
+    esmfold_db
+    esmfold_params_path
+    esmfold_3B_v1
+    esm2_t36_3B_UR50D
+    esm2_t36_3B_UR50D_contact_regression
+
+    // compute_mode
+    // pdb_chunk_size_long // TODO maybe remove
+    // outdir
     
     main:
     ch_versions = Channel.empty()
@@ -24,8 +36,25 @@ workflow PREDICT_STRUCTURES {
             [ [id: meta.id, chunk: file(file_path, checkIfExists: true).getBaseName().split('\\.')[-1]], file_path ]
         }
 
-    esmfold_result = ESMFOLD( ch_fasta, compute_mode )
-    ch_versions = ch_versions.mix( ESMFOLD.out.versions )
+    PREPARE_ESMFOLD_DBS( esmfold_db, esmfold_params_path, esmfold_3B_v1, \
+        esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression )
+    ch_versions = ch_versions.mix( PREPARE_ESMFOLD_DBS.out.versions )
+
+    // ESMFOLD (
+    //     ch_fasta,
+    //     ch_versions,
+    //     PREPARE_ESMFOLD_DBS.out.params,
+    //     num_recycles_esmfold
+    // )
+    // ch_versions = ch_versions.mix( ESMFOLD.out.versions )
+
+    // if (workflow.profile.contains("conda")) {
+    //     esmfold_result = RUN_ESMFOLD_CONDA( ch_fasta, compute_mode )
+    //     ch_versions = ch_versions.mix( RUN_ESMFOLD_CONDA.out.versions )
+    // } else {
+    //     esmfold_result = RUN_ESMFOLD( ch_fasta, compute_mode )
+    //     ch_versions = ch_versions.mix( RUN_ESMFOLD.out.versions )
+    // }
     
     // // Long sequences that cannot be run on GPU
     // fa_ch
@@ -91,6 +120,9 @@ workflow PREDICT_STRUCTURES {
 
     emit:
     versions = ch_versions
+    // esm_multiqc = ESMFOLD.out.multiqc_report.collect()
+    // pdb         = ESMFOLD.out.pdb
+
     // scores   = ch_scores
     // pdb      = ch_pdb
     // cif      = ch_cif

@@ -1,9 +1,10 @@
-process ESMFOLD {
+process RUN_ESMFOLD_CONDA {
     tag "$meta.id"
     // label 'process_high'
     label 'gpu'
 
     conda params.esm_conda_path
+    // conda "${moduleDir}/environment.yml"
 
     input:
     tuple val(meta), path(fasta)

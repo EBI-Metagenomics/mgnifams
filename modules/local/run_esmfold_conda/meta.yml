@@ -1,6 +1,6 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
-name: "esmfold"
+name: "run_esmfold_conda"
 description: Predict protein structures out of amino acid sequences
 keywords:
   - protein

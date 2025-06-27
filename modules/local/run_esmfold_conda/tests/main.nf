@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-include { ESMFOLD } from '../../esmfold/main'
+include { RUN_ESMFOLD_CONDA } from '../../run_esmfold_conda/main'
 
 workflow test_esmfold {
 
@@ -11,7 +11,7 @@ workflow test_esmfold {
         file("tests/modules/ebi-metagenomics/esmfold/data/one_protein.fasta", checkIfExists: true) // params.test_data['sarscov2']['genome']['proteome_fasta']
     ]
 
-    ESMFOLD ( input, "cpu" )
+    RUN_ESMFOLD_CONDA ( input, "cpu" )
 }
 
 workflow test_esmfold_gpu {
@@ -21,5 +21,5 @@ workflow test_esmfold_gpu {
         file("tests/modules/ebi-metagenomics/esmfold/data/one_protein.fasta", checkIfExists: true)
     ]
 
-    ESMFOLD ( input, "gpu" )
+    RUN_ESMFOLD_CONDA ( input, "gpu" )
 }

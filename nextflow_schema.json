@@ -382,6 +382,50 @@
                 }
             }
         },
+        "structural_prediction_params": {
+            "title": "structural_prediction_params",
+            "type": "object",
+            "description": "Parameters for predict_structures subworkflow",
+            "properties": {
+                "pdb_chunk_size": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "Chunk size for parallel structure prediction"
+                },
+                "esmfold_db": {
+                    "type": "string",
+                    "format": "path",
+                    "exists": true,
+                    "description": "Specifies the PARAMS path used by 'esmfold' mode",
+                    "fa_icon": "fas fa-folder-open",
+                    "errorMessage": "Please provide a valid path to ESMFold database"
+                },
+                "esmfold_params_path": {
+                    "type": "string",
+                    "description": "Link to the ESMFold parameters",
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "null/params/*"
+                },
+                "esmfold_3B_v1": {
+                    "type": "string",
+                    "default": "https://dl.fbaipublicfiles.com/fair-esm/models/esmfold_3B_v1.pt",
+                    "description": "Link to the ESMFold 3B-v1 model",
+                    "fa_icon": "fas fa-link"
+                },
+                "esm2_t36_3B_UR50D": {
+                    "type": "string",
+                    "default": "https://dl.fbaipublicfiles.com/fair-esm/models/esm2_t36_3B_UR50D.pt",
+                    "description": "Link to the ESMFold t36-3B-UR50D model",
+                    "fa_icon": "fas fa-link"
+                },
+                "esm2_t36_3B_UR50D_contact_regression": {
+                    "type": "string",
+                    "default": "https://dl.fbaipublicfiles.com/fair-esm/regression/esm2_t36_3B_UR50D-contact-regression.pt",
+                    "description": "Link to the ESMFold t36-3B-UR50D-contact-regression model",
+                    "fa_icon": "fas fa-link"
+                }
+            }
+        },
         "annotation_params": {
             "title": "annotation_params",
             "type": "object",
@@ -391,21 +435,6 @@
                     "type": "string",
                     "default": "hhsearch",
                     "description": "hhblits (fast) or hhsearch (sensitive)"
-                },
-                "pdb_chunk_size": {
-                    "type": "integer",
-                    "default": 50,
-                    "description": "Chunk size for parallel structure prediction"
-                },
-                "pdb_chunk_size_long": {
-                    "type": "integer",
-                    "default": 10,
-                    "description": "Chunk size for parallel structure prediction for long sequences"
-                },
-                "compute_mode": {
-                    "type": "string",
-                    "default": "gpu",
-                    "description": "GPU or CPU mode, depending on sequence length"
                 }
             }
         },
@@ -462,6 +491,9 @@
         },
         {
             "$ref": "#/defs/family_generation_params"
+        },
+        {
+            "$ref": "#/defs/structural_prediction_params"
         },
         {
             "$ref": "#/defs/annotation_params"
