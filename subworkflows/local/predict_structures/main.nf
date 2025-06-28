@@ -1,8 +1,6 @@
-include { PREPARE_ESMFOLD_DBS } from '../../../subworkflows/local/prepare_esmfold_dbs'
-include { RUN_ESMFOLD         } from '../../../modules/local/run_esmfold'
-
-// include { RUN_ESMFOLD_CONDA } from '../../../modules/local/run_esmfold_conda/main'
-// include { RUN_ESMFOLD       } from '../../../modules/local/run_esmfold/main'
+include { PREPARE_ESMFOLD_DBS             } from '../../../subworkflows/local/prepare_esmfold_dbs'
+include { RUN_ESMFOLD                     } from '../../../modules/local/run_esmfold'
+// include { RUN_ESMFOLD as RUN_ESMFOLD_LONG } from '../../../modules/local/run_esmfold'
 
 // include { EXTRACT_LONG_FA        } from '../../../modules/local/extract_long_fa/main'
 // include { ESMFOLD_CPU            } from '../../../modules/local/esmfold/esmfold_cpu/main'

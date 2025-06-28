@@ -1,8 +1,10 @@
 process RUN_ESMFOLD {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
     label 'process_gpu'
 
+    conda params.esm_conda_path
+    // conda "${moduleDir}/environment.yml" // Throws error
     container "nf-core/proteinfold_esmfold:1.1.1"
 
     input:
@@ -19,9 +21,6 @@ process RUN_ESMFOLD {
     task.ext.when == null || task.ext.when
 
     script:
-    if (workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1) {
-        error("Local RUN_ESMFOLD module does not support Conda. Please use Docker / Singularity / Podman instead.")
-    }
     def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
     def VERSION = '1.0.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
@@ -31,11 +30,11 @@ process RUN_ESMFOLD {
     """
     awk '{if (\$0 ~ /^>/) {gsub(/^>/, "", \$1); split(\$1, id, " "); gsub("/", "_", id[1]); print ">" id[1]} else {print}}' ${fasta} > parsed.fasta
 
-    esm-fold \
-        -i parsed.fasta \
-        -o \$PWD \
-        -m \$PWD \
-        --num-recycles ${numRec} \
+    esm-fold \\
+        -i parsed.fasta \\
+        -o \$PWD \\
+        -m \$PWD \\
+        --num-recycles ${numRec} \\
         $args > ${prefix}_scores.txt
 
     cat <<-END_VERSIONS > versions.yml
