@@ -3,7 +3,7 @@ process RUN_ESMFOLD {
     label 'process_medium'
     label 'process_gpu'
 
-    container "nf-core/proteinfold_esmfold:dev"
+    container "nf-core/proteinfold_esmfold:1.1.1"
 
     input:
     tuple val(meta), path(fasta)
@@ -11,16 +11,9 @@ process RUN_ESMFOLD {
     val numRec
 
     output:
-    tuple val(meta), path ("${meta.id}_esmfold.pdb")  , emit: top_ranked_pdb
-    tuple val(meta), path ("*.pdb")                   , emit: pdb
-    tuple val(meta), path ("${meta.id}_plddt.tsv")    , emit: multiqc
-    // No MSA information in ESMFold
-    // PAE from ESMFold is an absolute pain to retrieve, skipping.
-    // https://github.com/facebookresearch/esm/issues/582
-    // Since neither MSA or PAE exist, the optional will be handled with a NO_FILE in main.nf
-    tuple val(meta), path ("${meta.id}_msa.tsv")      , optional: true, emit: msa
-    tuple val(meta), path ("${meta.id}_*_pae.tsv")    , optional: true, emit: paes
-    path "versions.yml"                               , emit: versions
+    tuple val(meta), path ("*.pdb")              , emit: pdb
+    tuple val(meta), path("${prefix}_scores.txt"), emit: scores
+    path "versions.yml"                          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -30,21 +23,20 @@ process RUN_ESMFOLD {
         error("Local RUN_ESMFOLD module does not support Conda. Please use Docker / Singularity / Podman instead.")
     }
     def args = task.ext.args ?: ''
+    prefix = task.ext.prefix ?: "${meta.id}"
     def VERSION = '1.0.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
 
     // KR - note: removed the *.pdb -> tmp.pdb, tmp.pdb  -> esmfold.pdb. Why not just take directly?
     // Only one .pdb per ESMFold run
     """
+    awk '{if (\$0 ~ /^>/) {gsub(/^>/, "", \$1); split(\$1, id, " "); gsub("/", "_", id[1]); print ">" id[1]} else {print}}' ${fasta} > parsed.fasta
+
     esm-fold \
-        -i ${fasta} \
+        -i parsed.fasta \
         -o \$PWD \
         -m \$PWD \
         --num-recycles ${numRec} \
-        $args
-
-    mv  *.pdb ${meta.id}_esmfold.pdb
-    extract_metrics.py --name ${meta.id} \\
-        --structs ${meta.id}_esmfold.pdb
+        $args > ${prefix}_scores.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -53,10 +45,11 @@ process RUN_ESMFOLD {
     """
 
     stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
     def VERSION = '1.0.3' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
-    touch "${meta.id}_esmfold.pdb"
-    touch "${meta.id}_plddt.tsv"
+    touch "test.pdb"
+    touch "${prefix}_scores.txt"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

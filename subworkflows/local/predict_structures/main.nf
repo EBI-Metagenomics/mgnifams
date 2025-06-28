@@ -1,5 +1,5 @@
 include { PREPARE_ESMFOLD_DBS } from '../../../subworkflows/local/prepare_esmfold_dbs'
-include { ESMFOLD             } from '../../../subworkflows/local/esmfold'
+include { RUN_ESMFOLD         } from '../../../modules/local/run_esmfold'
 
 // include { RUN_ESMFOLD_CONDA } from '../../../modules/local/run_esmfold_conda/main'
 // include { RUN_ESMFOLD       } from '../../../modules/local/run_esmfold/main'
@@ -40,8 +40,8 @@ workflow PREDICT_STRUCTURES {
         esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression )
     ch_versions = ch_versions.mix( PREPARE_ESMFOLD_DBS.out.versions )
 
-    ESMFOLD ( ch_fasta, PREPARE_ESMFOLD_DBS.out.params, num_recycles_esmfold )
-    ch_versions = ch_versions.mix( ESMFOLD.out.versions )
+    RUN_ESMFOLD( ch_fasta, PREPARE_ESMFOLD_DBS.out.params, num_recycles_esmfold )
+    ch_versions = ch_versions.mix( RUN_ESMFOLD.out.versions )
 
     // if (workflow.profile.contains("conda")) {
     //     esmfold_result = RUN_ESMFOLD_CONDA( ch_fasta, compute_mode )
