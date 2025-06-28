@@ -21,8 +21,7 @@ workflow PREDICT_STRUCTURES {
     esm2_t36_3B_UR50D_contact_regression
     num_recycles_esmfold
 
-    // compute_mode
-    // pdb_chunk_size_long // TODO maybe remove
+    // pdb_chunk_size_long
     // outdir
     
     main:
