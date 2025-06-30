@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
 import os
+import argparse
 import numpy as np
 from Bio.PDB import PDBParser, MMCIFIO
 import subprocess
@@ -75,12 +75,13 @@ def concat_files(file1, file2, output_file):
     subprocess.run(command, shell=True, check=True, executable='/bin/bash')
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python parse_to_cif.py <pdb_file> <output_file>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Convert a PDB file to a combined CIF format.")
+    parser.add_argument("--pdb_file", help="Path to the input PDB file")
+    parser.add_argument("--output_file", help="Path to the output CIF file")
+    args = parser.parse_args()
 
-    pdb_file    = sys.argv[1]
-    output_file = sys.argv[2]
+    pdb_file    = args.pdb_file
+    output_file = args.output_file
     file1       = "temp1.cif"
     file2       = "temp2.cif"
 
@@ -88,7 +89,7 @@ def main():
     process_pdb(pdb_file, file1)
     append_cif_model(pdb_file, file2)
     concat_files(file1, file2, output_file)
-    
+
     os.remove(file1)
     os.remove(file2)
 

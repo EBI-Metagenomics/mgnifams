@@ -3,7 +3,7 @@ include { RUN_ESMFOLD                    } from '../../../modules/local/run_esmf
 include { EXTRACT_CUDA_FAILED            } from '../../../modules/local/extract_cuda_failed/main'
 include { RUN_ESMFOLD as RUN_ESMFOLD_CPU } from '../../../modules/local/run_esmfold'
 include { EXTRACT_ESMFOLD_SCORES         } from '../../../modules/local/extract_esmfold_scores/main'
-// include { PARSE_CIF              } from '../../../modules/local/parse_cif/main'
+include { PARSE_CIF                      } from '../../../modules/local/parse_cif/main'
 
 workflow PREDICT_STRUCTURES {
     take:
@@ -73,21 +73,29 @@ workflow PREDICT_STRUCTURES {
         .map { file ->
             [ [id: "scores"], file ]
         }
-    
-    // PARSE_CIF( RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb) )
-    // // TODO ch_versions = ch_versions.mix( PARSE_CIF.out.versions )
 
-    // ch_cif = PARSE_CIF.out.cif
-    //     .map { meta, file_path ->
-    //         file_path }
-    //     .collect()
-    //     .map { file ->
-    //         [ [id: "cif"], file ]
-    //     }
+    PARSE_CIF( RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb) )
+    ch_versions = ch_versions.mix( PARSE_CIF.out.versions )
+
+    ch_pdb = RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb)
+        .map { meta, file_path ->
+            file_path }
+        .collect()
+        .map { file ->
+            [ [id: "pdb"], file ]
+        }
+
+    ch_cif = PARSE_CIF.out.cif
+        .map { meta, file_path ->
+            file_path }
+        .collect()
+        .map { file ->
+            [ [id: "cif"], file ]
+        }
 
     emit:
     versions = ch_versions
-    pdb      = RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb)
     scores   = ch_scores
-    // cif      = ch_cif
+    pdb      = ch_pdb
+    cif      = ch_cif
 }
