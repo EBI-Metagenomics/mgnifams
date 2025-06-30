@@ -15,6 +15,9 @@ process EXTRACT_CUDA_FAILED {
     tuple val(meta), path("cuda_failed_reps.fasta"), emit: fasta, optional: true
     path "versions.yml"                            , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+    
     script:
     """
     extract_cuda_failed.py \\

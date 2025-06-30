@@ -14,6 +14,9 @@ process INSERT_SQLITE {
     tuple val(meta), path(db), emit: db
     path "versions.yml"      , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+    
     script:
     """
     # Import mgnifam.csv directly with NULLs for missing columns

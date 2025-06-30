@@ -2,8 +2,7 @@ include { PREPARE_ESMFOLD_DBS            } from '../../../subworkflows/local/pre
 include { RUN_ESMFOLD                    } from '../../../modules/local/run_esmfold'
 include { EXTRACT_CUDA_FAILED            } from '../../../modules/local/extract_cuda_failed/main'
 include { RUN_ESMFOLD as RUN_ESMFOLD_CPU } from '../../../modules/local/run_esmfold'
-
-// include { EXTRACT_ESMFOLD_SCORES } from '../../../modules/local/extract_esmfold_scores/main'
+include { EXTRACT_ESMFOLD_SCORES         } from '../../../modules/local/extract_esmfold_scores/main'
 // include { PARSE_CIF              } from '../../../modules/local/parse_cif/main'
 
 workflow PREDICT_STRUCTURES {
@@ -17,7 +16,7 @@ workflow PREDICT_STRUCTURES {
     esm2_t36_3B_UR50D_contact_regression
     num_recycles_esmfold
     pdb_chunk_size_long
-    // outdir
+    outdir
     
     main:
     ch_versions = Channel.empty()
@@ -63,23 +62,22 @@ workflow PREDICT_STRUCTURES {
     RUN_ESMFOLD_CPU( ch_fasta_long, PREPARE_ESMFOLD_DBS.out.params, num_recycles_esmfold )
     ch_versions = ch_versions.mix( RUN_ESMFOLD_CPU.out.versions )
 
-    // EXTRACT_ESMFOLD_SCORES( RUN_ESMFOLD.out.scores.concat(RUN_ESMFOLD_CPU.out.scores) )
-    // // TODO ch_versions = ch_versions.mix( EXTRACT_ESMFOLD_SCORES.out.versions )
+    EXTRACT_ESMFOLD_SCORES( RUN_ESMFOLD.out.scores.concat(RUN_ESMFOLD_CPU.out.scores) )
+    ch_versions = ch_versions.mix( EXTRACT_ESMFOLD_SCORES.out.versions )
     
-    // ch_scores = EXTRACT_ESMFOLD_SCORES.out.csv
-    //     .map { meta, file ->
-    //         file
-    //     }
-    //     .collectFile(name: "pdb_scores.csv", storeDir: outdir + "/structures")
-    //     .map { file ->
-    //         [ [id: "scores"], file ]
-    //     }
+    ch_scores = EXTRACT_ESMFOLD_SCORES.out.csv
+        .map { meta, file ->
+            file
+        }
+        .collectFile(name: "pdb_scores.csv", storeDir: outdir + "/structures/esmfold/", keepHeader: true)
+        .map { file ->
+            [ [id: "scores"], file ]
+        }
     
-    // ch_pdb = esmfold_result.pdb.concat(esmfold_long_result.pdb)
-    // ch_cif = PARSE_CIF(ch_pdb)
+    // PARSE_CIF( RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb) )
     // // TODO ch_versions = ch_versions.mix( PARSE_CIF.out.versions )
 
-    // ch_cif = ch_cif
+    // ch_cif = PARSE_CIF.out.cif
     //     .map { meta, file_path ->
     //         file_path }
     //     .collect()
@@ -89,10 +87,7 @@ workflow PREDICT_STRUCTURES {
 
     emit:
     versions = ch_versions
-    // esm_multiqc = ESMFOLD.out.multiqc_report.collect()
-    // pdb         = ESMFOLD.out.pdb
-
-    // scores   = ch_scores
-    // pdb      = ch_pdb
+    pdb      = RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb)
+    scores   = ch_scores
     // cif      = ch_cif
 }

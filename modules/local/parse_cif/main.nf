@@ -8,6 +8,9 @@ process PARSE_CIF {
     output:
     tuple val(meta), path("*.cif"), emit: cif
 
+    when:
+    task.ext.when == null || task.ext.when
+    
     script:
     """    
     for file in ${pdb_folder}/*; do

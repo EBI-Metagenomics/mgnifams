@@ -52,7 +52,6 @@ workflow MGNIFAMS {
     esm2_t36_3B_UR50D_contact_regression
     num_recycles_esmfold
     pdb_chunk_size_long
-
     funfams_path
     hh_mode
     hhdb_path
@@ -82,7 +81,8 @@ workflow MGNIFAMS {
 
     PREDICT_STRUCTURES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, \
         pdb_chunk_size, esmfold_db, esmfold_params_path, esmfold_3B_v1, \
-        esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression, num_recycles_esmfold, pdb_chunk_size_long ) // , outdir
+        esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression, num_recycles_esmfold, \
+        pdb_chunk_size_long, outdir )
     ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
     
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, funfams_path, \

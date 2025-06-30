@@ -12,6 +12,9 @@ process QUERY_MGNPROTEIN_DB {
     tuple val(meta2), path("biome_mapping.tsv"), emit: biome_mapping
     tuple val(meta2), path("pfam_mapping.tsv") , emit: pfam_mapping
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     query_mgnprotein_db.py \\

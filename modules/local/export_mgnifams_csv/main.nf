@@ -12,6 +12,9 @@ process EXPORT_MGNIFAMS_CSV {
     output:
     tuple val(meta), path("tables")
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     export_mgnifams_csvs.py \\

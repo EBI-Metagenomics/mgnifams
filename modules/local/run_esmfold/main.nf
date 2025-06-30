@@ -28,7 +28,7 @@ process RUN_ESMFOLD {
     // KR - note: removed the *.pdb -> tmp.pdb, tmp.pdb  -> esmfold.pdb. Why not just take directly?
     // Only one .pdb per ESMFold run
     """
-    awk '{if (\$0 ~ /^>/) {gsub(/^>/, "", \$1); split(\$1, id, " "); gsub("/", "_", id[1]); print ">" id[1]} else {print}}' ${fasta} > parsed.fasta
+    awk '{if (\$0 ~ /^>/) {split(substr(\$0, 2), id, " "); print ">" id[2]} else {print}}' ${fasta} > parsed.fasta
 
     esm-fold \\
         -i parsed.fasta \\
