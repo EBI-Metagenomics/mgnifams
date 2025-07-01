@@ -10,9 +10,9 @@ workflow ANNOTATE_FAMILIES {
     full_msa
     hh_mode
     hhdb_path
-    // pdb
-    // foldseek_db_path
-    // outdir
+    pdb
+    foldseek_db_path
+    outdir
 
     main:
     ch_versions = Channel.empty()
@@ -23,10 +23,8 @@ workflow ANNOTATE_FAMILIES {
     ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path )
     ch_versions = ch_versions.mix( ANNOTATE_MODELS.out.versions )
 
-    // TODO continue
-    // ANNOTATE_STRUCTURES( pdb )
-    // ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
-
+    ANNOTATE_STRUCTURES( pdb, foldseek_db_path, outdir )
+    ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
 
     // old, TODO remove
     // seed_msa
@@ -47,18 +45,11 @@ workflow ANNOTATE_FAMILIES {
     //     }
     //     .set { hmmalign_msa_ch }
 
-    // ch_structures = PREDICT_STRUCTURES(hmmalign_msa_ch)
-    // ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
-
-    // ch_pdb    = ch_structures.pdb
-    // ch_scores = ch_structures.scores
-    // ch_cif    = ch_structures.cif
-
-
     emit:
-    versions  = ch_versions
-    pfam_hits = ANNOTATE_MODELS.out.pfam_hits
+    versions        = ch_versions
+    s4preds         = ANNOTATE_REPS.out.s4preds
+    s4pred_features = ANNOTATE_REPS.out.s4pred_features
+    funfams_domains = ANNOTATE_REPS.out.funfams_domains
+    pfam_hits       = ANNOTATE_MODELS.out.pfam_hits
     // foldseek_hits = ANNOTATE_STRUCTURES.out.foldseek_hits
-    // scores        = ch_scores
-    // cif           = ch_cif
 }

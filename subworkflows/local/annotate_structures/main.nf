@@ -11,36 +11,32 @@ workflow ANNOTATE_STRUCTURES {
     outdir
     
     main:
-    ch_versions = Channel.empty()
-
+    ch_versions                 = Channel.empty()
+    ch_alphafold_aln            = Channel.empty()
     def foldseek_pdb_path       = foldseek_db_path + "/pdb"
     def foldseek_alphafold_path = foldseek_db_path + "/alphafold"
 
-    alphafold_aln = Channel.empty()
-    esm_aln       = Channel.empty()
-    
-    pdb_db = Channel.of([ [ id:'pdb' ], file(foldseek_pdb_path) ])
-    pdb_aln = FOLDSEEK_EASYSEARCH_PDB(pdb, pdb_db).aln
+    ch_pdb_db = Channel.of([ [ id:'pdb' ], file(foldseek_pdb_path, checkIfExists: true) ])
+    FOLDSEEK_EASYSEARCH_PDB( pdb, ch_pdb_db ).aln
     ch_versions = ch_versions.mix( FOLDSEEK_EASYSEARCH_PDB.out.versions )
 
     if (workflow.profile.contains("slurm")) {
-        alphafold_db = Channel.of([ [ id:'alphafold' ], file(foldseek_alphafold_path) ])
-        alphafold_aln = FOLDSEEK_EASYSEARCH_ALPHAFOLDB(pdb, alphafold_db).aln
+        ch_alphafold_db = Channel.of([ [ id:'alphafold' ], file(foldseek_alphafold_path, checkIfExists: true) ])
+        ch_alphafold_aln = FOLDSEEK_EASYSEARCH_ALPHAFOLDB( pdb, ch_alphafold_db ).aln
         ch_versions = ch_versions.mix( FOLDSEEK_EASYSEARCH_ALPHAFOLDB.out.versions )
     }
 
-    ch_foldseek_hits = pdb_aln
-        .concat(alphafold_aln)
-        .concat(esm_aln)
+    ch_foldseek_hits = FOLDSEEK_EASYSEARCH_PDB.out.aln
+        .concat(ch_alphafold_aln)
         .map { meta, file ->
             file
         }
-        .collectFile(name: 'foldseek_hits.tsv', storeDir: outdir + "/structures/foldseek")
+        .collectFile(name: 'foldseek_hits.tsv', storeDir: outdir + "/annotation/structures/foldseek")
         .map { file ->
             [[id: 'foldseek_hits'], file]
         }
 
-    FIND_ANNOTATED_FAMILIES_BY_STRUCTURE(ch_foldseek_hits)
+    // FIND_ANNOTATED_FAMILIES_BY_STRUCTURE( ch_foldseek_hits )
     // TODO ch_versions = ch_versions.mix( FIND_ANNOTATED_FAMILIES_BY_STRUCTURE.out.versions )
 
     emit:

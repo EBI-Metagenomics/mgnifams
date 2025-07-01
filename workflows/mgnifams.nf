@@ -87,7 +87,7 @@ workflow MGNIFAMS {
     
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, funfams_path, \
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
-        hh_mode, hhdb_path ) //, PREDICT_STRUCTURES.out.pdb, foldseek_db_path, outdir
+        hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_db_path, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
     // TODO update vs remove
