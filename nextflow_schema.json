@@ -442,7 +442,7 @@
                     "type": "integer",
                     "default": 5,
                     "description": "Chunk size for parallel structure prediction, for long sequences"
-                },
+                }
             }
         },
         "annotation_params": {
@@ -454,6 +454,26 @@
                     "type": "string",
                     "default": "hhsearch",
                     "description": "hhblits (fast) or hhsearch (sensitive)"
+                },
+                "hh_min_reported": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "Minimum allowed reported results from hhblits/hhsearch"
+                },
+                "hh_max_reported": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Maximum allowed reported results from hhblits/hhsearch"
+                },
+                "hh_probability_threshold": {
+                    "type": "number",
+                    "default": 80,
+                    "description": "Probability threshold above which to show hhblits/hhsearch results"
+                },
+                "foldseek_evalue_cutoff": {
+                    "type": "number",
+                    "default": 0.001,
+                    "description": "foldseek e-value cutoff threshold for reported results"
                 }
             }
         },
