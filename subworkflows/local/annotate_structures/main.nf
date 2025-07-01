@@ -31,13 +31,13 @@ workflow ANNOTATE_STRUCTURES {
         .map { meta, file ->
             file
         }
-        .collectFile(name: 'foldseek_hits.tsv', storeDir: outdir + "/annotation/structures/foldseek")
+        .collectFile(name: 'all_hits.tsv', storeDir: outdir + "/annotation/structures/foldseek")
         .map { file ->
             [[id: 'foldseek_hits'], file]
         }
 
-    // FIND_ANNOTATED_FAMILIES_BY_STRUCTURE( ch_foldseek_hits )
-    // TODO ch_versions = ch_versions.mix( FIND_ANNOTATED_FAMILIES_BY_STRUCTURE.out.versions )
+    FIND_ANNOTATED_FAMILIES_BY_STRUCTURE( ch_foldseek_hits )
+    ch_versions = ch_versions.mix( FIND_ANNOTATED_FAMILIES_BY_STRUCTURE.out.versions )
 
     emit:
     versions      = ch_versions
