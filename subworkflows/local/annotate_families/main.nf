@@ -26,30 +26,11 @@ workflow ANNOTATE_FAMILIES {
     ANNOTATE_STRUCTURES( pdb, foldseek_db_path, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
 
-    // old, TODO remove
-    // seed_msa
-    //     .map { meta, files ->
-    //         String filePath = files[0]
-    //         int lastIndex = filePath.lastIndexOf('/')
-    //         String seed_msa_dir = filePath.substring(0, lastIndex + 1)
-    //         [ [id:"seed_msa"], file(seed_msa_dir) ]
-    //     }
-    //     .set { seed_msa_ch }
-    
-    // full_msa
-    //     .map { meta, files ->
-    //         String filePath = files[0]
-    //         int lastIndex = filePath.lastIndexOf('/')
-    //         String msa_dir = filePath.substring(0, lastIndex + 1)
-    //         [ [id:"msa"], file(msa_dir) ]
-    //     }
-    //     .set { hmmalign_msa_ch }
-
     emit:
     versions        = ch_versions
     s4preds         = ANNOTATE_REPS.out.s4preds
     s4pred_features = ANNOTATE_REPS.out.s4pred_features
     funfams_domains = ANNOTATE_REPS.out.funfams_domains
     pfam_hits       = ANNOTATE_MODELS.out.pfam_hits
-    // foldseek_hits = ANNOTATE_STRUCTURES.out.foldseek_hits
+    foldseek_hits   = ANNOTATE_STRUCTURES.out.foldseek_hits
 }
