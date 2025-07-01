@@ -1,4 +1,4 @@
-process EXTRACT_UNANNOTATED_SLICES {
+process EXTRACT_CUDA_FAILED {
     tag "$meta.id"
     label "process_single"
 
@@ -8,24 +8,23 @@ process EXTRACT_UNANNOTATED_SLICES {
         'community.wave.seqera.io/library/python:b1b4b1f458c605bb' }"
 
     input:
-    tuple val(meta), path(sequence_chunk)
-    val min_sequence_length
+    tuple val(meta) , path(fasta)
+    tuple val(meta2), path(scores, stageAs: "scores/*")
 
     output:
-    tuple val(meta), path("${prefix}.fa"), emit: fa
-    path "versions.yml"                  , emit: versions
+    tuple val(meta), path("cuda_failed_reps.fasta"), emit: fasta, optional: true
+    path "versions.yml"                            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
     
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    extract_unannotated_slices.py \\
-        --input_file ${sequence_chunk} \\
-        --output_file ${prefix}.fa \\
-        --min_sequence_length ${min_sequence_length}
-
+    extract_cuda_failed.py \\
+        --input_fasta ${fasta} \\
+        --input_scores_folder scores \\
+        --output_fasta cuda_failed_reps.fasta
+    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')
@@ -33,9 +32,8 @@ process EXTRACT_UNANNOTATED_SLICES {
     """
 
     stub:
-    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.fa
+    touch cuda_failed_reps.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

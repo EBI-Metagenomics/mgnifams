@@ -14,6 +14,9 @@ process POOL_PREREDUNDANT_FAMILIES_TSV {
     tuple val(meta), path("${prefix}_preredundant_families.tsv"), emit: tsv
     path "versions.yml"                                         , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """

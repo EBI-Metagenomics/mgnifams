@@ -45,7 +45,12 @@ workflow MGNIFAMS {
     similarity_score_threshold
     starting_id
     pdb_chunk_size
-    compute_mode
+    esmfold_db
+    esmfold_params_path
+    esmfold_3B_v1
+    esm2_t36_3B_UR50D
+    esm2_t36_3B_UR50D_contact_regression
+    num_recycles_esmfold
     pdb_chunk_size_long
     funfams_path
     hh_mode
@@ -75,7 +80,9 @@ workflow MGNIFAMS {
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
     PREDICT_STRUCTURES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, \
-        pdb_chunk_size, compute_mode, pdb_chunk_size_long, outdir )
+        pdb_chunk_size, esmfold_db, esmfold_params_path, esmfold_3B_v1, \
+        esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression, num_recycles_esmfold, \
+        pdb_chunk_size_long, outdir )
     ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
     
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, funfams_path, \
