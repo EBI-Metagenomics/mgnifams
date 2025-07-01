@@ -13,9 +13,22 @@ process BZ2_UNCOMPRESS {
     tuple val(meta), path("${bz2_file.baseName}"), emit: file
     path "versions.yml"                          , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     bzip2 -d < ${bz2_file} > ${bz2_file.baseName}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bzip2: \$(echo \$(bzip2 --help 2>&1 | head -n 1 | sed 's/.*Version \\([0-9\\.]*\\).*/\\1/') )
+    END_VERSIONS
+    """
+
+    stub:
+    """
+    touch ${bz2_file.baseName}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

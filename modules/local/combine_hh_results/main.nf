@@ -8,6 +8,9 @@ process COMBINE_HH_RESULTS {
     output:
     tuple val(meta), path("self_hits.tsv"), optional: true, emit: pfam_hits
 
+    when:
+    task.ext.when == null || task.ext.when
+    
     script:
     """
     echo -e "Fam\tHit\tProb\tE-value\tP-value\tScore\tSS\tCols\tQuery HMM\tTemplate HMM" > self_hits.tsv

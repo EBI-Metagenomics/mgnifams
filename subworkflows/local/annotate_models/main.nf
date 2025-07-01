@@ -1,5 +1,3 @@
-#!/usr/bin/env nextflow
-
 include { HHSUITE_REFORMAT } from '../../../modules/nf-core/hhsuite/reformat/main'
 include { HHSUITE_HHBLITS  } from '../../../modules/nf-core/hhsuite/hhblits/main'
 include { HHSUITE_HHSEARCH } from '../../../modules/nf-core/hhsuite/hhsearch/main'

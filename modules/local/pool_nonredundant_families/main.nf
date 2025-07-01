@@ -38,6 +38,9 @@ process POOL_NONREDUNDANT_FAMILIES {
     tuple val(meta14), path("families/similarity_mqc.csv")     , emit: similarity_mqc
     path "versions.yml"                                        , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     pool_nonredundant_families.py \\

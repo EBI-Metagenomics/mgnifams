@@ -1,37 +1,44 @@
-#!/usr/bin/env nextflow
-
-include { EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER } from "../../../modules/local/extract_first_stockholm_sequences_from_folder/main"
-include { ESMFOLD                                       } from "../../../modules/local/esmfold/esmfold/main"
-include { EXTRACT_LONG_FA                               } from "../../../modules/local/extract_long_fa/main"
-include { ESMFOLD_CPU                                   } from "../../../modules/local/esmfold/esmfold_cpu/main"
-include { EXTRACT_ESMFOLD_SCORES                        } from "../../../modules/local/extract_esmfold_scores/main"
-include { PARSE_CIF                                     } from "../../../modules/local/parse_cif/main"
+include { PREPARE_ESMFOLD_DBS            } from '../../../subworkflows/local/prepare_esmfold_dbs'
+include { RUN_ESMFOLD                    } from '../../../modules/local/run_esmfold'
+include { EXTRACT_CUDA_FAILED            } from '../../../modules/local/extract_cuda_failed/main'
+include { RUN_ESMFOLD as RUN_ESMFOLD_CPU } from '../../../modules/local/run_esmfold'
+include { EXTRACT_ESMFOLD_SCORES         } from '../../../modules/local/extract_esmfold_scores/main'
+include { PARSE_CIF                      } from '../../../modules/local/parse_cif/main'
 
 workflow PREDICT_STRUCTURES {
     take:
-    msa_sto_ch
+    fasta
+    pdb_chunk_size
+    esmfold_db
+    esmfold_params_path
+    esmfold_3B_v1
+    esm2_t36_3B_UR50D
+    esm2_t36_3B_UR50D_contact_regression
+    num_recycles_esmfold
+    pdb_chunk_size_long
+    outdir
     
     main:
     ch_versions = Channel.empty()
 
-    family_reps_fa_ch = EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER(msa_sto_ch)
-    // TODO ch_versions = ch_versions.mix( EXTRACT_FIRST_STOCKHOLM_SEQUENCES_FROM_FOLDER.out.versions )
-
-    family_reps_fa_ch
-        .map { meta, filepath ->
-            [ meta, filepath.splitFasta( by: params.pdb_chunk_size, file: true ) ]
+    ch_fasta = fasta
+        .map { meta, file_path ->
+            [ meta, file_path.splitFasta( by: pdb_chunk_size, file: true ) ]
         }
         .transpose()
-        .map { meta, filepath ->
-            [ [id: meta.id, chunk: filepath.getBaseName().split('\\.')[-1]], filepath ]
+        .map { meta, file_path ->
+            [ [id: meta.id, chunk: file(file_path, checkIfExists: true).getBaseName().split('\\.')[-1]], file_path ]
         }
-        .set { fa_ch }
 
-    esmfold_result = ESMFOLD(fa_ch, params.compute_mode)
-    ch_versions = ch_versions.mix( ESMFOLD.out.versions )
-    
-    // Long sequences that cannot be run on GPU
-    fa_ch
+    PREPARE_ESMFOLD_DBS( esmfold_db, esmfold_params_path, esmfold_3B_v1, \
+        esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression )
+    ch_versions = ch_versions.mix( PREPARE_ESMFOLD_DBS.out.versions )
+
+    RUN_ESMFOLD( ch_fasta, PREPARE_ESMFOLD_DBS.out.params, num_recycles_esmfold )
+    ch_versions = ch_versions.mix( RUN_ESMFOLD.out.versions )
+
+    // Identify CUDA failed very long sequences, and run on CPU
+    ch_scores = RUN_ESMFOLD.out.scores
         .map { meta, files ->
             files
         }
@@ -39,54 +46,48 @@ workflow PREDICT_STRUCTURES {
         .map { file ->
             [ [id:"esm_scores"], file ]
         }
-        .set { fa_paths_ch }
-
-    esmfold_result.scores
-        .map { meta, files ->
-            files
-        }
-        .collect()
-        .map { file ->
-            [ [id:"esm_scores"], file ]
-        }
-        .set { score_paths_ch }
     
-    long_reps_fa_ch = EXTRACT_LONG_FA(fa_paths_ch, score_paths_ch)
-    // TODO ch_versions = ch_versions.mix( EXTRACT_LONG_FA.out.versions )
+    EXTRACT_CUDA_FAILED(fasta, ch_scores)
+    ch_versions = ch_versions.mix( EXTRACT_CUDA_FAILED.out.versions )
 
-    long_reps_fa_ch
-        .map { meta, filepath ->
-            [ meta, filepath.splitFasta( by: params.pdb_chunk_size_long, file: true ) ]
+    ch_fasta_long = EXTRACT_CUDA_FAILED.out.fasta
+        .map { meta, file_path ->
+            [ meta, file_path.splitFasta( by: pdb_chunk_size_long, file: true ) ]
         }
         .transpose()
-        .map { meta, filepath ->
-            [ [id: meta.id, chunk: filepath.getBaseName().split('\\.')[-1]], filepath ]
+        .map { meta, file_path ->
+            [ [id: meta.id, chunk: file(file_path, checkIfExists: true).getBaseName().split('\\.')[-1]], file_path ]
         }
-        .set { fa_long_ch }
 
-    esmfold_long_result = ESMFOLD_CPU(fa_long_ch)
-    ch_versions = ch_versions.mix( ESMFOLD_CPU.out.versions )
-    // End long sequences
+    RUN_ESMFOLD_CPU( ch_fasta_long, PREPARE_ESMFOLD_DBS.out.params, num_recycles_esmfold )
+    ch_versions = ch_versions.mix( RUN_ESMFOLD_CPU.out.versions )
 
-    ch_scores = EXTRACT_ESMFOLD_SCORES(esmfold_result.scores.concat(esmfold_long_result.scores)).csv
-    // TODO ch_versions = ch_versions.mix( EXTRACT_ESMFOLD_SCORES.out.versions )
+    EXTRACT_ESMFOLD_SCORES( RUN_ESMFOLD.out.scores.concat(RUN_ESMFOLD_CPU.out.scores) )
+    ch_versions = ch_versions.mix( EXTRACT_ESMFOLD_SCORES.out.versions )
     
-    ch_scores = ch_scores
+    ch_scores = EXTRACT_ESMFOLD_SCORES.out.csv
         .map { meta, file ->
             file
         }
-        .collectFile(name: "pdb_scores.csv", storeDir: params.outdir + "/structures")
+        .collectFile(name: "pdb_scores.csv", storeDir: outdir + "/structures/esmfold/", keepHeader: true)
         .map { file ->
             [ [id: "scores"], file ]
         }
-    
-    ch_pdb = esmfold_result.pdb.concat(esmfold_long_result.pdb)
-    ch_cif = PARSE_CIF(ch_pdb)
-    // TODO ch_versions = ch_versions.mix( PARSE_CIF.out.versions )
 
-    ch_cif = ch_cif
-        .map { meta, filepath ->
-            filepath }
+    PARSE_CIF( RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb) )
+    ch_versions = ch_versions.mix( PARSE_CIF.out.versions )
+
+    ch_pdb = RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb)
+        .map { meta, file_path ->
+            file_path }
+        .collect()
+        .map { file ->
+            [ [id: "pdb"], file ]
+        }
+
+    ch_cif = PARSE_CIF.out.cif
+        .map { meta, file_path ->
+            file_path }
         .collect()
         .map { file ->
             [ [id: "cif"], file ]

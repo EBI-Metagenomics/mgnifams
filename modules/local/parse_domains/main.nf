@@ -9,6 +9,9 @@ process PARSE_DOMAINS {
     output:
     tuple val(meta), path("domain_results/*")
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     parse_domains.py \\

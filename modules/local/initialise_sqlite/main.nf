@@ -14,6 +14,9 @@ process INITIALISE_SQLITE {
     tuple val(meta), path("${prefix}.sqlite3"), emit: db
     path "versions.yml"                       , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+    
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """

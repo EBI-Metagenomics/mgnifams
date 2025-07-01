@@ -8,6 +8,9 @@ process PARSE_BIOMES {
     output:
     tuple val(meta), path("biome_results/*")
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     parse_biomes.py \\

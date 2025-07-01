@@ -1,13 +1,9 @@
-/*
-    SEQUENCE CLUSTERING
-*/
-
-include { EXTRACT_UNANNOTATED_FASTA      } from "../../../subworkflows/local/extract_unannotated_fasta"
-include { CHECK_QUALITY                  } from "../../../subworkflows/local/check_quality"
-include { EXECUTE_CLUSTERING             } from "../../../subworkflows/local/execute_clustering"
-include { CALCULATE_CLUSTER_DISTRIBUTION } from "../../../modules/local/calculate_cluster_distribution/main"
-include { EXTRACT_UNIQUE_CLUSTER_REPS    } from "../../../modules/local/extract_unique_cluster_reps/main"
-include { CHUNK_CLUSTERS                 } from "../../../modules/local/chunk_clusters/main"
+include { EXTRACT_UNANNOTATED_FASTA      } from '../../../subworkflows/local/extract_unannotated_fasta'
+include { CHECK_QUALITY                  } from '../../../subworkflows/local/check_quality'
+include { EXECUTE_CLUSTERING             } from '../../../subworkflows/local/execute_clustering'
+include { CALCULATE_CLUSTER_DISTRIBUTION } from '../../../modules/local/calculate_cluster_distribution/main'
+include { EXTRACT_UNIQUE_CLUSTER_REPS    } from '../../../modules/local/extract_unique_cluster_reps/main'
+include { CHUNK_CLUSTERS                 } from '../../../modules/local/chunk_clusters/main'
 
 workflow SETUP_CLUSTERS {
     take:

@@ -49,8 +49,11 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.mgnifams_max_seq_identity, params.mgnifams_max_seed_seqs, params.mgnifams_max_gap_occupancy, \
             params.mgnifams_recruit_evalue_cutoff, params.mgnifams_recruit_hit_length_percentage, \
             params.redundant_length_threshold, params.redundant_score_threshold, \
-            params.similarity_score_threshold, params.starting_id, params.funfams_path, \
-            params.hh_mode, params.hhdb_path, \
+            params.similarity_score_threshold, params.starting_id, \
+            params.pdb_chunk_size, params.esmfold_db, params.esmfold_params_path, \
+            params.esmfold_3B_v1, params.esm2_t36_3B_UR50D, params.esm2_t36_3B_UR50D_contact_regression, \
+            params.num_recycles_esmfold, params.pdb_chunk_size_long, \
+            params.funfams_path, params.hh_mode, params.hhdb_path, params.foldseek_db_path, \
             params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
         )
         ch_multiqc = MGNIFAMS.out.multiqc_report
