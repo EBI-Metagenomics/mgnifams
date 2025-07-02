@@ -20,7 +20,7 @@ workflow ANNOTATE_STRUCTURES {
     FOLDSEEK_EASYSEARCH_PDB( pdb, ch_pdb_db ).aln
     ch_versions = ch_versions.mix( FOLDSEEK_EASYSEARCH_PDB.out.versions )
 
-    if (workflow.profile.contains("slurm")) {
+    if (workflow.profile.contains("slurm") && !workflow.profile.contains("test")) {
         ch_alphafold_db = Channel.of([ [ id:'alphafold' ], file(foldseek_alphafold_path, checkIfExists: true) ])
         ch_alphafold_aln = FOLDSEEK_EASYSEARCH_ALPHAFOLDB( pdb, ch_alphafold_db ).aln
         ch_versions = ch_versions.mix( FOLDSEEK_EASYSEARCH_ALPHAFOLDB.out.versions )

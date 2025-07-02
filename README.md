@@ -9,18 +9,18 @@ First, prepare a samplesheet with your input data that looks as follows:
 
 ```csv
 sample,protein_input
-plp2024,assets/test_data/sequence_explorer_protein_test_100001.csv
+plp2024,/path/to/assets/test_data/sequence_explorer_protein_test_100001.csv
 ```
 
 Now, you can run the pipeline either on slurm or locally.
 
 slurm:
 ```bash
-nextflow run main.nf -c path/to/slurm.config -profile test,slurm,conda,singularity -with-tower
+NXF_VER=25.04.6 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_test.csv -profile test,slurm,singularity,gpu -resume
 ```
 local:
 ```bash
-nextflow run main.nf -c path/to/local.config -profile test,local,conda,singularity
+nextflow run mgnifams -c conf/local.config --input mgnifams/input/samplesheet_test.csv -profile test,local,singularity -resume
 ```
 
 ![alt text](assets/pipeline.png)
