@@ -258,7 +258,7 @@
                 "compress_mode": {
                     "type": "string",
                     "default": "none",
-                    "description": "compression mode of starting CSV input"
+                    "description": "compression mode of starting CSV input [gz, bz2, none]"
                 },
                 "min_sequence_length": {
                     "type": "integer",
@@ -453,7 +453,8 @@
                 "hh_mode": {
                     "type": "string",
                     "default": "hhsearch",
-                    "description": "hhblits (fast) or hhsearch (sensitive)"
+                    "description": "hhblits (fast) or hhsearch (sensitive)",
+                    "enum": ["hhblits", "hhsearch"]
                 },
                 "hh_min_reported": {
                     "type": "integer",
