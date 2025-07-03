@@ -395,7 +395,8 @@
                 "fold_mode": {
                     "type": "string",
                     "default": "esmfold",
-                    "description": "esmfold or alphafold3"
+                    "description": "The structure prediction workflow/tool to use",
+                    "enum": ["esmfold", "alphafold3"]
                 },
                 "pdb_chunk_size": {
                     "type": "integer",
