@@ -392,6 +392,11 @@
                     "description": "Run on CPUs or GPUs",
                     "fa_icon": "fas fa-microchip"
                 },
+                "fold_mode": {
+                    "type": "string",
+                    "default": "esmfold",
+                    "description": "esmfold or alphafold3"
+                },
                 "pdb_chunk_size": {
                     "type": "integer",
                     "default": 50,
@@ -442,6 +447,48 @@
                     "type": "integer",
                     "default": 5,
                     "description": "Chunk size for parallel structure prediction, for long sequences"
+                },
+                "alphafold3_small_bfd_path": {
+                    "type": "string",
+                    "description": "Path to the reduced version of the BFD database",
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "null/small_bfd/*"
+                },
+                "alphafold3_params_path": {
+                    "type": "string",
+                    "description": "Path to the Alphafold3 parameters",
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "null/params/*"
+                },
+                "alphafold3_mgnify_path": {
+                    "type": "string",
+                    "description": "Path to the MGnify database",
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "null/mgnify/*"
+                },
+                "alphafold3_pdb_mmcif_path": {
+                    "type": "string",
+                    "description": "Path to the PDB mmCIF database",
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "null/mmcif_files"
+                },
+                "alphafold3_uniref90_path": {
+                    "type": "string",
+                    "description": "Path to the UniRef90 database",
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "null/uniref90/*"
+                },
+                "alphafold3_pdb_seqres_path": {
+                    "type": "string",
+                    "description": "Path to the PDB SEQRES database",
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "null/pdb_seqres/*"
+                },
+                "alphafold3_uniprot_path": {
+                    "type": "string",
+                    "description": "Path to UniProt database containing the SwissProt and the TrEMBL databases",
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "null/uniprot/*"
                 }
             }
         },

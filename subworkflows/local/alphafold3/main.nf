@@ -1,92 +1,62 @@
-include { PREPARE_ALPHAFOLD3_DBS            } from '../../../subworkflows/local/prepare_esmfold_dbs'
-include { RUN_ESMFOLD                    } from '../../../modules/local/run_esmfold'
-include { EXTRACT_CUDA_FAILED            } from '../../../modules/local/extract_cuda_failed/main'
-include { RUN_ESMFOLD as RUN_ESMFOLD_CPU } from '../../../modules/local/run_esmfold'
-include { EXTRACT_ESMFOLD_SCORES         } from '../../../modules/local/extract_esmfold_scores/main'
-include { PARSE_CIF                      } from '../../../modules/local/parse_cif/main'
+include { PREPARE_ALPHAFOLD3_DBS   } from '../../../subworkflows/local/prepare_alphafold3_dbs'
+include { FASTA_TO_ALPHAFOLD3_JSON } from '../../../modules/local/fasta_to_alphafold3_json'
+include { RUN_ALPHAFOLD3           } from '../../../modules/local/run_alphafold3'
 
-workflow ESMFOLD {
+workflow ALPHAFOLD3 {
     take:
     fasta
-    pdb_chunk_size
-    esmfold_db
-    esmfold_params_path
-    esmfold_3B_v1
-    esm2_t36_3B_UR50D
-    esm2_t36_3B_UR50D_contact_regression
-    num_recycles_esmfold
-    pdb_chunk_size_long
-    outdir
+    alphafold3_db
+    alphafold3_path
+    alphafold3_small_bfd_path
+    alphafold3_mgnify_path
+    alphafold3_pdb_mmcif_path
+    alphafold3_uniref90_path
+    alphafold3_pdb_seqres_path
+    alphafold3_uniprot_path
+    alphafold3_small_bfd_link
+    alphafold3_mgnify_link
+    alphafold3_pdb_mmcif_link
+    alphafold3_uniref90_link
+    alphafold3_pdb_seqres_link
+    uniprot_link
     
     main:
     ch_versions = Channel.empty()
 
-    PREPARE_ESMFOLD_DBS( esmfold_db, esmfold_params_path, esmfold_3B_v1, \
-        esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression )
-    ch_versions = ch_versions.mix( PREPARE_ESMFOLD_DBS.out.versions )
+    PREPARE_ALPHAFOLD3_DBS (
+        alphafold3_db,
+        alphafold3_path,
+        alphafold3_small_bfd_path,
+        alphafold3_mgnify_path,
+        alphafold3_pdb_mmcif_path,
+        alphafold3_uniref90_path,
+        alphafold3_pdb_seqres_path,
+        alphafold3_uniprot_path,
+        alphafold3_small_bfd_link,
+        alphafold3_mgnify_link,
+        alphafold3_pdb_mmcif_link,
+        alphafold3_uniref90_link,
+        alphafold3_pdb_seqres_link,
+        uniprot_link
+    )
+    ch_versions = ch_versions.mix( PREPARE_ALPHAFOLD3_DBS.out.versions )
 
-    RUN_ESMFOLD( fasta, PREPARE_ESMFOLD_DBS.out.params, num_recycles_esmfold )
-    ch_versions = ch_versions.mix( RUN_ESMFOLD.out.versions )
+    FASTA_TO_ALPHAFOLD3_JSON( fasta )
+    ch_versions = ch_versions.mix( FASTA_TO_ALPHAFOLD3_JSON.out.versions )
 
-    // Identify CUDA failed very long sequences, and run on CPU
-    ch_scores = RUN_ESMFOLD.out.scores
-        .map { meta, files ->
-            files
-        }
-        .collect()
-        .map { file ->
-            [ [id:"esm_scores"], file ]
-        }
-    
-    EXTRACT_CUDA_FAILED(fasta, ch_scores)
-    ch_versions = ch_versions.mix( EXTRACT_CUDA_FAILED.out.versions )
-
-    ch_fasta_long = EXTRACT_CUDA_FAILED.out.fasta
-        .map { meta, file_path ->
-            [ meta, file_path.splitFasta( by: pdb_chunk_size_long, file: true ) ]
-        }
-        .transpose()
-        .map { meta, file_path ->
-            [ [id: meta.id, chunk: file(file_path, checkIfExists: true).getBaseName().split('\\.')[-1]], file_path ]
-        }
-
-    RUN_ESMFOLD_CPU( ch_fasta_long, PREPARE_ESMFOLD_DBS.out.params, num_recycles_esmfold )
-    ch_versions = ch_versions.mix( RUN_ESMFOLD_CPU.out.versions )
-
-    EXTRACT_ESMFOLD_SCORES( RUN_ESMFOLD.out.scores.concat(RUN_ESMFOLD_CPU.out.scores) )
-    ch_versions = ch_versions.mix( EXTRACT_ESMFOLD_SCORES.out.versions )
-    
-    ch_scores = EXTRACT_ESMFOLD_SCORES.out.csv
-        .map { meta, file ->
-            file
-        }
-        .collectFile(name: "pdb_scores.csv", storeDir: outdir + "/structures/esmfold/", keepHeader: true)
-        .map { file ->
-            [ [id: "scores"], file ]
-        }
-
-    PARSE_CIF( RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb) )
-    ch_versions = ch_versions.mix( PARSE_CIF.out.versions )
-
-    ch_pdb = RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb)
-        .map { meta, file_path ->
-            file_path }
-        .collect()
-        .map { file ->
-            [ [id: "pdb"], file ]
-        }
-
-    ch_cif = PARSE_CIF.out.cif
-        .map { meta, file_path ->
-            file_path }
-        .collect()
-        .map { file ->
-            [ [id: "cif"], file ]
-        }
+    RUN_ALPHAFOLD3( FASTA_TO_ALPHAFOLD3_JSON.out.json,
+        PREPARE_ALPHAFOLD3_DBS.out.params,
+        PREPARE_ALPHAFOLD3_DBS.out.small_bfd,
+        PREPARE_ALPHAFOLD3_DBS.out.mgnify,
+        PREPARE_ALPHAFOLD3_DBS.out.pdb_mmcif,
+        PREPARE_ALPHAFOLD3_DBS.out.uniref90,
+        PREPARE_ALPHAFOLD3_DBS.out.pdb_seqres,
+        PREPARE_ALPHAFOLD3_DBS.out.uniprot )
+    ch_versions = ch_versions.mix( RUN_ALPHAFOLD3.out.versions )
 
     emit:
     versions = ch_versions
-    scores   = ch_scores
-    pdb      = ch_pdb
-    cif      = ch_cif
+    // scores   = ch_scores
+    // pdb      = ch_pdb
+    // cif      = ch_cif
 }

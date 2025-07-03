@@ -20,6 +20,11 @@
             "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
+          "gunzip": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+            "installed_by": ["modules"]
+          },
           "hhsuite/hhblits": {
             "branch": "master",
             "git_sha": "ec969dbd5a778b5b2c1204f14d5622edc064b805",
@@ -75,6 +80,11 @@
           "seqkit/stats": {
             "branch": "master",
             "git_sha": "9fe7867a4f012db581d7bd560228ded1074eb0e5",
+            "installed_by": ["modules"]
+          },
+          "untar": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           }
         }

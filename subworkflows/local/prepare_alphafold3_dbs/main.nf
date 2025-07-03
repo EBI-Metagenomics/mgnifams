@@ -2,14 +2,14 @@
 // Download all the required AlphaFold 3 databases and parameters
 //
 
-include { ARIA2_UNCOMPRESS as ARIA2_SMALL_BFD  } from './aria2_uncompress'
-include { ARIA2_UNCOMPRESS as ARIA2_MGNIFY     } from './aria2_uncompress'
-include { ARIA2_UNCOMPRESS as ARIA2_MMCIF      } from './aria2_uncompress'
-include { ARIA2_UNCOMPRESS as ARIA2_UNIREF90   } from './aria2_uncompress'
-include { ARIA2_UNCOMPRESS as ARIA2_PDB_SEQRES } from './aria2_uncompress'
-include { ARIA2_UNCOMPRESS as ARIA2_UNIPROT    } from './aria2_uncompress'
+include { ARIA2_UNCOMPRESS as ARIA2_SMALL_BFD  } from '../../../subworkflows/local/aria2_uncompress'
+include { ARIA2_UNCOMPRESS as ARIA2_MGNIFY     } from '../../../subworkflows/local/aria2_uncompress'
+include { ARIA2_UNCOMPRESS as ARIA2_MMCIF      } from '../../../subworkflows/local/aria2_uncompress'
+include { ARIA2_UNCOMPRESS as ARIA2_UNIREF90   } from '../../../subworkflows/local/aria2_uncompress'
+include { ARIA2_UNCOMPRESS as ARIA2_PDB_SEQRES } from '../../../subworkflows/local/aria2_uncompress'
+include { ARIA2_UNCOMPRESS as ARIA2_UNIPROT    } from '../../../subworkflows/local/aria2_uncompress'
 
-include { DOWNLOAD_PDBMMCIF_AF3 } from '../../modules/local/download_pdbmmcif_af3'
+include { DOWNLOAD_PDBMMCIF_AF3 } from '../../../modules/local/download_pdbmmcif_af3'
 
 workflow PREPARE_ALPHAFOLD3_DBS {
 
