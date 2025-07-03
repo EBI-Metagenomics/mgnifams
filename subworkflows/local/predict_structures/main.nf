@@ -32,6 +32,10 @@ workflow PREDICT_STRUCTURES {
     main:
     ch_versions = Channel.empty()
 
+    if (fold_mode == 'alphafold3') {
+        pdb_chunk_size = 1 // can only predict one protein at a time with alphafold3
+    }
+
     ch_fasta = fasta
         .map { meta, file_path ->
             [ meta, file_path.splitFasta( by: pdb_chunk_size, file: true ) ]
