@@ -1,12 +1,13 @@
 include { PREPARE_ALPHAFOLD3_DBS   } from '../../../subworkflows/local/prepare_alphafold3_dbs'
 include { FASTA_TO_ALPHAFOLD3_JSON } from '../../../modules/local/fasta_to_alphafold3_json'
 include { RUN_ALPHAFOLD3           } from '../../../modules/local/run_alphafold3'
+include { MMCIF2PDB                } from '../../../modules/local/mmcif2pdb/main.nf'
 
 workflow ALPHAFOLD3 {
     take:
     fasta
     alphafold3_db
-    alphafold3_path
+    alphafold3_params_path
     alphafold3_small_bfd_path
     alphafold3_mgnify_path
     alphafold3_pdb_mmcif_path
@@ -25,7 +26,7 @@ workflow ALPHAFOLD3 {
 
     PREPARE_ALPHAFOLD3_DBS (
         alphafold3_db,
-        alphafold3_path,
+        alphafold3_params_path,
         alphafold3_small_bfd_path,
         alphafold3_mgnify_path,
         alphafold3_pdb_mmcif_path,
@@ -54,9 +55,12 @@ workflow ALPHAFOLD3 {
         PREPARE_ALPHAFOLD3_DBS.out.uniprot )
     ch_versions = ch_versions.mix( RUN_ALPHAFOLD3.out.versions )
 
+    MMCIF2PDB( RUN_ALPHAFOLD3.out.top_ranked_cif )
+    ch_versions = ch_versions.mix( MMCIF2PDB.out.versions )
+
     emit:
     versions = ch_versions
     // scores   = ch_scores
-    // pdb      = ch_pdb
-    // cif      = ch_cif
+    pdb      = MMCIF2PDB.out.pdb
+    cif      = RUN_ALPHAFOLD3.out.top_ranked_cif
 }

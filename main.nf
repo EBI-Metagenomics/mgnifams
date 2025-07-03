@@ -53,7 +53,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.pdb_chunk_size, params.esmfold_db, params.esmfold_params_path, \
             params.esmfold_3B_v1, params.esm2_t36_3B_UR50D, params.esm2_t36_3B_UR50D_contact_regression, \
             params.num_recycles_esmfold, params.pdb_chunk_size_long, \
-            params.alphafold3_db, params.alphafold3_path, params.alphafold3_small_bfd_path, \
+            params.alphafold3_db, params.alphafold3_params_path, params.alphafold3_small_bfd_path, \
             params.alphafold3_mgnify_path, params.alphafold3_pdb_mmcif_path, params.alphafold3_uniref90_path, \
             params.alphafold3_pdb_seqres_path, params.alphafold3_uniprot_path, params.alphafold3_small_bfd_link, \
             params.alphafold3_mgnify_link, params.alphafold3_pdb_mmcif_link, \

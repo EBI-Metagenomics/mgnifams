@@ -54,7 +54,7 @@ workflow MGNIFAMS {
     num_recycles_esmfold
     pdb_chunk_size_long
     alphafold3_db
-    alphafold3_path
+    alphafold3_params_path
     alphafold3_small_bfd_path
     alphafold3_mgnify_path
     alphafold3_pdb_mmcif_path
@@ -97,7 +97,7 @@ workflow MGNIFAMS {
     PREDICT_STRUCTURES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, fold_mode, \
         pdb_chunk_size, esmfold_db, esmfold_params_path, esmfold_3B_v1, \
         esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression, num_recycles_esmfold, \
-        pdb_chunk_size_long, outdir, alphafold3_db, alphafold3_path, alphafold3_small_bfd_path, \
+        pdb_chunk_size_long, outdir, alphafold3_db, alphafold3_params_path, alphafold3_small_bfd_path, \
         alphafold3_mgnify_path, alphafold3_pdb_mmcif_path, alphafold3_uniref90_path,\
         alphafold3_pdb_seqres_path, alphafold3_uniprot_path, alphafold3_small_bfd_link,\
         alphafold3_mgnify_link, alphafold3_pdb_mmcif_link, alphafold3_uniref90_link,\

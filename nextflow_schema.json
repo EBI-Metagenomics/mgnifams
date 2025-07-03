@@ -448,6 +448,20 @@
                     "default": 5,
                     "description": "Chunk size for parallel structure prediction, for long sequences"
                 },
+                "alphafold3_db": {
+                    "type": "string",
+                    "format": "path",
+                    "exists": true,
+                    "description": "Specifies the DB and PARAMS path used by 'AlphaFold3' mode",
+                    "fa_icon": "fas fa-database",
+                    "errorMessage": "Please provide a valid path to AlphaFold3 database"
+                },
+                "alphafold3_path": {
+                    "type": "string",
+                    "description": "Link to the AlphaFold3 parameters",
+                    "fa_icon": "fas fa-folder-open",
+                    "default": "null/params/*"
+                },
                 "alphafold3_small_bfd_path": {
                     "type": "string",
                     "description": "Path to the reduced version of the BFD database",
@@ -489,6 +503,42 @@
                     "description": "Path to UniProt database containing the SwissProt and the TrEMBL databases",
                     "fa_icon": "fas fa-folder-open",
                     "default": "null/uniprot/*"
+                },
+                "alphafold3_small_bfd_link": {
+                    "type": "string",
+                    "default": "https://storage.googleapis.com/alphafold-databases/v3.0/bfd-first_non_consensus_sequences.fasta.zst",
+                    "description": "Link to a reduced version of the BFD dababase",
+                    "fa_icon": "fas fa-link"
+                },
+                "alphafold3_mgnify_link": {
+                    "type": "string",
+                    "default": "https://storage.googleapis.com/alphafold-databases/v3.0/mgy_clusters_2022_05.fa.zst",
+                    "description": "Link to the MGnify database",
+                    "fa_icon": "fas fa-link"
+                },
+                "alphafold3_pdb_mmcif_link": {
+                    "type": "string",
+                    "default": "https://storage.googleapis.com/alphafold-databases/v3.0/pdb_2022_09_28_mmcif_files.tar.zst",
+                    "description": "Link to the PDB mmCIF database",
+                    "fa_icon": "fas fa-link"
+                },
+                "alphafold3_uniref90_link": {
+                    "type": "string",
+                    "default": "https://storage.googleapis.com/alphafold-databases/v3.0/uniref90_2022_05.fa.zst",
+                    "description": "Link to the UniRef90 database",
+                    "fa_icon": "fas fa-link"
+                },
+                "alphafold3_pdb_seqres_link": {
+                    "type": "string",
+                    "default": "https://storage.googleapis.com/alphafold-databases/v3.0/pdb_seqres_2022_09_28.fasta.zst",
+                    "description": "Link to the PDB SEQRES database",
+                    "fa_icon": "fas fa-link"
+                },
+                "uniprot_link": {
+                    "type": "string",
+                    "default": "https://storage.googleapis.com/alphafold-databases/v3.0/uniprot_all_2021_04.fa.zst",
+                    "description": "Link to the UniProt database",
+                    "fa_icon": "fas fa-link"
                 }
             }
         },
