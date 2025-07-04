@@ -72,7 +72,7 @@ workflow PIPELINE_INITIALISATION {
     if (params.mode == "run_mgnifams_pipeline") {
         ch_samplesheet = ch_samplesheet
             .map { sample, protein_input, _results_folder, _existing_db, _schema ->
-                [ sample, protein_input ]
+                [ sample, file(protein_input, checkIfExists: true) ]
             }
     }
     else if (params.mode == "update_mgnifams_db") {
