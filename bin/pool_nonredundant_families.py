@@ -163,11 +163,12 @@ def translate_edgelist(file_path, out_path):
                 # Preserve quotes in output
                 outfile.write(f'{row_num},"{mapped_fam1}","{mapped_fam2}",{score}\n')
 
-def pool_nonredundant_reps(input_folder, output_file):
+def pool_nonredundant_reps(input_folder, output_file, ids_only_file):
     path_to_folder = os.path.join(arg_families_dir, input_folder)
-    output_file    = os.path.join(arg_out_dir, output_file) 
+    output_file    = os.path.join(arg_out_dir, output_file)
+    ids_only_file  = os.path.join(arg_out_dir, ids_only_file)
 
-    with open(output_file, 'w') as out_f:
+    with open(output_file, 'w') as out_f, open(ids_only_file, 'w') as ids_f:
         for filename in sorted(os.listdir(path_to_folder)):
             file_path = os.path.join(path_to_folder, filename)
             if not os.path.isfile(file_path) or not filename.endswith(('.fa', '.fasta', '.faa')):
@@ -188,8 +189,10 @@ def pool_nonredundant_reps(input_folder, output_file):
                             # Map description to new ID
                             mapped_id = family_to_id.get(fam_id, fam_id)
                             out_f.write(f"{seq_id}\t{mapped_id}\n")
+                            ids_f.write(f">{mapped_id}\n")
                     elif write_sequence:
                         out_f.write(line)
+                        ids_f.write(line)
 
 def main(args=None):
     args = parse_args(args)
@@ -227,7 +230,7 @@ def main(args=None):
     with open(output_file, 'w') as f:
         json.dump(family_to_id, f)
 
-    pool_nonredundant_reps("family_reps", "family_reps.fasta")
+    pool_nonredundant_reps("family_reps", "family_reps.fasta", "family_ids.fasta")
 
 if __name__ == "__main__":
     main()

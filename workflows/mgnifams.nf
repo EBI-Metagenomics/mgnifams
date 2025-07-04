@@ -94,7 +94,7 @@ workflow MGNIFAMS {
         similarity_score_threshold, starting_id )
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
-    PREDICT_STRUCTURES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, fold_mode, \
+    PREDICT_STRUCTURES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, fold_mode, \
         pdb_chunk_size, esmfold_db, esmfold_params_path, esmfold_3B_v1, \
         esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression, num_recycles_esmfold, \
         pdb_chunk_size_long, outdir, alphafold3_db, alphafold3_params_path, alphafold3_small_bfd_path, \
@@ -104,7 +104,7 @@ workflow MGNIFAMS {
         alphafold3_pdb_seqres_link, uniprot_link )
     ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
     
-    ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_reps, funfams_path, \
+    ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, funfams_path, \
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
         hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_db_path, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )

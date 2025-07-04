@@ -117,18 +117,19 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     ch_versions = ch_versions.mix( PRESENT_FAMILY_METADATA.out.versions )
 
     emit:
-    versions       = ch_versions
-    seed_msa_sto   = REMOVE_REDUNDANCY.out.seed_msa_sto
-    full_msa_sto   = REMOVE_REDUNDANCY.out.full_msa_sto
-    hmm            = REMOVE_REDUNDANCY.out.hmm
-    rf             = REMOVE_REDUNDANCY.out.rf
-    tsv            = REMOVE_REDUNDANCY.out.tsv
-    converged      = REMOVE_REDUNDANCY.out.converged
-    metadata       = REMOVE_REDUNDANCY.out.metadata
-    family_reps    = REMOVE_REDUNDANCY.out.family_reps
-    seed_msa       = REFORMAT_SEED_MSA.out.msa
-    full_msa       = REFORMAT_FULL_MSA.out.msa
-    discarded_mqc  = PRESENT_DISCARDED_FAMILIES.out.mqc
-    metadata_mqc   = PRESENT_FAMILY_METADATA.out.mqc
-    similarity_mqc = REMOVE_REDUNDANCY.out.similarity_mqc
+    versions         = ch_versions
+    seed_msa_sto     = REMOVE_REDUNDANCY.out.seed_msa_sto
+    full_msa_sto     = REMOVE_REDUNDANCY.out.full_msa_sto
+    hmm              = REMOVE_REDUNDANCY.out.hmm
+    rf               = REMOVE_REDUNDANCY.out.rf
+    tsv              = REMOVE_REDUNDANCY.out.tsv
+    converged        = REMOVE_REDUNDANCY.out.converged
+    metadata         = REMOVE_REDUNDANCY.out.metadata
+    family_reps      = REMOVE_REDUNDANCY.out.family_reps
+    family_ids_fasta = REMOVE_REDUNDANCY.out.family_ids_fasta
+    seed_msa         = REFORMAT_SEED_MSA.out.msa
+    full_msa         = REFORMAT_FULL_MSA.out.msa
+    discarded_mqc    = PRESENT_DISCARDED_FAMILIES.out.mqc
+    metadata_mqc     = PRESENT_FAMILY_METADATA.out.mqc
+    similarity_mqc   = REMOVE_REDUNDANCY.out.similarity_mqc
 }
