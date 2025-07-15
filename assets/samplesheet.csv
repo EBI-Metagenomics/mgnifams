@@ -1,2 +1,2 @@
 sample,protein_input
-plp2024,assets/data/sequence_explorer_protein_test_100001.csv.gz
+plp2024,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/sequence_explorer_protein_test_100001.csv.gz
