@@ -23,6 +23,26 @@ local:
 nextflow run mgnifams -c conf/local.config --input mgnifams/input/samplesheet_test.csv -profile test,local,singularity -resume
 ```
 
+### end-to-end nf-test
+```
+NXF_VER=25.04.6 nf-test test tests/default.nf.test --profile +singularity,test
+```
+
+The test profile will still need to be updated with the following local variables and paths:
+```
+    use_gpu             = false
+    esmfold_db          = 'path/to/esmfold/'
+    esmfold_params_path = 'path/to/esmfold/params/*'
+
+    // ANNOTATE_FAMILIES
+    // annotate_reps
+    funfams_path     = 'path/to/funfam-hmm3-v4_3_0_test.lib.gz'
+    // annotate_models
+    hhdb_path        = 'path/to/pfamA_35.0'
+    // annotate_structures
+    foldseek_db_path = 'path/to/foldseek'
+```
+
 ![alt text](assets/pipeline.png)
 
 The end-to-end MGnifams pipeline chains the subworkflows of four thematically different workflows; setup_clusters, generate_nonredundant_families, annotate_families and export_db. After the pipeline finishes its execution, the produced db can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.

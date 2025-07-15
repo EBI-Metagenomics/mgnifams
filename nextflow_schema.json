@@ -67,7 +67,6 @@
             },
             "required": [
                 "input",
-                "esm_conda_path",
                 "outdir"
             ]
         },

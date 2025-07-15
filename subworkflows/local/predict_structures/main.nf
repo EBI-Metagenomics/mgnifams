@@ -1,3 +1,4 @@
+include { TRIM_REPS                      } from '../../../modules/local/trim_reps/main'
 include { PREPARE_ESMFOLD_DBS            } from '../../../subworkflows/local/prepare_esmfold_dbs'
 include { RUN_ESMFOLD                    } from '../../../modules/local/run_esmfold'
 include { EXTRACT_CUDA_FAILED            } from '../../../modules/local/extract_cuda_failed/main'
@@ -29,6 +30,11 @@ workflow PREDICT_STRUCTURES {
         .map { meta, file_path ->
             [ [id: meta.id, chunk: file(file_path, checkIfExists: true).getBaseName().split('\\.')[-1]], file_path ]
         }
+
+    if (workflow.profile.contains("test")) {
+        ch_fasta = TRIM_REPS( ch_fasta ).fasta
+        ch_versions = ch_versions.mix( TRIM_REPS.out.versions )
+    }
 
     PREPARE_ESMFOLD_DBS( esmfold_db, esmfold_params_path, esmfold_3B_v1, \
         esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression )
