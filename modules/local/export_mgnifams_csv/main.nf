@@ -15,7 +15,7 @@ process EXPORT_MGNIFAMS_CSV {
     // tuple val(meta6), path(scores      , stageAs: "results/structures/*")
 
     output:
-    tuple val(meta), path("mgnifam.csv"), emit: csv // TODO split and output files instead, update stub
+    tuple val(meta), path("mgnifam.csv"), emit: csv
     path "versions.yml"                 , emit: versions
 
     when:
@@ -37,8 +37,7 @@ process EXPORT_MGNIFAMS_CSV {
 
     stub:
     """
-    mkdir tables
-    touch tables/test.csv
+    touch mgnifam.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -11,8 +11,9 @@ process PARSE_S4PRED_TO_FEATURE_VIEWER {
     tuple val(meta), path(preds) 
 
     output:
-    tuple val(meta), path("${prefix}"), emit: features
-    path "versions.yml"               , emit: versions
+    tuple val(meta), path("${prefix}")      , emit: features
+    tuple val(meta), path("composition.csv"), emit: composition
+    path "versions.yml"                     , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -21,8 +22,9 @@ process PARSE_S4PRED_TO_FEATURE_VIEWER {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     parse_s4pred_to_feature_viewer.py \\
-        ${preds} \\
-        ${prefix}
+        --input_dir ${preds} \\
+        --output_dir ${prefix} \\
+        --csv_out composition.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -35,6 +37,7 @@ process PARSE_S4PRED_TO_FEATURE_VIEWER {
     """
     mkdir -p ${prefix}
     touch ${prefix}/${prefix}.json
+    touch composition.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

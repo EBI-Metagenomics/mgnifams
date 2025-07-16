@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import sys
+import argparse
 import os
 import json
+import csv
 
 def parse_s4pred_to_feature_viewer(input_file, output_file):
     conf_data, pred_data, aa_data = [], [], ""
@@ -17,6 +18,14 @@ def parse_s4pred_to_feature_viewer(input_file, output_file):
             elif line.startswith("  AA:"):
                 aa_data += line.split(":")[1].strip()
 
+    total = len(pred_data)
+    helix_count = pred_data.count('H')
+    strand_count = pred_data.count('E')
+    coil_count = pred_data.count('C')
+    helix_percentage = round((helix_count / total) * 100, 2)
+    strand_percentage = round((strand_count / total) * 100, 2)
+    coil_percentage = round((coil_count / total) * 100, 2)
+    
     if not (len(conf_data) == len(pred_data) == len(aa_data)):
         raise ValueError("Mismatch in lengths of Conf, Pred, and AA sequences.")
     
@@ -67,10 +76,14 @@ def parse_s4pred_to_feature_viewer(input_file, output_file):
     with open(output_file, 'w') as outfile:
         json.dump(features, outfile, indent=4)
 
-def process_directory(input_dir, output_dir):
+    return helix_percentage, strand_percentage, coil_percentage
+
+def process_directory(input_dir, output_dir, csv_out):
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
     
+    csv_rows = [("id","helix_percent","strand_percent","coil_percent")]
+
     # Iterate over all files in the input directory
     for filename in os.listdir(input_dir):
         input_file = os.path.join(input_dir, filename)
@@ -82,16 +95,22 @@ def process_directory(input_dir, output_dir):
             output_file = os.path.join(output_dir, f"{base_name}.json")
             
             # Process the file and save the output JSON
-            parse_s4pred_to_feature_viewer(input_file, output_file)
+            try:
+                helix_percent, strand_percent, coil_percentage = parse_s4pred_to_feature_viewer(input_file, output_file)
+                csv_rows.append((base_name, helix_percent, strand_percent, coil_percentage))
+            except Exception as e:
+                print(f"Error processing {filename}: {e}")
+
+    with open(csv_out, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerows(csv_rows)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python ./bin/parse_s4pred_to_feature_viewer.py <input_dir> <output_dir>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Parse S4Pred output to JSON for FeatureViewer and collect coil % per protein.")
+    parser.add_argument("--input_dir", help="Directory with S4Pred input horiz files", required=True)
+    parser.add_argument("--output_dir", help="Directory for output JSON files", required=True)
+    parser.add_argument("--csv_out", help="Path to output CSV summary file with coil percentages", required=True)
 
-        # Example: python ./bin/parse_s4pred_to_feature_viewer.py /path/to/s4pred_preds output/s4pred
+    args = parser.parse_args()
 
-    input_dir = sys.argv[1]
-    output_dir = sys.argv[2]
-
-    process_directory(input_dir, output_dir)
+    process_directory(args.input_dir, args.output_dir, args.csv_out)
