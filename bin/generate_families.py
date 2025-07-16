@@ -366,7 +366,8 @@ def renumber_sto_msa(
     iteration=None,
     chunk_num=None,
     full_msa_num_seqs=None,
-    consensus=None
+    consensus=None,
+    converged=None
 ):
     if write_metadata:
         assert iteration is not None and chunk_num is not None
@@ -402,7 +403,7 @@ def renumber_sto_msa(
                         if rep_flag:
                             splits = seq_name.split("/")
                             region = splits[1].strip() if "/" in seq_name else "-"
-                            metadatafile.write(f"{iteration},{full_msa_num_seqs},\"{splits[0]}\",{region},{len(seq)},{seq},{consensus}\n")
+                            metadatafile.write(f"{iteration},{full_msa_num_seqs},\"{splits[0]}\",{region},{len(seq)},{seq},{consensus},{converged}\n")
                             repsfile.write(f">{seq_name.strip()}\t{chunk_num}_{iteration}\n{seq}\n")
                             rep_flag = False
 
@@ -442,6 +443,7 @@ def main():
         discard_reason = ""
         discard_value = 0.0
         exit_flag = False
+        converged = False
         hmm = ""
         family_iteration = 0
         while True:
@@ -475,6 +477,7 @@ def main():
 
                 if not new_recruited_sequences:
                     exit_flag = True
+                    converged = True
                     logging.info("Exiting-CONVERGED: no new sequences recruited.")
                     with open(converged_families_file, 'a') as file:
                         file.write(f"{iteration}\n")
@@ -565,7 +568,8 @@ def main():
                 iteration=iteration,
                 chunk_num=args.chunk_num,
                 full_msa_num_seqs=full_msa_num_seqs,
-                consensus=final_hmm.consensus
+                consensus=final_hmm.consensus,
+                converged=converged
             )
 
         remove_tmp_files()
