@@ -27,10 +27,11 @@ workflow ANNOTATE_FAMILIES {
     ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
 
     emit:
-    versions        = ch_versions
-    s4preds         = ANNOTATE_REPS.out.s4preds
-    s4pred_features = ANNOTATE_REPS.out.s4pred_features
-    funfams_domains = ANNOTATE_REPS.out.funfams_domains
-    pfam_hits       = ANNOTATE_MODELS.out.pfam_hits
-    foldseek_hits   = ANNOTATE_STRUCTURES.out.foldseek_hits
+    versions           = ch_versions
+    s4preds            = ANNOTATE_REPS.out.s4preds
+    s4pred_features    = ANNOTATE_REPS.out.s4pred_features
+    s4pred_composition = ANNOTATE_REPS.out.s4pred_composition
+    funfams_domains    = ANNOTATE_REPS.out.funfams_domains
+    pfam_hits          = ANNOTATE_MODELS.out.pfam_hits
+    foldseek_hits      = ANNOTATE_STRUCTURES.out.foldseek_hits
 }

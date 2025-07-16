@@ -9,9 +9,9 @@ import pandas as pd
 # 
 # 
 
-def write_mgnifam_csv(metadata, structure_scores, mgnifam_out):
+def write_mgnifam_csv(metadata, structure_scores, composition, mgnifam_out):
     mgnifam_headers = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length', 'converged', \
-                        'plddt', 'ptm', 'quality_rank', 'novelty_rank', \
+                        'plddt', 'ptm', 'helix_percent','strand_percent','coil_percent', \
                         'seed_msa_blob', 'hmm_blob', 'rf_blob', 'cif_blob',
                         'biome_blob', 'domain_blob', 's4pred_blob' ]
 
@@ -21,7 +21,10 @@ def write_mgnifam_csv(metadata, structure_scores, mgnifam_out):
 
     df2 = pd.read_csv(structure_scores)
 
-    merged = pd.merge(df1, df2, on='id', how='left') # Merge on 'id'
+    merged = pd.merge(df1, df2, on='id', how='left')
+
+    df3 = pd.read_csv(composition)
+    merged = pd.merge(merged, df3, on='id', how='left')
 
     # Map columns to final header, fill missing ones
     for col in mgnifam_headers:
@@ -200,11 +203,12 @@ def main():
     parser = argparse.ArgumentParser(description="Export MGnifams sql-ready table CSV files.")
     parser.add_argument("--metadata", help="Generated families metadata mqc CSV")
     parser.add_argument("--structure_scores", help="Tertiary prediction structure scores (plddit, ptm)")
+    parser.add_argument("--composition", help="Predicted compositional features --helix, strand or coil")
     parser.add_argument("--mgnifam_out", help="CSV for mgnifam table")
 
     args = parser.parse_args()
 
-    write_mgnifam_csv(args.metadata, args.structure_scores, args.mgnifam_out)
+    write_mgnifam_csv(args.metadata, args.structure_scores, args.composition, args.mgnifam_out)
     # mgnifams_out_dir  = sys.argv[1]
     # families_dir_name = sys.argv[2]
     # output_dir        = sys.argv[3] # 'tables'

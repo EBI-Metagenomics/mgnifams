@@ -7,13 +7,14 @@ workflow EXPORT_DATA {
     take:
     family_metadata
     predicted_scores
+    composition
     pfam_hits
     foldseek_hits
 
     main:
     ch_versions = Channel.empty()
 
-    EXPORT_MGNIFAMS_CSV( family_metadata, predicted_scores )
+    EXPORT_MGNIFAMS_CSV( family_metadata, predicted_scores, composition )
     ch_versions = ch_versions.mix( EXPORT_MGNIFAMS_CSV.out.versions )
 
     // query_results  = QUERY_MGNPROTEIN_DB( Channel.of( [ [id:"config"], params.db_config_file ] ), refined_families )
