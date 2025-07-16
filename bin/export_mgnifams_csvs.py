@@ -18,16 +18,10 @@ def write_mgnifam_csv(metadata, structure_scores, mgnifam_out):
     df1 = pd.read_csv(metadata, header=None)
     df1.columns = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length',
                 'query_sequence', 'target_sequence', 'converged']
-    df1['id'] = df1['id'].astype(int)
 
-    df2 = pd.read_csv(structure_scores)  # already has headers: family_id,rep_length,plddt,ptm
-    df2.rename(columns={'family_id': 'id'}, inplace=True)
+    df2 = pd.read_csv(structure_scores)
 
     merged = pd.merge(df1, df2, on='id', how='left') # Merge on 'id'
-
-    # Resolve duplicated rep_length column (keep original from df1)
-    merged = merged.drop(columns=['rep_length_y'])
-    merged = merged.rename(columns={'rep_length_x': 'rep_length'})
 
     # Map columns to final header, fill missing ones
     for col in mgnifam_headers:
@@ -36,7 +30,7 @@ def write_mgnifam_csv(metadata, structure_scores, mgnifam_out):
 
     # Reorder columns
     merged = merged[mgnifam_headers]
-    
+
     merged.to_csv(mgnifam_out, index=False, header=mgnifam_headers)
 
 def initiate_output_csvs(mgnifam_out):

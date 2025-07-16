@@ -20,8 +20,8 @@ process EXTRACT_ESMFOLD_SCORES {
     script:
     """
     csv_file="${meta.id}_scores.csv"
-    echo "family_id,rep_length,plddt,ptm" > "\$csv_file"
-    grep -E 'pLDDT' *_scores.txt | awk -F' |, ' '{gsub("_", "/", \$11); print \$11 "," \$14 "," \$16 "," \$18}' >> "\$csv_file"
+    echo "id,plddt,ptm" > "\$csv_file"
+    grep -E 'pLDDT' *_scores.txt | awk -F' |, ' '{gsub("_", "/", \$11); print \$11 "," \$16 "," \$18}' >> "\$csv_file"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
