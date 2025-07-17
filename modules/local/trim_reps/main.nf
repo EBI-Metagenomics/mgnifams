@@ -21,7 +21,7 @@ process TRIM_REPS {
     def filename = reps.getBaseName()
     """
     while IFS= read -r line; do
-    echo "\${line:0:10}" >> "${filename}_trimmed.fasta"
+    echo "\${line:0:20}" >> "${filename}_trimmed.fasta"
     done < "${reps}"
 
     cat <<-END_VERSIONS > versions.yml
