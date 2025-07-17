@@ -35,13 +35,10 @@ process EXPORT_PFAMS {
             long_desc = \$3
             gsub(/^[[:space:]]+/, "", short_desc)
             gsub(/^[[:space:]]+/, "", long_desc)
-            if (!(pfam in desc_map)) {
-                desc_map[pfam] = short_desc "; " long_desc
+            if (!(pfam in seen)) {
+                seen[pfam] = 1
+                print pfam "\t" short_desc "\t" long_desc
             }
-        }
-        END {
-            for (k in desc_map)
-                print k "\t" desc_map[k]
         }
     ' "${hhr_name}" > descriptions.tsv
 
