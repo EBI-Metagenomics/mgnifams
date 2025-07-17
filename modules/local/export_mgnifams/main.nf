@@ -28,7 +28,7 @@ process EXPORT_MGNIFAMS {
         --metadata ${metadata} \\
         --structure_scores ${scores} \\
         --composition ${composition} \\
-        --mgnifam_out mgnifam.csv
+        --outfile mgnifam.csv
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
 import argparse
-import csv
 import pandas as pd
 # import sys
 # import os
 # import glob
-# 
-# 
 
-def write_mgnifam_csv(metadata, structure_scores, composition, mgnifam_out):
+def write_mgnifam_csv(metadata, structure_scores, composition, outfile):
     mgnifam_headers = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length', 'converged', \
                         'plddt', 'ptm', 'helix_percent','strand_percent','coil_percent', \
                         'rep_sequence', 'consensus', 'seed_msa_blob', 'hmm_blob', 'rf_blob',\
@@ -34,9 +31,9 @@ def write_mgnifam_csv(metadata, structure_scores, composition, mgnifam_out):
     # Reorder columns
     merged = merged[mgnifam_headers]
 
-    merged.to_csv(mgnifam_out, index=False, header=mgnifam_headers)
+    merged.to_csv(outfile, index=False, header=mgnifam_headers)
 
-# def initiate_output_csvs(mgnifam_out):
+# def initiate_output_csvs(outfile):
 #     mgnifam_headers = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length', 'converged', \
 #                         'plddt', 'ptm', 'quality_rank', 'novelty_rank', \
 #                         'seed_msa_blob', 'hmm_blob', 'rf_blob', 'cif_blob',
@@ -50,7 +47,7 @@ def write_mgnifam_csv(metadata, structure_scores, composition, mgnifam_out):
 #     mgnifam_pfams_csv_path    = os.path.join(output_dir, 'mgnifam_pfams.csv')
 #     mgnifam_folds_csv_path    = os.path.join(output_dir, 'mgnifam_folds.csv')
 
-    # with open(mgnifam_out, 'w', newline='') as file:
+    # with open(outfile, 'w', newline='') as file:
     #     writer = csv.writer(file)
     #     writer.writerow(mgnifam_headers)
 #     with open(mgnifam_proteins_csv_path, 'w', newline='') as file:
@@ -204,11 +201,11 @@ def main():
     parser.add_argument("--metadata", help="Generated families metadata mqc CSV")
     parser.add_argument("--structure_scores", help="Tertiary prediction structure scores (plddit, ptm)")
     parser.add_argument("--composition", help="Predicted compositional features --helix, strand or coil")
-    parser.add_argument("--mgnifam_out", help="CSV for mgnifam table")
+    parser.add_argument("--outfile", help="CSV for mgnifam table")
 
     args = parser.parse_args()
 
-    write_mgnifam_csv(args.metadata, args.structure_scores, args.composition, args.mgnifam_out)
+    write_mgnifam_csv(args.metadata, args.structure_scores, args.composition, args.outfile)
     # mgnifams_out_dir  = sys.argv[1]
     # families_dir_name = sys.argv[2]
     # output_dir        = sys.argv[3] # 'tables'
