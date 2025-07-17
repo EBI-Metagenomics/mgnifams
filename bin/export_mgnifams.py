@@ -30,42 +30,6 @@ def write_mgnifam_csv(metadata, structure_scores, composition, outfile):
 
     merged.to_csv(outfile, index=False, header=mgnifam_headers)
 
-# def initiate_output_csvs(outfile):
-#     mgnifam_pfams_headers    = ['mgnifam_id', 'rank', 'pfam_id', 'pfam_hit', 'query_hmm_range', 'template_hmm_range', 'e_value']
-
-
-# def write_mgnifam_pfams(mgnifams_out_dir, output_dir):
-#     pfam_hits_directory = os.path.join(mgnifams_out_dir, 'hh', 'pfam_hits')
-#     hits_files = glob.glob(os.path.join(pfam_hits_directory, '*'))
-
-#     mgnifam_pfams_csv_path = os.path.join(output_dir, 'mgnifam_pfams.csv')
-
-#     for file_path in hits_files:
-#         with open(file_path, 'r') as file:
-#             hits_data = []
-#             mgnifam_id = os.path.basename(file_path).split('.')[0]
-
-#             for line in file:
-#                 name = line[4:34].strip()
-#                 pfam_id = name.split(';')[0].strip().split('.')[0]
-                
-#                 hit = {
-#                     'mgnifam_id': mgnifam_id,
-#                     'rank': line[0:3].strip(),
-#                     'pfam_id': pfam_id,
-#                     'name': name,
-#                     'query_hmm': line[75:83].strip(),
-#                     'template_hmm': line[84:99].strip(),
-#                     'e_value': line[41:48].strip()
-#                 }
-#                 hits_data.append(hit)
-
-#             with open(mgnifam_pfams_csv_path, 'a', newline='') as csv_file:
-#                 writer = csv.DictWriter(csv_file, fieldnames=hit.keys())
-#                 if os.path.getsize(mgnifam_pfams_csv_path) == 0:  # If file is empty, write header
-#                     writer.writeheader()
-#                 writer.writerows(hits_data)
-
 def main():
     parser = argparse.ArgumentParser(description="Export MGnifams sql-ready table CSV files.")
     parser.add_argument("--metadata", help="Generated families metadata mqc CSV")

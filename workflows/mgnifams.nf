@@ -92,7 +92,7 @@ workflow MGNIFAMS {
 
     EXPORT_DATA( GENERATE_NONREDUNDANT_FAMILIES.out.metadata, PREDICT_STRUCTURES.out.scores, \
         ANNOTATE_FAMILIES.out.s4pred_composition, ANNOTATE_FAMILIES.out.funfam_domains, \
-        ANNOTATE_FAMILIES.out.pfam_hits, ANNOTATE_FAMILIES.out.foldseek_hits )
+        ANNOTATE_FAMILIES.out.pfam_hits, ANNOTATE_FAMILIES.out.foldseek_hits, outdir )
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
 
     //
