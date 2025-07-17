@@ -26,6 +26,8 @@ process INSERT_SQLITE {
     .exit
     EOF
 
+    # Create temporary tables for the other CSV files
+    sqlite3 ${db} <<EOF
     CREATE TEMP TABLE temp_mgnifam_funfams (
         mgnifam_id INTEGER,
         funfam TEXT,
@@ -68,7 +70,6 @@ process INSERT_SQLITE {
     # Import data into temporary tables
     sqlite3 ${db} <<EOF
     .mode csv
-    .import 'mgnifam_proteins.csv' temp_mgnifam_proteins
     .import 'mgnifam_funfams.csv' temp_mgnifam_funfams
     .import 'mgnifam_folds.csv' temp_mgnifam_folds
     .import 'mgnifam_pfams.csv' temp_mgnifam_pfams
