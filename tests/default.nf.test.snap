@@ -24,9 +24,6 @@
                 "EXTRACT_UNIQUE_CLUSTER_REPS": {
                     "sed": 4.7
                 },
-                "FIND_ANNOTATED_FAMILIES_BY_STRUCTURE": {
-                    "sed": 4.7
-                },
                 "FOLDSEEK_EASYSEARCH_PDB": {
                     "foldseek": "9.427df8a"
                 },
