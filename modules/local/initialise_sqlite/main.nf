@@ -27,4 +27,15 @@ process INITIALISE_SQLITE {
         sqlite3: \$(sqlite3 --version | awk '{print \$1}')
     END_VERSIONS
     """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.sqlite3
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        sqlite3: \$(sqlite3 --version | awk '{print \$1}')
+    END_VERSIONS
+    """
 }

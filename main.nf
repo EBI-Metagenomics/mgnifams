@@ -40,7 +40,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     //
     // WORKFLOW: Run main pipeline
     //
-    if (params.mode == "run_mgnifams_pipeline") {
+    if (params.mode == 'run_mgnifams_pipeline') {
         MGNIFAMS( 
             samplesheet, params.fasta_input_mode, params.compress_mode, \
             params.input_csv_chunk_size, params.min_sequence_length, params.outdir, \
@@ -61,7 +61,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     //
     // SUBWORKFLOW: Run update mgnifams db subworkflow
     //
-    else if (params.mode == "update_mgnifams_db") {
+    else if (params.mode == 'update_mgnifams_db') {
         UPDATE_DB( 
             samplesheet
         )
@@ -69,7 +69,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     //
     // MODULE: Run initialise mgnifams db module
     //
-    else if (params.mode == "initialise_mgnifams_db") {
+    else if (params.mode == 'initialise_mgnifams_db') {
         INITIALISE_SQLITE( 
             samplesheet
         )
