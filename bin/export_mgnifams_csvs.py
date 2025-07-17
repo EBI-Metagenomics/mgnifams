@@ -12,12 +12,12 @@ import pandas as pd
 def write_mgnifam_csv(metadata, structure_scores, composition, mgnifam_out):
     mgnifam_headers = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length', 'converged', \
                         'plddt', 'ptm', 'helix_percent','strand_percent','coil_percent', \
-                        'seed_msa_blob', 'hmm_blob', 'rf_blob', 'cif_blob',
-                        'biome_blob', 'domain_blob', 's4pred_blob' ]
+                        'rep_sequence', 'consensus', 'seed_msa_blob', 'hmm_blob', 'rf_blob',\
+                        'cif_blob', 'biome_blob', 'domain_blob', 's4pred_blob' ]
 
     df1 = pd.read_csv(metadata, header=None)
     df1.columns = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length',
-                'query_sequence', 'target_sequence', 'converged']
+                    'rep_sequence', 'consensus', 'converged']
 
     df2 = pd.read_csv(structure_scores)
 
@@ -36,11 +36,11 @@ def write_mgnifam_csv(metadata, structure_scores, composition, mgnifam_out):
 
     merged.to_csv(mgnifam_out, index=False, header=mgnifam_headers)
 
-def initiate_output_csvs(mgnifam_out):
-    mgnifam_headers = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length', 'converged', \
-                        'plddt', 'ptm', 'quality_rank', 'novelty_rank', \
-                        'seed_msa_blob', 'hmm_blob', 'rf_blob', 'cif_blob',
-                        'biome_blob', 'domain_blob', 's4pred_blob' ]
+# def initiate_output_csvs(mgnifam_out):
+#     mgnifam_headers = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length', 'converged', \
+#                         'plddt', 'ptm', 'quality_rank', 'novelty_rank', \
+#                         'seed_msa_blob', 'hmm_blob', 'rf_blob', 'cif_blob',
+#                         'biome_blob', 'domain_blob', 's4pred_blob' ]
 #     mgnifam_proteins_headers = ['mgnifam_id', 'protein', 'region']
 #     mgnifam_pfams_headers    = ['mgnifam_id', 'rank', 'pfam_id', 'pfam_hit', 'query_hmm_range', 'template_hmm_range', 'e_value']
 #     mgnifam_folds_headers    = ['mgnifam_id', 'target_structure', 'aligned_length', 'query_start', 'query_end', 'target_start', 'target_end', 'e_value']
@@ -50,9 +50,9 @@ def initiate_output_csvs(mgnifam_out):
 #     mgnifam_pfams_csv_path    = os.path.join(output_dir, 'mgnifam_pfams.csv')
 #     mgnifam_folds_csv_path    = os.path.join(output_dir, 'mgnifam_folds.csv')
 
-    with open(mgnifam_out, 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(mgnifam_headers)
+    # with open(mgnifam_out, 'w', newline='') as file:
+    #     writer = csv.writer(file)
+    #     writer.writerow(mgnifam_headers)
 #     with open(mgnifam_proteins_csv_path, 'w', newline='') as file:
 #         writer = csv.writer(file)
 #         writer.writerow(mgnifam_proteins_headers)
