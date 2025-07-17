@@ -1,4 +1,8 @@
-include { EXPORT_MGNIFAMS_CSV } from '../../../modules/local/export_mgnifams_csv/main'
+include { EXPORT_MGNIFAMS   } from '../../../modules/local/export_mgnifams/main'
+// include { EXPORT_FUNFAMS    } from '../../../modules/local/export_funfams/main'
+// include { EXPORT_PFAMS      } from '../../../modules/local/export_pfams/main'
+// include { EXPORT_FOLDS      } from '../../../modules/local/export_folds/main'
+
 // include { QUERY_MGNPROTEIN_DB } from '../../../modules/local/query_mgnprotein_db/main'
 // include { PARSE_BIOMES        } from '../../../modules/local/parse_biomes/main'
 // include { PARSE_DOMAINS       } from '../../../modules/local/parse_domains/main'
@@ -8,15 +12,27 @@ workflow EXPORT_DATA {
     family_metadata
     predicted_scores
     composition
+    funfam_domains
     pfam_hits
     foldseek_hits
 
     main:
     ch_versions = Channel.empty()
 
-    EXPORT_MGNIFAMS_CSV( family_metadata, predicted_scores, composition )
-    ch_versions = ch_versions.mix( EXPORT_MGNIFAMS_CSV.out.versions )
+    EXPORT_MGNIFAMS( family_metadata, predicted_scores, composition )
+    ch_versions = ch_versions.mix( EXPORT_MGNIFAMS.out.versions )
 
+    // EXPORT_FUNFAMS( funfam_domains )
+    // ch_versions = ch_versions.mix( EXPORT_FUNFAMS.out.versions )
+
+    // EXPORT_PFAMS( pfam_hits )
+    // ch_versions = ch_versions.mix( EXPORT_PFAMS.out.versions )
+
+    // EXPORT_FOLDS( foldseek_hits )
+    // ch_versions = ch_versions.mix( EXPORT_FOLDS.out.versions )
+
+
+    // TODO move to own workflow
     // query_results  = QUERY_MGNPROTEIN_DB( Channel.of( [ [id:"config"], params.db_config_file ] ), refined_families )
     // // TODO ch_versions = ch_versions.mix( QUERY_MGNPROTEIN_DB.out.versions )
     

@@ -29,5 +29,5 @@ workflow ANNOTATE_REPS {
     s4preds            = S4PRED_RUNMODEL.out.preds
     s4pred_features    = PARSE_S4PRED_TO_FEATURE_VIEWER.out.features
     s4pred_composition = PARSE_S4PRED_TO_FEATURE_VIEWER.out.composition
-    funfams_domains    = HMMER_HMMSEARCH.out.domain_summary
+    funfam_domains     = HMMER_HMMSEARCH.out.domain_summary
 }

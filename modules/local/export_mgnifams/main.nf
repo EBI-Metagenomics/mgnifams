@@ -1,4 +1,4 @@
-process EXPORT_MGNIFAMS_CSV {
+process EXPORT_MGNIFAMS {
     tag "$meta.id"
     label 'process_single'
 
@@ -24,7 +24,7 @@ process EXPORT_MGNIFAMS_CSV {
 
     script:
     """
-    export_mgnifams_csvs.py \\
+    export_mgnifams.py \\
         --metadata ${metadata} \\
         --structure_scores ${scores} \\
         --composition ${composition} \\
