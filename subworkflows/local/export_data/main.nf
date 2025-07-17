@@ -1,7 +1,7 @@
 include { EXPORT_MGNIFAMS } from '../../../modules/local/export_mgnifams/main'
 include { EXPORT_FUNFAMS  } from '../../../modules/local/export_funfams/main'
 // include { EXPORT_PFAMS    } from '../../../modules/local/export_pfams/main'
-// include { EXPORT_FOLDS    } from '../../../modules/local/export_folds/main'
+include { EXPORT_FOLDS    } from '../../../modules/local/export_folds/main'
 
 // include { QUERY_MGNPROTEIN_DB } from '../../../modules/local/query_mgnprotein_db/main'
 // include { PARSE_BIOMES        } from '../../../modules/local/parse_biomes/main'
@@ -28,8 +28,8 @@ workflow EXPORT_DATA {
     // EXPORT_PFAMS( pfam_hits )
     // ch_versions = ch_versions.mix( EXPORT_PFAMS.out.versions )
 
-    // EXPORT_FOLDS( foldseek_hits )
-    // ch_versions = ch_versions.mix( EXPORT_FOLDS.out.versions )
+    EXPORT_FOLDS( foldseek_hits )
+    ch_versions = ch_versions.mix( EXPORT_FOLDS.out.versions )
 
 
     // TODO move to own workflow
