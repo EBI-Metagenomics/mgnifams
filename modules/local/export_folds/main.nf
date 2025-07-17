@@ -1,4 +1,4 @@
-process FIND_ANNOTATED_FAMILIES_BY_STRUCTURE {
+process EXPORT_FOLDS {
     tag "$meta.id"
     label 'process_single'
 
@@ -8,19 +8,28 @@ process FIND_ANNOTATED_FAMILIES_BY_STRUCTURE {
         'nf-core/ubuntu:20.04' }"
 
     input:
-    tuple val(meta), path(m8s)
+    tuple val(meta ), path(m8)
 
     output:
-    tuple val(meta), path("annotated_families.txt"), emit: annotated_families, optional: true
-    path "versions.yml"                            , emit: versions
+    tuple val(meta), path("mgnifam_folds.csv"), emit: csv
+    path "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
+    def is_compressed = m8.getExtension() == "gz" ? true : false
+    def m8_name = is_compressed ? m8.getBaseName() : m8
     """
-    awk '{print \$1}' ${m8s} | cut -d'-' -f 1 | sort | uniq > annotated_families.txt
-    
+    if [ "${is_compressed}" == "true" ]; then
+        gzip -c -d ${m8} > ${m8_name}
+    fi
+
+    (
+        echo "id,fold,aligned_length,q_start,q_end,t_start,t_end,e_value"
+        cut -f1,2,4,7,8,9,10,11 ${m8_name} | tr '\t' ','
+    ) > mgnifam_folds.csv
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sed: \$(sed --version 2>&1 | sed -n 1p | sed 's/sed (GNU sed) //')
@@ -29,7 +38,7 @@ process FIND_ANNOTATED_FAMILIES_BY_STRUCTURE {
 
     stub:
     """
-    touch annotated_families.txt
+    touch mgnifam_folds.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
