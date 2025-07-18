@@ -1,5 +1,5 @@
-include { INIT_SQLITE } from '../../../modules/local/init_sqlite/main'
-include { IMPORT_QUERIES    } from '../../../modules/local/import_queries/main.nf'
+include { INIT_SQLITE    } from '../../../modules/local/init_sqlite/main'
+include { IMPORT_QUERIES } from '../../../modules/local/import_queries/main.nf'
 
 workflow INIT_DB {
     take:
@@ -10,8 +10,8 @@ workflow INIT_DB {
 
     ch_queries = samplesheet
         .multiMap { meta, schema, pipeline_results ->
-            schema: [ meta, file("${schema.toUriString()}", checkIfExists: true) ]
-            pipeline_results: [ meta, file("${pipeline_results.toUriString()}", checkIfExists: true) ]
+            schema: [ meta, file("${schema}", checkIfExists: true) ]
+            pipeline_results: [ meta, file("${pipeline_results.toUriString()}/table_data/*", checkIfExists: true) ]
         }
 
     INIT_SQLITE( ch_queries.schema )
