@@ -14,10 +14,10 @@
 */
 
 include { MGNIFAMS                } from './workflows/mgnifams'
+include { INIT_DB                 } from './subworkflows/local/init_db'
 include { UPDATE_DB               } from './subworkflows/local/update_db'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
-include { INITIALISE_SQLITE       } from './modules/local/initialise_sqlite/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,18 +59,18 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
         ch_multiqc = MGNIFAMS.out.multiqc_report
     }
     //
-    // SUBWORKFLOW: Run update mgnifams db subworkflow
+    // SUBWORKFLOW: Run initialize mgnifams db subworkflow
     //
-    else if (params.mode == 'update_mgnifams_db') {
-        UPDATE_DB( 
+    else if (params.mode == 'init_mgnifams_db') {
+        INIT_DB( 
             samplesheet
         )
     }
     //
-    // MODULE: Run initialise mgnifams db module
+    // SUBWORKFLOW: Run update mgnifams db subworkflow
     //
-    else if (params.mode == 'initialise_mgnifams_db') {
-        INITIALISE_SQLITE( 
+    else if (params.mode == 'update_mgnifams_db') {
+        UPDATE_DB( 
             samplesheet
         )
     }

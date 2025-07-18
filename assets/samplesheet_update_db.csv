@@ -1,2 +1,2 @@
 sample,results_folder,existing_db
-mgnifams_update_db,/path/to/mgnifams/output,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/db/assets/data/mgnifams_test.sqlite3
+mgnifams_update_db,/path/to/mgnifams/output,/path/to/mgnifams_test.sqlite3

@@ -1,4 +1,4 @@
-process INITIALISE_SQLITE {
+process INIT_SQLITE {
     tag "$meta.id"
     label 'process_single'
 

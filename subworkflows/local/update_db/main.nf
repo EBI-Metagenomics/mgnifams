@@ -1,4 +1,3 @@
-include { INSERT_SQLITE       } from '../../../modules/local/insert_sqlite/main.nf'
 // include { QUERY_MGNPROTEIN_DB } from '../../../modules/local/query_mgnprotein_db/main'
 // include { PARSE_BIOMES        } from '../../../modules/local/parse_biomes/main'
 // include { PARSE_DOMAINS       } from '../../../modules/local/parse_domains/main'
@@ -18,9 +17,6 @@ workflow UPDATE_DB {
         }
     //TODO more multiMaps for query/parse modules
 
-    INSERT_SQLITE( ch_queries.insert )
-    ch_versions = ch_versions.mix( INSERT_SQLITE.out.versions )
-
     // query_results  = QUERY_MGNPROTEIN_DB( Channel.of( [ [id:"config"], params.db_config_file ] ), refined_families )
     // // TODO ch_versions = ch_versions.mix( QUERY_MGNPROTEIN_DB.out.versions )
     
@@ -39,7 +35,7 @@ workflow UPDATE_DB {
     // // TODO ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
 
     // TODO append PARSE_BIOMES and PARSE_DOMAINS from above
-    // APPEND_SQLITE_BLOBS( INSERT_SQLITE.out.db, ch_queries.update )
+    // APPEND_SQLITE_BLOBS( IMPORT_QUERIES.out.db, ch_queries.update )
     // ch_versions = ch_versions.mix( APPEND_SQLITE_BLOBS.out.versions )
 
     emit:

@@ -1,4 +1,4 @@
-process INSERT_SQLITE {
+process IMPORT_QUERIES {
     tag "$meta.id"
     label 'process_single'
 
@@ -8,7 +8,8 @@ process INSERT_SQLITE {
         'community.wave.seqera.io/library/sqlite:3.48.0--48957425ca78aa09' }"
 
     input:
-    tuple val(meta), path(pipeline_results), path(db)
+    tuple val(meta) , path(pipeline_results)
+    tuple val(meta2), path(db)
     
     output:
     tuple val(meta), path(db), emit: db
