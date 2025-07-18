@@ -9,7 +9,7 @@ def load_descriptions(desc_file):
         for line in f:
             parts = line.rstrip("\n").split("\t")
             if len(parts) >= 3:
-                pfam, name, description = parts[0].strip(), parts[1].strip(), parts[2].strip()
+                pfam, name, description = parts[0].strip().split('.')[0], parts[1].strip(), parts[2].strip()
                 desc_map[pfam] = {"name": name, "description": description}
             else:
                 # fallback if descriptions missing, just empty strings
@@ -31,15 +31,12 @@ def parse_summary_block(hhr_file, desc_map):
                 if line.strip() == "":
                     break
 
-                parts = line.strip().split()
-                if len(parts) < 15:
-                    continue
-                pfam_id = parts[1]
-                prob = parts[6]
-                e_value = parts[7]
-                length = parts[11]
-                query_hmm = parts[12]
-                template_hmm = parts[13] + " " + parts[14]
+                pfam_id = line[4:34].strip().split(';')[0].strip().split('.')[0]
+                prob = line[35:40].strip()
+                e_value = line[41:48].strip()
+                length = line[70:74].strip()
+                query_hmm = line[75:83].strip()
+                template_hmm = line[84:99].strip()
 
                 desc = desc_map.get(pfam_id, {"name": "", "description": ""})
 
