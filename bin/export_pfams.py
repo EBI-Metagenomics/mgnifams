@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import csv
 
 def load_descriptions(desc_file):
     desc_map = {}
@@ -36,7 +35,7 @@ def parse_summary_block(hhr_file, desc_map):
                 e_value = line[41:48].strip()
                 length = line[70:74].strip()
                 query_hmm = line[75:83].strip()
-                template_hmm = line[84:99].strip()
+                template_hmm = ' '.join(line[84:99].strip().split()) # also convert double space to single
 
                 desc = desc_map.get(pfam_id, {"name": "", "description": ""})
 
@@ -48,7 +47,7 @@ def parse_summary_block(hhr_file, desc_map):
                     "e_value": e_value,
                     "length": length,
                     "query_hmm": query_hmm,
-                    "template_hmm": template_hmm,
+                    "template_hmm": template_hmm
                 }
                 records.append(rec)
 
@@ -65,13 +64,20 @@ def main():
     desc_map = load_descriptions(args.descriptions)
     records = parse_summary_block(args.hhr_file, desc_map)
 
-    with open(args.outfile, "w", newline="") as csvfile:
-        fieldnames = ["id", "pfam", "name", "description", "prob", "e_value", "length", "query_hmm", "template_hmm"]
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
+    with open(args.outfile, "w", encoding="utf-8") as f:
+        header = ["id", "pfam", "name", "description", "prob", "e_value", "length", "query_hmm", "template_hmm"]
+        f.write(",".join(header) + "\n")
+        
         for rec in records:
-            rec["id"] = args.id  # add the family chunk id to each record
-            writer.writerow(rec)
+            rec["id"] = args.id # add the family chunk id to each record
+            row = []
+            for col in header:
+                val = rec.get(col, "")
+                if col == "description":
+                    # Always quote description, escape any embedded quotes
+                    val = '"' + val.replace('"', '""') + '"'
+                row.append(val)
+            f.write(",".join(row) + "\n")
 
     print(f"Wrote {len(records)} records to {args.outfile}")
 
