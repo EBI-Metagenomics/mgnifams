@@ -1,4 +1,4 @@
-process INITIALISE_SQLITE {
+process INIT_SQLITE {
     tag "$meta.id"
     label 'process_single'
 
@@ -21,6 +21,17 @@ process INITIALISE_SQLITE {
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     sqlite3 ${prefix}.sqlite3 < ${schema_file}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        sqlite3: \$(sqlite3 --version | awk '{print \$1}')
+    END_VERSIONS
+    """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.sqlite3
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
