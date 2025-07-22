@@ -22,3 +22,4 @@ setup_clusters/*
 generate_families/**/*
 generate_families/*
 annotation/**/*
+table_data/*

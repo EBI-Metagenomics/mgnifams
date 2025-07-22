@@ -26,6 +26,8 @@ nextflow_pipeline {
             def stable_families_size    = getAllFilesFromDir(params.outdir + families_path, ignoreFile: 'tests/.nftignore')
             def annotations_path        = "/annotation"
             def stable_annotations_size = getAllFilesFromDir(params.outdir + annotations_path, ignoreFile: 'tests/.nftignore')
+            def table_data_path         = "/table_data"
+            def stable_table_data_size  = getAllFilesFromDir(params.outdir + table_data_path, ignoreFile: 'tests/.nftignore')
 
             assertAll(
                 { assert workflow.success},
@@ -42,7 +44,8 @@ nextflow_pipeline {
                     structures_path  + ": " + stable_structures_size.size(),
                     clusters_path    + ": " + stable_clusters_size.size(),
                     families_path    + ": " + stable_families_size.size(),
-                    annotations_path + ": " + stable_annotations_size.size()
+                    annotations_path + ": " + stable_annotations_size.size(),
+                    table_data_path  + ": " + stable_table_data_size.size()
                 ).match() }
             )
         }

@@ -1,7 +1,7 @@
 {
     "-profile test": {
         "content": [
-            70,
+            80,
             {
                 "CALCULATE_CLUSTER_DISTRIBUTION": {
                     "sed": 4.7
@@ -11,6 +11,19 @@
                 },
                 "CHUNK_CLUSTERS": {
                     "sed": 4.7
+                },
+                "EXPORT_FOLDS": {
+                    "sed": 4.7
+                },
+                "EXPORT_FUNFAMS": {
+                    "sed": 4.7
+                },
+                "EXPORT_MGNIFAMS": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
+                },
+                "EXPORT_PFAMS": {
+                    "python": "3.13.0"
                 },
                 "EXTRACT_CUDA_FAILED": {
                     "python": "3.13.0"
@@ -122,6 +135,7 @@
                 "annotation/reps/funfams",
                 "annotation/reps/funfams/reps_fasta.domtbl.gz",
                 "annotation/reps/s4pred",
+                "annotation/reps/s4pred/composition.csv",
                 "annotation/reps/s4pred/horiz",
                 "annotation/reps/s4pred/horiz/1.horiz",
                 "annotation/reps/s4pred/horiz/2.horiz",
@@ -143,7 +157,6 @@
                 "annotation/structures",
                 "annotation/structures/foldseek",
                 "annotation/structures/foldseek/all_hits.tsv",
-                "annotation/structures/foldseek/annotated_families.txt",
                 "annotation/structures/foldseek/pdb.m8",
                 "generate_families",
                 "generate_families/discarded_discarded_mqc.csv",
@@ -283,6 +296,11 @@
                 "structures/esmfold/scores",
                 "structures/esmfold/scores/1_scores.txt",
                 "structures/esmfold/scores/2_scores.txt",
+                "table_data",
+                "table_data/mgnifam.csv",
+                "table_data/mgnifam_folds.csv",
+                "table_data/mgnifam_funfams.csv",
+                "table_data/mgnifam_pfams.csv",
                 "trim",
                 "trim/family_ids.1_trimmed.fasta",
                 "trim/family_ids.2_trimmed.fasta"
@@ -297,12 +315,13 @@
             "/structures: 20",
             "/setup_clusters: 3",
             "/generate_families: 60",
-            "/annotation: 28"
+            "/annotation: 28",
+            "/table_data: 4"
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "25.04.6"
         },
-        "timestamp": "2025-07-15T10:31:51.746159022"
+        "timestamp": "2025-07-22T11:42:00.54840452"
     }
 }
