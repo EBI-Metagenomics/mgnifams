@@ -1,0 +1,5 @@
+channels:
+- conda-forge
+- bioconda
+dependencies:
+- conda-forge::psycopg2=2.9.10

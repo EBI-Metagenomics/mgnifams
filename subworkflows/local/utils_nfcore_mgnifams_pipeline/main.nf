@@ -71,20 +71,20 @@ workflow PIPELINE_INITIALISATION {
 
     if (params.mode == "run_mgnifams_pipeline") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, protein_input, _results_folder, _existing_db, _schema ->
+            .map { sample, protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config ->
                 [ sample, file(protein_input, checkIfExists: true) ]
             }
     }
     else if (params.mode == "init_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, _existing_db, schema ->
+            .map { sample, _protein_input, results_folder, _existing_db, schema, _mgnprotein_db_config ->
                 [ sample, schema, results_folder ]
             }
     }
     else if (params.mode == "update_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, existing_db, _schema ->
-                [ sample, results_folder, existing_db ]
+            .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config ->
+                [ sample, results_folder, existing_db, mgnprotein_db_config ]
             }
     }
 

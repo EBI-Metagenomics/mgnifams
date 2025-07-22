@@ -38,7 +38,7 @@
                     "type": "string",
                     "description": "predict_structures ESMfold conda env"
                 },
-                "db_config_file": {
+                "mgnprotein_db_config_file": {
                     "type": "string",
                     "description": "secrets for sqlite db"
                 },

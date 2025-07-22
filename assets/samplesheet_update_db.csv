@@ -1,2 +1,2 @@
-sample,results_folder,existing_db
-mgnifams_update_db,/path/to/mgnifams/output,/path/to/mgnifams_test.sqlite3
+sample,results_folder,existing_db,mgnprotein_db_config
+mgnifams_update_db,/path/to/mgnifams/output,/path/to/mgnifams_test.sqlite3,/path/to/mgnprotein_db_config.ini

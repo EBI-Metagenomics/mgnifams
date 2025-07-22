@@ -5,9 +5,9 @@ import configparser
 import os
 import psycopg2
 
-def read_config(db_config_file):
+def read_config(mgnprotein_db_config_file):
     config = configparser.ConfigParser()
-    config.read(db_config_file)
+    config.read(mgnprotein_db_config_file)
     return dict(config.items('database'))
 
 def extract_sequence_id(sequence_id_with_region):
@@ -81,12 +81,12 @@ def query_sequence_explorer_pfam(cursor):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Query the PostgreSQL database MGnifams proteins data.")
-    parser.add_argument("db_config_file",       help="Path to the configuration file for the database secrets")
-    parser.add_argument("family_proteins_file", help="Path to the tsv file with families and respective proteins")
+    parser.add_argument("--mgnprotein_db_config_file", help="Path to the configuration file for the database secrets")
+    parser.add_argument("--family_proteins_file", help="Path to the tsv file with families and respective proteins")
     
     args = parser.parse_args()
 
-    db_params = read_config(args.db_config_file)
+    db_params = read_config(args.mgnprotein_db_config_file)
     conn      = psycopg2.connect(**db_params)
     cursor    = conn.cursor()
 

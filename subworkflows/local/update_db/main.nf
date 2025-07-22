@@ -1,4 +1,4 @@
-// include { QUERY_MGNPROTEIN_DB } from '../../../modules/local/query_mgnprotein_db/main'
+include { QUERY_MGNPROTEIN_DB } from '../../../modules/local/query_mgnprotein_db/main'
 // include { PARSE_BIOMES        } from '../../../modules/local/parse_biomes/main'
 // include { PARSE_DOMAINS       } from '../../../modules/local/parse_domains/main'
 // include { APPEND_SQLITE_BLOBS } from '../../../modules/local/append_sqlite_blobs/main.nf'
@@ -11,14 +11,13 @@ workflow UPDATE_DB {
     ch_versions = Channel.empty()
 
     ch_queries = samplesheet
-        .multiMap { meta, pipeline_results, db ->
-            insert: [ meta, file("${pipeline_results.toUriString()}/table_data/*", checkIfExists: true), db ]
+        .multiMap { meta, pipeline_results, db, secrets ->
+            query_mgnprotein: [ meta, secrets, file("${pipeline_results.toUriString()}/generate_families/families/refined_families.tsv", checkIfExists: true) ]
             update: [ meta, file("${pipeline_results.toUriString()}", checkIfExists: true) ]
         }
-    //TODO more multiMaps for query/parse modules
 
-    // query_results  = QUERY_MGNPROTEIN_DB( Channel.of( [ [id:"config"], params.db_config_file ] ), refined_families )
-    // // TODO ch_versions = ch_versions.mix( QUERY_MGNPROTEIN_DB.out.versions )
+    QUERY_MGNPROTEIN_DB( ch_queries.query_mgnprotein )
+    ch_versions = ch_versions.mix( QUERY_MGNPROTEIN_DB.out.versions )
     
     // // Chunking query results to run in parallel
     // ch_query_results_batch = query_results.res

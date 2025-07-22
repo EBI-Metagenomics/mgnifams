@@ -37,8 +37,15 @@
                 "type": "string",
                 "pattern": "^\\S+\\.sqlite$",
                 "exists": true,
-                "description": "The sqlite schema file with the databse table creation queries",
+                "description": "The sqlite schema file with the database table creation queries",
                 "errorMessage": "Must be a schema .sqlite file."
+            },
+            "mgnprotein_db_config": {
+                "type": "string",
+                "pattern": "^\\S+\\.ini$",
+                "exists": true,
+                "description": "The mgnify proteins database config file with secrets",
+                "errorMessage": "Must be a .ini file."
             }
         },
         "required": ["sample"]
