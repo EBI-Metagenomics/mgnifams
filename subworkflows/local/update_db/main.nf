@@ -1,7 +1,7 @@
 include { QUERY_MGNPROTEIN_DB } from '../../../modules/local/query_mgnprotein_db/main'
 include { PARSE_BIOMES        } from '../../../modules/local/parse_biomes/main'
 include { PARSE_DOMAINS       } from '../../../modules/local/parse_domains/main'
-// include { APPEND_SQLITE_BLOBS } from '../../../modules/local/append_sqlite_blobs/main.nf'
+include { UPDATE_SQLITE_BLOBS } from '../../../modules/local/update_sqlite_blobs/main.nf'
 
 workflow UPDATE_DB {
     take:
@@ -32,12 +32,21 @@ workflow UPDATE_DB {
     PARSE_BIOMES( ch_query_results_batch, QUERY_MGNPROTEIN_DB.out.biome_mapping.first() )
     ch_versions = ch_versions.mix( PARSE_BIOMES.out.versions )
 
+    ch_biomes = PARSE_BIOMES.out.res
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"biomes_combined"], file ] }
+    
     PARSE_DOMAINS( ch_query_results_batch, QUERY_MGNPROTEIN_DB.out.pfam_mapping.first(), ch_queries.refined_families.first() )
     ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
 
-    // TODO append PARSE_BIOMES and PARSE_DOMAINS from above
-    // APPEND_SQLITE_BLOBS( ch_queries.update, PARSE_BIOMES.out., PARSE_DOMAINS.out., )
-    // ch_versions = ch_versions.mix( APPEND_SQLITE_BLOBS.out.versions )
+    ch_domains = PARSE_DOMAINS.out.res
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"domains_combined"], file ] }
+
+    UPDATE_SQLITE_BLOBS( ch_queries.update, ch_biomes, ch_domains )
+    ch_versions = ch_versions.mix( UPDATE_SQLITE_BLOBS.out.versions )
 
     emit:
     versions = ch_versions
