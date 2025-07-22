@@ -83,7 +83,7 @@ This workflow is responsible for pulling both model and structural annotations f
 ### 5. export_data
 The final workflow of the pipeline, export_data, creates the MGnifams database. This consists of three different execution units; the first one is parsing files from the outputs of the pipeline into MGnifam CSV tables. The second one is querying the MGnify Proteins database (PGSQL) for additional post-processing information regarding underlying biomes and domain architectures of the families. The third one is initialising the sqlite db with the schema and CSV tables, and then appends all BLOB files to the db. The db tables are; mgnifam, mgnifam_proteins, mgnifam_folds and mgnifam_pfams. The result post-processing files include two id-to-name mapping files (biomes and pfams from MGnify Proteins database), the query results for each family’s proteins for metadata against the MGnify Proteins database, the respective biome and domain results that are appended as BLOBs in the mgnifams database, along with other families generated from previous workflows (MSAs, HMM, CIF, etc.), and finally the resulting db incorporating all this data.
 
-A db_config.ini filepath with secrets must be set in the export_data subworkflow nextflow.config.
+A `mgnprotein_db_config.ini` filepath with secrets must be provided in the `samplesheet_update_db.csv`, under the `mgnprotein_db_config` column.
 
 ```
 [database]
@@ -98,8 +98,6 @@ port = ***
 MGnifams site: http://mgnifams-demo.mgnify.org
 
 GitHub repo: https://github.com/vagkaratzas/mgnifams-site
-
-Quay image: quay.io/microbiome-informatics/mgnifams_site:ebi-wp-k8s-hl
 
 ## Final steps
 Manually execute the next steps to finalise setting up the MGnifams website.

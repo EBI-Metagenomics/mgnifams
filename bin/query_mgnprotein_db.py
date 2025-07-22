@@ -5,9 +5,9 @@ import configparser
 import os
 import psycopg2
 
-def read_config(db_config_file):
+def read_config(mgnprotein_db_config_file):
     config = configparser.ConfigParser()
-    config.read(db_config_file)
+    config.read(mgnprotein_db_config_file)
     return dict(config.items('database'))
 
 def extract_sequence_id(sequence_id_with_region):
@@ -19,7 +19,7 @@ def extract_sequence_id(sequence_id_with_region):
 
     return sequence_id_with_region
 
-def write_out(family_id, rows):
+def write_out(family_id, rows, output_dir):
     output_tsv = f"{output_dir}/{family_id}.tsv"
     with open(output_tsv, 'w') as file:
         for row in rows:
@@ -29,7 +29,7 @@ def write_out(family_id, rows):
             meta_p = metadata.get('p', '')
             file.write(f"{mgyp}\t{meta_b}\t{meta_p}\n")
 
-def execute_query(cursor, family_id, query_sequences):
+def execute_query(cursor, family_id, query_sequences, output_dir):
     unique_query_sequences = list(set(query_sequences))
     sql_query = "SELECT mgyp, metadata FROM sequence_explorer_protein WHERE mgyp IN ({})".format(
         ",".join([f"'{query_sequence}'" for query_sequence in unique_query_sequences])
@@ -39,9 +39,9 @@ def execute_query(cursor, family_id, query_sequences):
     # print(sql_query)
     cursor.execute(sql_query)
     rows = cursor.fetchall()
-    write_out(family_id, rows)
+    write_out(family_id, rows, output_dir)
 
-def query_sequence_explorer_protein(cursor, family_proteins_file):
+def query_sequence_explorer_protein(cursor, family_proteins_file, output_dir):
     with open(family_proteins_file, 'r') as file:
         previous_family_id = None
         query_sequences = []
@@ -49,7 +49,7 @@ def query_sequence_explorer_protein(cursor, family_proteins_file):
             family_id, sequence_id_with_region = line.strip().split('\t')
             if family_id != previous_family_id:
                 if query_sequences:  # Execute previous query if items exist
-                    execute_query(cursor, previous_family_id, query_sequences)
+                    execute_query(cursor, previous_family_id, query_sequences, output_dir)
                 query_sequences = []
                 previous_family_id = family_id
             sequence_id = extract_sequence_id(sequence_id_with_region)
@@ -57,7 +57,7 @@ def query_sequence_explorer_protein(cursor, family_proteins_file):
 
         # Execute the last query
         if query_sequences:
-            execute_query(cursor, previous_family_id, query_sequences)
+            execute_query(cursor, previous_family_id, query_sequences, output_dir)
 
 def query_sequence_explorer_biome(cursor):
     sql_query = "SELECT id, name FROM sequence_explorer_biome"
@@ -81,21 +81,20 @@ def query_sequence_explorer_pfam(cursor):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Query the PostgreSQL database MGnifams proteins data.")
-    parser.add_argument("db_config_file",       help="Path to the configuration file for the database secrets")
-    parser.add_argument("family_proteins_file", help="Path to the tsv file with families and respective proteins")
+    parser.add_argument("--mgnprotein_db_config_file", help="Path to the configuration file for the database secrets")
+    parser.add_argument("--family_proteins_file", help="Path to the tsv file with families and respective proteins")
+    parser.add_argument("--output_dir", help="Output directory with family TSV files containing per MGnify sequence biome and pfam annotations")
     
     args = parser.parse_args()
 
-    db_params = read_config(args.db_config_file)
+    db_params = read_config(args.mgnprotein_db_config_file)
     conn      = psycopg2.connect(**db_params)
     cursor    = conn.cursor()
 
-    global output_dir
-    output_dir = "query_results"
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+    if not os.path.exists(args.output_dir):
+        os.mkdir(args.output_dir)
         
-    query_sequence_explorer_protein(cursor, args.family_proteins_file)
+    query_sequence_explorer_protein(cursor, args.family_proteins_file, args.output_dir)
     query_sequence_explorer_biome(cursor)
     query_sequence_explorer_pfam(cursor)
 

@@ -38,7 +38,7 @@
                     "type": "string",
                     "description": "predict_structures ESMfold conda env"
                 },
-                "db_config_file": {
+                "mgnprotein_db_config_file": {
                     "type": "string",
                     "description": "secrets for sqlite db"
                 },
@@ -477,10 +477,10 @@
                 }
             }
         },
-        "export_data_params": {
-            "title": "export_data_params",
+        "update_db_params": {
+            "title": "update_db_params",
             "type": "object",
-            "description": "Parameters for export_data subworkflow",
+            "description": "Parameters for update_db workflow",
             "properties": {
                 "query_result_chunks": {
                     "type": "integer",
@@ -538,7 +538,7 @@
             "$ref": "#/defs/annotation_params"
         },
         {
-            "$ref": "#/defs/export_data_params"
+            "$ref": "#/defs/update_db_params"
         },
         {
             "$ref": "#/defs/reference_databases"

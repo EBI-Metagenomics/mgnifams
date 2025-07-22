@@ -71,7 +71,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     //
     else if (params.mode == 'update_mgnifams_db') {
         UPDATE_DB( 
-            samplesheet
+            samplesheet, params.query_result_chunks
         )
     }
 
