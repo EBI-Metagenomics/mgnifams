@@ -159,11 +159,15 @@ def get_fasta_sequences(
     headers: typing.Iterable[str],
 ) -> typing.List[Sequence]:
     """Retrieve sequences from pyhmmer obj given a list of headers."""
-    return [
-        Sequence(header.decode(), ALPHABET.decode(pyhmmer_seqs.indexed[header].sequence)) 
-        for header in map(str.encode, headers)
-        if header in pyhmmer_seqs.indexed
-    ]
+    encoded_headers = set(map(str.encode, headers))  # for fast lookup
+    results = []
+
+    for seq in pyhmmer_seqs:
+        if seq.name in encoded_headers:
+            decoded_seq = ALPHABET.decode(seq.sequence)
+            results.append(Sequence(seq.name.decode(), decoded_seq))
+
+    return results
 
 def run_initial_msa(
     members: typing.Iterable[str],
@@ -174,10 +178,12 @@ def run_initial_msa(
     start_time = time.time()
     
     # Convert sequences to pyfamsa.Sequence objects
+    seq_dict = {seq.name: seq for seq in seqs if seq.name in map(str.encode, members)}
+
     sequences = [
-        pyfamsa.Sequence(member, seqs.indexed[member].textize().sequence.encode()) 
-        for member in map(str.encode, members) 
-        if member in seqs.indexed
+        pyfamsa.Sequence(member, seq_dict[member].textize().sequence.encode())
+        for member in map(str.encode, members)
+        if member in seq_dict
     ]
     if not sequences:
         raise ValueError("No valid sequences found for alignment.")
