@@ -1,6 +1,6 @@
 include { QUERY_MGNPROTEIN_DB } from '../../../modules/local/query_mgnprotein_db/main'
 include { PARSE_BIOMES        } from '../../../modules/local/parse_biomes/main'
-// include { PARSE_DOMAINS       } from '../../../modules/local/parse_domains/main'
+include { PARSE_DOMAINS       } from '../../../modules/local/parse_domains/main'
 // include { APPEND_SQLITE_BLOBS } from '../../../modules/local/append_sqlite_blobs/main.nf'
 
 workflow UPDATE_DB {
@@ -14,7 +14,7 @@ workflow UPDATE_DB {
     ch_queries = samplesheet
         .multiMap { meta, pipeline_results, db, secrets ->
             query_mgnprotein: [ meta, secrets, file("${pipeline_results.toUriString()}/generate_families/families/refined_families.tsv", checkIfExists: true) ]
-            parse_domains: [ meta, file("${pipeline_results.toUriString()}/generate_families/families/refined_families.tsv", checkIfExists: true) ]
+            refined_families: [ meta, file("${pipeline_results.toUriString()}/generate_families/families/refined_families.tsv", checkIfExists: true) ]
             update: [ meta, db, file("${pipeline_results.toUriString()}", checkIfExists: true) ]
         }
 
@@ -32,8 +32,8 @@ workflow UPDATE_DB {
     PARSE_BIOMES( ch_query_results_batch, QUERY_MGNPROTEIN_DB.out.biome_mapping.first() )
     ch_versions = ch_versions.mix( PARSE_BIOMES.out.versions )
 
-    // PARSE_DOMAINS( ch_query_results_batch, QUERY_MGNPROTEIN_DB.out.pfam_mapping.first(), ch_queries.parse_domains.first() )
-    // // TODO ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
+    PARSE_DOMAINS( ch_query_results_batch, QUERY_MGNPROTEIN_DB.out.pfam_mapping.first(), ch_queries.refined_families.first() )
+    ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
 
     // TODO append PARSE_BIOMES and PARSE_DOMAINS from above
     // APPEND_SQLITE_BLOBS( ch_queries.update, PARSE_BIOMES.out., PARSE_DOMAINS.out., )
