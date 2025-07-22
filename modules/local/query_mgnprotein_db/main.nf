@@ -23,7 +23,8 @@ process QUERY_MGNPROTEIN_DB {
     """
     query_mgnprotein_db.py \\
         --mgnprotein_db_config_file ${config_file} \\
-        --family_proteins_file ${family_proteins_file}
+        --family_proteins_file ${family_proteins_file} \\
+        --output_dir query_results
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
