@@ -397,6 +397,8 @@ def renumber_sto_msa(
     with open(in_sto_file, 'r') as infile, open(out_sto_file, 'w') as outfile:
         seq_name = ""
         rep_flag = True
+        seen_seq_names = set()  # Found edge cases that contain duplicates
+
         for line in infile:
             split_line = line.split()
 
@@ -405,14 +407,18 @@ def renumber_sto_msa(
                     outfile.write(line)
                 elif split_line[1] == 'STOCKHOLM':
                     outfile.write(f'{line}\n')
-                elif split_line[0] != '#=GF' and split_line[0] != '#=GS' \
-                    and split_line[0] != '#=GC' and split_line[0] != '#=GR':
-                    seq_name = split_line[0].split("/")[0]
+                elif split_line[0] not in ['#=GF', '#=GS', '#=GC', '#=GR']:
+                    raw_seq_name = split_line[0].split("/")[0]
                     seq = re.sub(r"[.-]", "", split_line[1]).upper()
-                    original_seq = get_fasta_sequences(seq_dict, [seq_name])[0][1]
+                    original_seq = get_fasta_sequences(seq_dict, [raw_seq_name])[0][1]
                     start = original_seq.find(seq)
                     end = start + len(seq)
-                    seq_name = parse_protein_name(seq_name, len(seq), split_line[0], len(original_seq), start, end)
+                    seq_name = parse_protein_name(raw_seq_name, len(seq), split_line[0], len(original_seq), start, end)
+
+                    if seq_name.strip() in seen_seq_names:
+                        continue  # Skip duplicates
+                    seen_seq_names.add(seq_name.strip())  # Mark as seen
+
                     line = line.replace(split_line[0], seq_name, 1)
                     outfile.write(line)
 
