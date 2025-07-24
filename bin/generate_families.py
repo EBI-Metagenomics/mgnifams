@@ -154,16 +154,31 @@ def read_pyhmmer_seqs(mgnifams_input_fasta_file: str) -> pyhmmer.easel.DigitalSe
 
     return seqs
 
+def build_sequence_dict(seqs: pyhmmer.easel.DigitalSequenceBlock) -> dict[str, pyhmmer.easel.DigitalSequence]:
+    """Safely build a name → sequence mapping without crashing like .indexed"""
+    start_time = time.time()
+
+    seq_dict = {seq.name.decode(): seq for seq in seqs}
+    
+    log_time(start_time, "build_sequence_dict: ")
+
+    return seq_dict
+
 def get_fasta_sequences(
-    pyhmmer_seqs: pyhmmer.easel.DigitalSequenceBlock,
+    seq_dict: dict[str, pyhmmer.easel.DigitalSequence],
     headers: typing.Iterable[str],
 ) -> typing.List[Sequence]:
-    """Retrieve sequences from pyhmmer obj given a list of headers."""
-    return [
-        Sequence(header.decode(), ALPHABET.decode(pyhmmer_seqs.indexed[header].sequence)) 
-        for header in map(str.encode, headers)
-        if header in pyhmmer_seqs.indexed
-    ]
+    """Retrieve sequences from a prebuilt name → sequence dictionary."""
+    results = []
+
+    for header in headers:
+        seq = seq_dict.get(header)
+        if seq is not None:
+            decoded_seq = ALPHABET.decode(seq.sequence)
+            results.append(Sequence(header, decoded_seq))
+
+    return results
+
 
 def run_initial_msa(
     members: typing.Iterable[str],
@@ -174,10 +189,12 @@ def run_initial_msa(
     start_time = time.time()
     
     # Convert sequences to pyfamsa.Sequence objects
+    seq_dict = {seq.name: seq for seq in seqs if seq.name in map(str.encode, members)}
+
     sequences = [
-        pyfamsa.Sequence(member, seqs.indexed[member].textize().sequence.encode()) 
-        for member in map(str.encode, members) 
-        if member in seqs.indexed
+        pyfamsa.Sequence(member, seq_dict[member].textize().sequence.encode())
+        for member in map(str.encode, members)
+        if member in seq_dict
     ]
     if not sequences:
         raise ValueError("No valid sequences found for alignment.")
@@ -220,6 +237,7 @@ def mask_sequence(sequence: Sequence, env_from: int, env_to: int) -> Sequence:
 def run_hmmsearch(
     hmm: pyhmmer.plan7.HMM, 
     pyhmmer_seqs: pyhmmer.easel.DigitalSequenceBlock, 
+    seq_dict: dict[str, pyhmmer.easel.DigitalSequence],
     exit_flag: bool,
     recruit_evalue_cutoff: float,
     recruit_hit_length_percentage: float,
@@ -238,7 +256,7 @@ def run_hmmsearch(
             for subhit in hit.domains:
                 env_length = subhit.env_to - subhit.env_from + 1
                 if (exit_flag or env_length >= recruit_hit_length_percentage * qlen):
-                    sequence = get_fasta_sequences(pyhmmer_seqs, [sequence_name])[0]
+                    sequence = get_fasta_sequences(seq_dict, [sequence_name])[0]
                     if (env_length < tlen):
                         sequence = mask_sequence(sequence, subhit.env_from, subhit.env_to)
                     filtered_sequences.append(sequence)
@@ -361,7 +379,7 @@ def parse_protein_name(seq_name, seq_length, seq_whole_name, original_length, st
 def renumber_sto_msa(
     in_sto_file,
     out_sto_file,
-    pyhmmer_seqs,
+    seq_dict,
     write_metadata=False,
     iteration=None,
     chunk_num=None,
@@ -379,6 +397,8 @@ def renumber_sto_msa(
     with open(in_sto_file, 'r') as infile, open(out_sto_file, 'w') as outfile:
         seq_name = ""
         rep_flag = True
+        seen_seq_names = set()  # Found edge cases that contain duplicates
+
         for line in infile:
             split_line = line.split()
 
@@ -387,14 +407,18 @@ def renumber_sto_msa(
                     outfile.write(line)
                 elif split_line[1] == 'STOCKHOLM':
                     outfile.write(f'{line}\n')
-                elif split_line[0] != '#=GF' and split_line[0] != '#=GS' \
-                    and split_line[0] != '#=GC' and split_line[0] != '#=GR':
-                    seq_name = split_line[0].split("/")[0]
+                elif split_line[0] not in ['#=GF', '#=GS', '#=GC', '#=GR']:
+                    raw_seq_name = split_line[0].split("/")[0]
                     seq = re.sub(r"[.-]", "", split_line[1]).upper()
-                    original_seq = get_fasta_sequences(pyhmmer_seqs, [seq_name])[0][1]
+                    original_seq = get_fasta_sequences(seq_dict, [raw_seq_name])[0][1]
                     start = original_seq.find(seq)
                     end = start + len(seq)
-                    seq_name = parse_protein_name(seq_name, len(seq), split_line[0], len(original_seq), start, end)
+                    seq_name = parse_protein_name(raw_seq_name, len(seq), split_line[0], len(original_seq), start, end)
+
+                    if seq_name.strip() in seen_seq_names:
+                        continue  # Skip duplicates
+                    seen_seq_names.add(seq_name.strip())  # Mark as seen
+
                     line = line.replace(split_line[0], seq_name, 1)
                     outfile.write(line)
 
@@ -424,6 +448,7 @@ def main():
     create_empty_output_files()
     clusters_df = load_clusters_df(args.clusters_chunk)
     pyhmmer_seqs = read_pyhmmer_seqs(args.fasta_file)
+    seq_dict = build_sequence_dict(pyhmmer_seqs)
 
     iteration = 0
     while True:
@@ -461,6 +486,7 @@ def main():
                 filtered_seqs = run_hmmsearch(
                     hmm, 
                     pyhmmer_seqs,
+                    seq_dict,
                     exit_flag=exit_flag, 
                     cpus=args.cpus, 
                     recruit_evalue_cutoff=args.recruit_evalue_cutoff,
@@ -490,6 +516,7 @@ def main():
                 filtered_seqs = run_hmmsearch(
                     hmm, 
                     pyhmmer_seqs,
+                    seq_dict,
                     exit_flag, 
                     args.recruit_evalue_cutoff, 
                     args.recruit_hit_length_percentage, 
@@ -558,12 +585,12 @@ def main():
             renumber_sto_msa(
                 in_sto_file=tmp_seed_msa_path,
                 out_sto_file=os.path.join(seed_msa_folder, f'{args.chunk_num}_{iteration}.sto'),
-                pyhmmer_seqs=pyhmmer_seqs
+                seq_dict=seq_dict
             )
             renumber_sto_msa(
                 in_sto_file=tmp_full_msa_path,
                 out_sto_file=os.path.join(full_msa_folder, f'{args.chunk_num}_{iteration}.sto'),
-                pyhmmer_seqs=pyhmmer_seqs,
+                seq_dict=seq_dict,
                 write_metadata=True,
                 iteration=iteration,
                 chunk_num=args.chunk_num,
