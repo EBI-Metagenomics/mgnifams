@@ -307,7 +307,7 @@
             "properties": {
                 "mgnifams_discard_min_rep_length": {
                     "type": "integer",
-                    "default": 100,
+                    "default": 75,
                     "description": "Minimum allowed representative sequence length, to keep family",
                     "help_text": "After iteratively refining the family, make sure its representative sequence does not drop below this many amino acids"
                 },
