@@ -1,7 +1,7 @@
-include { QUERY_MGNPROTEIN_DB } from '../../../modules/local/query_mgnprotein_db/main'
-include { PARSE_BIOMES        } from '../../../modules/local/parse_biomes/main'
-include { PARSE_DOMAINS       } from '../../../modules/local/parse_domains/main'
-include { UPDATE_SQLITE_BLOBS } from '../../../modules/local/update_sqlite_blobs/main.nf'
+include { QUERY_MGNPROTEIN_DB } from '../modules/local/query_mgnprotein_db/main'
+include { PARSE_BIOMES        } from '../modules/local/parse_biomes/main'
+include { PARSE_DOMAINS       } from '../modules/local/parse_domains/main'
+include { UPDATE_SQLITE_BLOBS } from '../modules/local/update_sqlite_blobs/main.nf'
 
 workflow UPDATE_DB {
     take:

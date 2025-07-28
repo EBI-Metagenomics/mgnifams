@@ -1,5 +1,5 @@
-include { INIT_SQLITE    } from '../../../modules/local/init_sqlite/main'
-include { IMPORT_QUERIES } from '../../../modules/local/import_queries/main.nf'
+include { INIT_SQLITE    } from '../modules/local/init_sqlite/main'
+include { IMPORT_QUERIES } from '../modules/local/import_queries/main.nf'
 
 workflow INIT_DB {
     take:
