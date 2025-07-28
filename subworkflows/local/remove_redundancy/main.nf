@@ -1,4 +1,4 @@
-include { CAT_CAT                        } from '../../../modules/nf-core/cat/cat'
+include { FIND_CONCATENATE               } from '../../../modules/nf-core/find/concatenate/main'
 include { HMMER_HMMSEARCH                } from '../../../modules/nf-core/hmmer/hmmsearch/main'
 include { POOL_PREREDUNDANT_FAMILIES_TSV } from '../../../modules/local/pool_preredundant_families_tsv/main'
 include { IDENTIFY_REDUNDANT_FAMS        } from '../../../modules/local/identify_redundant_fams/main'
@@ -32,10 +32,10 @@ workflow REMOVE_REDUNDANCY {
         .collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families")
         .map { file -> [[id: 'pre_redundant'], file] }
 
-    CAT_CAT( hmm )
-    ch_versions = ch_versions.mix( CAT_CAT.out.versions )
+    FIND_CONCATENATE( hmm )
+    ch_versions = ch_versions.mix( FIND_CONCATENATE.out.versions )
 
-    ch_input_for_hmmsearch = CAT_CAT.out.file_out
+    ch_input_for_hmmsearch = FIND_CONCATENATE.out.file_out
         .combine(ch_reps_fasta, by: 0)
         .map { meta, model, seqs -> [meta, model, seqs, false, false, true] }
 

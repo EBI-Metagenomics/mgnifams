@@ -1,13 +1,10 @@
 {
     "-profile test": {
         "content": [
-            80,
+            85,
             {
                 "CALCULATE_CLUSTER_DISTRIBUTION": {
                     "sed": 4.7
-                },
-                "CAT_CAT": {
-                    "pigz": "2.3.4"
                 },
                 "CHUNK_CLUSTERS": {
                     "sed": 4.7
@@ -36,6 +33,11 @@
                 },
                 "EXTRACT_UNIQUE_CLUSTER_REPS": {
                     "sed": 4.7
+                },
+                "FIND_CONCATENATE": {
+                    "find": "4.6.0",
+                    "pigz": 2.8,
+                    "coreutils": 9.4
                 },
                 "FOLDSEEK_EASYSEARCH_PDB": {
                     "foldseek": "9.427df8a"
@@ -131,6 +133,7 @@
                 "annotation/models/hhblits/6.hhr",
                 "annotation/models/hhblits/7.hhr",
                 "annotation/models/hhblits/8.hhr",
+                "annotation/models/hhblits/9.hhr",
                 "annotation/reps",
                 "annotation/reps/funfams",
                 "annotation/reps/funfams/reps_fasta.domtbl.gz",
@@ -145,6 +148,7 @@
                 "annotation/reps/s4pred/horiz/6.horiz",
                 "annotation/reps/s4pred/horiz/7.horiz",
                 "annotation/reps/s4pred/horiz/8.horiz",
+                "annotation/reps/s4pred/horiz/9.horiz",
                 "annotation/reps/s4pred/json",
                 "annotation/reps/s4pred/json/1.json",
                 "annotation/reps/s4pred/json/2.json",
@@ -154,6 +158,7 @@
                 "annotation/reps/s4pred/json/6.json",
                 "annotation/reps/s4pred/json/7.json",
                 "annotation/reps/s4pred/json/8.json",
+                "annotation/reps/s4pred/json/9.json",
                 "annotation/structures",
                 "annotation/structures/foldseek",
                 "annotation/structures/foldseek/all_hits.tsv",
@@ -176,6 +181,7 @@
                 "generate_families/families/full_msa/6.fas.gz",
                 "generate_families/families/full_msa/7.fas.gz",
                 "generate_families/families/full_msa/8.fas.gz",
+                "generate_families/families/full_msa/9.fas.gz",
                 "generate_families/families/full_msa_sto",
                 "generate_families/families/full_msa_sto/1.sto",
                 "generate_families/families/full_msa_sto/2.sto",
@@ -185,6 +191,7 @@
                 "generate_families/families/full_msa_sto/6.sto",
                 "generate_families/families/full_msa_sto/7.sto",
                 "generate_families/families/full_msa_sto/8.sto",
+                "generate_families/families/full_msa_sto/9.sto",
                 "generate_families/families/hmm",
                 "generate_families/families/hmm/1.hmm",
                 "generate_families/families/hmm/2.hmm",
@@ -194,6 +201,7 @@
                 "generate_families/families/hmm/6.hmm",
                 "generate_families/families/hmm/7.hmm",
                 "generate_families/families/hmm/8.hmm",
+                "generate_families/families/hmm/9.hmm",
                 "generate_families/families/refined_families.tsv",
                 "generate_families/families/rf",
                 "generate_families/families/rf/1.txt",
@@ -204,6 +212,7 @@
                 "generate_families/families/rf/6.txt",
                 "generate_families/families/rf/7.txt",
                 "generate_families/families/rf/8.txt",
+                "generate_families/families/rf/9.txt",
                 "generate_families/families/seed_msa",
                 "generate_families/families/seed_msa/1.fas.gz",
                 "generate_families/families/seed_msa/2.fas.gz",
@@ -213,6 +222,7 @@
                 "generate_families/families/seed_msa/6.fas.gz",
                 "generate_families/families/seed_msa/7.fas.gz",
                 "generate_families/families/seed_msa/8.fas.gz",
+                "generate_families/families/seed_msa/9.fas.gz",
                 "generate_families/families/seed_msa_sto",
                 "generate_families/families/seed_msa_sto/1.sto",
                 "generate_families/families/seed_msa_sto/2.sto",
@@ -222,6 +232,7 @@
                 "generate_families/families/seed_msa_sto/6.sto",
                 "generate_families/families/seed_msa_sto/7.sto",
                 "generate_families/families/seed_msa_sto/8.sto",
+                "generate_families/families/seed_msa_sto/9.sto",
                 "generate_families/families/similarity_mqc.csv",
                 "generate_families/families/successful_clusters.txt",
                 "generate_families/metadata_mqc.csv",
@@ -234,7 +245,6 @@
                 "multiqc/multiqc_data/multiqc_citations.txt",
                 "multiqc/multiqc_data/multiqc_cluster_distribution.txt",
                 "multiqc/multiqc_data/multiqc_data.json",
-                "multiqc/multiqc_data/multiqc_discarded_clusters.txt",
                 "multiqc/multiqc_data/multiqc_family_metadata.txt",
                 "multiqc/multiqc_data/multiqc_family_similarities.txt",
                 "multiqc/multiqc_data/multiqc_seqkit_stats_summary.txt",
@@ -243,19 +253,16 @@
                 "multiqc/multiqc_plots",
                 "multiqc/multiqc_plots/pdf",
                 "multiqc/multiqc_plots/pdf/cluster_distribution.pdf",
-                "multiqc/multiqc_plots/pdf/discarded_clusters.pdf",
                 "multiqc/multiqc_plots/pdf/family_metadata.pdf",
                 "multiqc/multiqc_plots/pdf/family_similarities.pdf",
                 "multiqc/multiqc_plots/pdf/seqkit_stats_summary.pdf",
                 "multiqc/multiqc_plots/png",
                 "multiqc/multiqc_plots/png/cluster_distribution.png",
-                "multiqc/multiqc_plots/png/discarded_clusters.png",
                 "multiqc/multiqc_plots/png/family_metadata.png",
                 "multiqc/multiqc_plots/png/family_similarities.png",
                 "multiqc/multiqc_plots/png/seqkit_stats_summary.png",
                 "multiqc/multiqc_plots/svg",
                 "multiqc/multiqc_plots/svg/cluster_distribution.svg",
-                "multiqc/multiqc_plots/svg/discarded_clusters.svg",
                 "multiqc/multiqc_plots/svg/family_metadata.svg",
                 "multiqc/multiqc_plots/svg/family_similarities.svg",
                 "multiqc/multiqc_plots/svg/seqkit_stats_summary.svg",
@@ -281,6 +288,7 @@
                 "structures/esmfold/cif/6.cif",
                 "structures/esmfold/cif/7.cif",
                 "structures/esmfold/cif/8.cif",
+                "structures/esmfold/cif/9.cif",
                 "structures/esmfold/cuda_failed",
                 "structures/esmfold/cuda_failed/cuda_failed_reps.fasta",
                 "structures/esmfold/pdb",
@@ -292,6 +300,7 @@
                 "structures/esmfold/pdb/6.pdb",
                 "structures/esmfold/pdb/7.pdb",
                 "structures/esmfold/pdb/8.pdb",
+                "structures/esmfold/pdb/9.pdb",
                 "structures/esmfold/pdb_scores.csv",
                 "structures/esmfold/scores",
                 "structures/esmfold/scores/1_scores.txt",
@@ -312,16 +321,16 @@
                 "mgnifams_v2_stats_mqc.csv:md5,ff0a65cc32cacf04a49b06647d818391",
                 "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
             ],
-            "/structures: 20",
+            "/structures: 22",
             "/setup_clusters: 3",
-            "/generate_families: 60",
-            "/annotation: 28",
+            "/generate_families: 66",
+            "/annotation: 31",
             "/table_data: 4"
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "25.04.6"
         },
-        "timestamp": "2025-07-22T11:42:00.54840452"
+        "timestamp": "2025-07-28T10:31:13.136991557"
     }
 }
