@@ -269,9 +269,8 @@
                 "multiqc/multiqc_report.html",
                 "pipeline_info",
                 "pipeline_info/nf_core_pipeline_software_mqc_versions.yml",
-                "seqkit",
-                "seqkit/mgnifams_v2.tsv",
-                "seqkit/mgnifams_v2_stats_mqc.csv",
+                "qc",
+                "qc/mgnifams_v2.tsv",
                 "setup_clusters",
                 "setup_clusters/mgnifams_v2_clustering_distribution_mqc.csv",
                 "setup_clusters/mgnifams_v2_unique_reps.txt",
@@ -318,7 +317,6 @@
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
                 "multiqc_seqkit_stats_summary.txt:md5,f35e5022d9be7fbf86e664149c054290",
                 "mgnifams_v2.tsv:md5,57739343a6c2d595dce56e4c5ff08ef6",
-                "mgnifams_v2_stats_mqc.csv:md5,ff0a65cc32cacf04a49b06647d818391",
                 "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
             ],
             "/structures: 22",
@@ -331,6 +329,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.6"
         },
-        "timestamp": "2025-07-28T10:31:13.136991557"
+        "timestamp": "2025-08-01T15:41:01.857314509"
     }
 }
