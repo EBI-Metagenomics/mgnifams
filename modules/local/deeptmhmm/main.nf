@@ -22,7 +22,7 @@ process DEEPTMHMM {
         --fasta ../${fasta} \\
         --output-dir ../outdir
     cd ..
-    rm -r ${tmhmm_dir} outdir/embeddings
+    rm -r outdir/embeddings
     chmod -R 777 outdir
     """
 }
