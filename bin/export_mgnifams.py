@@ -8,7 +8,7 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
                         'plddt', 'ptm', 'helix_percent','strand_percent','coil_percent', \
                         'inside_percent','membrane_percent','outside_percent', \
                         'rep_sequence', 'consensus', 'seed_msa_blob', 'hmm_blob', 'rf_blob',\
-                        'cif_blob', 'biome_blob', 'domain_blob', 's4pred_blob' ]
+                        'cif_blob', 'biome_blob', 'domain_blob', 's4pred_blob', 'tm_blob' ]
 
     df1 = pd.read_csv(metadata, header=None)
     df1.columns = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length',
