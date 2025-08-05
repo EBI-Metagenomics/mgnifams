@@ -1,6 +1,6 @@
 include { S4PRED_RUNMODEL                } from '../../../modules/nf-core/s4pred/runmodel/main'
 include { PARSE_S4PRED_TO_FEATURE_VIEWER } from '../../../modules/local/parse_s4pred_to_feature_viewer/main'
-include { DEEPTMHMM                      } from '../../../modules/local/deeptmhmm/main'
+include { DEEPTMHMM_PREDICT              } from '../../../modules/local/deeptmhmm/predict/main'
 include { HMMER_HMMSEARCH                } from '../../../modules/nf-core/hmmer/hmmsearch/main'
 
 workflow ANNOTATE_REPS {
@@ -20,7 +20,8 @@ workflow ANNOTATE_REPS {
     ch_versions = ch_versions.mix( PARSE_S4PRED_TO_FEATURE_VIEWER.out.versions )
 
     if (!skip_deeptmhmm && workflow.profile.contains("slurm") && !workflow.profile.contains("conda")) {
-        DEEPTMHMM( fasta, deeptmhmm_path )
+        DEEPTMHMM_PREDICT( fasta, deeptmhmm_path )
+        ch_versions = ch_versions.mix( DEEPTMHMM_PREDICT.out.versions )
     }
 
     ch_funfams = Channel.of([ [ id: 'reps_fasta' ], file(funfams_path, checkIfExists: true) ])
