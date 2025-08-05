@@ -3,9 +3,10 @@
 import argparse
 import pandas as pd
 
-def write_mgnifam_csv(metadata, structure_scores, composition, outfile):
+def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, outfile):
     mgnifam_headers = ['id', 'full_size', 'protein_rep', 'rep_region', 'rep_length', 'converged', \
                         'plddt', 'ptm', 'helix_percent','strand_percent','coil_percent', \
+                        'inside_percent','membrane_percent','outside_percent', \
                         'rep_sequence', 'consensus', 'seed_msa_blob', 'hmm_blob', 'rf_blob',\
                         'cif_blob', 'biome_blob', 'domain_blob', 's4pred_blob' ]
 
@@ -14,11 +15,13 @@ def write_mgnifam_csv(metadata, structure_scores, composition, outfile):
                     'rep_sequence', 'consensus', 'converged']
 
     df2 = pd.read_csv(structure_scores)
-
     merged = pd.merge(df1, df2, on='id', how='left')
 
     df3 = pd.read_csv(composition)
     merged = pd.merge(merged, df3, on='id', how='left')
+
+    df4 = pd.read_csv(tm_composition)
+    merged = pd.merge(merged, df4, on='id', how='left')
 
     # Map columns to final header, fill missing ones
     for col in mgnifam_headers:
@@ -35,11 +38,12 @@ def main():
     parser.add_argument("--metadata", help="Generated families metadata mqc CSV")
     parser.add_argument("--structure_scores", help="Tertiary prediction structure scores (plddit, ptm)")
     parser.add_argument("--composition", help="Predicted compositional features --helix, strand or coil")
+    parser.add_argument("--tm_composition", help="Predicted transmembrane features --inside, membrane or outside")
     parser.add_argument("--outfile", help="CSV for mgnifam table")
 
     args = parser.parse_args()
 
-    write_mgnifam_csv(args.metadata, args.structure_scores, args.composition, args.outfile)
+    write_mgnifam_csv(args.metadata, args.structure_scores, args.composition, args.tm_composition, args.outfile)
 
 if __name__ == "__main__":
     main()

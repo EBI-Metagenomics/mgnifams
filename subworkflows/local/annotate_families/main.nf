@@ -32,7 +32,8 @@ workflow ANNOTATE_FAMILIES {
     versions           = ch_versions
     s4preds            = ANNOTATE_REPS.out.s4preds
     s4pred_features    = ANNOTATE_REPS.out.s4pred_features
-    s4pred_composition = ANNOTATE_REPS.out.s4pred_composition
+    composition        = ANNOTATE_REPS.out.composition
+    tm_composition     = ANNOTATE_REPS.out.tm_composition
     funfam_domains     = ANNOTATE_REPS.out.funfam_domains
     pfam_hits          = ANNOTATE_MODELS.out.pfam_hits
     foldseek_hits      = ANNOTATE_STRUCTURES.out.foldseek_hits

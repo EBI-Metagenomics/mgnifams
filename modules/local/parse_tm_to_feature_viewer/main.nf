@@ -11,9 +11,9 @@ process PARSE_TM_TO_FEATURE_VIEWER {
     tuple val(meta), path(preds) 
 
     output:
-    tuple val(meta), path("${prefix}")      , emit: features
-    tuple val(meta), path("composition.csv"), emit: composition
-    path "versions.yml"                     , emit: versions
+    tuple val(meta), path("${prefix}")         , emit: features
+    tuple val(meta), path("tm_composition.csv"), emit: composition
+    path "versions.yml"                        , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -24,7 +24,7 @@ process PARSE_TM_TO_FEATURE_VIEWER {
     parse_tm_to_feature_viewer.py \\
         --input_file ${preds} \\
         --output_dir ${prefix} \\
-        --csv_out composition.csv
+        --csv_out tm_composition.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -37,7 +37,7 @@ process PARSE_TM_TO_FEATURE_VIEWER {
     """
     mkdir -p ${prefix}
     touch ${prefix}/${prefix}.json
-    touch composition.csv
+    touch tm_composition.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
