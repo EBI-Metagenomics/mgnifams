@@ -6,6 +6,8 @@ include { HMMER_HMMSEARCH                } from '../../../modules/nf-core/hmmer/
 workflow ANNOTATE_REPS {
     take:
     fasta
+    skip_deeptmhmm
+    deeptmhmm_path
     funfams_path
     
     main:
@@ -17,8 +19,8 @@ workflow ANNOTATE_REPS {
     PARSE_S4PRED_TO_FEATURE_VIEWER( S4PRED_RUNMODEL.out.preds )
     ch_versions = ch_versions.mix( PARSE_S4PRED_TO_FEATURE_VIEWER.out.versions )
 
-    if (workflow.profile.contains("slurm") && !workflow.profile.contains("conda")) {
-        DEEPTMHMM( fasta, params.deeptmhmm_path )
+    if (!skip_deeptmhmm && workflow.profile.contains("slurm") && !workflow.profile.contains("conda")) {
+        DEEPTMHMM( fasta, deeptmhmm_path )
     }
 
     ch_funfams = Channel.of([ [ id: 'reps_fasta' ], file(funfams_path, checkIfExists: true) ])

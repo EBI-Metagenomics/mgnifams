@@ -449,6 +449,10 @@
             "type": "object",
             "description": "Parameters for annotate_families subworkflow",
             "properties": {
+                "skip_deeptmhmm": {
+                    "type": "boolean",
+                    "description": "Skip deeptmhmm transmemrane protein prediction from family reps"
+                },
                 "hh_mode": {
                     "type": "string",
                     "default": "hhsearch",

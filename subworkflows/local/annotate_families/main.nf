@@ -5,6 +5,8 @@ include { ANNOTATE_STRUCTURES } from '../../../subworkflows/local/annotate_struc
 workflow ANNOTATE_FAMILIES {
     take:
     reps
+    skip_deeptmhmm
+    deeptmhmm_path
     funfams_path
     seed_msa
     full_msa
@@ -17,7 +19,7 @@ workflow ANNOTATE_FAMILIES {
     main:
     ch_versions = Channel.empty()
 
-    ANNOTATE_REPS( reps, funfams_path )
+    ANNOTATE_REPS( reps, skip_deeptmhmm, deeptmhmm_path, funfams_path )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
     ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path )
