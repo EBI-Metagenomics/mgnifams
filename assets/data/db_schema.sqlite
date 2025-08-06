@@ -10,6 +10,9 @@ CREATE TABLE mgnifam (
     helix_percent REAL,
     strand_percent REAL,
     coil_percent REAL,
+    inside_percent REAL,
+    membrane_percent REAL,
+    outside_percent REAL,
     rep_sequence TEXT,
     consensus TEXT,
     seed_msa_blob BLOB DEFAULT NULL,
@@ -18,7 +21,8 @@ CREATE TABLE mgnifam (
     cif_blob BLOB DEFAULT NULL,
     biome_blob BLOB DEFAULT NULL,
     domain_blob BLOB DEFAULT NULL,
-    s4pred_blob BLOB DEFAULT NULL
+    s4pred_blob BLOB DEFAULT NULL,
+    tm_blob BLOB DEFAULT NULL
 );
 
 CREATE TABLE mgnifam_funfams (

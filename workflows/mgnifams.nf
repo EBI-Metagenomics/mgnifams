@@ -52,6 +52,8 @@ workflow MGNIFAMS {
     esm2_t36_3B_UR50D_contact_regression
     num_recycles_esmfold
     pdb_chunk_size_long
+    skip_deeptmhmm
+    deeptmhmm_path
     funfams_path
     hh_mode
     hhdb_path
@@ -84,15 +86,17 @@ workflow MGNIFAMS {
         esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression, num_recycles_esmfold, \
         pdb_chunk_size_long, outdir )
     ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
-    
-    ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, funfams_path, \
+
+    ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, \
+        skip_deeptmhmm, deeptmhmm_path, funfams_path, \
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
         hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_db_path, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
     EXPORT_DATA( GENERATE_NONREDUNDANT_FAMILIES.out.metadata, PREDICT_STRUCTURES.out.scores, \
-        ANNOTATE_FAMILIES.out.s4pred_composition, ANNOTATE_FAMILIES.out.funfam_domains, \
-        ANNOTATE_FAMILIES.out.pfam_hits, ANNOTATE_FAMILIES.out.foldseek_hits, outdir )
+        ANNOTATE_FAMILIES.out.composition, ANNOTATE_FAMILIES.out.tm_composition, \
+        ANNOTATE_FAMILIES.out.funfam_domains, ANNOTATE_FAMILIES.out.pfam_hits, \
+        ANNOTATE_FAMILIES.out.foldseek_hits, outdir )
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
 
     //

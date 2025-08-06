@@ -449,6 +449,10 @@
             "type": "object",
             "description": "Parameters for annotate_families subworkflow",
             "properties": {
+                "skip_deeptmhmm": {
+                    "type": "boolean",
+                    "description": "Skip deeptmhmm transmemrane protein prediction from family reps"
+                },
                 "hh_mode": {
                     "type": "string",
                     "default": "hhsearch",
@@ -495,9 +499,13 @@
             "description": "Paths to downloaded databases used by the pipeline.",
             "default": "",
             "properties": {
+                "deeptmhmm_path": {
+                    "type": "string",
+                    "description": "For transmembrane protein prediction"
+                },
                 "funfams_path": {
                     "type": "string",
-                    "description": "For functional annotation of family representative sequences",
+                    "description": "For functional annotation of family representative sequences"
                 },
                 "hhdb_path": {
                     "type": "string",

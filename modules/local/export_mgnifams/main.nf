@@ -11,9 +11,7 @@ process EXPORT_MGNIFAMS {
     tuple val(meta ), path(metadata)
     tuple val(meta2), path(scores)
     tuple val(meta3), path(composition)
-    // tuple val(meta4), path(pfam_hits   , stageAs: "results/hh/*")
-    // tuple val(meta5), path(foldseek_hit, stageAs: "results/structures/foldseek/*")
-    // tuple val(meta6), path(scores      , stageAs: "results/structures/*")
+    tuple val(meta4), path(tm_composition)
 
     output:
     tuple val(meta), path("mgnifam.csv"), emit: csv
@@ -23,11 +21,13 @@ process EXPORT_MGNIFAMS {
     task.ext.when == null || task.ext.when
 
     script:
+    def tm = tm_composition ? "${tm_composition}" : '""'
     """
     export_mgnifams.py \\
         --metadata ${metadata} \\
         --structure_scores ${scores} \\
         --composition ${composition} \\
+        --tm_composition ${tm} \\
         --outfile mgnifam.csv
     
     cat <<-END_VERSIONS > versions.yml

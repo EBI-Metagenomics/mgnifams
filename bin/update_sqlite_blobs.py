@@ -22,7 +22,8 @@ def construct_file_path(pipeline_results, biome_results, domain_results, col_ite
         3: f"{pipeline_results}/structures/esmfold/cif",
         4: biome_results,
         5: domain_results,
-        6: f"{pipeline_results}/annotation/reps/s4pred/json"
+        6: f"{pipeline_results}/annotation/reps/s4pred/json",
+        7: f"{pipeline_results}/annotation/reps/deeptmhmm/json"
     }
     
     directory = file_directory.get(col_iter)
@@ -36,7 +37,8 @@ def get_blob_column(col_iter):
         3: "cif_blob",
         4: "biome_blob",
         5: "domain_blob",
-        6: "s4pred_blob"
+        6: "s4pred_blob",
+        7: "tm_blob"
     }
     
     return blob_col_name.get(col_iter)
@@ -72,7 +74,8 @@ def process_row(db, pipeline_results, biome_results, domain_results, row):
         ".cif",    # cif
         ".csv",    # biomes
         ".json",   # domains
-        ".json"    # s4pred
+        ".json",   # s4pred
+        ".json"    # tm
     ]
 
     for i, suffix in enumerate(file_suffixes):

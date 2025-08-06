@@ -5,6 +5,8 @@ include { ANNOTATE_STRUCTURES } from '../../../subworkflows/local/annotate_struc
 workflow ANNOTATE_FAMILIES {
     take:
     reps
+    skip_deeptmhmm
+    deeptmhmm_path
     funfams_path
     seed_msa
     full_msa
@@ -17,7 +19,7 @@ workflow ANNOTATE_FAMILIES {
     main:
     ch_versions = Channel.empty()
 
-    ANNOTATE_REPS( reps, funfams_path )
+    ANNOTATE_REPS( reps, skip_deeptmhmm, deeptmhmm_path, funfams_path )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
     ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path )
@@ -30,7 +32,8 @@ workflow ANNOTATE_FAMILIES {
     versions           = ch_versions
     s4preds            = ANNOTATE_REPS.out.s4preds
     s4pred_features    = ANNOTATE_REPS.out.s4pred_features
-    s4pred_composition = ANNOTATE_REPS.out.s4pred_composition
+    composition        = ANNOTATE_REPS.out.composition
+    tm_composition     = ANNOTATE_REPS.out.tm_composition
     funfam_domains     = ANNOTATE_REPS.out.funfam_domains
     pfam_hits          = ANNOTATE_MODELS.out.pfam_hits
     foldseek_hits      = ANNOTATE_STRUCTURES.out.foldseek_hits

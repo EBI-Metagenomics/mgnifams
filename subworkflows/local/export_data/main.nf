@@ -8,6 +8,7 @@ workflow EXPORT_DATA {
     family_metadata
     predicted_scores
     composition
+    tm_composition
     funfam_domains
     pfam_hits
     foldseek_hits
@@ -16,7 +17,7 @@ workflow EXPORT_DATA {
     main:
     ch_versions = Channel.empty()
 
-    EXPORT_MGNIFAMS( family_metadata, predicted_scores, composition )
+    EXPORT_MGNIFAMS( family_metadata, predicted_scores, composition, tm_composition )
     ch_versions = ch_versions.mix( EXPORT_MGNIFAMS.out.versions )
 
     EXPORT_FUNFAMS( funfam_domains )
