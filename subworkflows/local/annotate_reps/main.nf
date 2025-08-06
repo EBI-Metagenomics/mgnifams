@@ -12,7 +12,8 @@ workflow ANNOTATE_REPS {
     funfams_path
     
     main:
-    ch_versions = Channel.empty()
+    ch_versions       = Channel.empty()
+    ch_tm_composition = Channel.of([ [ id: 'reps_fasta' ], [] ])
 
     S4PRED_RUNMODEL( fasta )
     ch_versions = ch_versions.mix( S4PRED_RUNMODEL.out.versions )
@@ -20,11 +21,11 @@ workflow ANNOTATE_REPS {
     PARSE_S4PRED_TO_FEATURE_VIEWER( S4PRED_RUNMODEL.out.preds )
     ch_versions = ch_versions.mix( PARSE_S4PRED_TO_FEATURE_VIEWER.out.versions )
 
-    if (!skip_deeptmhmm && workflow.profile.contains("slurm") && !workflow.profile.contains("conda")) {
+    if (!skip_deeptmhmm && !workflow.profile.contains("conda")) {
         DEEPTMHMM_PREDICT( fasta, deeptmhmm_path )
         ch_versions = ch_versions.mix( DEEPTMHMM_PREDICT.out.versions )
 
-        PARSE_TM_TO_FEATURE_VIEWER( DEEPTMHMM_PREDICT.out.line3 )
+        ch_tm_composition = PARSE_TM_TO_FEATURE_VIEWER( DEEPTMHMM_PREDICT.out.line3 ).composition
         ch_versions = ch_versions.mix( PARSE_TM_TO_FEATURE_VIEWER.out.versions )
     }
 
@@ -41,6 +42,6 @@ workflow ANNOTATE_REPS {
     s4preds         = S4PRED_RUNMODEL.out.preds
     s4pred_features = PARSE_S4PRED_TO_FEATURE_VIEWER.out.features
     composition     = PARSE_S4PRED_TO_FEATURE_VIEWER.out.composition
-    tm_composition  = PARSE_TM_TO_FEATURE_VIEWER.out.composition
+    tm_composition  = ch_tm_composition
     funfam_domains  = HMMER_HMMSEARCH.out.domain_summary
 }

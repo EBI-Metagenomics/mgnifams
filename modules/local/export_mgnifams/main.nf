@@ -21,12 +21,13 @@ process EXPORT_MGNIFAMS {
     task.ext.when == null || task.ext.when
 
     script:
+    def tm = tm_composition ? "${tm_composition}" : '""'
     """
     export_mgnifams.py \\
         --metadata ${metadata} \\
         --structure_scores ${scores} \\
         --composition ${composition} \\
-        --tm_composition ${tm_composition} \\
+        --tm_composition ${tm} \\
         --outfile mgnifam.csv
     
     cat <<-END_VERSIONS > versions.yml
