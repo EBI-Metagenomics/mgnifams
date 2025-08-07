@@ -1,5 +1,4 @@
 # MGnifams
-![alt text](assets/mgnifams.png)
 
 ## Nextflow pipeline
 
