@@ -285,6 +285,20 @@ def run_hmmalign(hmm: pyhmmer.plan7.HMM, family_sequences: typing.Iterable[Seque
 
     return hmmalign_res, num_seqs_result, non_gap_seq_length
 
+def check_rep_length(non_gap_seq_length, iteration, args):
+    """Check if representative length is within limits.
+
+    Returns:
+        discard_flag (bool), discard_reason (str or None), discard_value (int or None)
+    """
+    if non_gap_seq_length < args.discard_min_rep_length:
+        logging.info(f"Discard-Warning: {iteration} rep length is only {non_gap_seq_length}")
+        return True, "family representative length too small", non_gap_seq_length
+    elif non_gap_seq_length > args.discard_max_rep_length:
+        logging.info(f"Discard-Warning: {iteration} rep length is over {non_gap_seq_length}")
+        return True, "family representative length too large", non_gap_seq_length
+    return False, None, None
+
 def extract_first_part(sequence_name: str) -> str:
     return sequence_name.split('/')[0]
 
@@ -539,23 +553,18 @@ def main():
                     logging.info(f"Warning: {iteration} seed percentage in MSA is {membership_percentage}")
 
                 full_msa, full_msa_num_seqs, non_gap_seq_length = run_hmmalign(hmm, filtered_seqs) # final full MSA, including smaller sequences
-                if (non_gap_seq_length < args.discard_min_rep_length):
-                    discard_flag = True
-                    discard_reason = "family representative length too small"
-                    discard_value = non_gap_seq_length
-                    logging.info(f"Discard-Warning: {iteration} rep length is only {non_gap_seq_length}")
-                    break
-                elif (non_gap_seq_length > args.discard_max_rep_length):
-                    discard_flag = True
-                    discard_reason = "family representative length too large"
-                    discard_value = non_gap_seq_length
-                    logging.info(f"Discard-Warning: {iteration} rep length is over {non_gap_seq_length}")
+                discard_flag, discard_reason, discard_value = check_rep_length(non_gap_seq_length, iteration, args)
+                if discard_flag:
                     break
 
                 break # break from main strategy
 
             # main strategy continue, if not converged
-            hmmalign_res, _, _ = run_hmmalign(hmm, filtered_seqs)
+            hmmalign_res, _, non_gap_seq_length = run_hmmalign(hmm, filtered_seqs)
+            discard_flag, discard_reason, discard_value = check_rep_length(non_gap_seq_length, iteration, args)
+            if discard_flag:
+                break
+            
             full_msa = run_pytrimal_reps(hmmalign_res, args.max_seq_identity, args.max_seed_seqs) # removes redundant sequences
             full_msa = clip_ends(full_msa, args.max_gap_occupancy) # removes gaps above threshold at ends
             seed_msa = full_msa.digitize(ALPHABET)
