@@ -33,6 +33,22 @@ class Sequence(typing.NamedTuple):
     id: str
     seq: str
 
+class SizedIterator:
+    def __init__(self, it, length):
+        self.it = iter(it)
+        self.length = length
+
+    def __len__(self):
+        return self.length
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        item = next(self.it)
+        self.length -= 1
+        return item
+
 def pyfamsa_to_pyhmmer(ali: pyfamsa.Alignment) -> pyhmmer.easel.DigitalMSA:
     return pyhmmer.easel.TextMSA(
         sequences=[
@@ -312,8 +328,11 @@ def run_pytrimal_reps(full_msa: pyhmmer.easel.TextMSA, threshold: float, max_see
     assert full_msa.reference is not None
     rf = np.array(list(full_msa.reference.decode()))
 
-    # Load the MSA
-    sequences = [seq.upper().replace('.', '-') for seq in full_msa.alignment]
+    # Load the MSA - Stream sequences instead of materializing all at once
+    sequences = SizedIterator(
+        (seq.upper().replace('.', '-') for seq in full_msa.alignment),
+        len(full_msa.alignment)
+    )
     ali = pytrimal.Alignment(full_msa.names, sequences)
 
     # and remove redundant sequences
@@ -564,7 +583,7 @@ def main():
             discard_flag, discard_reason, discard_value = check_rep_length(non_gap_seq_length, iteration, args)
             if discard_flag:
                 break
-            
+
             full_msa = run_pytrimal_reps(hmmalign_res, args.max_seq_identity, args.max_seed_seqs) # removes redundant sequences
             full_msa = clip_ends(full_msa, args.max_gap_occupancy) # removes gaps above threshold at ends
             seed_msa = full_msa.digitize(ALPHABET)
