@@ -8,7 +8,8 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
     mgnifam_headers = [
         'id', 'full_size', 'protein_rep', 'rep_region', 'rep_length', 'converged',
         'plddt', 'ptm', 'helix_percent', 'strand_percent', 'coil_percent',
-        'inside_percent', 'membrane_percent', 'outside_percent',
+        'inside_percent', 'membrane_alpha_percent', 'outside_percent',
+        'signal_percent', 'membrane_beta_percent', 'periplasm_percent',
         'rep_sequence', 'consensus', 'seed_msa_blob', 'hmm_blob', 'rf_blob',
         'cif_blob', 'biome_blob', 'domain_blob', 's4pred_blob', 'tm_blob'
     ]

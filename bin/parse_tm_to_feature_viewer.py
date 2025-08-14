@@ -13,21 +13,60 @@ def parse_tm_file(input_file, output_dir, csv_out):
 
     os.makedirs(output_dir, exist_ok=True)
 
-    csv_rows = [("id", "inside_percent", "membrane_percent", "outside_percent")]
+    # CSV columns for all possible labels
+    csv_header = [
+        "id",
+        "inside_percent", "membrane_alpha_percent", "outside_percent",
+        "signal_percent", "membrane_beta_percent", "periplasm_percent"
+    ]
+    csv_rows = [tuple(csv_header)]
+
+    label_map = {
+        'I': {
+            "name": "Inside (cytosolic)",
+            "className": "tm-i",
+            "color": "#619CFF"
+        },
+        'M': {
+            "name": "Transmembrane α-helix",
+            "className": "tm-m",
+            "color": "#F8766D"
+        },
+        'O': {
+            "name": "Outside (extracellular)",
+            "className": "tm-o",
+            "color": "#00BA38"
+        },
+        'S': {
+            "name": "Signal peptide",
+            "className": "tm-s",
+            "color": "#E69F00"
+        },
+        'B': {
+            "name": "Transmembrane β-strand",
+            "className": "tm-b",
+            "color": "#800080"
+        },
+        'P': {
+            "name": "Periplasm / lumen",
+            "className": "tm-p",
+            "color": "#00CED1"
+        }
+    }
 
     for i in range(0, len(lines), 3):
         header = lines[i]
         seq = lines[i + 1]
         labels = lines[i + 2]
 
-        if not (len(seq) == len(labels)):
+        if len(seq) != len(labels):
             print(f"Length mismatch in entry: {header}")
             continue
 
         # Extract ID (e.g. >1 | GLOB → 1)
         try:
             protein_id = header.split()[0].lstrip(">")
-        except:
+        except Exception:
             protein_id = f"seq_{i//3+1}"
 
         features = {
@@ -35,47 +74,30 @@ def parse_tm_file(input_file, output_dir, csv_out):
             "features": []
         }
 
-        label_map = {
-            'I': {
-                "name": "Inside",
-                "className": "tm-i",
-                "color": "#619CFF"
-            },
-            'M': {
-                "name": "Transmembrane",
-                "className": "tm-m",
-                "color": "#F8766D"
-            },
-            'O': {
-                "name": "Outside",
-                "className": "tm-o",
-                "color": "#00BA38"
-            }
-        }
-
-        # Count for percentage summary
         total = len(labels)
-        inside_count = labels.count('I')
-        membrane_count = labels.count('M')
-        outside_count = labels.count('O')
+        # Count percentages for each known label
+        counts = {k: labels.count(k) for k in label_map.keys()}
+        percents = {k: round((counts[k] / total) * 100, 2) for k in counts}
 
-        inside_pct = round((inside_count / total) * 100, 2)
-        membrane_pct = round((membrane_count / total) * 100, 2)
-        outside_pct = round((outside_count / total) * 100, 2)
+        csv_rows.append((
+            protein_id,
+            percents['I'], percents['M'], percents['O'],
+            percents['S'], percents['B'], percents['P']
+        ))
 
-        csv_rows.append((protein_id, inside_pct, membrane_pct, outside_pct))
-
-        # Group into contiguous regions
-        grouped = {"I": [], "M": [], "O": []}
+        # Group contiguous regions
+        grouped = {k: [] for k in label_map.keys()}
         current = labels[0]
         start = 0
 
         for j in range(1, len(labels)):
             if labels[j] != current:
-                grouped[current].append({"x": start + 1, "y": j})
+                if current in grouped:
+                    grouped[current].append({"x": start + 1, "y": j})
                 start = j
                 current = labels[j]
-        grouped[current].append({"x": start + 1, "y": len(labels)})
+        if current in grouped:
+            grouped[current].append({"x": start + 1, "y": len(labels)})
 
         for label, rects in grouped.items():
             if rects:
@@ -99,7 +121,7 @@ def parse_tm_file(input_file, output_dir, csv_out):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Convert transmembrane predictions to FeatureViewer JSON and CSV summaries.")
+    parser = argparse.ArgumentParser(description="Convert DeepTMHMM predictions to FeatureViewer JSON and CSV summaries.")
     parser.add_argument("--input_file", required=True, help="Input file with TM predictions")
     parser.add_argument("--output_dir", required=True, help="Directory to store output .json files")
     parser.add_argument("--csv_out", required=True, help="Path to output CSV summary file")
