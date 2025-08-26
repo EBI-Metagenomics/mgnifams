@@ -330,7 +330,7 @@ def run_pytrimal_reps(full_msa: pyhmmer.easel.TextMSA, threshold: float, max_see
 
     # Load the MSA - Stream sequences instead of materializing all at once
     sequences = SizedIterator(
-        (seq.upper().replace('.', '-') for seq in full_msa.alignment),
+        (seq.upper().replace('.', '-').replace('~', '-') for seq in full_msa.alignment),
         len(full_msa.alignment)
     )
     ali = pytrimal.Alignment(full_msa.names, sequences)
