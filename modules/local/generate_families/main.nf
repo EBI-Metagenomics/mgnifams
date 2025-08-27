@@ -4,8 +4,8 @@ process GENERATE_FAMILIES {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e2/e26ce00244b6cc71edc451bb368f0e4e6ad2cf497f152337177ea0bff7d5cba1/data' :
-        'community.wave.seqera.io/library/python_pip_biopython_numpy_pruned:dd4bec78b7f08a4e' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/f4/f4885191191b7d69e8db7508024bf7869584db550ee24dd94eaa6a8698b1b04a/data' :
+        'community.wave.seqera.io/library/pyhmmer_numpy_pandas_python_pruned:c9c85eea9b91196f' }"
     
     input:
     tuple val(meta) , path(clusters_chunk)
