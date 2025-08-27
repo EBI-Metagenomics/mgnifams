@@ -336,20 +336,19 @@ def run_pytrimal_reps(full_msa: pyhmmer.easel.TextMSA, threshold: float, max_see
     ali = pytrimal.Alignment(full_msa.names, sequences)
 
     # and remove redundant sequences
-    while True:
-        repTrimmer = pytrimal.RepresentativeTrimmer(identity_threshold=threshold)
+    repTrimmer = pytrimal.RepresentativeTrimmer(identity_threshold=threshold)
+    ali = repTrimmer.trim(ali)
+    rf = rf[ali.residues_mask]
+
+    logging.info("run_pytrimal_reps finished.")
+    number_of_remaining_sequences = len(list(ali.names))
+    logging.info(f"Remaining sequences: {str(number_of_remaining_sequences)}")
+
+    if (number_of_remaining_sequences > max_seed_seqs):
+        logging.info(f"Capping to {str(max_seed_seqs)} most representative")
+        repTrimmer = pytrimal.RepresentativeTrimmer(clusters=max_seed_seqs)
         ali = repTrimmer.trim(ali)
         rf = rf[ali.residues_mask]
-
-        logging.info("run_pytrimal_reps finished.")
-        number_of_remaining_sequences = len(list(ali.names))
-        logging.info(f"Remaining sequences: {str(number_of_remaining_sequences)}")
-
-        if (number_of_remaining_sequences <= max_seed_seqs): # TODO pytrimal -clusters arg_max_seed_seqs max once, if/when fixed
-            break
-        else:
-            threshold -= 0.1
-            logging.info("Rerunning run_pytrimal_reps; ")
 
     log_time(start_time, "run_pytrimal_reps: ")
 
