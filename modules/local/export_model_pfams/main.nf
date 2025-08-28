@@ -1,4 +1,4 @@
-process EXPORT_PFAMS {
+process EXPORT_MODEL_PFAMS {
     tag "$meta.id"
     label 'process_single'
 

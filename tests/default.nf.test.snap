@@ -12,6 +12,9 @@
                 "EXPORT_FOLDS": {
                     "sed": 4.7
                 },
+                "FILTER_EXPORT_PFAMS": {
+                    "sed": 4.7
+                },
                 "FILTER_EXPORT_FUNFAMS": {
                     "sed": 4.7
                 },
@@ -19,7 +22,7 @@
                     "python": "3.10.6",
                     "pandas": "1.4.3"
                 },
-                "EXPORT_PFAMS": {
+                "EXPORT_MODEL_PFAMS": {
                     "python": "3.13.0"
                 },
                 "EXTRACT_CUDA_FAILED": {

@@ -37,6 +37,6 @@ workflow ANNOTATE_FAMILIES {
     tm_composition     = ANNOTATE_REPS.out.tm_composition
     pfam_domains       = ANNOTATE_REPS.out.pfam_domains
     funfam_domains     = ANNOTATE_REPS.out.funfam_domains
-    pfam_hits          = ANNOTATE_MODELS.out.pfam_hits
+    pfam_model_hits    = ANNOTATE_MODELS.out.pfam_hits
     foldseek_hits      = ANNOTATE_STRUCTURES.out.foldseek_hits
 }
