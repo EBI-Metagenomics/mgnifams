@@ -486,6 +486,18 @@
                 }
             }
         },
+        "export_params": {
+            "title": "export_params",
+            "type": "object",
+            "description": "Parameters for export_data subworkflow",
+            "properties": {
+                "query_hmm_length_threshold": {
+                    "type": "number",
+                    "default": 0.8,
+                    "description": "Minimum length percentage of env hit against query HMM"
+                }
+            }
+        },
         "update_db_params": {
             "title": "update_db_params",
             "type": "object",
@@ -549,6 +561,9 @@
         },
         {
             "$ref": "#/defs/annotation_params"
+        },
+        {
+            "$ref": "#/defs/export_params"
         },
         {
             "$ref": "#/defs/update_db_params"

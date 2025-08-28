@@ -12,7 +12,7 @@
                 "EXPORT_FOLDS": {
                     "sed": 4.7
                 },
-                "EXPORT_FUNFAMS": {
+                "FILTER_EXPORT_FUNFAMS": {
                     "sed": 4.7
                 },
                 "EXPORT_MGNIFAMS": {

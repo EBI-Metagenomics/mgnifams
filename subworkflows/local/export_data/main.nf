@@ -1,7 +1,7 @@
-include { EXPORT_MGNIFAMS } from '../../../modules/local/export_mgnifams/main'
-include { EXPORT_FUNFAMS  } from '../../../modules/local/export_funfams/main'
-include { EXPORT_PFAMS    } from '../../../modules/local/export_pfams/main'
-include { EXPORT_FOLDS    } from '../../../modules/local/export_folds/main'
+include { EXPORT_MGNIFAMS       } from '../../../modules/local/export_mgnifams/main'
+include { FILTER_EXPORT_FUNFAMS } from '../../../modules/local/filter_export_funfams/main'
+include { EXPORT_PFAMS          } from '../../../modules/local/export_pfams/main'
+include { EXPORT_FOLDS          } from '../../../modules/local/export_folds/main'
 
 workflow EXPORT_DATA {
     take:
@@ -10,6 +10,7 @@ workflow EXPORT_DATA {
     composition
     tm_composition
     funfam_domains
+    query_hmm_length_threshold
     pfam_hits
     foldseek_hits
     outdir
@@ -20,8 +21,8 @@ workflow EXPORT_DATA {
     EXPORT_MGNIFAMS( family_metadata, predicted_scores, composition, tm_composition )
     ch_versions = ch_versions.mix( EXPORT_MGNIFAMS.out.versions )
 
-    EXPORT_FUNFAMS( funfam_domains )
-    ch_versions = ch_versions.mix( EXPORT_FUNFAMS.out.versions )
+    FILTER_EXPORT_FUNFAMS( funfam_domains, query_hmm_length_threshold )
+    ch_versions = ch_versions.mix( FILTER_EXPORT_FUNFAMS.out.versions )
 
     EXPORT_PFAMS( pfam_hits )
     ch_versions = ch_versions.mix( EXPORT_PFAMS.out.versions )
