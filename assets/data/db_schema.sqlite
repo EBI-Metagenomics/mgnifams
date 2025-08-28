@@ -28,6 +28,21 @@ CREATE TABLE mgnifam (
     tm_blob BLOB DEFAULT NULL
 );
 
+CREATE TABLE mgnifam_pfams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mgnifam_id INTEGER REFERENCES mgnifam(id),
+    pfam TEXT,
+    e_value REAL,
+    score REAL,
+    hmm_from INTEGER,
+    hmm_to INTEGER,
+    ali_from INTEGER,
+    ali_to INTEGER,
+    env_from INTEGER,
+    env_to INTEGER,
+    acc REAL
+);
+
 CREATE TABLE mgnifam_funfams (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mgnifam_id INTEGER REFERENCES mgnifam(id),
@@ -55,7 +70,7 @@ CREATE TABLE mgnifam_folds (
     e_value REAL
 );
 
-CREATE TABLE mgnifam_pfams (
+CREATE TABLE mgnifam_model_pfams (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mgnifam_id INTEGER REFERENCES mgnifam(id),
     pfam TEXT,
