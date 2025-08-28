@@ -474,6 +474,11 @@
                     "default": 80,
                     "description": "Probability threshold above which to show hhblits/hhsearch results"
                 },
+                "hh_evalue_cutoff": {
+                    "type": "number",
+                    "default": 0.001,
+                    "description": "hhblits/hhsearch e-value cutoff threshold for reported results"
+                },
                 "foldseek_evalue_cutoff": {
                     "type": "number",
                     "default": 0.001,
