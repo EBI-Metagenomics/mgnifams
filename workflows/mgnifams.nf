@@ -54,6 +54,7 @@ workflow MGNIFAMS {
     pdb_chunk_size_long
     skip_deeptmhmm
     deeptmhmm_path
+    pfam_path
     funfams_path
     hh_mode
     hhdb_path
@@ -89,7 +90,7 @@ workflow MGNIFAMS {
     ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
 
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, \
-        skip_deeptmhmm, deeptmhmm_path, funfams_path, \
+        skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, \
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
         hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_db_path, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )

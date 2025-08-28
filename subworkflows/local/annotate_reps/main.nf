@@ -9,6 +9,7 @@ workflow ANNOTATE_REPS {
     fasta
     skip_deeptmhmm
     deeptmhmm_path
+    pfam_path
     funfams_path
     
     main:
@@ -28,6 +29,8 @@ workflow ANNOTATE_REPS {
         ch_tm_composition = PARSE_TM_TO_FEATURE_VIEWER( DEEPTMHMM_PREDICT.out.line3 ).composition
         ch_versions = ch_versions.mix( PARSE_TM_TO_FEATURE_VIEWER.out.versions )
     }
+
+    // TODO ch_pfam
 
     ch_funfams = Channel.of([ [ id: 'reps_fasta' ], file(funfams_path, checkIfExists: true) ])
     ch_input_for_hmmsearch = ch_funfams

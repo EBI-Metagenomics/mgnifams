@@ -520,6 +520,10 @@
                     "type": "string",
                     "description": "For transmembrane protein prediction"
                 },
+                "pfam_path": {
+                    "type": "string",
+                    "description": "For functional annotation of family representative sequences"
+                },
                 "funfams_path": {
                     "type": "string",
                     "description": "For functional annotation of family representative sequences"
@@ -534,6 +538,7 @@
                 }
             },
             "required": [
+                "pfam_path",
                 "funfams_path",
                 "hhdb_path",
                 "foldseek_db_path"
