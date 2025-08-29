@@ -35,6 +35,7 @@ The test profile will still need to be updated with the following local variable
 
     // ANNOTATE_FAMILIES
     // annotate_reps
+    pfam_path        = 'path/to/Pfam-A.38.0.hmm.gz'
     funfams_path     = 'path/to/funfam-hmm3-v4_3_0_test.lib.gz'
     // annotate_models
     hhdb_path        = 'path/to/pfamA_35.0'

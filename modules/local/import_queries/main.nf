@@ -29,6 +29,21 @@ process IMPORT_QUERIES {
 
     # Create temporary tables for the other CSV files
     sqlite3 ${db} <<EOF
+    CREATE TEMP TABLE temp_mgnifam_pfams (
+        mgnifam_id INTEGER,
+        pfam TEXT,
+        name TEXT,
+        e_value REAL,
+        score REAL,
+        hmm_from INTEGER,
+        hmm_to INTEGER,
+        ali_from INTEGER,
+        ali_to INTEGER,
+        env_from INTEGER,
+        env_to INTEGER,
+        acc REAL
+    );
+
     CREATE TEMP TABLE temp_mgnifam_funfams (
         mgnifam_id INTEGER,
         funfam TEXT,
@@ -54,7 +69,7 @@ process IMPORT_QUERIES {
         e_value REAL
     );
 
-    CREATE TEMP TABLE temp_mgnifam_pfams (
+    CREATE TEMP TABLE temp_mgnifam_model_pfams (
         mgnifam_id INTEGER,
         pfam TEXT,
         name TEXT,
@@ -71,26 +86,31 @@ process IMPORT_QUERIES {
     # Import data into temporary tables
     sqlite3 ${db} <<EOF
     .mode csv
+    .import 'mgnifam_pfams.csv' temp_mgnifam_pfams
     .import 'mgnifam_funfams.csv' temp_mgnifam_funfams
     .import 'mgnifam_folds.csv' temp_mgnifam_folds
-    .import 'mgnifam_pfams.csv' temp_mgnifam_pfams
+    .import 'mgnifam_model_pfams.csv' temp_mgnifam_model_pfams
     .exit
     EOF
 
     # Insert data from temporary tables into the main tables
     sqlite3 ${db} <<EOF
+    INSERT INTO mgnifam_pfams (mgnifam_id, pfam, name, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc)
+    SELECT id, pfam, name, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc FROM temp_mgnifam_pfams;
+
     INSERT INTO mgnifam_funfams (mgnifam_id, funfam, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc)
     SELECT id, funfam, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc FROM temp_mgnifam_funfams;
 
     INSERT INTO mgnifam_folds (mgnifam_id, fold, aligned_length, q_start, q_end, t_start, t_end, e_value)
     SELECT id, fold, aligned_length, q_start, q_end, t_start, t_end, e_value FROM temp_mgnifam_folds;
 
-    INSERT INTO mgnifam_pfams (mgnifam_id, pfam, name, description, prob, e_value, length, query_hmm, template_hmm)
-    SELECT id, pfam, name, description, prob, e_value, length, query_hmm, template_hmm FROM temp_mgnifam_pfams;
+    INSERT INTO mgnifam_model_pfams (mgnifam_id, pfam, name, description, prob, e_value, length, query_hmm, template_hmm)
+    SELECT id, pfam, name, description, prob, e_value, length, query_hmm, template_hmm FROM temp_mgnifam_model_pfams;
 
+    DROP TABLE temp_mgnifam_pfams;
     DROP TABLE temp_mgnifam_funfams;
     DROP TABLE temp_mgnifam_folds;
-    DROP TABLE temp_mgnifam_pfams;
+    DROP TABLE temp_mgnifam_model_pfams;
     .exit
     EOF
 
