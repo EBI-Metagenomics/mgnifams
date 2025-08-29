@@ -32,6 +32,7 @@ process IMPORT_QUERIES {
     CREATE TEMP TABLE temp_mgnifam_pfams (
         mgnifam_id INTEGER,
         pfam TEXT,
+        name TEXT,
         e_value REAL,
         score REAL,
         hmm_from INTEGER,
@@ -94,8 +95,8 @@ process IMPORT_QUERIES {
 
     # Insert data from temporary tables into the main tables
     sqlite3 ${db} <<EOF
-    INSERT INTO mgnifam_pfams (mgnifam_id, pfam, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc)
-    SELECT id, pfam, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc FROM temp_mgnifam_pfams;
+    INSERT INTO mgnifam_pfams (mgnifam_id, pfam, name, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc)
+    SELECT id, pfam, name, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc FROM temp_mgnifam_pfams;
 
     INSERT INTO mgnifam_funfams (mgnifam_id, funfam, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc)
     SELECT id, funfam, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc FROM temp_mgnifam_funfams;

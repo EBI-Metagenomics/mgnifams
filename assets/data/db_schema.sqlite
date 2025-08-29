@@ -32,6 +32,7 @@ CREATE TABLE mgnifam_pfams (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     mgnifam_id INTEGER REFERENCES mgnifam(id),
     pfam TEXT,
+    name TEXT,
     e_value REAL,
     score REAL,
     hmm_from INTEGER,
