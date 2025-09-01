@@ -441,7 +441,7 @@ def renumber_sto_msa(
                     outfile.write(f'{line}\n')
                 elif split_line[0] not in ['#=GF', '#=GS', '#=GC', '#=GR']:
                     raw_seq_name = split_line[0].split("/")[0]
-                    seq = re.sub(r"[.-]", "", split_line[1]).upper()
+                    seq = re.sub(r"[.\-~]", "", split_line[1]).upper()
                     original_seq = get_fasta_sequences(seq_dict, [raw_seq_name])[0][1]
                     start = original_seq.find(seq)
                     end = start + len(seq)
