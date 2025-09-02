@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_PDB        } from '../../../modules/nf-core/foldseek/easysearch/main'
-include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_ALPHAFOLDB } from '../../../modules/nf-core/foldseek/easysearch/main'
+include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_PDB         } from '../../../modules/nf-core/foldseek/easysearch/main'
+include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_ALPHAFOLDDB } from '../../../modules/nf-core/foldseek/easysearch/main'
 
 workflow ANNOTATE_STRUCTURES {
     take:
@@ -21,8 +21,8 @@ workflow ANNOTATE_STRUCTURES {
 
     if (workflow.profile.contains("slurm") && !workflow.profile.contains("test")) {
         ch_alphafold_db = Channel.of([ [ id:'alphafold' ], file(foldseek_alphafold_path, checkIfExists: true) ])
-        ch_alphafold_aln = FOLDSEEK_EASYSEARCH_ALPHAFOLDB( pdb, ch_alphafold_db ).aln
-        ch_versions = ch_versions.mix( FOLDSEEK_EASYSEARCH_ALPHAFOLDB.out.versions )
+        ch_alphafold_aln = FOLDSEEK_EASYSEARCH_ALPHAFOLDDB( pdb, ch_alphafold_db ).aln
+        ch_versions = ch_versions.mix( FOLDSEEK_EASYSEARCH_ALPHAFOLDDB.out.versions )
     }
 
     ch_foldseek_hits = FOLDSEEK_EASYSEARCH_PDB.out.aln
