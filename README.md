@@ -43,7 +43,7 @@ The test profile will still need to be updated with the following local variable
     foldseek_db_path = 'path/to/foldseek'
 ```
 
-![alt text](assets/pipeline.png)
+![alt text](assets/mgnifams_workflow.png)
 
 The end-to-end MGnifams pipeline chains the subworkflows of five thematically different workflows; setup_clusters, generate_nonredundant_families, predict_structures, annotate_families and export_data. After the pipeline finishes its execution, the produced db can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
