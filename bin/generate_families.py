@@ -382,12 +382,15 @@ def check_seed_membership(original_sequence_names, filtered_seq_names):
     return percentage_membership
 
 def parse_protein_name(seq_name, seq_length, seq_whole_name, original_length, start, end):
+    splits = seq_name.split('_')
+
     if (end - start) == original_length:
+        if len(splits) == 3: # example 199394972_125_238
+            seq_name = f"{splits[0]}/{splits[1]}-{splits[2]}"
         return seq_name
     else:
-        splits = seq_name.split('_')
         old_length = len(seq_whole_name)
-        if len(splits) == 3:
+        if len(splits) == 3: # example 199394972_125_238
             new_start = start + int(splits[1])
             new_end = new_start + seq_length - 1
             new_name = f"{splits[0]}/{new_start}-{new_end}"

@@ -73,16 +73,18 @@ The test profile will still need to be updated with the following local variable
 
 ![alt text](assets/mgnifams_workflow.png)
 
-The end-to-end MGnifams pipeline chains the subworkflows of five thematically different workflows; setup_clusters, generate_nonredundant_families, predict_structures, annotate_families and export_data. After the pipeline finishes its execution, the produced db can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
+The end-to-end MGnifams pipeline chains five major subworkflows; `setup_clusters`, `generate_nonredundant_families`, `predict_structures`, `annotate_families` and `export_data`.
+
+For MGnify only; After the main pipeline finishes its execution, `init_db` and `update_db` must be executed. Then, the produced `sqlite` database can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
 After the db has been produced by the pipeline, do the following:  
-* copy db to site/ifs  
+* copy database to site/ifs  
 * host online with k8s  
 
 ### 1. setup_clusters 
-This is the first workflow to be executed before the main family generation. It consists of two subworkflows; extract_unannotated_fasta and execute_clustering. In a nutshell, this workflow converts the initial input (see below) into family-generation-ready input.
+This is the first workflow to be executed before the main family generation. It consists of three subworkflows; `extract_unannotated_fasta`, `check_quality` and `execute_clustering`. In a nutshell, this workflow converts the initial input (see below) into family-generation-ready input.
 
-The initial input for this pipeline is the output file of the protein-landing-page data generation pipeline, sequence_explorer_protein.csv (e.g., path/to/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv).
+The initial input for this pipeline is the output file of the `mgnify-proteins` data generation pipeline, `sequence_explorer_protein.csv` (e.g., path/to/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv).
 
 head:
 ```bash
@@ -97,7 +99,8 @@ mgyp,sequence,full_length,cluster_size,metadata
 1821912652,RQRQMCIRDRAVTMFALEWCEFCWSIRKLFETCGIEYRSVDLDSVAYQEGDLGGRLRAALHARTGSPTVPQVFVGETYVGGCTETLDAFRSGELQRLLERDGVPYSAPAGLDPGKLLPAWLHPR,false,1,"{""s"":[[125457,[[1689011,[[989761960,1,375,1]]]]]],""b"":[[88,1]],""p"":[[""PF00462"",1.5e-12,54.1,1,60,12,79]]}"
 760903384,MNIQIFGTSKCFDTKKAQRYFKERGIKFQMIDLKEKEMSRGEFENVARALGGWEKLVDPNAKDKQTLALLDALVDWQKEDKLFENQQLLRTPIVRNGRKATVGYQPDVSVSYTHLRAHE,false,1,"{""s"":[[108957,[[654179,[[823249866,507,863,1]]]]]],""b"":[[361,1]],""p"":[[""PF00462"",0.0021,24.8,2,48,3,56],[""PF03960"",8.6e-6,32.5,1,74,6,110]]}"
 ```
-In case this file is compressed, there are two different decompression modes available; gz and bz2. Set the --compress_mode parameter accordingly. Then, the known pfam domains (or previous versions MGnifams domains) are sliced off from proteins and we filter the remaining proteins to be above a given length threshold with the min_sequence_length parameter (e.g., >=100 AA).
+
+In case this file is compressed, there are two different decompression modes available; `gz` and `bz2`. Set the `--compress_mode` parameter accordingly. Then, the known pfam domains (or previous versions MGnifams domains) are sliced off from proteins and we filter the remaining proteins to be above a given length threshold with the `min_sequence_length` parameter (e.g., >=75 AA).
 
 ### 2. generate_nonredundant_families
 This workflow is the essence of MGnifams and is responsible for converting initial clusters into nonredundant protein families. The clusters from the previous workflow are chunked (minimum_members threshold=25, for clusters to keep) and then, along with the `mgnifams_input.fa` file they are fed into the `generate_families` subworkflow, which iteratively recruits sequences in the families, for each clusters’ chunk. The results are then pooled and checked for redundancy among families (keeping uniques) via the `remove_redundancy` subworkflow. The remaining families are then assigned a unique integer ID.
