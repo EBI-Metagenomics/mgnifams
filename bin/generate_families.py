@@ -65,7 +65,6 @@ def pytrimal_to_pyhmmer(ali: pytrimal.Alignment) -> pyhmmer.easel.TextMSA:
         ]
     )
 
-
 # ---- Process -----------------------------------------------------------------
 
 def parse_args(args=None):
@@ -195,7 +194,6 @@ def get_fasta_sequences(
 
     return results
 
-
 def run_initial_msa(
     members: typing.Iterable[str],
     seqs: pyhmmer.easel.DigitalSequenceBlock,
@@ -292,10 +290,10 @@ def run_hmmalign(hmm: pyhmmer.plan7.HMM, family_sequences: typing.Iterable[Seque
         pyhmmer.easel.TextSequence(name=seq.id.encode(), sequence=seq.seq)
         for seq in family_sequences
     ).digitize(ALPHABET)   
-    hmmalign_res = typing.cast(pyhmmer.easel.TextMSA, pyhmmer.hmmer.hmmalign(hmm, seqs, trim=True))
+    hmmalign_res = typing.cast(pyhmmer.easel.TextMSA, pyhmmer.hmmer.hmmalign(hmm, seqs, trim=False))
 
     num_seqs_result = len(hmmalign_res.names)
-    non_gap_seq_length = len(re.sub(r"[.-]", "", hmmalign_res.alignment[0]))
+    non_gap_seq_length = len(re.sub(r"[.\-~]", "", hmmalign_res.alignment[0]))
 
     log_time(start_time, "run_hmmalign (pyhmmer): ")
 
