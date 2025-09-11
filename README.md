@@ -82,9 +82,9 @@ After the db has been produced by the pipeline, do the following:
 * host online with k8s  
 
 ### 1. setup_clusters 
-This is the first workflow to be executed before the main family generation. It consists of three subworkflows; `extract_unannotated_fasta`, `check_quality` and `execute_clustering`. In a nutshell, this workflow converts the initial input (see below) into family-generation-ready input.
+This is the first subworkflow to be executed before the main family generation. It consists of three subworkflows; `extract_unannotated_fasta`, `check_quality` and `execute_clustering`. In a nutshell, this suborkflow converts the initial input (see below) into family-generation-ready input.
 
-The initial input for this pipeline is the output file of the `mgnify-proteins` data generation pipeline, `sequence_explorer_protein.csv` (e.g., path/to/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv).
+The initial input for this pipeline is the output file of the `mgnify-proteins` data generation pipeline, `sequence_explorer_protein.csv` (e.g., `path/to/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv`).
 
 head:
 ```bash
@@ -102,14 +102,36 @@ mgyp,sequence,full_length,cluster_size,metadata
 
 In case this file is compressed, there are two different decompression modes available; `gz` and `bz2`. Set the `--compress_mode` parameter accordingly. Then, the known pfam domains (or previous versions MGnifams domains) are sliced off from proteins and we filter the remaining proteins to be above a given length threshold with the `min_sequence_length` parameter (e.g., >=75 AA).
 
+Alternatively, an amino acid fasta file can be passed through the samplesheet while setting the `--fasta_input_mode` parameter to `true`.
+
+Following, a quality statistics report is produced via `seqkit/stats`. Sequences are then clustered via the `mmseqs` suite and are chunked for downstream parallel processing.
+
 ### 2. generate_nonredundant_families
-This workflow is the essence of MGnifams and is responsible for converting initial clusters into nonredundant protein families. The clusters from the previous workflow are chunked (minimum_members threshold=25, for clusters to keep) and then, along with the `mgnifams_input.fa` file they are fed into the `generate_families` subworkflow, which iteratively recruits sequences in the families, for each clusters’ chunk. The results are then pooled and checked for redundancy among families (keeping uniques) via the `remove_redundancy` subworkflow. The remaining families are then assigned a unique integer ID.
+This subworkflow is the essence of MGnifams and is responsible for converting initial sequence clusters into non-redundant protein families. The `TSV` clusters from the previous subworkflow are fed into the `generate_families` subworkflow along with the `mgnifams_input.fa` file.
+The core MGnifams algorithm utilizes the `pyhmmer`, `pyfamsa` and `pytrimal` libraries to produce protein families.
+For a cluster, the algorithm creates an initial seed alignment with `pyfamsa` and then iteratively recruits sequences with `pyhmmer/hmmsearch`. 
+Sequences that pass set filters are then aligned to the seed HMM via `pyhmmer/hmmalign`.
+Until the model converges (no new sequences added to the alignment or up to three iterations), the aligned sequences are trimmed down with `pytrimal` to create an updated seed alignment to further recruit sequences from the initial fasta set.
+Finally, the full alignment will contain all sequences that matched the final family model (created from the final seed alignment), including smaller sequences (not using a length filter here).
+The results are then pooled and checked for redundancy among families via the `remove_redundancy` subworkflow. The remaining families are then assigned a unique integer identifier.
+Metadata regarding the remaining families (`Family Id,Size,Representative Id,Region,Representative Length,Sequence,HMM consensus,Converged`) as well as the discarded families (`Cluster Representative,Discard Reason,Value`) are provided.
 
 ### 3. predict_structures
-ESMFold is used here, similarly to the [nf-core/proteinfold pipeline](https://github.com/nf-core/proteinfold).
+ESMFold is used here on the family representative sequences, similarly to the [nf-core/proteinfold pipeline](https://github.com/nf-core/proteinfold).
+Each predicted structure is kept in the original `pdb` format and also parsed into a `cif` format along with its plddt and ptm scores.
+In some cases, some very long sequences do not receive sufficient GPU virtual memory on the cluster to predict structures.
+These will show in the `pdb*_scores.txt` file as: `24/05/25 22:16:10 | INFO | root | Failed (CUDA out of memory) on sequence 80 of length 1180`. The `EXTRACT_CUDA_FAILED` module gathers these sequences and runs the prediction on the CPU via the `RUN_ESMFOLD_CPU` module.
 
 ### 4. annotate_families
-This workflow is responsible for pulling both model and structural annotations for MGnifams. The first subworkflow, reformat_msa, is used to reformat the MSA files to be usable for the downstream subworkflows. Then, distant Pfam annotations are searched through hhsuite/hhblits for the model through the annotate_models subworkflow. In parallel, the predict_structures subworkflow predicts the family representative structures (first sequence of full msa). In some cases, some very long sequences can’t receive sufficient GPU virtual memory on the cluster to predict their structures. These will show in the pdb*_scores.txt file as: 24/05/25 22:16:10 | INFO | root | Failed (CUDA out of memory) on sequence 80 of length 1180. The EXTRACT_CUDA_FAILED gathers these sequences and runs the prediction on the CPU via the RUN_ESMFOLD_CPU module. The results of both GPU and CPU predictions are then merged and fed in the annotate_structures subworkflow. This subworkflow is responsible for identifying structural homologs by using foldseek against the PDB, AlphaFolDB and ESM databases.
+This subworkflow is comprised of three subworkflows that aim to annotate families via model annotation, structural homology and family representative sequence annotation.
+The `annotate_reps` subworkflow, runs the `s4pred` software to predict the secondary structure feature composition of representative sequences.
+It also run the `deeptmhmm` software to predict transmembrane regions.
+Finally, `hmmsearch` is run against `funfams` and `pfam` to assign functional and domain annotation to MGnifams.
+
+The `annotate_models` subworkflow, performs an `hhsuite/hhsearch` with the family HMM to draw family-level Pfam annotations.
+
+The `annotate_structures` subworkflow, performs a `foldseek/easysearch` against PDB and ALPHAFOLDDB.
+Structural homologs are identified and may be further explored for common function.
 
 ### 5. export_data
 The final workflow of the pipeline, export_data, creates the MGnifams database. This consists of three different execution units; the first one is parsing files from the outputs of the pipeline into MGnifam CSV tables. The second one is querying the MGnify Proteins database (PGSQL) for additional post-processing information regarding underlying biomes and domain architectures of the families. The third one is initialising the sqlite db with the schema and CSV tables, and then appends all BLOB files to the db. The db tables are; mgnifam, mgnifam_proteins, mgnifam_folds and mgnifam_pfams. The result post-processing files include two id-to-name mapping files (biomes and pfams from MGnify Proteins database), the query results for each family’s proteins for metadata against the MGnify Proteins database, the respective biome and domain results that are appended as BLOBs in the mgnifams database, along with other families generated from previous workflows (MSAs, HMM, CIF, etc.), and finally the resulting db incorporating all this data.
