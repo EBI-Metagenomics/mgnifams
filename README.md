@@ -17,7 +17,7 @@ The `csv` is the output file of the `mgnify-proteins` pipeline.
 
 Alternatively, by setting the `--fasta_input_mode` parameter to `true`, the input can be an amino acid `fasta` file:
 
-```faa
+```csv
 sample,protein_input
 fasta,/path/to/test.fasta
 ```
@@ -81,7 +81,11 @@ After the db has been produced by the pipeline, do the following:
 * copy database to site/ifs  
 * host online with k8s  
 
-### 1. setup_clusters 
+### mgnifams workflow
+
+This is the main pipeline that receives an input file (MGnify proteins `CSV` or `fasta`) and generates MGnifams data along with metadata and annotations.
+
+#### 1. setup_clusters 
 This is the first subworkflow to be executed before the main family generation. It consists of three subworkflows; `extract_unannotated_fasta`, `check_quality` and `execute_clustering`. In a nutshell, this suborkflow converts the initial input (see below) into family-generation-ready input.
 
 The initial input for this pipeline is the output file of the `mgnify-proteins` data generation pipeline, `sequence_explorer_protein.csv` (e.g., `path/to/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv`).
@@ -106,7 +110,7 @@ Alternatively, an amino acid fasta file can be passed through the samplesheet wh
 
 Following, a quality statistics report is produced via `seqkit/stats`. Sequences are then clustered via the `mmseqs` suite and are chunked for downstream parallel processing.
 
-### 2. generate_nonredundant_families
+#### 2. generate_nonredundant_families
 This subworkflow is the essence of MGnifams and is responsible for converting initial sequence clusters into non-redundant protein families. The `TSV` clusters from the previous subworkflow are fed into the `generate_families` subworkflow along with the `mgnifams_input.fa` file.
 The core MGnifams algorithm utilizes the `pyhmmer`, `pyfamsa` and `pytrimal` libraries to produce protein families.
 For a cluster, the algorithm creates an initial seed alignment with `pyfamsa` and then iteratively recruits sequences with `pyhmmer/hmmsearch`. 
@@ -116,13 +120,13 @@ Finally, the full alignment will contain all sequences that matched the final fa
 The results are then pooled and checked for redundancy among families via the `remove_redundancy` subworkflow. The remaining families are then assigned a unique integer identifier.
 Metadata regarding the remaining families (`Family Id,Size,Representative Id,Region,Representative Length,Sequence,HMM consensus,Converged`) as well as the discarded families (`Cluster Representative,Discard Reason,Value`) are provided.
 
-### 3. predict_structures
+#### 3. predict_structures
 ESMFold is used here on the family representative sequences, similarly to the [nf-core/proteinfold pipeline](https://github.com/nf-core/proteinfold).
 Each predicted structure is kept in the original `pdb` format and also parsed into a `cif` format along with its plddt and ptm scores.
 In some cases, some very long sequences do not receive sufficient GPU virtual memory on the cluster to predict structures.
 These will show in the `pdb*_scores.txt` file as: `24/05/25 22:16:10 | INFO | root | Failed (CUDA out of memory) on sequence 80 of length 1180`. The `EXTRACT_CUDA_FAILED` module gathers these sequences and runs the prediction on the CPU via the `RUN_ESMFOLD_CPU` module.
 
-### 4. annotate_families
+#### 4. annotate_families
 This subworkflow is comprised of three subworkflows that aim to annotate families via model annotation, structural homology and family representative sequence annotation.
 The `annotate_reps` subworkflow, runs the `s4pred` software to predict the secondary structure feature composition of representative sequences.
 It also run the `deeptmhmm` software to predict transmembrane regions.
@@ -133,8 +137,35 @@ The `annotate_models` subworkflow, performs an `hhsuite/hhsearch` with the famil
 The `annotate_structures` subworkflow, performs a `foldseek/easysearch` against PDB and ALPHAFOLDDB.
 Structural homologs are identified and may be further explored for common function.
 
-### 5. export_data
-The final workflow of the pipeline, export_data, creates the MGnifams database. This consists of three different execution units; the first one is parsing files from the outputs of the pipeline into MGnifam CSV tables. The second one is querying the MGnify Proteins database (PGSQL) for additional post-processing information regarding underlying biomes and domain architectures of the families. The third one is initialising the sqlite db with the schema and CSV tables, and then appends all BLOB files to the db. The db tables are; mgnifam, mgnifam_proteins, mgnifam_folds and mgnifam_pfams. The result post-processing files include two id-to-name mapping files (biomes and pfams from MGnify Proteins database), the query results for each family’s proteins for metadata against the MGnify Proteins database, the respective biome and domain results that are appended as BLOBs in the mgnifams database, along with other families generated from previous workflows (MSAs, HMM, CIF, etc.), and finally the resulting db incorporating all this data.
+#### 5. export_data
+The final subworkflow of the pipeline, `export_data`, exports all generated data and metadata in tabular format.
+This data consists of family data and metadata, and annotation data for pfam, funfams and structures.
+
+### init_db workflow
+
+This is a MGnify-only workflow that needs to be executed after `mgnifams.nf` to initialize the database that hosts all data required for the MGnifams website.
+This workflow also appends all data and metadata except for `blob` items.
+
+The samplesheet must be in this format:
+```csv
+sample,schema,results_folder
+mgnifams_test,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/db_schema.sqlite,/path/to/mgnifams/output
+```
+The `sample` column contains a given identifier.
+The `schema` contains the required model attributes for the `sqlite` database tables.
+The `results_folder` is the path to the output folder of the main `mgnifams.nf` execution.
+
+The command to run:
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_init_db.csv --mode init_mgnifams_db --outdir '/path/to/mgnifams/output_db' -profile slurm,singularity -resume -with-tower
+```
+
+Make sure to manually delete any potential previous `init_db` workflow cached work jobs.
+
+### update_db workflow
+
+TODO
+The second one is querying the MGnify Proteins database (PGSQL) for additional post-processing information regarding underlying biomes and domain architectures of the families. The third one is initialising the sqlite db with the schema and CSV tables, and then appends all BLOB files to the db. The db tables are; mgnifam, mgnifam_proteins, mgnifam_folds and mgnifam_pfams. The result post-processing files include two id-to-name mapping files (biomes and pfams from MGnify Proteins database), the query results for each family’s proteins for metadata against the MGnify Proteins database, the respective biome and domain results that are appended as BLOBs in the mgnifams database, along with other families generated from previous workflows (MSAs, HMM, CIF, etc.), and finally the resulting db incorporating all this data.
 
 A `mgnprotein_db_config.ini` filepath with secrets must be provided in the `samplesheet_update_db.csv`, under the `mgnprotein_db_config` column.
 
