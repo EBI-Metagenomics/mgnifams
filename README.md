@@ -1,9 +1,10 @@
 # MGnifams
+From metagenomics derived amino acid sequences, to protein families.
 
 ## Nextflow pipeline
+This pipeline is developed in Nextflow, following nf-core standards.
 
 ### Input
-
 `samplesheet.csv`
 
 First, for a MGnify-specific execution, prepare a samplesheet with input data that looks as follows:
@@ -23,7 +24,6 @@ fasta,/path/to/test.fasta
 ```
 
 ### Test runs
-
 Now, you can run the pipeline either on slurm or locally.
 
 slurm:
@@ -70,7 +70,6 @@ The test profile will still need to be updated with the following local variable
 ```
 
 ### Overview
-
 ![alt text](assets/mgnifams_workflow.png)
 
 The end-to-end MGnifams pipeline chains five major subworkflows; `setup_clusters`, `generate_nonredundant_families`, `predict_structures`, `annotate_families` and `export_data`.
@@ -82,7 +81,6 @@ After the db has been produced by the pipeline, do the following:
 * host online with k8s  
 
 ### mgnifams workflow
-
 This is the main pipeline that receives an input file (MGnify proteins `CSV` or `fasta`) and generates MGnifams data along with metadata and annotations.
 
 #### 1. setup_clusters 
@@ -142,7 +140,6 @@ The final subworkflow of the pipeline, `export_data`, exports all generated data
 This data consists of family data and metadata, and annotation data for pfam, funfams and structures.
 
 ### init_db workflow
-
 This is a MGnify-only workflow that needs to be executed after `mgnifams.nf` to initialize the database that hosts all data required for the MGnifams website.
 This workflow also appends all data and metadata except for `blob` items.
 
@@ -160,15 +157,21 @@ The command to run:
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_init_db.csv --mode init_mgnifams_db --outdir '/path/to/mgnifams/output_db' -profile slurm,singularity -resume -with-tower
 ```
 
-Make sure to manually delete any potential previous `init_db` workflow cached work jobs.
+Make sure to manually delete any previous `init_db` workflow cached work jobs.
 
 ### update_db workflow
+The `update_db` workflow connects to the MGnify proteins database, and makes queries for all MGnifams underlying MGnify sequence to retrieve relevant information for their biomes and domain architecture.
+The retrieved data is then parsed and the sqlite mgnifam table entries are updated with all required blob data for the site.
 
-TODO
-The second one is querying the MGnify Proteins database (PGSQL) for additional post-processing information regarding underlying biomes and domain architectures of the families. The third one is initialising the sqlite db with the schema and CSV tables, and then appends all BLOB files to the db. The db tables are; mgnifam, mgnifam_proteins, mgnifam_folds and mgnifam_pfams. The result post-processing files include two id-to-name mapping files (biomes and pfams from MGnify Proteins database), the query results for each family’s proteins for metadata against the MGnify Proteins database, the respective biome and domain results that are appended as BLOBs in the mgnifams database, along with other families generated from previous workflows (MSAs, HMM, CIF, etc.), and finally the resulting db incorporating all this data.
-
-A `mgnprotein_db_config.ini` filepath with secrets must be provided in the `samplesheet_update_db.csv`, under the `mgnprotein_db_config` column.
-
+The samplesheet must be in this format:
+```csv
+sample,results_folder,existing_db,mgnprotein_db_config
+mgnifams_update_db,/path/to/mgnifams/output,/path/to/mgnifams_test.sqlite3,/path/to/mgnprotein_db_config.ini
+```
+The `sample` column contains a given identifier.
+The `results_folder` is the path to the output folder of the main `mgnifams.nf` execution.
+The `existing_db` contains the path to the `sqlite` database that was initialized during the `init_db` workflow.
+The `mgnprotein_db_config` is a filepath with the required secrets to connect to the MGnify proteins database, with the following format;
 ```
 [database]
 dbname = ***
@@ -181,67 +184,83 @@ port = ***
 ## Website
 MGnifams site: http://mgnifams-demo.mgnify.org
 
-GitHub repo: https://github.com/vagkaratzas/mgnifams-site
+GitHub repository: https://github.com/EBI-Metagenomics/mgnifams-site
 
 ## Final steps
 Manually execute the next steps to finalise setting up the MGnifams website.
 
 ### Testing sqlite locally
-Move the mgnifams.sqlite3 db to the mgnifams_site/dbs folder in the mgnifams-site repo.
-
+Move the `mgnifams.sqlite3` database to the `mgnifams_site/dbs` folder in the mgnifams-site repo.
+```
+export DJANGO_SECRET_KEY="**************"
 python manage.py collectstatic --noinput  
 python manage.py migrate --fake  
 python manage.py runserver 0.0.0.0:8000
+```
 
 ### Hosting with k8s
-Move the db to path/to/metagenomics/mgnifams/dbs while on the datamover queue.  
-slurm:  
+Move the sqlite database to `path/to/metagenomics/mgnifams/dbs` while on the datamover queue.  
+slurm:
+```
 salloc -t 3:30:00 --mem=8G -p datamover
+```
 
-Then, from the deployment folder of the website repo: https://github.com/EBI-Metagenomics/mgnifams-site
+Then, from the deployment folder of the website repository: https://github.com/EBI-Metagenomics/mgnifams-site
 
-k8s:  
+k8s:
+```
 kubectl apply -f ebi-wp-k8s-hl.yaml
+```
 
-or restart:  
+or restart:
+```
 kubectl rollout restart deployment mgnifams-site
+```
 
-Make sure the kubeconfig.yaml at the home directory shows the correct namespace: mgnifams-hl-exp
+Make sure the `kubeconfig.yaml` at the home directory shows the correct namespace: `mgnifams-hl-exp`
 
 #### If site changes
-From within the main mgnifams-site repo:  
+From within the main mgnifams-site repository:  
 Update Docker image  
+```
 sudo systemctl start docker  
 sudo docker build -t quay.io/microbiome-informatics/mgnifams_site:ebi-wp-k8s-hl .
+```
 
-Push to quay.io  
+Push to quay.io
+``` 
 sudo docker login quay.io  
 sudo docker push quay.io/microbiome-informatics/mgnifams_site:ebi-wp-k8s-hl
+```
 
-#### If the db was created on a local machine
-Move sqlite3 DB from local machine to path/to/metagenomics/mgnifams/dbs  
-slurm:  
+#### If the sqlite database was created on a local machine
+Move sqlite database from local machine to `path/to/metagenomics/mgnifams/dbs` 
+slurm: 
+``` 
 salloc -t 3:30:00 --mem=8G -p datamover
-
+```
+```
 wormhole send mgnifams_site/dbs/mgnifams.sqlite3
+```
 
-This needs to be added to ~/.zshrc:  
+This needs to be added to `~/.zshrc`:
+```
 MIT_BASERC="path/to/team_environments/codon/baserc.sh"
 
 if [ -f $MIT_BASERC ]; then  
   . $MIT_BASERC  
-fi  
+fi
 mitload miniconda; conda activate wormhole
+```
+```
+wormhole receive code_id
 
-wormhole receive code-id (e.g., wormhole receive 8-saturday-endorse)
-
-chmod 775 mgnifams.sqlite3 after moving the db there
+chmod 775 mgnifams.sqlite3
+```
 
 ## External usage
-
 Transmembrane regions are being predicted with a local installation of the `deeptmhmm` software and models on the EMBL-EBI cluster.
 Currently for external executions this is not supported and the `skip_deeptmhmm` parameter must be set to `true`.
 The HHsuite Pfam database (https://wwwuser.gwdguser.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/pfamA_35.0.tar.gz) and the respective foldseek databases (foldseek downloads command for PDB and optionally AlphaFold and ESMAtlas, https://github.com/steineggerlab/foldseek) must be downloaded by the user and the parameters **hhdb_path** and **foldseek_db_path** must be set accordingly.
 For the family representative sequence annotation, the [Pfam](https://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz) and [FunFams](https://download.cathdb.info/cath/releases/all-releases/v4_3_0/sequence-data/funfam-hmm3-v4_3_0.lib.gz) model resources must also be downloaded
 and `pfam_path` and `funfams_path` parameters set accordingly.
-
