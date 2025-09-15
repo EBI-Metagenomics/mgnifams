@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- [#52](https://github.com/EBI-Metagenomics/mgnifams/pull/52) - Added pfam annotations for family representatives.
 - [#50](https://github.com/EBI-Metagenomics/mgnifams/pull/50) - Added support for local deeptmhmm executions.
+- [#48](https://github.com/EBI-Metagenomics/mgnifams/pull/48) - Added update_db workflow.
+- [#47](https://github.com/EBI-Metagenomics/mgnifams/pull/47) - Added init_db workflow.
 - [#45](https://github.com/EBI-Metagenomics/mgnifams/pull/45) - Added end-to-end nf-test.
 - [#41](https://github.com/EBI-Metagenomics/mgnifams/pull/41) - Added funfams annotations for family representatives.
 - [#37](https://github.com/EBI-Metagenomics/mgnifams/pull/37) - Added various custom MultiQC reports; family metadata, discarded clusters, family similarities.
@@ -30,12 +33,12 @@ Benchmark results: CPU usage decrease 37.6% - Memory decrease 0.36% - Job durati
 
 | Tool       | Previous version | New version |
 | ---------- | ---------------- | ----------- |
-| pytrimal   |                  | 0.8.1       |
+| pytrimal   |                  | 0.8.2       |
 | pyhmmer    |                  | 0.11.1      |
-| pyfamsa    |                  | 0.5.3.post1 |
+| pyfamsa    |                  | 0.6.0       |
 | biopython  |                  | 1.85        |
-| pandas     |                  | 2.3.0       |
-| numpy      |                  | 2.3.0       |
+| pandas     |                  | 2.3.2       |
+| numpy      |                  | 2.3.2       |
 
 ### `Removed`
 
