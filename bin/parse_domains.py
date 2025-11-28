@@ -178,7 +178,7 @@ def translate_architecture(architecture_json, pfam_mapping_df):
                 domain['name']  = pfam_mapping_df.loc[pfam_mapping_df['id'] == domain["id"], 'name'].values[0]
                 domain['color'] = string_to_hex_color(domain['name'])
             else: # mgnifam
-                domain['link'] = f'http://mgnifams-demo.mgnify.org/details/?id={construct_name(int(domain["id"]))}'
+                domain['link'] = f'http://mgnifams-demo.mgnify.org/details/{construct_name(int(domain["id"]))}'
                 domain['name'] = f'MGnifam{domain["id"]}'
             domain['font_color'] = decide_font_color(domain['color'])
 
