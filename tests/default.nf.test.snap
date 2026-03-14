@@ -1,7 +1,7 @@
 {
     "-profile test": {
         "content": [
-            85,
+            87,
             {
                 "CALCULATE_CLUSTER_DISTRIBUTION": {
                     "sed": 4.7
@@ -10,12 +10,6 @@
                     "sed": 4.7
                 },
                 "EXPORT_FOLDS": {
-                    "sed": 4.7
-                },
-                "FILTER_EXPORT_PFAMS": {
-                    "sed": 4.7
-                },
-                "FILTER_EXPORT_FUNFAMS": {
                     "sed": 4.7
                 },
                 "EXPORT_MGNIFAMS": {
@@ -37,6 +31,12 @@
                 "EXTRACT_UNIQUE_CLUSTER_REPS": {
                     "sed": 4.7
                 },
+                "FILTER_EXPORT_FUNFAMS": {
+                    "sed": 4.7
+                },
+                "FILTER_EXPORT_PFAMS": {
+                    "sed": 4.7
+                },
                 "FIND_CONCATENATE": {
                     "find": "4.6.0",
                     "pigz": 2.8,
@@ -47,11 +47,11 @@
                 },
                 "GENERATE_FAMILIES": {
                     "python": "3.13.5",
-                    "pandas": "2.3.0",
-                    "pyfamsa": "0.5.3.post1",
+                    "pandas": "2.3.2",
+                    "pyfamsa": "0.6.0",
                     "pyhmmer": "0.11.1",
-                    "pytrimal": "0.8.1",
-                    "numpy": "2.3.0",
+                    "pytrimal": "0.8.2",
+                    "numpy": "2.3.2",
                     "biopython": 1.85
                 },
                 "HHSUITE_HHBLITS": {
@@ -61,6 +61,12 @@
                     "hhsuite": "3.3.0"
                 },
                 "HMMER_HMMSEARCH": {
+                    "hmmer": 3.4
+                },
+                "HMMER_HMMSEARCH_FUNFAMS": {
+                    "hmmer": 3.4
+                },
+                "HMMER_HMMSEARCH_PFAM": {
                     "hmmer": 3.4
                 },
                 "IDENTIFY_REDUNDANT_FAMS": {
@@ -140,6 +146,8 @@
                 "annotation/reps",
                 "annotation/reps/funfams",
                 "annotation/reps/funfams/reps_fasta.domtbl.gz",
+                "annotation/reps/pfam",
+                "annotation/reps/pfam/reps_fasta.domtbl.gz",
                 "annotation/reps/s4pred",
                 "annotation/reps/s4pred/composition.csv",
                 "annotation/reps/s4pred/horiz",
@@ -311,6 +319,7 @@
                 "table_data/mgnifam.csv",
                 "table_data/mgnifam_folds.csv",
                 "table_data/mgnifam_funfams.csv",
+                "table_data/mgnifam_model_pfams.csv",
                 "table_data/mgnifam_pfams.csv",
                 "trim",
                 "trim/family_ids.1_trimmed.fasta",
@@ -325,13 +334,13 @@
             "/structures: 22",
             "/setup_clusters: 3",
             "/generate_families: 66",
-            "/annotation: 31",
-            "/table_data: 4"
+            "/annotation: 32",
+            "/table_data: 5"
         ],
         "meta": {
-            "nf-test": "0.9.2",
-            "nextflow": "25.04.6"
+            "nf-test": "0.9.3",
+            "nextflow": "25.10.2"
         },
-        "timestamp": "2025-08-01T15:41:01.857314509"
+        "timestamp": "2026-03-14T19:28:29.370548743"
     }
 }
