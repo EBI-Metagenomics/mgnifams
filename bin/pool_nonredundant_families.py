@@ -7,6 +7,7 @@ import json
 import fileinput
 import re
 import csv
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
@@ -54,8 +55,7 @@ def parse_args(args=None):
 
 def read_non_redundant_fam_ids(file_path):
     with open(file_path, 'r') as file:
-        lines = file.read().splitlines()
-    return lines
+        return set(file.read().splitlines())
 
 def create_mapping_dict():
     hmm_folder = os.path.join(arg_families_dir, 'hmm')
@@ -67,36 +67,32 @@ def create_mapping_dict():
     
 def pool_directory(input_dir, output_filename, splitChar):
     path_to_folder = os.path.join(arg_families_dir, input_dir)
-    output_file    = os.path.join(arg_out_dir, output_filename)    
-    
-    with open(output_file, 'w') as outfile:
+    output_file    = os.path.join(arg_out_dir, output_filename)
+
+    with open(output_file, 'w', buffering=1 << 20) as outfile:
         for filename in sorted(os.listdir(path_to_folder)):
             filepath = os.path.join(path_to_folder, filename)
-            with open(filepath, 'r') as infile:
-                base_filename = os.path.splitext(filename)[0]
-                for line in infile:
-                    value = line.strip()
-                    if value:  # Check if the line is not empty
-                        converged_but_discarded = False
-                        if splitChar != "":
-                            first_element       = value.split(splitChar)[0]
-                            fam_id              = base_filename + '_' + first_element
-                            if (fam_id in redundant_fam_ids):
-                                continue
-                            remaining_elements  = splitChar.join(value.split(splitChar)[1:])
-                            family_id           = str(family_to_id[fam_id])
-                            concatenated_string = family_id + splitChar + remaining_elements
-                        else: # converged_families file, only one value element
-                            fam_id              = base_filename + '_' + value
-                            if (fam_id in redundant_fam_ids):
-                                continue
-                            if fam_id not in family_to_id:
-                                converged_but_discarded = True
-                                continue
-                            concatenated_string = str(family_to_id[fam_id])
-
-                        if not converged_but_discarded:
-                            outfile.write(f"{concatenated_string}\n")
+            base_filename = os.path.splitext(filename)[0]
+            with open(filepath, 'r', buffering=1 << 20) as infile:
+                if splitChar:
+                    for line in infile:
+                        value = line.strip()
+                        if not value:
+                            continue
+                        first_element, _, remaining_elements = value.partition(splitChar)
+                        fam_id = base_filename + '_' + first_element
+                        if fam_id in redundant_fam_ids:
+                            continue
+                        outfile.write(str(family_to_id[fam_id]) + splitChar + remaining_elements + '\n')
+                else:  # converged_families: one value per line
+                    for line in infile:
+                        value = line.strip()
+                        if not value:
+                            continue
+                        fam_id = base_filename + '_' + value
+                        if fam_id in redundant_fam_ids or fam_id not in family_to_id:
+                            continue
+                        outfile.write(str(family_to_id[fam_id]) + '\n')
 
 def pool_clusters_directory(input_dir, output_filename):
     path_to_folder = os.path.join(arg_families_dir, input_dir)
@@ -212,18 +208,24 @@ def main(args=None):
     redundant_fam_ids = read_non_redundant_fam_ids(arg_non_redundant_fam_ids_file)
     family_to_id      = create_mapping_dict()
 
-    pool_directory("family_metadata", "family_metadata.csv", ",")
-    pool_directory("refined_families", "refined_families.tsv", "\t")
-    pool_directory("converged_families", "converged_families.txt", "")
-    pool_clusters_directory("successful_clusters", "successful_clusters.txt")
-    pool_clusters_directory("discarded_clusters", "discarded_clusters.txt")
+    tasks = [
+        (pool_directory,         ("family_metadata",   "family_metadata.csv",        ",")),
+        (pool_directory,         ("refined_families",  "refined_families.tsv",        "\t")),
+        (pool_directory,         ("converged_families","converged_families.txt",      "")),
+        (pool_clusters_directory,("successful_clusters","successful_clusters.txt")),
+        (pool_clusters_directory,("discarded_clusters", "discarded_clusters.txt")),
+        (translate_directory,    ('rf',)),
+        (translate_directory,    ('hmm',)),
+        (translate_directory,    ('full_msa_sto',)),
+        (translate_directory,    ('seed_msa_sto',)),
+        (translate_edgelist,     (arg_similarity_edgelist,
+                                  os.path.join(arg_out_dir, 'similarity_mqc.csv'))),
+    ]
 
-    translate_directory('rf')
-    translate_directory('hmm')
-    translate_directory('full_msa_sto')
-    translate_directory('seed_msa_sto')
-    translate_edgelist(arg_similarity_edgelist, \
-        os.path.join(arg_out_dir, 'similarity_mqc.csv'))
+    with ThreadPoolExecutor(max_workers=min(len(tasks), os.cpu_count() or 4)) as executor:
+        futures = {executor.submit(fn, *args): (fn.__name__, args) for fn, args in tasks}
+        for future in as_completed(futures):
+            future.result()  # re-raise any exception
     
     json_mapping = 'family_to_id.json'
     output_file  = os.path.join(arg_out_dir, json_mapping)
