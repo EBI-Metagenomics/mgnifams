@@ -51,6 +51,15 @@ def parse_args(args=None):
         type=int,
         help="Starting family id.",
     )
+    parser.add_argument(
+        "-t",
+        "--threads",
+        required=False,
+        metavar="INT",
+        type=int,
+        default=None,
+        help="Number of parallel threads to use.",
+    )
     return parser.parse_args(args)
 
 def read_non_redundant_fam_ids(file_path):
@@ -202,6 +211,7 @@ def main(args=None):
     arg_non_redundant_fam_ids_file = args.redundant
     arg_starting_id = args.iter
     arg_similarity_edgelist = args.similarity_csv
+    arg_threads = args.threads
 
     os.makedirs(arg_out_dir, exist_ok=True)
 
@@ -222,7 +232,7 @@ def main(args=None):
                                   os.path.join(arg_out_dir, 'similarity_mqc.csv'))),
     ]
 
-    with ThreadPoolExecutor(max_workers=min(len(tasks), os.cpu_count() or 4)) as executor:
+    with ThreadPoolExecutor(max_workers=min(len(tasks), arg_threads or os.cpu_count() or 4)) as executor:
         futures = {executor.submit(fn, *args): (fn.__name__, args) for fn, args in tasks}
         for future in as_completed(futures):
             future.result()  # re-raise any exception

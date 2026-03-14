@@ -49,7 +49,8 @@ process POOL_NONREDUNDANT_FAMILIES {
         --output_dir families \\
         --redundant ${redundant_family_ids} \\
         --similarity_csv ${similarity_csv} \\
-        --iter ${starting_id}
+        --iter ${starting_id} \\
+        --threads ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
