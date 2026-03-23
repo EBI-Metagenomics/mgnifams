@@ -1,6 +1,6 @@
 process POOL_NONREDUNDANT_FAMILIES {
     tag "$meta12.id"
-    label 'process_single'
+    label 'process_high'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -49,7 +49,8 @@ process POOL_NONREDUNDANT_FAMILIES {
         --output_dir families \\
         --redundant ${redundant_family_ids} \\
         --similarity_csv ${similarity_csv} \\
-        --iter ${starting_id}
+        --iter ${starting_id} \\
+        --threads ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
