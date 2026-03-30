@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+[#54](https://github.com/EBI-Metagenomics/mgnifams/pull/54) - ESM-1b max is 1022 residues; truncated longer sequences to avoid CRF mask errors in DeepTMHMM
 [#37](https://github.com/EBI-Metagenomics/mgnifams/pull/37) - MGYP protein slices for MGnifams seed MSAs, full MSAs, reps fasta and metadata are now calculated properly in the `generate_families.py` script.
 
 ### `Changed`
