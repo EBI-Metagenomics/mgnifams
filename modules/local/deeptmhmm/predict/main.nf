@@ -23,10 +23,13 @@ process DEEPTMHMM_PREDICT {
 
     script:
     """
+    # ESM-1b max is 1022 residues; truncate longer sequences to avoid CRF mask errors
+    awk '/^>/{if (seq) print substr(seq,1,1022); print; seq=""} !/^>/{seq=seq\$0} END{if (seq) print substr(seq,1,1022)}' ${fasta} > truncated.fa
+
     # deeptmhmm has a hard coded assumption it is being run within its dir
     cd ${tmhmm_dir}
     python3 predict.py \\
-        --fasta ../${fasta} \\
+        --fasta ../truncated.fa \\
         --output-dir ../biolib_results
     cd ..
     rm -r biolib_results/embeddings
