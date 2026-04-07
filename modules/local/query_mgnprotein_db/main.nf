@@ -1,6 +1,6 @@
 process QUERY_MGNPROTEIN_DB {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_high'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -24,7 +24,8 @@ process QUERY_MGNPROTEIN_DB {
     query_mgnprotein_db.py \\
         --mgnprotein_db_config_file ${config_file} \\
         --family_proteins_file ${family_proteins_file} \\
-        --output_dir query_results
+        --output_dir query_results \\
+        --threads ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
