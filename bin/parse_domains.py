@@ -4,7 +4,16 @@ import argparse
 import os
 import ast
 import json
+import logging
 from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+log = logging.getLogger(__name__)
 
 def extract_mgyp(protein_name):
     parts = protein_name.split('/')
@@ -147,11 +156,13 @@ def decide_font_color(hex_color):
         return 'white'
 
 def load_pfam_mapping(pfam_mapping_file):
+    log.info(f"Loading pfam mapping from {pfam_mapping_file}")
     pfam_mapping = {}
     with open(pfam_mapping_file, 'r') as f:
         for line in f:
             pfam_id, name = line.strip().split('\t', 1)
             pfam_mapping[pfam_id] = name
+    log.info(f"Loaded {len(pfam_mapping)} pfam entries")
     return pfam_mapping
 
 def translate_architecture(architecture_json, pfam_mapping):
@@ -176,32 +187,60 @@ def write_out(translated_json, out_file):
     with open(out_file, 'w') as f:
         json.dump(translated_json, f, indent=4)
 
-def load_family_data(refined_families_file):
-    """Load all family-protein mappings into a nested dict without requiring sorted input.
-    Returns {family_id: {mgyp: [mgnifam_start, ...]}}."""
-    family_data = defaultdict(lambda: defaultdict(list))
-
-    with open(refined_families_file, 'r') as f:
-        for line in f:
-            family_id_str, protein_name = line.strip().split('\t')
-            family_id     = int(family_id_str)
-            mgyp          = extract_mgyp(protein_name)
-            mgnifam_start = calculate_mgnifam_start(protein_name)
-            family_data[family_id][mgyp].append(mgnifam_start)
-
-    return family_data
-
 def process_family(family_id, mgyp_lookup, query_results_dir, pfam_mapping, output_dir):
-    tsv_path = os.path.join(query_results_dir, f"{family_id}.tsv")
-    if not os.path.exists(tsv_path):
-        return
+    domain_architecture_counts = count_domain_architectures(
+        os.path.join(query_results_dir, f"{family_id}.tsv"), family_id, mgyp_lookup
+    )
+    architecture_json   = construct_architecture_json(domain_architecture_counts)
+    translated_top_json = translate_architecture(architecture_json, pfam_mapping)
 
-    domain_architecture_counts = count_domain_architectures(tsv_path, family_id, mgyp_lookup)
-    architecture_json           = construct_architecture_json(domain_architecture_counts)
-    translated_top_json         = translate_architecture(architecture_json, pfam_mapping)
+    write_out(translated_top_json, os.path.join(output_dir, f"{family_id}.json"))
 
-    out_file = os.path.join(output_dir, f"{family_id}.json")
-    write_out(translated_top_json, out_file)
+def stream_and_process(refined_families_file, query_results_dir, pfam_mapping, output_dir, threads):
+    """Stream refined_families batch-by-batch (all rows for one family_id are contiguous,
+    but families may appear in any order).
+    Main thread streams and builds mgyp_lookup; worker threads process and write JSON.
+    Peak memory = threads * largest single family."""
+    current_family_id = None
+    mgyp_lookup       = defaultdict(list)  # {mgyp: [mgnifam_start, ...]}
+    families_done     = 0
+    futures           = {}
+
+    def submit(family_id, lookup):
+        tsv_path = os.path.join(query_results_dir, f"{family_id}.tsv")
+        if not os.path.exists(tsv_path):
+            log.warning(f"No query result TSV for family {family_id}, skipping")
+            return
+        futures[executor.submit(process_family, family_id, lookup, query_results_dir, pfam_mapping, output_dir)] = family_id
+
+    log.info(f"Streaming {refined_families_file} with {threads} worker threads")
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        with open(refined_families_file, 'r') as f:
+            for line in f:
+                family_id_str, protein_name = line.strip().split('\t')
+                family_id = int(family_id_str)
+
+                if family_id != current_family_id:
+                    if current_family_id is not None:
+                        submit(current_family_id, mgyp_lookup)
+                    current_family_id = family_id
+                    mgyp_lookup       = defaultdict(list)
+
+                mgyp          = extract_mgyp(protein_name)
+                mgnifam_start = calculate_mgnifam_start(protein_name)
+                mgyp_lookup[mgyp].append(mgnifam_start)
+
+        # Submit the last batch before the executor shuts down
+        if current_family_id is not None:
+            submit(current_family_id, mgyp_lookup)
+
+        for future in as_completed(futures):
+            future.result()  # re-raise any worker exception
+            families_done += 1
+            if families_done % 1000 == 0:
+                log.info(f"Processed {families_done} families")
+
+    log.info(f"Finished: processed {families_done} families total")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse the protein query TSV results into domain architecture JSONs.")
@@ -209,11 +248,15 @@ if __name__ == "__main__":
     parser.add_argument("--pfam_mapping",     help="Path to the biome id to names mapping tsv file")
     parser.add_argument("--refined_families", help="Path to the family-proteins TSV file with two columns")
     parser.add_argument("--output_dir",       help="Path to the output directory with per family JSON domain architectures")
+    parser.add_argument("--threads", type=int, default=1, help="Number of worker threads for parallel family processing")
 
     args = parser.parse_args()
 
+    log.info("Starting parse_domains")
+
     if not os.path.exists(args.query_results):
         raise FileNotFoundError(f"The folder {args.query_results} does not exist.")
+    log.info(f"Query results dir: {args.query_results}")
 
     if not os.path.exists(args.pfam_mapping):
         raise FileNotFoundError(f"The file {args.pfam_mapping} does not exist.")
@@ -222,10 +265,10 @@ if __name__ == "__main__":
         raise FileNotFoundError(f"The file {args.refined_families} does not exist.")
 
     pfam_mapping = load_pfam_mapping(args.pfam_mapping)
-    family_data  = load_family_data(args.refined_families)
 
     os.makedirs(args.output_dir, exist_ok=True)
-    for tsv in os.listdir(args.query_results):
-        family_id   = int(os.path.splitext(tsv)[0])
-        mgyp_lookup = family_data.get(family_id, {})
-        process_family(family_id, mgyp_lookup, args.query_results, pfam_mapping, args.output_dir)
+    log.info(f"Output dir ready: {args.output_dir}")
+
+    stream_and_process(args.refined_families, args.query_results, pfam_mapping, args.output_dir, args.threads)
+
+    log.info("parse_domains complete")

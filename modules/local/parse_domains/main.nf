@@ -1,6 +1,6 @@
 process PARSE_DOMAINS {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_high'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -25,7 +25,8 @@ process PARSE_DOMAINS {
         --query_results query_results \\
         --pfam_mapping ${pfam_mapping} \\
         --refined_families ${refined_families} \\
-        --output_dir domain_results
+        --output_dir domain_results \\
+        --threads ${task.cpus}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
