@@ -3,7 +3,7 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v2.0.0 - [yyyy/mm/dd]
+## v2.0.0 - [2026/04/14]
 
 ### `Added`
 
@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
+- [#56](https://github.com/EBI-Metagenomics/mgnifams/pull/56) - Parallelized and optimized the `parse_domains.py` script for large-scale.
+- [#55](https://github.com/EBI-Metagenomics/mgnifams/pull/55) - Parallelized and optimized the `query_mgnprotein_db.py` script for large-scale.
 - [#53](https://github.com/EBI-Metagenomics/mgnifams/pull/53) - Parallelized and optimized the `pool_nonredundant_families.py` script for large-scale.
 - [#42](https://github.com/EBI-Metagenomics/mgnifams/pull/42) - Replaced in house `hhsuite/reformat`, `hhsuite/hhblits` and `hhsuite/hhsearch` modules with the nf-core ones.
 - [#39](https://github.com/EBI-Metagenomics/mgnifams/pull/39) - Further optimizations for MGnifams main algorithm, removing unnecessary I/O operations, by @althonos
