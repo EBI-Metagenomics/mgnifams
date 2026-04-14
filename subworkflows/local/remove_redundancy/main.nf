@@ -1,0 +1,74 @@
+include { FIND_CONCATENATE               } from '../../../modules/nf-core/find/concatenate/main'
+include { HMMER_HMMSEARCH                } from '../../../modules/nf-core/hmmer/hmmsearch/main'
+include { POOL_PREREDUNDANT_FAMILIES_TSV } from '../../../modules/local/pool_preredundant_families_tsv/main'
+include { IDENTIFY_REDUNDANT_FAMS        } from '../../../modules/local/identify_redundant_fams/main'
+include { POOL_NONREDUNDANT_FAMILIES     } from '../../../modules/local/pool_nonredundant_families/main'
+
+workflow REMOVE_REDUNDANCY {
+    take:
+    reps_fasta
+    outdir
+    hmm
+    metadata
+    seed_msa_sto
+    full_msa_sto
+    rf
+    tsv
+    redundant_length_threshold
+    redundant_score_threshold
+    similarity_score_threshold
+    discarded
+    successful
+    converged
+    logs
+    starting_id
+
+    main:
+    ch_versions = Channel.empty()
+
+    ch_reps_fasta = reps_fasta
+        .map { meta, files -> files }
+        .flatten()
+        .collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families")
+        .map { file -> [[id: 'pre_redundant'], file] }
+
+    FIND_CONCATENATE( hmm )
+    ch_versions = ch_versions.mix( FIND_CONCATENATE.out.versions )
+
+    ch_input_for_hmmsearch = FIND_CONCATENATE.out.file_out
+        .combine(ch_reps_fasta, by: 0)
+        .map { meta, model, seqs -> [meta, model, seqs, false, false, true] }
+
+    HMMER_HMMSEARCH( ch_input_for_hmmsearch )
+    ch_versions = ch_versions.mix( HMMER_HMMSEARCH.out.versions )
+
+    POOL_PREREDUNDANT_FAMILIES_TSV( tsv )
+    ch_versions = ch_versions.mix( POOL_PREREDUNDANT_FAMILIES_TSV.out.versions )
+
+    IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, \
+        POOL_PREREDUNDANT_FAMILIES_TSV.out.tsv, redundant_length_threshold, \
+        redundant_score_threshold, similarity_score_threshold )
+    ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
+
+    pooled_families = POOL_NONREDUNDANT_FAMILIES( seed_msa_sto, \
+        full_msa_sto, hmm, rf, tsv, discarded, successful, \
+        converged, metadata, reps_fasta, logs, IDENTIFY_REDUNDANT_FAMS.out.txt, \
+        IDENTIFY_REDUNDANT_FAMS.out.csv, starting_id )
+    ch_versions = ch_versions.mix( POOL_NONREDUNDANT_FAMILIES.out.versions )
+
+    emit:
+    versions         = ch_versions
+    seed_msa_sto     = pooled_families.seed_msa_sto
+    full_msa_sto     = pooled_families.full_msa_sto
+    hmm              = pooled_families.hmm
+    rf               = pooled_families.rf
+    tsv              = pooled_families.tsv
+    discarded        = pooled_families.discarded
+    successful       = pooled_families.successful
+    converged        = pooled_families.converged
+    metadata         = pooled_families.metadata
+    family_reps      = pooled_families.family_reps
+    family_ids_fasta = pooled_families.family_ids_fasta
+    id_mapping       = pooled_families.id_mapping
+    similarity_mqc   = POOL_NONREDUNDANT_FAMILIES.out.similarity_mqc
+}

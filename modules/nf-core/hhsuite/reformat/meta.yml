@@ -1,12 +1,12 @@
 ---
-# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
-name: "hhsuite_hhblits"
-description: search an HHsuite database with a query sequence or MSA
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "hhsuite_reformat"
+description: Reformat a Multiple Sequence Alignment (MSA) file
 keywords:
-  - HMM
-  - search
-  - comparison
+  - reformat
   - MSA
+  - hhsuite
+  - alignment
 tools:
   - "hhsuite":
       description: "HH-suite3 for fast remote homology detection and deep protein annotation"
@@ -15,37 +15,42 @@ tools:
       tool_dev_url: "https://github.com/soedinglab/hh-suite"
       doi: "10.1371/journal.pone.0082138"
       licence: ["GPL v3"]
+      identifier: biotools:hh-suite
 input:
-  - meta:
-      type: map
-      description: |
-        Groovy Map containing sample information
-        e.g. `[ id:'test', single_end:false ]`
-  - fa:
-      type: file
-      description: Input multiple sequence alignment file
-      pattern: "*.{fa,fasta,fas,a2m,a3m,sto,psi,clu}"
-  - informat:
-      type: string
-      description: Format of the input multiple sequence alignment file
-      pattern: "fas|a2m|a3m|sto|psi|clu"
-  - outformat:
-      type: string
-      description: Format of the output multiple sequence alignment file
-      pattern: "fas|a2m|a3m|sto|psi|clu"
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'sample1' ]`
+    - aln:
+        type: file
+        description: Input MSA file
+        pattern: "*.{fa,fasta,fas,a2m,a3m,sto,psi,clu,fa.gz,fasta.gz,fas.gz,a2m.gz,a3m.gz,sto.gz,psi.gz,clu.gz}"
+  - - informat:
+        type: string
+        description: Format of the input MSA file
+        enum: ["fas", "a2m", "a3m", "sto", "psi", "clu"]
+  - - outformat:
+        type: string
+        description: Format of the output MSA file
+        enum: ["fas", "a2m", "a3m", "sto", "psi", "clu"]
 output:
-  - meta:
-      type: map
-      description: |
-        Groovy Map containing sample information
-        e.g. `[ id:'test', single_end:false ]`
-  - fa:
-      type: file
-      description: Transformed output multiple sequence alignment file
-      pattern: "*.{fas,a2m,a3m,sto,psi,clu}"
+  - msa:
+      - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "${prefix}.${outformat}.gz":
+          type: file
+          description: Gzipped reformatted output MSA file
+          pattern: "*.{fas.gz,a2m.gz,a3m.gz,sto.gz,psi.gz,clu.gz}"
   - versions:
-      type: file
-      description: File containing software versions
-      pattern: "versions.yml"
+      - "versions.yml":
+          type: file
+          description: File containing software versions
+          pattern: "versions.yml"
 authors:
+  - "@vagkaratzas"
+maintainers:
   - "@vagkaratzas"

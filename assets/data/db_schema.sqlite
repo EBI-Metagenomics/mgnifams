@@ -1,0 +1,85 @@
+CREATE TABLE mgnifam (
+    id INTEGER PRIMARY KEY,
+    full_size INTEGER,
+    protein_rep INTEGER,
+    rep_region TEXT,
+    rep_length INTEGER,
+    converged BOOLEAN,
+    plddt REAL,
+    ptm REAL,
+    helix_percent REAL,
+    strand_percent REAL,
+    coil_percent REAL,
+    inside_percent REAL,
+    membrane_alpha_percent REAL,
+    outside_percent REAL,
+    signal_percent REAL,
+    membrane_beta_percent REAL,
+    periplasm_percent REAL,
+    rep_sequence TEXT,
+    consensus TEXT,
+    seed_msa_blob BLOB DEFAULT NULL,
+    hmm_blob BLOB DEFAULT NULL,
+    rf_blob BLOB DEFAULT NULL,
+    cif_blob BLOB DEFAULT NULL,
+    biome_blob BLOB DEFAULT NULL,
+    domain_blob BLOB DEFAULT NULL,
+    s4pred_blob BLOB DEFAULT NULL,
+    tm_blob BLOB DEFAULT NULL
+);
+
+CREATE TABLE mgnifam_pfams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mgnifam_id INTEGER REFERENCES mgnifam(id),
+    pfam TEXT,
+    name TEXT,
+    e_value REAL,
+    score REAL,
+    hmm_from INTEGER,
+    hmm_to INTEGER,
+    ali_from INTEGER,
+    ali_to INTEGER,
+    env_from INTEGER,
+    env_to INTEGER,
+    acc REAL
+);
+
+CREATE TABLE mgnifam_funfams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mgnifam_id INTEGER REFERENCES mgnifam(id),
+    funfam TEXT,
+    e_value REAL,
+    score REAL,
+    hmm_from INTEGER,
+    hmm_to INTEGER,
+    ali_from INTEGER,
+    ali_to INTEGER,
+    env_from INTEGER,
+    env_to INTEGER,
+    acc REAL
+);
+
+CREATE TABLE mgnifam_folds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mgnifam_id INTEGER REFERENCES mgnifam(id),
+    fold TEXT,
+    aligned_length INTEGER,
+    q_start INTEGER,
+    q_end INTEGER,
+    t_start INTEGER,
+    t_end INTEGER,
+    e_value REAL
+);
+
+CREATE TABLE mgnifam_model_pfams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mgnifam_id INTEGER REFERENCES mgnifam(id),
+    pfam TEXT,
+    name TEXT,
+    description TEXT,
+    prob REAL,
+    e_value REAL,
+    length INTEGER,
+    query_hmm TEXT,
+    template_hmm TEXT
+);

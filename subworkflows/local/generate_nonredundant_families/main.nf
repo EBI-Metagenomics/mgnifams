@@ -1,0 +1,135 @@
+include { GENERATE_FAMILIES                     } from '../../../modules/local/generate_families/main'
+include { REMOVE_REDUNDANCY                     } from '../../../subworkflows/local/remove_redundancy'
+include { HHSUITE_REFORMAT as REFORMAT_SEED_MSA } from '../../../modules/nf-core/hhsuite/reformat/main'
+include { HHSUITE_REFORMAT as REFORMAT_FULL_MSA } from '../../../modules/nf-core/hhsuite/reformat/main'
+include { PRESENT_DISCARDED_FAMILIES            } from '../../../modules/local/present_discarded_families/main'
+include { PRESENT_FAMILY_METADATA               } from '../../../modules/local/present_family_metadata/main'
+
+workflow GENERATE_NONREDUNDANT_FAMILIES {
+    take:
+    cluster_chunks
+    mgnifams_fa
+    mgnifams_discard_min_rep_length
+    mgnifams_discard_max_rep_length
+    mgnifams_discard_min_starting_membership
+    mgnifams_max_seq_identity
+    mgnifams_max_seed_seqs
+    mgnifams_max_gap_occupancy
+    mgnifams_recruit_evalue_cutoff
+    mgnifams_recruit_hit_length_percentage
+    outdir
+    redundant_length_threshold
+    redundant_score_threshold
+    similarity_score_threshold
+    starting_id
+
+    main:
+    ch_versions = Channel.empty()
+
+    ch_families = GENERATE_FAMILIES( cluster_chunks, mgnifams_fa.first(), \
+        mgnifams_discard_min_rep_length, mgnifams_discard_max_rep_length, mgnifams_discard_min_starting_membership, \
+        mgnifams_max_seq_identity, mgnifams_max_seed_seqs, mgnifams_max_gap_occupancy, \
+        mgnifams_recruit_evalue_cutoff, mgnifams_recruit_hit_length_percentage )
+    ch_versions = ch_versions.mix( GENERATE_FAMILIES.out.versions )
+
+    ch_hmm = ch_families.hmm
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"pre_redundant"], file ] }
+
+    ch_reps_fasta = ch_families.fasta
+        .map { meta, files -> files }
+        .collect()
+        .map{ file -> [[id: 'reps_fasta'], file] }
+
+    ch_metadata = ch_families.metadata
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"metadata"], file ] }
+
+    ch_seed_msa_sto = ch_families.seed_msa_sto
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"seed_msa_sto"], file ] }
+
+    ch_full_msa_sto = ch_families.full_msa_sto
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"full_msa_sto"], file ] }
+
+    ch_rf = ch_families.rf
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"rf"], file ] }
+
+    ch_tsv = ch_families.tsv
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"tsv"], file ] }
+
+    ch_discarded = ch_families.discarded
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"discarded"], file ] }
+
+    ch_successful = ch_families.successful
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"successful"], file ] }
+
+    ch_converged = ch_families.converged
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"converged"], file ] }
+
+    ch_logs = ch_families.logs
+        .map { meta, files -> files }
+        .collect()
+        .map { file -> [ [id:"logs"], file ] }
+
+    REMOVE_REDUNDANCY( ch_reps_fasta, outdir, ch_hmm, ch_metadata, \
+        ch_seed_msa_sto, ch_full_msa_sto, ch_rf, ch_tsv, \
+        redundant_length_threshold, redundant_score_threshold, \
+        similarity_score_threshold, ch_discarded, ch_successful, \
+        ch_converged, ch_logs, starting_id )
+    ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
+
+    ch_input_for_reformat_seed = REMOVE_REDUNDANCY.out.seed_msa_sto
+        .transpose()
+        .map { meta, file ->
+            [[id: meta.id, chunk: file.getSimpleName()], file]
+        }
+    REFORMAT_SEED_MSA(ch_input_for_reformat_seed, "sto", "fas")
+    ch_versions = ch_versions.mix( REFORMAT_SEED_MSA.out.versions )
+
+    ch_input_for_reformat_full = REMOVE_REDUNDANCY.out.full_msa_sto
+        .transpose()
+        .map { meta, file ->
+            [[id: meta.id, chunk: file.getSimpleName()], file]
+        }
+    REFORMAT_FULL_MSA(ch_input_for_reformat_full, "sto", "fas")
+    ch_versions = ch_versions.mix( REFORMAT_FULL_MSA.out.versions )
+
+    PRESENT_DISCARDED_FAMILIES( REMOVE_REDUNDANCY.out.discarded )
+    ch_versions = ch_versions.mix( PRESENT_DISCARDED_FAMILIES.out.versions )
+
+    PRESENT_FAMILY_METADATA( REMOVE_REDUNDANCY.out.metadata )
+    ch_versions = ch_versions.mix( PRESENT_FAMILY_METADATA.out.versions )
+
+    emit:
+    versions         = ch_versions
+    seed_msa_sto     = REMOVE_REDUNDANCY.out.seed_msa_sto
+    full_msa_sto     = REMOVE_REDUNDANCY.out.full_msa_sto
+    hmm              = REMOVE_REDUNDANCY.out.hmm
+    rf               = REMOVE_REDUNDANCY.out.rf
+    tsv              = REMOVE_REDUNDANCY.out.tsv
+    converged        = REMOVE_REDUNDANCY.out.converged
+    metadata         = REMOVE_REDUNDANCY.out.metadata
+    family_reps      = REMOVE_REDUNDANCY.out.family_reps
+    family_ids_fasta = REMOVE_REDUNDANCY.out.family_ids_fasta
+    seed_msa         = REFORMAT_SEED_MSA.out.msa
+    full_msa         = REFORMAT_FULL_MSA.out.msa
+    discarded_mqc    = PRESENT_DISCARDED_FAMILIES.out.mqc
+    metadata_mqc     = PRESENT_FAMILY_METADATA.out.mqc
+    similarity_mqc   = REMOVE_REDUNDANCY.out.similarity_mqc
+}

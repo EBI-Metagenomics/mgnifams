@@ -1,0 +1,346 @@
+{
+    "-profile test": {
+        "content": [
+            87,
+            {
+                "CALCULATE_CLUSTER_DISTRIBUTION": {
+                    "sed": 4.7
+                },
+                "CHUNK_CLUSTERS": {
+                    "sed": 4.7
+                },
+                "EXPORT_FOLDS": {
+                    "sed": 4.7
+                },
+                "EXPORT_MGNIFAMS": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
+                },
+                "EXPORT_MODEL_PFAMS": {
+                    "python": "3.13.0"
+                },
+                "EXTRACT_CUDA_FAILED": {
+                    "python": "3.13.0"
+                },
+                "EXTRACT_ESMFOLD_SCORES": {
+                    "sed": 4.7
+                },
+                "EXTRACT_UNANNOTATED_SLICES": {
+                    "python": "3.13.0"
+                },
+                "EXTRACT_UNIQUE_CLUSTER_REPS": {
+                    "sed": 4.7
+                },
+                "FILTER_EXPORT_FUNFAMS": {
+                    "sed": 4.7
+                },
+                "FILTER_EXPORT_PFAMS": {
+                    "sed": 4.7
+                },
+                "FIND_CONCATENATE": {
+                    "find": "4.6.0",
+                    "pigz": 2.8,
+                    "coreutils": 9.4
+                },
+                "FOLDSEEK_EASYSEARCH_PDB": {
+                    "foldseek": "9.427df8a"
+                },
+                "GENERATE_FAMILIES": {
+                    "python": "3.13.5",
+                    "pandas": "2.3.2",
+                    "pyfamsa": "0.6.0",
+                    "pyhmmer": "0.11.1",
+                    "pytrimal": "0.8.2",
+                    "numpy": "2.3.2",
+                    "biopython": 1.85
+                },
+                "HHSUITE_HHBLITS": {
+                    "hh-suite": "3.3.0"
+                },
+                "HHSUITE_REFORMAT": {
+                    "hhsuite": "3.3.0"
+                },
+                "HMMER_HMMSEARCH": {
+                    "hmmer": 3.4
+                },
+                "HMMER_HMMSEARCH_FUNFAMS": {
+                    "hmmer": 3.4
+                },
+                "HMMER_HMMSEARCH_PFAM": {
+                    "hmmer": 3.4
+                },
+                "IDENTIFY_REDUNDANT_FAMS": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
+                },
+                "MMSEQS_CREATEDB": {
+                    "mmseqs": "17.b804f"
+                },
+                "MMSEQS_CREATETSV": {
+                    "mmseqs": "17.b804f"
+                },
+                "MMSEQS_LINCLUST": {
+                    "mmseqs": "17.b804f"
+                },
+                "PARSE_CIF": {
+                    "python": "3.13.1",
+                    "numpy": "2.3.1",
+                    "biopython": 1.85
+                },
+                "PARSE_S4PRED_TO_FEATURE_VIEWER": {
+                    "python": "3.13.0"
+                },
+                "PIGZ_UNCOMPRESS": {
+                    "pigz": 2.8
+                },
+                "POOL_NONREDUNDANT_FAMILIES": {
+                    "python": "3.13.0"
+                },
+                "POOL_PREREDUNDANT_FAMILIES_TSV": {
+                    "python": "3.13.0"
+                },
+                "PRESENT_DISCARDED_FAMILIES": {
+                    "sed": 4.7
+                },
+                "PRESENT_FAMILY_METADATA": {
+                    "sed": 4.7
+                },
+                "REFORMAT_FULL_MSA": {
+                    "hhsuite": "3.3.0"
+                },
+                "REFORMAT_SEED_MSA": {
+                    "hhsuite": "3.3.0"
+                },
+                "RUN_ESMFOLD": {
+                    "esm-fold": "1.0.3"
+                },
+                "S4PRED_RUNMODEL": {
+                    "s4pred": "1.2.1"
+                },
+                "SEQKIT_STATS": {
+                    "seqkit": "2.9.0"
+                },
+                "SEQKIT_STATS_TO_MQC": {
+                    "sed": 4.7
+                },
+                "TRIM_REPS": {
+                    "sed": 4.7
+                },
+                "Workflow": {
+                    "ebi-metagenomics/mgnifams": "v2.0.0dev"
+                }
+            },
+            [
+                "annotation",
+                "annotation/models",
+                "annotation/models/hhblits",
+                "annotation/models/hhblits/1.hhr",
+                "annotation/models/hhblits/2.hhr",
+                "annotation/models/hhblits/3.hhr",
+                "annotation/models/hhblits/4.hhr",
+                "annotation/models/hhblits/5.hhr",
+                "annotation/models/hhblits/6.hhr",
+                "annotation/models/hhblits/7.hhr",
+                "annotation/models/hhblits/8.hhr",
+                "annotation/models/hhblits/9.hhr",
+                "annotation/reps",
+                "annotation/reps/funfams",
+                "annotation/reps/funfams/reps_fasta.domtbl.gz",
+                "annotation/reps/pfam",
+                "annotation/reps/pfam/reps_fasta.domtbl.gz",
+                "annotation/reps/s4pred",
+                "annotation/reps/s4pred/composition.csv",
+                "annotation/reps/s4pred/horiz",
+                "annotation/reps/s4pred/horiz/1.horiz",
+                "annotation/reps/s4pred/horiz/2.horiz",
+                "annotation/reps/s4pred/horiz/3.horiz",
+                "annotation/reps/s4pred/horiz/4.horiz",
+                "annotation/reps/s4pred/horiz/5.horiz",
+                "annotation/reps/s4pred/horiz/6.horiz",
+                "annotation/reps/s4pred/horiz/7.horiz",
+                "annotation/reps/s4pred/horiz/8.horiz",
+                "annotation/reps/s4pred/horiz/9.horiz",
+                "annotation/reps/s4pred/json",
+                "annotation/reps/s4pred/json/1.json",
+                "annotation/reps/s4pred/json/2.json",
+                "annotation/reps/s4pred/json/3.json",
+                "annotation/reps/s4pred/json/4.json",
+                "annotation/reps/s4pred/json/5.json",
+                "annotation/reps/s4pred/json/6.json",
+                "annotation/reps/s4pred/json/7.json",
+                "annotation/reps/s4pred/json/8.json",
+                "annotation/reps/s4pred/json/9.json",
+                "annotation/structures",
+                "annotation/structures/foldseek",
+                "annotation/structures/foldseek/all_hits.tsv",
+                "annotation/structures/foldseek/pdb.m8",
+                "generate_families",
+                "generate_families/discarded_discarded_mqc.csv",
+                "generate_families/families",
+                "generate_families/families/converged_families.txt",
+                "generate_families/families/discarded_clusters.txt",
+                "generate_families/families/family_ids.fasta",
+                "generate_families/families/family_metadata.csv",
+                "generate_families/families/family_reps.fasta",
+                "generate_families/families/family_to_id.json",
+                "generate_families/families/full_msa",
+                "generate_families/families/full_msa/1.fas.gz",
+                "generate_families/families/full_msa/2.fas.gz",
+                "generate_families/families/full_msa/3.fas.gz",
+                "generate_families/families/full_msa/4.fas.gz",
+                "generate_families/families/full_msa/5.fas.gz",
+                "generate_families/families/full_msa/6.fas.gz",
+                "generate_families/families/full_msa/7.fas.gz",
+                "generate_families/families/full_msa/8.fas.gz",
+                "generate_families/families/full_msa/9.fas.gz",
+                "generate_families/families/full_msa_sto",
+                "generate_families/families/full_msa_sto/1.sto",
+                "generate_families/families/full_msa_sto/2.sto",
+                "generate_families/families/full_msa_sto/3.sto",
+                "generate_families/families/full_msa_sto/4.sto",
+                "generate_families/families/full_msa_sto/5.sto",
+                "generate_families/families/full_msa_sto/6.sto",
+                "generate_families/families/full_msa_sto/7.sto",
+                "generate_families/families/full_msa_sto/8.sto",
+                "generate_families/families/full_msa_sto/9.sto",
+                "generate_families/families/hmm",
+                "generate_families/families/hmm/1.hmm",
+                "generate_families/families/hmm/2.hmm",
+                "generate_families/families/hmm/3.hmm",
+                "generate_families/families/hmm/4.hmm",
+                "generate_families/families/hmm/5.hmm",
+                "generate_families/families/hmm/6.hmm",
+                "generate_families/families/hmm/7.hmm",
+                "generate_families/families/hmm/8.hmm",
+                "generate_families/families/hmm/9.hmm",
+                "generate_families/families/refined_families.tsv",
+                "generate_families/families/rf",
+                "generate_families/families/rf/1.txt",
+                "generate_families/families/rf/2.txt",
+                "generate_families/families/rf/3.txt",
+                "generate_families/families/rf/4.txt",
+                "generate_families/families/rf/5.txt",
+                "generate_families/families/rf/6.txt",
+                "generate_families/families/rf/7.txt",
+                "generate_families/families/rf/8.txt",
+                "generate_families/families/rf/9.txt",
+                "generate_families/families/seed_msa",
+                "generate_families/families/seed_msa/1.fas.gz",
+                "generate_families/families/seed_msa/2.fas.gz",
+                "generate_families/families/seed_msa/3.fas.gz",
+                "generate_families/families/seed_msa/4.fas.gz",
+                "generate_families/families/seed_msa/5.fas.gz",
+                "generate_families/families/seed_msa/6.fas.gz",
+                "generate_families/families/seed_msa/7.fas.gz",
+                "generate_families/families/seed_msa/8.fas.gz",
+                "generate_families/families/seed_msa/9.fas.gz",
+                "generate_families/families/seed_msa_sto",
+                "generate_families/families/seed_msa_sto/1.sto",
+                "generate_families/families/seed_msa_sto/2.sto",
+                "generate_families/families/seed_msa_sto/3.sto",
+                "generate_families/families/seed_msa_sto/4.sto",
+                "generate_families/families/seed_msa_sto/5.sto",
+                "generate_families/families/seed_msa_sto/6.sto",
+                "generate_families/families/seed_msa_sto/7.sto",
+                "generate_families/families/seed_msa_sto/8.sto",
+                "generate_families/families/seed_msa_sto/9.sto",
+                "generate_families/families/similarity_mqc.csv",
+                "generate_families/families/successful_clusters.txt",
+                "generate_families/metadata_mqc.csv",
+                "generate_families/pre_redundant_reps.fasta",
+                "mgnifams_v2.fa",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/BETA-multiqc.parquet",
+                "multiqc/multiqc_data/multiqc.log",
+                "multiqc/multiqc_data/multiqc_citations.txt",
+                "multiqc/multiqc_data/multiqc_cluster_distribution.txt",
+                "multiqc/multiqc_data/multiqc_data.json",
+                "multiqc/multiqc_data/multiqc_family_metadata.txt",
+                "multiqc/multiqc_data/multiqc_family_similarities.txt",
+                "multiqc/multiqc_data/multiqc_seqkit_stats_summary.txt",
+                "multiqc/multiqc_data/multiqc_software_versions.txt",
+                "multiqc/multiqc_data/multiqc_sources.txt",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/pdf",
+                "multiqc/multiqc_plots/pdf/cluster_distribution.pdf",
+                "multiqc/multiqc_plots/pdf/family_metadata.pdf",
+                "multiqc/multiqc_plots/pdf/family_similarities.pdf",
+                "multiqc/multiqc_plots/pdf/seqkit_stats_summary.pdf",
+                "multiqc/multiqc_plots/png",
+                "multiqc/multiqc_plots/png/cluster_distribution.png",
+                "multiqc/multiqc_plots/png/family_metadata.png",
+                "multiqc/multiqc_plots/png/family_similarities.png",
+                "multiqc/multiqc_plots/png/seqkit_stats_summary.png",
+                "multiqc/multiqc_plots/svg",
+                "multiqc/multiqc_plots/svg/cluster_distribution.svg",
+                "multiqc/multiqc_plots/svg/family_metadata.svg",
+                "multiqc/multiqc_plots/svg/family_similarities.svg",
+                "multiqc/multiqc_plots/svg/seqkit_stats_summary.svg",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/nf_core_pipeline_software_mqc_versions.yml",
+                "qc",
+                "qc/mgnifams_v2.tsv",
+                "setup_clusters",
+                "setup_clusters/mgnifams_v2_clustering_distribution_mqc.csv",
+                "setup_clusters/mgnifams_v2_unique_reps.txt",
+                "setup_clusters/mmseqs",
+                "setup_clusters/mmseqs/mgnifams_v2.tsv",
+                "structures",
+                "structures/esmfold",
+                "structures/esmfold/cif",
+                "structures/esmfold/cif/1.cif",
+                "structures/esmfold/cif/2.cif",
+                "structures/esmfold/cif/3.cif",
+                "structures/esmfold/cif/4.cif",
+                "structures/esmfold/cif/5.cif",
+                "structures/esmfold/cif/6.cif",
+                "structures/esmfold/cif/7.cif",
+                "structures/esmfold/cif/8.cif",
+                "structures/esmfold/cif/9.cif",
+                "structures/esmfold/cuda_failed",
+                "structures/esmfold/cuda_failed/cuda_failed_reps.fasta",
+                "structures/esmfold/pdb",
+                "structures/esmfold/pdb/1.pdb",
+                "structures/esmfold/pdb/2.pdb",
+                "structures/esmfold/pdb/3.pdb",
+                "structures/esmfold/pdb/4.pdb",
+                "structures/esmfold/pdb/5.pdb",
+                "structures/esmfold/pdb/6.pdb",
+                "structures/esmfold/pdb/7.pdb",
+                "structures/esmfold/pdb/8.pdb",
+                "structures/esmfold/pdb/9.pdb",
+                "structures/esmfold/pdb_scores.csv",
+                "structures/esmfold/scores",
+                "structures/esmfold/scores/1_scores.txt",
+                "structures/esmfold/scores/2_scores.txt",
+                "table_data",
+                "table_data/mgnifam.csv",
+                "table_data/mgnifam_folds.csv",
+                "table_data/mgnifam_funfams.csv",
+                "table_data/mgnifam_model_pfams.csv",
+                "table_data/mgnifam_pfams.csv",
+                "trim",
+                "trim/family_ids.1_trimmed.fasta",
+                "trim/family_ids.2_trimmed.fasta"
+            ],
+            [
+                "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
+                "multiqc_seqkit_stats_summary.txt:md5,f35e5022d9be7fbf86e664149c054290",
+                "mgnifams_v2.tsv:md5,57739343a6c2d595dce56e4c5ff08ef6",
+                "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
+            ],
+            "/structures: 22",
+            "/setup_clusters: 3",
+            "/generate_families: 66",
+            "/annotation: 32",
+            "/table_data: 5"
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.10.2"
+        },
+        "timestamp": "2026-03-14T19:28:29.370548743"
+    }
+}

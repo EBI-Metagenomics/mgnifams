@@ -1,0 +1,103 @@
+{
+  "name": "ebi-metagenomics/mgnifams",
+  "homePage": "https://github.com/ebi-metagenomics/mgnifams",
+  "repos": {
+    "https://github.com/nf-core/modules.git": {
+      "modules": {
+        "nf-core": {
+          "aria2": {
+            "branch": "master",
+            "git_sha": "48c86d92fe761cb3faafdb38e4d8ca3bf6d1c657",
+            "installed_by": ["modules"]
+          },
+          "find/concatenate": {
+            "branch": "master",
+            "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
+            "installed_by": ["modules"]
+          },
+          "foldseek/easysearch": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+            "installed_by": ["modules"]
+          },
+          "hhsuite/hhblits": {
+            "branch": "master",
+            "git_sha": "ec969dbd5a778b5b2c1204f14d5622edc064b805",
+            "installed_by": ["modules"]
+          },
+          "hhsuite/hhsearch": {
+            "branch": "master",
+            "git_sha": "b3c8ac6683cbb871ec8ab4bd83a9bb7974681d85",
+            "installed_by": ["modules"]
+          },
+          "hhsuite/reformat": {
+            "branch": "master",
+            "git_sha": "42a304570b75122f9948dde6c34182e4d6bb22b3",
+            "installed_by": ["modules"]
+          },
+          "hmmer/hmmsearch": {
+            "branch": "master",
+            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+            "installed_by": ["modules"]
+          },
+          "mmseqs/createdb": {
+            "branch": "master",
+            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+            "installed_by": ["modules"]
+          },
+          "mmseqs/createtsv": {
+            "branch": "master",
+            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/mmseqs/createtsv/mmseqs-createtsv.diff"
+          },
+          "mmseqs/linclust": {
+            "branch": "master",
+            "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+            "installed_by": ["modules"]
+          },
+          "multiqc": {
+            "branch": "master",
+            "git_sha": "e594e9dfaffa7572afc11bafc634984fd4cbd87b",
+            "installed_by": ["modules"]
+          },
+          "pigz/uncompress": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+            "installed_by": ["modules"]
+          },
+          "s4pred/runmodel": {
+            "branch": "master",
+            "git_sha": "712d3f4d6c1b430c6a3eab7c1f92c8df63ad9a35",
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/s4pred/runmodel/s4pred-runmodel.diff"
+          },
+          "seqkit/stats": {
+            "branch": "master",
+            "git_sha": "9fe7867a4f012db581d7bd560228ded1074eb0e5",
+            "installed_by": ["modules"]
+          }
+        }
+      },
+      "subworkflows": {
+        "nf-core": {
+          "utils_nextflow_pipeline": {
+            "branch": "master",
+            "git_sha": "c2b22d85f30a706a3073387f30380704fcae013b",
+            "installed_by": ["subworkflows"]
+          },
+          "utils_nfcore_pipeline": {
+            "branch": "master",
+            "git_sha": "51ae5406a030d4da1e49e4dab49756844fdd6c7a",
+            "installed_by": ["subworkflows"]
+          },
+          "utils_nfschema_plugin": {
+            "branch": "master",
+            "git_sha": "2fd2cd6d0e7b273747f32e465fdc6bcc3ae0814e",
+            "installed_by": ["subworkflows"]
+          }
+        }
+      }
+    }
+  }
+}

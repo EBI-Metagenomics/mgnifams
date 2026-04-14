@@ -1,2 +1,0 @@
-hhsuite/buildhhdb:
-  - "modules/ebi-metagenomics/hhsuite/buildhhdb/**"
