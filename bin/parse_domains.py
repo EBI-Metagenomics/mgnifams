@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import re
 import ast
 import json
 import logging
@@ -25,21 +26,16 @@ def extract_mgyp(protein_name):
 
 
 def calculate_mgnifam_start(protein_name):
-    number_of_underscores = protein_name.count("_")
+    """1-based start of the MGnifam region on the full protein.
 
-    if number_of_underscores == 0:  # 250671917
-        start = 1
-    elif number_of_underscores == 1:  # 250671917/1_50
-        parts = protein_name.split("/")
-        start = parts[1].split("_")[0]
-    elif number_of_underscores == 2:  # 250671917_50_150
-        start = protein_name.split("_")[1]
-    elif number_of_underscores == 3:  # 250671917_50_200/2_34
-        start = int(protein_name.split("_")[1])
-        region = protein_name.split("/")[1].split("_")
-        start = start + int(region[0]) - 1
-
-    return start
+    Forms: 250671917 | 250671917_50_150 (slice) | <base>/2_34 or <base>/2-34 (region within base).
+    """
+    base, _, region = protein_name.partition("/")
+    parts = base.split("_")
+    offset = int(parts[1]) if len(parts) == 3 else 1
+    if not region:
+        return offset
+    return offset + int(re.split(r"[-_]", region)[0]) - 1
 
 
 def construct_domain_architecture(pfams, family_id, mgnifam_starts):
@@ -49,7 +45,7 @@ def construct_domain_architecture(pfams, family_id, mgnifam_starts):
 
     for pfam in pfams:
         fam_names.append(pfam[0])
-        start_points.append(pfam[3])
+        start_points.append(int(pfam[5]))  # env_from
 
     for mgnifam_start in mgnifam_starts:
         fam_names.append(str(family_id))
