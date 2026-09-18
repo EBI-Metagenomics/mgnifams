@@ -1,0 +1,42 @@
+{
+    "test parquets - chunk 1 of 2": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "mgnifams_update_test"
+                    },
+                    "chunk_000001.faa:md5,14a5f09bd7d102f1b62e8e51ecf9ab9c"
+                ]
+            ],
+            {
+                "EXTRACT_UNANNOTATED_PARQUET_SLICES": {
+                    "python": "3.13.1",
+                    "pyarrow": "21.0.0"
+                }
+            }
+        ],
+        "timestamp": "2026-09-18T18:31:41.824651246",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "test parquets - stub": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "mgnifams_update_test"
+                    },
+                    "chunk_000000.faa:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-18T18:31:47.858640775",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}
