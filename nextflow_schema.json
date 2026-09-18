@@ -26,7 +26,7 @@
                     "type": "string",
                     "default": "run_mgnifams_pipeline",
                     "description": "Specifies the mode in which the pipeline will be run",
-                    "enum": ["run_mgnifams_pipeline", "init_mgnifams_db", "update_mgnifams_db"],
+                    "enum": ["run_mgnifams_pipeline", "init_mgnifams_db", "update_mgnifams_db", "update_mgnifams"],
                     "fa_icon": "fas fa-cogs"
                 },
                 "fasta_input_mode": {
@@ -534,7 +534,48 @@
                     "description": "annotate_structures"
                 }
             },
-            "required": ["pfam_path", "funfams_path", "hhdb_path", "foldseek_db_path"]
+            "required": ["pfam_path", "funfams_path", "foldseek_db_path"]
+        },
+        "update_mgnifams_params": {
+            "title": "update_mgnifams_params",
+            "type": "object",
+            "fa_icon": "fas fa-sync",
+            "description": "Options of the update_mgnifams mode (refresh full MSAs and representatives of existing families).",
+            "properties": {
+                "parquet_chunks": {
+                    "type": "integer",
+                    "default": 100,
+                    "minimum": 1,
+                    "description": "Number of parallel preprocessing tasks over the sequence parquet row groups"
+                },
+                "hmm_chunk_size": {
+                    "type": "integer",
+                    "default": 5000,
+                    "minimum": 1,
+                    "description": "Number of family HMMs per update_families task"
+                },
+                "run_alphafold2": {
+                    "type": "boolean",
+                    "description": "Also predict representative structures with ColabFold (AlphaFold2) from the family full MSA. Needs a GPU; published only, not loaded in the DB"
+                },
+                "colabfold_params_path": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Directory with the AlphaFold2 weights (params_model_*.npz). Required with --run_alphafold2"
+                },
+                "af2_max_msa_seqs": {
+                    "type": "integer",
+                    "default": 512,
+                    "minimum": 1,
+                    "description": "Number of full MSA rows (representative first) passed to ColabFold"
+                },
+                "af2_num_recycles": {
+                    "type": "integer",
+                    "default": 3,
+                    "minimum": 0,
+                    "description": "ColabFold number of recycles"
+                }
+            }
         }
     },
     "allOf": [
@@ -564,6 +605,9 @@
         },
         {
             "$ref": "#/defs/update_db_params"
+        },
+        {
+            "$ref": "#/defs/update_mgnifams_params"
         },
         {
             "$ref": "#/defs/reference_databases"

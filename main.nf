@@ -16,6 +16,7 @@
 include { MGNIFAMS                } from './workflows/mgnifams'
 include { INIT_DB                 } from './workflows/init_db'
 include { UPDATE_DB               } from './workflows/update_db'
+include { UPDATE_MGNIFAMS         } from './workflows/update_mgnifams'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
@@ -74,6 +75,15 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
         UPDATE_DB(
             samplesheet, params.query_result_chunks
         )
+    }
+    //
+    // WORKFLOW: Refresh full MSAs and representatives of existing families
+    //
+    else if (params.mode == 'update_mgnifams') {
+        UPDATE_MGNIFAMS(
+            samplesheet
+        )
+        ch_multiqc = UPDATE_MGNIFAMS.out
     }
 
     emit:

@@ -1,0 +1,2 @@
+sample,mgnify_proteins_sequences,mgnify_proteins_pfam,mgnifams_hmms,mgnprotein_db_config
+mgnifams_update_test,/home/vangelis/Desktop/Projects/mgnifams/mgnifams/assets/data/mgy_protein_sequences.parquet,/home/vangelis/Desktop/Projects/mgnifams/mgnifams/assets/data/mgy_proteins_pfam.parquet,/home/vangelis/Desktop/Projects/mgnifams/mgnifams/assets/data/mgnifams_hmm.lib.gz,
