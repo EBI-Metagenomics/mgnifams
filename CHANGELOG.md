@@ -5,6 +5,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v2.1.0dev - [unreleased]
 
+### `Added`
+
+- New `--mode update_mgnifams`: refreshes existing families against new MGnify proteins, read from the MGnify proteins sequence and Pfam parquet files, without changing their seed MSAs or HMMs. It recomputes representatives, structures, annotations, Foldseek hits, domain architectures and (with `mgnprotein_db_config`) biomes, and publishes a delta database, `db/<sample>_update.sqlite3`, holding only the successfully updated families. The pipeline never modifies the production DB: `assets/merge_update_delta.sql` merges the delta in a single transaction, and the README documents it. New parameters: `--parquet_chunks`, `--hmm_chunk_size`, `--run_alphafold2`, `--colabfold_params_path`, `--af2_max_msa_seqs`, `--af2_num_recycles`.
+  - `--run_alphafold2 true` also predicts each representative with ColabFold from its family full MSA (GPU). These predictions are published under `structures/alphafold2/`.
+- New `mgnifam.seed_size` column: the number of sequences in the family seed MSA.
+- `mgnifam_folds` gains the Foldseek TM-scores `aln_tmscore`, `q_tmscore` and `t_tmscore`.
+- `assets/migrate_schema_seed_size_tmscores.sql` adds both of these to an existing database and backfills `seed_size`. Run it once, before the first `update_mgnifams` merge.
+
+### `Changed`
+
+- **Breaking:** the samplesheet `sample` must match `^[A-Za-z0-9._-]+$`.
+- `hhdb_path` is required only by the default `run_mgnifams_pipeline` mode.
+
+### `Fixed`
+
+- [#62](https://github.com/EBI-Metagenomics/mgnifams/issues/62) - `mgnifam_pfams` / `mgnifam_funfams` `e_value` and `score` held the full-sequence values. They now hold the per-domain i-Evalue and domain score. Rows in existing databases keep the old values until their families are updated.
+- [#58](https://github.com/EBI-Metagenomics/mgnifams/issues/58), [#59](https://github.com/EBI-Metagenomics/mgnifams/issues/59) - Domain architectures placed MGnifam domains of `<mgyp>/<start>-<end>` members at the wrong start, and ordered Pfam domains by HMM position instead of their position on the protein.
+- [#61](https://github.com/EBI-Metagenomics/mgnifams/issues/61) - `init_mgnifams_db` stored empty strings instead of NULL, and failed when an optional table CSV was missing.
+- [#60](https://github.com/EBI-Metagenomics/mgnifams/issues/60), [#63](https://github.com/EBI-Metagenomics/mgnifams/issues/63) - `-stub-run` failed in `EXTRACT_ESMFOLD_SCORES`, `PARSE_CIF` and the database modes.
+
+### `Internal`
+
+- `prek` pre-commit hooks (`prek run --all-files`); pipeline-owned files are `nextflow lint` clean.
+
 ## v2.0.0 - [2026/04/14]
 
 ### `Added`

@@ -88,6 +88,8 @@ The end-to-end MGnifams pipeline chains five major subworkflows; `setup_clusters
 
 For MGnify only; After the main pipeline finishes its execution, `init_db` and `update_db` must be executed. Then, the produced `sqlite` database can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
+To refresh the existing families with new MGnify proteins later, run the `update_mgnifams` workflow and merge its delta database into the production one (see [update_mgnifams workflow](#update_mgnifams-workflow)).
+
 After the db has been produced by the pipeline, do the following:
 
 - copy database to site/ifs
@@ -208,6 +210,43 @@ password = ***
 host = ***
 port = ***
 ```
+
+### update_mgnifams workflow
+
+The `update_mgnifams` workflow (`--mode update_mgnifams`) refreshes existing families against new MGnify proteins without touching their seed MSAs or HMMs.
+It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and, optionally, biomes (from the MGnify proteins DB).
+`--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
+
+The samplesheet must have exactly one row:
+
+```csv
+sample,mgnify_proteins_sequences,mgnify_proteins_pfam,mgnifams_hmms,mgnprotein_db_config
+mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,
+```
+
+`mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgnprotein_db_config` is optional; when it is empty, biomes are not recomputed.
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_update_mgnifams.csv --mode update_mgnifams --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity,gpu -resume
+```
+
+Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation).
+The pipeline does not modify the production database. It publishes a delta database, `db/<sample>_update.sqlite3`, holding only the successfully updated families:
+
+- Overwritten by the merge: `full_size`, `protein_rep`, `rep_region`, `rep_length`, `rep_sequence`, `plddt`, `ptm`, the secondary structure percents, `cif_blob`, `domain_blob`, `s4pred_blob`, and the `mgnifam_pfams`, `mgnifam_funfams` and `mgnifam_folds` rows of these families.
+- Only when the delta's `update_info` table says they were computed: the transmembrane percents and `tm_blob` (`tm_computed`), and `biome_blob` (`biome_computed`).
+- Kept from production: `consensus`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size` and `mgnifam_model_pfams`.
+
+To apply it, migrate the production database once (this adds `seed_size` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
+
+```bash
+db=/path/to/mgnifams.sqlite3
+[ "$(sqlite3 "$db" "SELECT count(*) FROM pragma_table_info('mgnifam') WHERE name = 'seed_size'")" = 0 ] \
+    && sqlite3 -bail "$db" < assets/migrate_schema_seed_size_tmscores.sql
+sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/merge_update_delta.sql
+```
+
+Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
 
 ## Website
 
