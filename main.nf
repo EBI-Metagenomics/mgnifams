@@ -35,7 +35,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
 
     main:
 
-    ch_multiqc = Channel.empty()
+    ch_multiqc = channel.empty()
 
     //
     // WORKFLOW: Run main pipeline
@@ -77,7 +77,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     }
 
     emit:
-    multiqc_report = ch_multiqc // channel: /path/to/multiqc_report.html
+    ch_multiqc.toList() // value channel: list of /path/to/multiqc_report.html
 }
 
 /*
@@ -120,7 +120,7 @@ workflow {
         params.outdir,
         params.monochrome_logs,
         params.hook_url,
-        EBIMETAGENOMICS_MGNIFAMS.out.multiqc_report
+        EBIMETAGENOMICS_MGNIFAMS.out
     )
 }
 

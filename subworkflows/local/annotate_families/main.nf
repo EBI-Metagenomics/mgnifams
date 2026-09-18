@@ -10,7 +10,7 @@ workflow ANNOTATE_FAMILIES {
     pfam_path
     funfams_path
     seed_msa
-    full_msa
+    _full_msa
     hh_mode
     hhdb_path
     pdb
@@ -18,7 +18,7 @@ workflow ANNOTATE_FAMILIES {
     outdir
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     ANNOTATE_REPS( reps, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )

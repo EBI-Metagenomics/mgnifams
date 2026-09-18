@@ -9,12 +9,12 @@ workflow ANNOTATE_MODELS {
     hhdb_path
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     HHSUITE_REFORMAT( seed_msa, "fas", "a3m" )
     ch_versions = ch_versions.mix( HHSUITE_REFORMAT.out.versions )
 
-    ch_hhdb = Channel.of([ [ id: 'pfam_hh_db' ], file(hhdb_path, checkIfExists: true) ])
+    ch_hhdb = channel.of([ [ id: 'pfam_hh_db' ], file(hhdb_path, checkIfExists: true) ])
     if (hh_mode == "hhblits") {
         ch_hhr = HHSUITE_HHBLITS( HHSUITE_REFORMAT.out.msa, ch_hhdb.first() ).hhr
         ch_versions = ch_versions.mix( HHSUITE_HHBLITS.out.versions )

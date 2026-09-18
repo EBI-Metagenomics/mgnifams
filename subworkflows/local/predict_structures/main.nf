@@ -20,7 +20,7 @@ workflow PREDICT_STRUCTURES {
     outdir
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     ch_fasta = fasta
         .map { meta, file_path ->
@@ -45,7 +45,7 @@ workflow PREDICT_STRUCTURES {
 
     // Identify CUDA failed very long sequences, and run on CPU
     ch_scores = RUN_ESMFOLD.out.scores
-        .map { meta, files ->
+        .map { _meta, files ->
             files
         }
         .collect()
@@ -72,7 +72,7 @@ workflow PREDICT_STRUCTURES {
     ch_versions = ch_versions.mix( EXTRACT_ESMFOLD_SCORES.out.versions )
 
     ch_scores = EXTRACT_ESMFOLD_SCORES.out.csv
-        .map { meta, file ->
+        .map { _meta, file ->
             file
         }
         .collectFile(name: "pdb_scores.csv", storeDir: outdir + "/structures/esmfold/", keepHeader: true)
@@ -84,7 +84,7 @@ workflow PREDICT_STRUCTURES {
     ch_versions = ch_versions.mix( PARSE_CIF.out.versions )
 
     ch_pdb = RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb)
-        .map { meta, file_path ->
+        .map { _meta, file_path ->
             file_path }
         .collect()
         .map { file ->
@@ -92,7 +92,7 @@ workflow PREDICT_STRUCTURES {
         }
 
     ch_cif = PARSE_CIF.out.cif
-        .map { meta, file_path ->
+        .map { _meta, file_path ->
             file_path }
         .collect()
         .map { file ->

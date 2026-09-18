@@ -6,7 +6,7 @@ workflow INIT_DB {
     samplesheet
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     ch_queries = samplesheet
         .multiMap { meta, schema, pipeline_results ->
@@ -19,7 +19,4 @@ workflow INIT_DB {
 
     IMPORT_QUERIES( ch_queries.pipeline_results, INIT_SQLITE.out.db )
     ch_versions = ch_versions.mix( IMPORT_QUERIES.out.versions )
-
-    emit:
-    versions = ch_versions
 }

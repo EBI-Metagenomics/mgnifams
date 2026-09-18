@@ -11,7 +11,7 @@ workflow EXTRACT_UNANNOTATED_FASTA {
     outdir
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     if (compress_mode == 'gz') {
         ch_sequence_explorer_protein = PIGZ_UNCOMPRESS( ch_sequence_explorer_protein ).file
@@ -31,7 +31,7 @@ workflow EXTRACT_UNANNOTATED_FASTA {
     ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_SLICES.out.versions )
 
     ch_fasta = ch_fasta_chunk
-        .map { meta, file ->
+        .map { _meta, file ->
             file
         }
         .collectFile(name: "mgnifams_v2.fa", storeDir: outdir)

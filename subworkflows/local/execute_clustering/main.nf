@@ -7,7 +7,7 @@ workflow EXECUTE_CLUSTERING {
     mgnifams_input_fasta
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     MMSEQS_CREATEDB( mgnifams_input_fasta )
     ch_versions = ch_versions.mix( MMSEQS_CREATEDB.out.versions )
