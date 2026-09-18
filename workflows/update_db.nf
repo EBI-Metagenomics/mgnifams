@@ -24,7 +24,7 @@ workflow UPDATE_DB {
     // Chunking query results to run in parallel
     ch_query_results_batch = QUERY_MGNPROTEIN_DB.out.res
         .flatMap { _meta, files ->
-            files.collate( query_result_chunks )
+            [files].flatten().collate( query_result_chunks ) // a single output file is a Path, not a List
                 .withIndex()
                 .collect{ flist, index -> tuple( [id: "batch_${index}" ], flist ) }
         }

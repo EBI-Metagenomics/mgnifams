@@ -38,7 +38,7 @@ process PARSE_DOMAINS {
     stub:
     """
     mkdir domain_results
-    touch domain_results/test.json
+    for f in query_results/*; do n=\$(basename "\$f"); touch "domain_results/\${n%.*}.json"; done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

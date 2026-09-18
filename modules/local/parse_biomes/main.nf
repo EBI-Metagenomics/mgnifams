@@ -35,7 +35,7 @@ process PARSE_BIOMES {
     stub:
     """
     mkdir biome_results
-    touch biome_results/test.csv
+    for f in query_results/*; do n=\$(basename "\$f"); touch "biome_results/\${n%.*}.csv"; done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
