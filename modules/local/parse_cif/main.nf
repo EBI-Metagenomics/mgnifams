@@ -35,9 +35,10 @@ process PARSE_CIF {
     """
 
     stub:
-    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}_clustering_distribution_mqc.csv
+    for file in pdb_folder/*; do
+        touch \$(basename \$file .pdb).cif
+    done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
