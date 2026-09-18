@@ -1,0 +1,66 @@
+nextflow_process {
+
+    name "Test Process FILTER_EXPORT_DOMTBL"
+    script "../main.nf"
+    process "FILTER_EXPORT_DOMTBL"
+
+    tag "modules"
+    tag "modules_local"
+    tag "filter_export_domtbl"
+
+    // Per-domain e_value/score must be domtbl columns 13 (i-Evalue) and 14 (domain score), #62
+    def assertDomainValues = { csv, domtbl, int eIdx, int envIdx ->
+        def dom = path(domtbl).linesGzip.findAll { line -> !line.startsWith('#') }.collect { line -> line.trim().split(/\s+/) }
+        def rows = path(csv).readLines().drop(1).collect { line -> line.split(',', -1) }
+        assert rows.size() > 0
+        rows.each { r ->
+            assert dom.any { d -> d[0] == r[0] && d[19] == r[envIdx] && d[20] == r[envIdx + 1] && d[12] == r[eIdx] && d[13] == r[eIdx + 1] }
+        }
+    }
+
+    test("pfam domtbl") {
+
+        config "./nextflow.config"
+
+        when {
+            params {
+                prefix = "pfam"
+            }
+            process {
+                """
+                input[0] = channel.of([ [ id:'reps_fasta' ], file("${moduleDir}/tests/fixtures/pfam.domtbl.gz", checkIfExists: true) ])
+                input[1] = 0.8
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assertDomainValues(process.out.csv[0][1], "${moduleDir}/tests/fixtures/pfam.domtbl.gz", 3, 9)
+            assert snapshot(process.out.csv).match()
+        }
+    }
+
+    test("funfam domtbl") {
+
+        config "./nextflow.config"
+
+        when {
+            params {
+                prefix = "funfam"
+            }
+            process {
+                """
+                input[0] = channel.of([ [ id:'reps_fasta' ], file("${moduleDir}/tests/fixtures/funfam.domtbl.gz", checkIfExists: true) ])
+                input[1] = 0.8
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assertDomainValues(process.out.csv[0][1], "${moduleDir}/tests/fixtures/funfam.domtbl.gz", 2, 8)
+            assert snapshot(process.out.csv).match()
+        }
+    }
+}
