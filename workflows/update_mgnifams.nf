@@ -26,6 +26,9 @@ include { PARSE_BIOMES                 } from '../modules/local/parse_biomes/mai
 include { INIT_SQLITE                  } from '../modules/local/init_sqlite/main'
 include { IMPORT_QUERIES               } from '../modules/local/import_queries/main'
 include { UPDATE_SQLITE_BLOBS_STAGED   } from '../modules/local/update_sqlite_blobs_staged/main'
+include { HHSUITE_REFORMAT as REFORMAT_FULL_MSA_A3M } from '../modules/nf-core/hhsuite/reformat/main'
+include { TRUNCATE_A3M                 } from '../modules/local/truncate_a3m/main'
+include { COLABFOLD_BATCH_MSA          } from '../modules/local/colabfold_batch_msa/main'
 
 workflow UPDATE_MGNIFAMS {
 
@@ -49,6 +52,10 @@ workflow UPDATE_MGNIFAMS {
     foldseek_db_path
     query_hmm_length_threshold
     query_result_chunks
+    run_alphafold2
+    colabfold_params_path
+    af2_max_msa_seqs
+    af2_num_recycles
     outdir
     multiqc_config
     multiqc_logo
@@ -70,6 +77,26 @@ workflow UPDATE_MGNIFAMS {
     ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
 
     // Not ANNOTATE_FAMILIES: its HH-suite model annotation works on the seed MSA, which does not change
+    //
+    // Optional: AlphaFold2 (ColabFold) from each family's full MSA; published only, not used downstream
+    //
+    if (run_alphafold2) {
+        REFORMAT_FULL_MSA_A3M( UPDATE_FAMILIES.out.full_msa, 'sto', 'a3m' )
+        ch_versions = ch_versions.mix( REFORMAT_FULL_MSA_A3M.out.versions )
+
+        TRUNCATE_A3M( REFORMAT_FULL_MSA_A3M.out.msa, af2_max_msa_seqs )
+        ch_versions = ch_versions.mix( TRUNCATE_A3M.out.versions )
+
+        ch_af2_batches = TRUNCATE_A3M.out.a3m
+            .map { _meta, a3m -> a3m }
+            .collect()
+            .flatMap { a3ms ->
+                a3ms.sort { f -> f.name }.collate( pdb_chunk_size ).withIndex().collect { batch, index -> [ [id: "af2_batch_${index}"], batch ] }
+            }
+        COLABFOLD_BATCH_MSA( ch_af2_batches, colabfold_params_path ? file(colabfold_params_path, checkIfExists: true) : [], af2_num_recycles )
+        ch_versions = ch_versions.mix( COLABFOLD_BATCH_MSA.out.versions )
+    }
+
     ANNOTATE_REPS( UPDATE_FAMILIES.out.family_ids_fasta, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
