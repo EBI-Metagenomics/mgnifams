@@ -6,7 +6,7 @@ process PARSE_DOMAINS {
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/pandas:1.4.3' :
         'biocontainers/pandas:1.4.3' }"
-    
+
     input:
     tuple val(meta) , path(query_results, stageAs: "query_results/*")
     tuple val(meta2), path(pfam_mapping)

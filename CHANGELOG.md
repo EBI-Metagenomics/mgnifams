@@ -33,18 +33,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [#37](https://github.com/EBI-Metagenomics/mgnifams/pull/37) - Added protein set Jaccard score calculation in `identify_redundant_fams.py`, for better estimation of family similarities, in addition to `hmmsearch` among families.
   Pipeline `params` moved to root `main.nf` file, and are being passed downstream to subworkflows.
 - [#31](https://github.com/EBI-Metagenomics/mgnifams/pull/31) - Swapped all subprocess calls of `generate_families.py` to cythonised lib versions (pyfamsa, pyhmmer, pytrimal).
-Benchmark results: CPU usage decrease 37.6% - Memory decrease 0.36% - Job duration decrease 37.5% - I/O read decrease 90% - I/O write decrease 77.7%
+  Benchmark results: CPU usage decrease 37.6% - Memory decrease 0.36% - Job duration decrease 37.5% - I/O read decrease 90% - I/O write decrease 77.7%
 
 ### `Dependencies`
 
-| Tool       | Previous version | New version |
-| ---------- | ---------------- | ----------- |
-| pytrimal   |                  | 0.8.2       |
-| pyhmmer    |                  | 0.11.1      |
-| pyfamsa    |                  | 0.6.0       |
-| biopython  |                  | 1.85        |
-| pandas     |                  | 2.3.2       |
-| numpy      |                  | 2.3.2       |
+| Tool      | Previous version | New version |
+| --------- | ---------------- | ----------- |
+| pytrimal  |                  | 0.8.2       |
+| pyhmmer   |                  | 0.11.1      |
+| pyfamsa   |                  | 0.6.0       |
+| biopython |                  | 1.85        |
+| pandas    |                  | 2.3.2       |
+| numpy     |                  | 2.3.2       |
 
 ### `Removed`
 

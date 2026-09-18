@@ -12,7 +12,7 @@ workflow ANNOTATE_REPS {
     deeptmhmm_path
     pfam_path
     funfams_path
-    
+
     main:
     ch_versions       = Channel.empty()
     ch_tm_composition = Channel.of([ [ id: 'reps_fasta' ], [] ])

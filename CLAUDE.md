@@ -30,6 +30,7 @@ nf-test test tests/default.nf.test --profile +singularity,test
 ```
 
 The test profile requires paths to external databases set in your local config:
+
 - `esmfold_db`, `esmfold_params_path` — ESMFold model weights
 - `pfam_path` — Pfam-A HMM database (gzipped)
 - `funfams_path` — FunFams HMM library (gzipped)
@@ -41,6 +42,7 @@ The test profile requires paths to external databases set in your local config:
 Three modes controlled by `--mode` parameter:
 
 ### `run_mgnifams_pipeline` (default) — `workflows/mgnifams.nf`
+
 Five sequential subworkflows:
 
 1. **SETUP_CLUSTERS** (`subworkflows/local/setup_clusters/`) — Extract unannotated sequences from MGnify CSV (or use FASTA directly via `--fasta_input_mode`), filter by length, quality check with seqkit, cluster with mmseqs linclust, distribute into chunks.
@@ -57,9 +59,11 @@ Five sequential subworkflows:
 5. **EXPORT_DATA** (`subworkflows/local/export_data/`) — Tabular output for the web interface and MultiQC reports.
 
 ### `init_mgnifams_db` — `workflows/init_db.nf`
+
 Initializes SQLite schema (`assets/data/db_schema.sqlite`) and imports pipeline results.
 
 ### `update_mgnifams_db` — `workflows/update_db.nf`
+
 Queries MGnify proteins PostgreSQL DB (`bin/query_mgnprotein_db.py`) to enrich families with biome and domain architecture data, then updates the SQLite via `bin/update_sqlite_blobs.py`.
 
 ## Key Configuration

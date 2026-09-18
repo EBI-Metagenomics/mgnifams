@@ -7,7 +7,7 @@ workflow UPDATE_DB {
     take:
     samplesheet
     query_result_chunks
-    
+
     main:
     ch_versions = Channel.empty()
 
@@ -20,10 +20,10 @@ workflow UPDATE_DB {
 
     QUERY_MGNPROTEIN_DB( ch_queries.query_mgnprotein )
     ch_versions = ch_versions.mix( QUERY_MGNPROTEIN_DB.out.versions )
-    
+
     // Chunking query results to run in parallel
     ch_query_results_batch = QUERY_MGNPROTEIN_DB.out.res
-        .flatMap { _meta, files -> 
+        .flatMap { _meta, files ->
             files.collate( query_result_chunks )
                 .withIndex()
                 .collect{ flist, index -> tuple( [id: "batch_${index}" ], flist ) }
@@ -36,7 +36,7 @@ workflow UPDATE_DB {
         .map { meta, files -> files }
         .collect()
         .map { file -> [ [id:"biomes_combined"], file ] }
-    
+
     PARSE_DOMAINS( ch_query_results_batch, QUERY_MGNPROTEIN_DB.out.pfam_mapping.first(), ch_queries.refined_families.first() )
     ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
 

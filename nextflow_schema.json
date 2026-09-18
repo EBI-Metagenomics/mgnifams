@@ -65,10 +65,7 @@
                     "fa_icon": "fas fa-file-signature"
                 }
             },
-            "required": [
-                "input",
-                "outdir"
-            ]
+            "required": ["input", "outdir"]
         },
         "institutional_config_options": {
             "title": "Institutional config options",
@@ -537,12 +534,7 @@
                     "description": "annotate_structures"
                 }
             },
-            "required": [
-                "pfam_path",
-                "funfams_path",
-                "hhdb_path",
-                "foldseek_db_path"
-            ]
+            "required": ["pfam_path", "funfams_path", "hhdb_path", "foldseek_db_path"]
         }
     },
     "allOf": [

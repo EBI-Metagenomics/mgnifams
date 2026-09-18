@@ -16,7 +16,7 @@ process EXTRACT_ESMFOLD_SCORES {
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
     """
     csv_file="${meta.id}_scores.csv"

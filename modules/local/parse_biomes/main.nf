@@ -6,7 +6,7 @@ process PARSE_BIOMES {
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/pandas:1.4.3' :
         'biocontainers/pandas:1.4.3' }"
-    
+
     input:
     tuple val(meta) , path(query_results, stageAs: "query_results/*")
     tuple val(meta2), path(biome_mapping)
@@ -24,7 +24,7 @@ process PARSE_BIOMES {
         --query_results query_results \\
         --biome_mapping ${biome_mapping} \\
         --output_dir biome_results
-    
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')

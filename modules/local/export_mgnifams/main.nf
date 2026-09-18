@@ -29,7 +29,7 @@ process EXPORT_MGNIFAMS {
         --composition ${composition} \\
         --tm_composition ${tm} \\
         --outfile mgnifam.csv
-    
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')

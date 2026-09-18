@@ -22,7 +22,7 @@ include { EXPORT_DATA                    } from '../subworkflows/local/export_da
 */
 
 workflow MGNIFAMS {
-    
+
     take:
     ch_samplesheet // channel: samplesheet read in from --input
     fasta_input_mode
@@ -65,7 +65,7 @@ workflow MGNIFAMS {
     multiqc_methods_description
 
     main:
-    
+
     ch_versions      = Channel.empty()
     ch_multiqc_files = Channel.empty()
 

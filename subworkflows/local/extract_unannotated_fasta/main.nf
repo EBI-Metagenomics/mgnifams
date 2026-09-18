@@ -9,7 +9,7 @@ workflow EXTRACT_UNANNOTATED_FASTA {
     input_csv_chunk_size
     min_sequence_length
     outdir
-    
+
     main:
     ch_versions = Channel.empty()
 
@@ -26,10 +26,10 @@ workflow EXTRACT_UNANNOTATED_FASTA {
         .map { meta, file ->
             [[id: meta.id, chunk: file.getBaseName(1).split('\\.')[-1]], file]
         }
-    
+
     ch_fasta_chunk = EXTRACT_UNANNOTATED_SLICES( ch_sequence_explorer_chunk, min_sequence_length ).fa
     ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_SLICES.out.versions )
-    
+
     ch_fasta = ch_fasta_chunk
         .map { meta, file ->
             file

@@ -41,7 +41,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     // WORKFLOW: Run main pipeline
     //
     if (params.mode == 'run_mgnifams_pipeline') {
-        MGNIFAMS( 
+        MGNIFAMS(
             samplesheet, params.fasta_input_mode, params.compress_mode, \
             params.input_csv_chunk_size, params.min_sequence_length, params.outdir, \
             params.minimum_members, params.clusters_chunk_size, params.mgnifams_discard_min_rep_length, \
@@ -63,7 +63,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     // WORKFLOW: Run initialize mgnifams db workflow
     //
     else if (params.mode == 'init_mgnifams_db') {
-        INIT_DB( 
+        INIT_DB(
             samplesheet
         )
     }
@@ -71,7 +71,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     // WORKFLOW: Run update mgnifams db workflow
     //
     else if (params.mode == 'update_mgnifams_db') {
-        UPDATE_DB( 
+        UPDATE_DB(
             samplesheet, params.query_result_chunks
         )
     }
@@ -102,7 +102,7 @@ workflow {
         params.outdir,
         params.input
     )
-    
+
     //
     // WORKFLOW: Run main workflow
     //

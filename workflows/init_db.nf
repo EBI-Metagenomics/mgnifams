@@ -4,7 +4,7 @@ include { IMPORT_QUERIES } from '../modules/local/import_queries/main.nf'
 workflow INIT_DB {
     take:
     samplesheet
-    
+
     main:
     ch_versions = Channel.empty()
 

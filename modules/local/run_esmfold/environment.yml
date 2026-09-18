@@ -141,8 +141,8 @@ dependencies:
   - zstandard=0.22.0=py38ha98ab4e_0
   - zstd=1.5.5=hfc55251_0
   - pip:
-    - biopython==1.79
-    - dm-tree==0.1.8
-    - fair-esm==2.0.0
-    - git+https://github.com/facebookresearch/esm.git
-    - 'openfold @ git+https://github.com/aqlaboratory/openfold.git'
+      - biopython==1.79
+      - dm-tree==0.1.8
+      - fair-esm==2.0.0
+      - git+https://github.com/facebookresearch/esm.git
+      - "openfold @ git+https://github.com/aqlaboratory/openfold.git"

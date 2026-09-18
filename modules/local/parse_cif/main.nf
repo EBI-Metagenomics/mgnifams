@@ -16,9 +16,9 @@ process PARSE_CIF {
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
-    """    
+    """
     for file in pdb_folder/*; do
         name=\$(basename \$file .pdb)
         parse_cif.py \\

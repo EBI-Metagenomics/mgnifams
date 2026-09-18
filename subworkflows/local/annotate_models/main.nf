@@ -7,7 +7,7 @@ workflow ANNOTATE_MODELS {
     seed_msa
     hh_mode
     hhdb_path
-    
+
     main:
     ch_versions = Channel.empty()
 

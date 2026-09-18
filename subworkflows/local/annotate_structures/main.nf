@@ -8,7 +8,7 @@ workflow ANNOTATE_STRUCTURES {
     pdb
     foldseek_db_path
     outdir
-    
+
     main:
     ch_versions                 = Channel.empty()
     ch_alphafold_aln            = Channel.empty()

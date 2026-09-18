@@ -18,7 +18,7 @@ workflow PREDICT_STRUCTURES {
     num_recycles_esmfold
     pdb_chunk_size_long
     outdir
-    
+
     main:
     ch_versions = Channel.empty()
 
@@ -52,7 +52,7 @@ workflow PREDICT_STRUCTURES {
         .map { file ->
             [ [id:"esm_scores"], file ]
         }
-    
+
     EXTRACT_CUDA_FAILED(fasta, ch_scores)
     ch_versions = ch_versions.mix( EXTRACT_CUDA_FAILED.out.versions )
 
@@ -70,7 +70,7 @@ workflow PREDICT_STRUCTURES {
 
     EXTRACT_ESMFOLD_SCORES( RUN_ESMFOLD.out.scores.concat(RUN_ESMFOLD_CPU.out.scores) )
     ch_versions = ch_versions.mix( EXTRACT_ESMFOLD_SCORES.out.versions )
-    
+
     ch_scores = EXTRACT_ESMFOLD_SCORES.out.csv
         .map { meta, file ->
             file

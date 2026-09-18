@@ -17,7 +17,7 @@ process CHUNK_CLUSTERS {
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """

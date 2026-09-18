@@ -10,14 +10,14 @@ process IMPORT_QUERIES {
     input:
     tuple val(meta) , path(pipeline_results)
     tuple val(meta2), path(db)
-    
+
     output:
     tuple val(meta), path(db), emit: db
     path "versions.yml"      , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
     """
     # Import mgnifam.csv directly with NULLs for missing columns
