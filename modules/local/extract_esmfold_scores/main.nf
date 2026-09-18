@@ -30,9 +30,8 @@ process EXTRACT_ESMFOLD_SCORES {
     """
 
     stub:
-    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}_clustering_distribution_mqc.csv
+    echo "id,plddt,ptm" > "${meta.id}_scores.csv"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
