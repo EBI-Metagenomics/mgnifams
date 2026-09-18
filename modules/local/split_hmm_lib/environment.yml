@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - conda-forge::gawk=5.1.0
+  - conda-forge::gzip=1.13

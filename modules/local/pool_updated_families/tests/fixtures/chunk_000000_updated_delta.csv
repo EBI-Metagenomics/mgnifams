@@ -1,0 +1,10 @@
+family_id,model_length_before,model_length_after,round1_recruits,full_msa_size,retention,rounds_run,converged,outcome
+1,122,122,43,47,1.0,1,False,successful
+2,114,114,17,17,1.0,1,False,successful
+3,539,539,12,57,1.0,1,False,successful
+4,100,100,44,60,1.0,1,False,successful
+5,109,109,24,24,1.0,1,False,successful
+6,123,123,23,23,1.0,1,False,successful
+7,178,178,10,11,1.0,1,False,successful
+8,124,124,6,6,1.0,1,False,successful
+9,154,154,20,21,1.0,1,False,successful

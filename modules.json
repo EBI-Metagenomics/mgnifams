@@ -35,9 +35,19 @@
                         "git_sha": "42a304570b75122f9948dde6c34182e4d6bb22b3",
                         "installed_by": ["modules"]
                     },
+                    "hmmer/eslsfetchindex": {
+                        "branch": "master",
+                        "git_sha": "d3d8e0c6c33925e69f96f44fc6204302841f3562",
+                        "installed_by": ["modules"]
+                    },
                     "hmmer/hmmsearch": {
                         "branch": "master",
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["modules"]
+                    },
+                    "mgnifam/updatefamilies": {
+                        "branch": "master",
+                        "git_sha": "d550e1da9436d4cc3b6489872e10dfe082cb811e",
                         "installed_by": ["modules"]
                     },
                     "mmseqs/createdb": {

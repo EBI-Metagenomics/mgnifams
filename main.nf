@@ -81,7 +81,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     //
     else if (params.mode == 'update_mgnifams') {
         UPDATE_MGNIFAMS(
-            samplesheet
+            samplesheet, params.parquet_chunks, params.min_sequence_length, params.hmm_chunk_size, params.outdir
         )
         ch_multiqc = UPDATE_MGNIFAMS.out
     }

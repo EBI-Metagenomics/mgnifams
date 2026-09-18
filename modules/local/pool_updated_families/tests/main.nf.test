@@ -1,0 +1,92 @@
+nextflow_process {
+
+    name "Test Process POOL_UPDATED_FAMILIES"
+    script "../main.nf"
+    process "POOL_UPDATED_FAMILIES"
+
+    tag "modules"
+    tag "modules_local"
+    tag "pool_updated_families"
+
+    test("one update_families chunk") {
+
+        when {
+            process {
+                """
+                input[0] = [ id:'mgnifams_update_test' ]
+                input[1] = [ file("${moduleDir}/tests/fixtures/chunk_000000_updated_families.tsv", checkIfExists: true) ]
+                input[2] = [ file("${moduleDir}/tests/fixtures/chunk_000000_updated_metadata.csv", checkIfExists: true) ]
+                input[3] = [ file("${moduleDir}/tests/fixtures/chunk_000000_updated_reps.fasta.gz", checkIfExists: true) ]
+                input[4] = [ file("${moduleDir}/tests/fixtures/chunk_000000_updated_delta.csv", checkIfExists: true) ]
+                input[5] = [ file("${moduleDir}/tests/fixtures/chunk_000000_updated_discarded.csv", checkIfExists: true) ]
+                input[6] = [ file("${moduleDir}/tests/fixtures/chunk_000000_updated_converged.txt", checkIfExists: true) ]
+                """
+            }
+        }
+
+        then {
+            def delta = path(process.out.delta[0][1]).readLines()
+            def successful = delta.drop(1).findAll { line -> line.endsWith(',successful') }.collect { line -> line.split(',')[0] }
+            def ids = path(process.out.family_ids_fasta[0][1]).readLines().findAll { line -> line.startsWith('>') }.collect { line -> line.substring(1) }
+            assertAll(
+                { assert process.success },
+                { assert delta[0].startsWith('family_id,') && delta.count { line -> line.startsWith('family_id,') } == 1 },
+                { assert successful.size() == 9 && ids == successful },
+                { assert !path(process.out.metadata[0][1]).readLines()[0].startsWith('family_id') },
+                { assert snapshot(process.out.tsv, process.out.metadata, process.out.family_ids_fasta, process.out.delta, process.out.discarded).match() }
+            )
+        }
+    }
+
+    test("no outputs at all") {
+
+        when {
+            process {
+                """
+                input[0] = [ id:'mgnifams_update_test' ]
+                input[1] = []
+                input[2] = []
+                input[3] = []
+                input[4] = []
+                input[5] = []
+                input[6] = []
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.family_ids_fasta[0][1]).text == '' },
+                { assert path(process.out.delta[0][1]).readLines().size() == 1 },
+                { assert path(process.out.discarded[0][1]).readLines() == ['representative,reason,value'] }
+            )
+        }
+    }
+
+    test("stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [ id:'mgnifams_update_test' ]
+                input[1] = []
+                input[2] = []
+                input[3] = []
+                input[4] = []
+                input[5] = []
+                input[6] = []
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.family_ids_fasta[0][1]).readLines()[0] == '>1_7' }
+            )
+        }
+    }
+}
