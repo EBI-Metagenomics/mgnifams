@@ -81,7 +81,13 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     //
     else if (params.mode == 'update_mgnifams') {
         UPDATE_MGNIFAMS(
-            samplesheet, params.parquet_chunks, params.min_sequence_length, params.hmm_chunk_size, params.outdir
+            samplesheet, params.parquet_chunks, params.min_sequence_length, params.hmm_chunk_size, \
+            params.pdb_chunk_size, params.esmfold_db, params.esmfold_params_path, \
+            params.esmfold_3B_v1, params.esm2_t36_3B_UR50D, params.esm2_t36_3B_UR50D_contact_regression, \
+            params.num_recycles_esmfold, params.pdb_chunk_size_long, \
+            params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, \
+            params.foldseek_db_path, params.query_hmm_length_threshold, params.query_result_chunks, params.outdir, \
+            params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
         )
         ch_multiqc = UPDATE_MGNIFAMS.out
     }
