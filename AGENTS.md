@@ -37,7 +37,7 @@ nf-test test modules/local/<module> --profile +singularity
 python3 bin/test_<script>.py
 ```
 
-`tests/update_mgnifams.nf.test` has a self-contained `-stub` variant; its real test needs the same local database paths.
+`tests/update_mgnifams.nf.test` has a self-contained `-stub` variant. nf-test cannot load `../conf/local.config`, so for its real test (as for `tests/default.nf.test`) add the database paths to `conf/test_update_mgnifams.config` locally, without committing them.
 The real pipeline tests run ESMFold, which needs most of a 30 GB machine on CPU.
 
 The test profile requires paths to external databases set in your local config:

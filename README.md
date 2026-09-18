@@ -246,7 +246,7 @@ db=/path/to/mgnifams.sqlite3
 sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/merge_update_delta.sql
 ```
 
-Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
+This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`). Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
 
 ## Website
 
