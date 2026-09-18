@@ -1,0 +1,52 @@
+nextflow_process {
+
+    name "Test Process COUNT_SEED_MSA_SIZES"
+    script "../main.nf"
+    process "COUNT_SEED_MSA_SIZES"
+
+    tag "modules"
+    tag "modules_local"
+    tag "count_seed_msa_sizes"
+
+    test("seed msa sto") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'seed_msa_sto' ], [
+                    file("${moduleDir}/tests/fixtures/1.sto", checkIfExists: true),
+                    file("${moduleDir}/tests/fixtures/2.sto", checkIfExists: true)
+                ] ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // = '>' counts of the matching seed_msa/*.fas.gz
+                { assert path(process.out.csv[0][1]).readLines() == ["id,seed_size", "1,14", "2,82"] }
+            )
+        }
+    }
+
+    test("seed msa sto - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'seed_msa_sto' ], [ file("${moduleDir}/tests/fixtures/1.sto", checkIfExists: true) ] ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.csv[0][1]).readLines() == ["id,seed_size"] }
+            )
+        }
+    }
+}

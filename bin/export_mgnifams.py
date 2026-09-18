@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 
-def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, outfile):
+def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, outfile, seed_sizes=""):
     mgnifam_headers = [
         "id",
         "full_size",
@@ -34,6 +34,7 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
         "domain_blob",
         "s4pred_blob",
         "tm_blob",
+        "seed_size",
     ]
 
     df1 = pd.read_csv(metadata, header=None)
@@ -61,6 +62,11 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
     else:
         print("Note: TM composition file not provided or empty. Skipping...")
 
+    # Optional: seed MSA sizes (id,seed_size); absent in update mode, where seeds do not change
+    if seed_sizes and os.path.isfile(seed_sizes) and os.path.getsize(seed_sizes) > 0:
+        merged = pd.merge(merged, pd.read_csv(seed_sizes), on="id", how="left")
+        merged["seed_size"] = merged["seed_size"].astype("Int64")
+
     # Ensure all expected columns are present
     for col in mgnifam_headers:
         if col not in merged.columns:
@@ -79,11 +85,14 @@ def main():
     parser.add_argument(
         "--tm_composition", default="", help="Predicted transmembrane features --inside, membrane or outside"
     )
+    parser.add_argument("--seed_sizes", default="", help="Optional CSV with id,seed_size (seed MSA sequence counts)")
     parser.add_argument("--outfile", required=True, help="CSV for mgnifam table")
 
     args = parser.parse_args()
 
-    write_mgnifam_csv(args.metadata, args.structure_scores, args.composition, args.tm_composition, args.outfile)
+    write_mgnifam_csv(
+        args.metadata, args.structure_scores, args.composition, args.tm_composition, args.outfile, args.seed_sizes
+    )
 
 
 if __name__ == "__main__":
