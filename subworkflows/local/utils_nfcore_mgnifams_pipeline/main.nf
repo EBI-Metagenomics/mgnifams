@@ -28,14 +28,14 @@ workflow PIPELINE_INITIALISATION {
     take:
     version           // boolean: Display version and exit
     validate_params   // boolean: Boolean whether to validate parameters against the schema at runtime
-    monochrome_logs   // boolean: Do not use coloured log outputs
+    _monochrome_logs  // boolean: Do not use coloured log outputs
     nextflow_cli_args //   array: List of positional nextflow CLI args
     outdir            //  string: The output directory where the results will be saved
-    input             //  string: Path to input samplesheet
+    _input            //  string: Path to input samplesheet
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // Print version and exit if required and dump pipeline parameters to JSON file
@@ -66,25 +66,52 @@ workflow PIPELINE_INITIALISATION {
     //
     // Create channel from input file provided through params.input
     //
-    ch_samplesheet = Channel
-            .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+    def samplesheet_rows = samplesheetToList(params.input, "${projectDir}/assets/schema_input.json")
+
+    if (params.mode == "run_mgnifams_pipeline" && !params.hhdb_path) {
+        error("run_mgnifams_pipeline: --hhdb_path is required")
+    }
+    if (params.mode == "update_mgnifams") {
+        // All collected outputs and the delta DB are per run
+        if (samplesheet_rows.size() != 1) {
+            error("update_mgnifams: the samplesheet must have exactly one row, found ${samplesheet_rows.size()}")
+        }
+        if (params.parquet_chunks < 1 || params.hmm_chunk_size < 1) {
+            error("update_mgnifams: --parquet_chunks and --hmm_chunk_size must be >= 1")
+        }
+        if (params.run_alphafold2 && !workflow.stubRun && !params.colabfold_params_path) {
+            error("update_mgnifams: --run_alphafold2 needs --colabfold_params_path")
+        }
+    }
+
+    // Rows follow the schema_input.json property order
+    ch_samplesheet = channel.fromList(samplesheet_rows)
 
     if (params.mode == "run_mgnifams_pipeline") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config ->
+            .map { sample, protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _pfam, _hmms ->
                 [ sample, file(protein_input, checkIfExists: true) ]
             }
     }
     else if (params.mode == "init_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, _existing_db, schema, _mgnprotein_db_config ->
+            .map { sample, _protein_input, results_folder, _existing_db, schema, _mgnprotein_db_config, _sequences, _pfam, _hmms ->
                 [ sample, schema, results_folder ]
             }
     }
     else if (params.mode == "update_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config ->
+            .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config, _sequences, _pfam, _hmms ->
                 [ sample, results_folder, existing_db, mgnprotein_db_config ]
+            }
+    }
+    else if (params.mode == "update_mgnifams") {
+        ch_samplesheet = ch_samplesheet
+            .map { sample, _protein_input, _results_folder, _existing_db, _schema, mgnprotein_db_config, sequences, pfam, hmms ->
+                if (!sequences || !pfam || !hmms) {
+                    error("update_mgnifams: samplesheet row '${sample.id}' needs mgnify_proteins_sequences, mgnify_proteins_pfam and mgnifams_hmms")
+                }
+                [ sample, file(sequences), file(pfam), file(hmms), mgnprotein_db_config ? file(mgnprotein_db_config) : [] ]
             }
     }
 
@@ -108,11 +135,11 @@ workflow PIPELINE_COMPLETION {
     outdir          //    path: Path to output directory where results will be published
     monochrome_logs // boolean: Disable ANSI colour codes in log output
     hook_url        //  string: hook URL for notifications
-    multiqc_report  //  string: Path to MultiQC report
+    multiqc_report  //    value: List of MultiQC report paths
 
     main:
     summary_params = paramsSummaryMap(workflow, parameters_schema: "nextflow_schema.json")
-    def multiqc_reports = multiqc_report.toList()
+    def multiqc_reports = multiqc_report
 
     //
     // Completion email and summary

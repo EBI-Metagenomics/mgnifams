@@ -7,9 +7,9 @@ workflow UPDATE_DB {
     take:
     samplesheet
     query_result_chunks
-    
+
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     ch_queries = samplesheet
         .multiMap { meta, pipeline_results, db, secrets ->
@@ -20,11 +20,11 @@ workflow UPDATE_DB {
 
     QUERY_MGNPROTEIN_DB( ch_queries.query_mgnprotein )
     ch_versions = ch_versions.mix( QUERY_MGNPROTEIN_DB.out.versions )
-    
+
     // Chunking query results to run in parallel
     ch_query_results_batch = QUERY_MGNPROTEIN_DB.out.res
-        .flatMap { _meta, files -> 
-            files.collate( query_result_chunks )
+        .flatMap { _meta, files ->
+            [files].flatten().collate( query_result_chunks ) // a single output file is a Path, not a List
                 .withIndex()
                 .collect{ flist, index -> tuple( [id: "batch_${index}" ], flist ) }
         }
@@ -33,21 +33,18 @@ workflow UPDATE_DB {
     ch_versions = ch_versions.mix( PARSE_BIOMES.out.versions )
 
     ch_biomes = PARSE_BIOMES.out.res
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"biomes_combined"], file ] }
-    
+
     PARSE_DOMAINS( ch_query_results_batch, QUERY_MGNPROTEIN_DB.out.pfam_mapping.first(), ch_queries.refined_families.first() )
     ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
 
     ch_domains = PARSE_DOMAINS.out.res
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"domains_combined"], file ] }
 
     UPDATE_SQLITE_BLOBS( ch_queries.update, ch_biomes, ch_domains )
     ch_versions = ch_versions.mix( UPDATE_SQLITE_BLOBS.out.versions )
-
-    emit:
-    versions = ch_versions
 }

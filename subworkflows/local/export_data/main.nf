@@ -10,6 +10,7 @@ workflow EXPORT_DATA {
     predicted_scores
     composition
     tm_composition
+    seed_sizes // [ meta, seed_sizes.csv ] or [ meta, [] ]
     pfam_domains
     funfam_domains
     query_hmm_length_threshold
@@ -18,9 +19,9 @@ workflow EXPORT_DATA {
     outdir
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
-    EXPORT_MGNIFAMS( family_metadata, predicted_scores, composition, tm_composition )
+    EXPORT_MGNIFAMS( family_metadata, predicted_scores, composition, tm_composition, seed_sizes )
     ch_versions = ch_versions.mix( EXPORT_MGNIFAMS.out.versions )
 
     FILTER_EXPORT_PFAMS( pfam_domains, query_hmm_length_threshold )
@@ -33,7 +34,7 @@ workflow EXPORT_DATA {
     ch_versions = ch_versions.mix( EXPORT_MODEL_PFAMS.out.versions )
 
     EXPORT_MODEL_PFAMS.out.csv
-        .map { meta, file ->
+        .map { _meta, file ->
             file
         }
         .collectFile(name: "mgnifam_model_pfams.csv", storeDir: outdir + "/table_data/", keepHeader: true)
@@ -45,5 +46,9 @@ workflow EXPORT_DATA {
     ch_versions = ch_versions.mix( EXPORT_FOLDS.out.versions )
 
     emit:
+    mgnifam  = EXPORT_MGNIFAMS.out.csv       // [ meta, mgnifam.csv ]
+    pfams    = FILTER_EXPORT_PFAMS.out.csv   // [ meta, mgnifam_pfams.csv ]
+    funfams  = FILTER_EXPORT_FUNFAMS.out.csv // [ meta, mgnifam_funfams.csv ]
+    folds    = EXPORT_FOLDS.out.csv          // [ meta, mgnifam_folds.csv ]
     versions = ch_versions
 }

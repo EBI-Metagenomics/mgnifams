@@ -2,19 +2,21 @@
 
 import argparse
 
+
 def load_descriptions(desc_file):
     desc_map = {}
     with open(desc_file) as f:
         for line in f:
             parts = line.rstrip("\n").split("\t")
             if len(parts) >= 3:
-                pfam, name, description = parts[0].strip().split('.')[0], parts[1].strip(), parts[2].strip()
+                pfam, name, description = parts[0].strip().split(".")[0], parts[1].strip(), parts[2].strip()
                 desc_map[pfam] = {"name": name, "description": description}
             else:
                 # fallback if descriptions missing, just empty strings
                 pfam = parts[0]
                 desc_map[pfam] = {"name": "", "description": ""}
     return desc_map
+
 
 def parse_summary_block(hhr_file, desc_map):
     records = []
@@ -30,12 +32,12 @@ def parse_summary_block(hhr_file, desc_map):
                 if line.strip() == "":
                     break
 
-                pfam_id = line[4:34].strip().split(';')[0].strip().split('.')[0]
+                pfam_id = line[4:34].strip().split(";")[0].strip().split(".")[0]
                 prob = line[35:40].strip()
                 e_value = line[41:48].strip()
                 length = line[70:74].strip()
                 query_hmm = line[75:83].strip()
-                template_hmm = ' '.join(line[84:99].strip().split()) # also convert double space to single
+                template_hmm = " ".join(line[84:99].strip().split())  # also convert double space to single
 
                 desc = desc_map.get(pfam_id, {"name": "", "description": ""})
 
@@ -47,11 +49,12 @@ def parse_summary_block(hhr_file, desc_map):
                     "e_value": e_value,
                     "length": length,
                     "query_hmm": query_hmm,
-                    "template_hmm": template_hmm
+                    "template_hmm": template_hmm,
                 }
                 records.append(rec)
 
     return records
+
 
 def main():
     parser = argparse.ArgumentParser(description="Parse HHR summary block and output CSV with descriptions")
@@ -67,9 +70,9 @@ def main():
     with open(args.outfile, "w", encoding="utf-8") as f:
         header = ["id", "pfam", "name", "description", "prob", "e_value", "length", "query_hmm", "template_hmm"]
         f.write(",".join(header) + "\n")
-        
+
         for rec in records:
-            rec["id"] = args.id # add the family chunk id to each record
+            rec["id"] = args.id  # add the family chunk id to each record
             row = []
             for col in header:
                 val = rec.get(col, "")
@@ -80,6 +83,7 @@ def main():
             f.write(",".join(row) + "\n")
 
     print(f"Wrote {len(records)} records to {args.outfile}")
+
 
 if __name__ == "__main__":
     main()

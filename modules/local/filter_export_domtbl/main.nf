@@ -40,9 +40,9 @@ process FILTER_EXPORT_DOMTBL {
                     if (pfam) {
                         split(\$5, a, ".");   # split accession by "."
                         acc=a[1];             # keep only first part
-                        printf "%s %s %s %s %s %s %s %s %s %s %s %s\\n",\$1,acc,\$4,\$7,\$8,\$16,\$17,\$18,\$19,\$20,\$21,\$22;
+                        printf "%s %s %s %s %s %s %s %s %s %s %s %s\\n",\$1,acc,\$4,\$13,\$14,\$16,\$17,\$18,\$19,\$20,\$21,\$22;
                     } else {
-                        printf "%s %s %s %s %s %s %s %s %s %s %s\\n",\$1,\$4,\$7,\$8,\$16,\$17,\$18,\$19,\$20,\$21,\$22;
+                        printf "%s %s %s %s %s %s %s %s %s %s %s\\n",\$1,\$4,\$13,\$14,\$16,\$17,\$18,\$19,\$20,\$21,\$22;
                     }
                 }
             }' | tr ' ' ','

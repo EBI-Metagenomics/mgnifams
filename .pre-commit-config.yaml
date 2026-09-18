@@ -1,0 +1,32 @@
+# Run with prek (https://github.com/j178/prek) or pre-commit: `prek install && prek run --all-files`
+exclude: ^(modules/nf-core/|.*/tests/fixtures/|subworkflows/nf-core/|assets/data/|\.serena/|assets/(adaptivecard|slackreport)\.json$)|.*\.(snap|sqlite|sqlite3|gz|parquet|png|svg)$
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=2048]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.7
+    hooks:
+      - id: ruff-check
+        files: ^bin/.*\.py$
+      - id: ruff-format
+        files: ^bin/.*\.py$
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.8.1
+    hooks:
+      - id: prettier
+        types_or: [markdown, yaml, json]
+  - repo: local
+    hooks:
+      - id: nextflow-lint
+        name: nextflow lint
+        entry: nextflow lint
+        language: system
+        files: \.(nf|config)$

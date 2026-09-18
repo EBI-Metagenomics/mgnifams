@@ -9,8 +9,8 @@
         "properties": {
             "sample": {
                 "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "pattern": "^[A-Za-z0-9._-]+$",
+                "errorMessage": "Sample name must be provided and may only contain letters, digits, '.', '_' and '-'",
                 "meta": ["id"]
             },
             "protein_input": {
@@ -46,6 +46,30 @@
                 "exists": true,
                 "description": "The mgnify proteins database config file with secrets",
                 "errorMessage": "Must be a .ini file."
+            },
+            "mgnify_proteins_sequences": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.parquet$",
+                "description": "update_mgnifams: MGnify protein sequences parquet (protein_id, sequence)",
+                "errorMessage": "Must be a .parquet file."
+            },
+            "mgnify_proteins_pfam": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.parquet$",
+                "description": "update_mgnifams: MGnify protein Pfam hits parquet (protein_id, pfam_accession, i_evalue, score, hmm_from, hmm_to, env_from, env_to)",
+                "errorMessage": "Must be a .parquet file."
+            },
+            "mgnifams_hmms": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.(hmm|lib)(\\.gz)?$",
+                "description": "update_mgnifams: HMM library of the existing MGnifams (NAME = family id)",
+                "errorMessage": "Must be a .hmm/.lib file, optionally gzipped."
             }
         },
         "required": ["sample"]

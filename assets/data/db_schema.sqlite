@@ -25,7 +25,8 @@ CREATE TABLE mgnifam (
     biome_blob BLOB DEFAULT NULL,
     domain_blob BLOB DEFAULT NULL,
     s4pred_blob BLOB DEFAULT NULL,
-    tm_blob BLOB DEFAULT NULL
+    tm_blob BLOB DEFAULT NULL,
+    seed_size INTEGER
 );
 
 CREATE TABLE mgnifam_pfams (
@@ -68,7 +69,10 @@ CREATE TABLE mgnifam_folds (
     q_end INTEGER,
     t_start INTEGER,
     t_end INTEGER,
-    e_value REAL
+    e_value REAL,
+    aln_tmscore REAL,
+    q_tmscore REAL,
+    t_tmscore REAL
 );
 
 CREATE TABLE mgnifam_model_pfams (

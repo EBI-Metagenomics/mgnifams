@@ -24,10 +24,10 @@ workflow REMOVE_REDUNDANCY {
     starting_id
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     ch_reps_fasta = reps_fasta
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .flatten()
         .collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families")
         .map { file -> [[id: 'pre_redundant'], file] }

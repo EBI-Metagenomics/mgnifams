@@ -16,6 +16,7 @@
 include { MGNIFAMS                } from './workflows/mgnifams'
 include { INIT_DB                 } from './workflows/init_db'
 include { UPDATE_DB               } from './workflows/update_db'
+include { UPDATE_MGNIFAMS         } from './workflows/update_mgnifams'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
@@ -35,13 +36,13 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
 
     main:
 
-    ch_multiqc = Channel.empty()
+    ch_multiqc = channel.empty()
 
     //
     // WORKFLOW: Run main pipeline
     //
     if (params.mode == 'run_mgnifams_pipeline') {
-        MGNIFAMS( 
+        MGNIFAMS(
             samplesheet, params.fasta_input_mode, params.compress_mode, \
             params.input_csv_chunk_size, params.min_sequence_length, params.outdir, \
             params.minimum_members, params.clusters_chunk_size, params.mgnifams_discard_min_rep_length, \
@@ -63,7 +64,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     // WORKFLOW: Run initialize mgnifams db workflow
     //
     else if (params.mode == 'init_mgnifams_db') {
-        INIT_DB( 
+        INIT_DB(
             samplesheet
         )
     }
@@ -71,13 +72,29 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     // WORKFLOW: Run update mgnifams db workflow
     //
     else if (params.mode == 'update_mgnifams_db') {
-        UPDATE_DB( 
+        UPDATE_DB(
             samplesheet, params.query_result_chunks
         )
     }
+    //
+    // WORKFLOW: Refresh full MSAs and representatives of existing families
+    //
+    else if (params.mode == 'update_mgnifams') {
+        UPDATE_MGNIFAMS(
+            samplesheet, params.parquet_chunks, params.min_sequence_length, params.hmm_chunk_size, \
+            params.pdb_chunk_size, params.esmfold_db, params.esmfold_params_path, \
+            params.esmfold_3B_v1, params.esm2_t36_3B_UR50D, params.esm2_t36_3B_UR50D_contact_regression, \
+            params.num_recycles_esmfold, params.pdb_chunk_size_long, \
+            params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, \
+            params.foldseek_db_path, params.query_hmm_length_threshold, params.query_result_chunks, \
+            params.run_alphafold2, params.colabfold_params_path, params.af2_max_msa_seqs, params.af2_num_recycles, params.outdir, \
+            params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
+        )
+        ch_multiqc = UPDATE_MGNIFAMS.out
+    }
 
     emit:
-    multiqc_report = ch_multiqc // channel: /path/to/multiqc_report.html
+    ch_multiqc.toList() // value channel: list of /path/to/multiqc_report.html
 }
 
 /*
@@ -102,7 +119,7 @@ workflow {
         params.outdir,
         params.input
     )
-    
+
     //
     // WORKFLOW: Run main workflow
     //
@@ -120,7 +137,7 @@ workflow {
         params.outdir,
         params.monochrome_logs,
         params.hook_url,
-        EBIMETAGENOMICS_MGNIFAMS.out.multiqc_report
+        EBIMETAGENOMICS_MGNIFAMS.out
     )
 }
 
