@@ -28,8 +28,22 @@ process BUILD_PARQUET_DOMAIN_QUERIES {
         --pfam "${pfam}" \\
         --output_dir query_results
 
-    # Pfam accession (no version) -> description, as in the sequence_explorer_pfam mapping
-    gzip -cdf "${pfam_hmms}" | awk '/^ACC/ { split(\$2, a, "."); acc = a[1] } /^DESC/ { sub(/^DESC +/, ""); print acc "\\t" \$0 }' > pfam_mapping.tsv
+    # Pfam accession (no version) -> description, as in the sequence_explorer_pfam mapping.
+    # Python, not gzip: the python_pyarrow container has no gzip binary.
+    python - "${pfam_hmms}" > pfam_mapping.tsv <<-'END_MAPPING'
+    import gzip, sys
+
+    path = sys.argv[1]
+    with open(path, 'rb') as fh:
+        gzipped = fh.read(2) == b'\\x1f\\x8b'
+    acc = ''
+    with (gzip.open(path, 'rt') if gzipped else open(path)) as fh:
+        for line in fh:
+            if line.startswith('ACC'):
+                acc = line.split()[1].split('.')[0]
+            elif line.startswith('DESC'):
+                print(acc + '\\t' + line.split(None, 1)[1].rstrip('\\n'))
+    END_MAPPING
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
