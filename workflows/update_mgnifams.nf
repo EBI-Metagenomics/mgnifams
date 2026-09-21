@@ -167,8 +167,9 @@ workflow UPDATE_MGNIFAMS {
     UPDATE_SQLITE_BLOBS_STAGED(
         IMPORT_QUERIES.out.db,
         PREDICT_STRUCTURES.out.cif.map { _meta, cifs -> cifs },
-        ANNOTATE_REPS.out.s4pred_features.map { _meta, dir -> dir }.collect().ifEmpty([]),
-        ANNOTATE_REPS.out.tm_features.map { _meta, dir -> dir }.collect().ifEmpty([]),
+        // Feature-viewer outputs are directories; stage their <id>.json files flat
+        ANNOTATE_REPS.out.s4pred_features.map { _meta, dir -> files("${dir}/*") }.collect().ifEmpty([]),
+        ANNOTATE_REPS.out.tm_features.map { _meta, dir -> files("${dir}/*") }.collect().ifEmpty([]),
         PARSE_BIOMES.out.res.map { _meta, files -> files }.collect().ifEmpty([]),
         PARSE_DOMAINS.out.res.map { _meta, files -> files }.collect().ifEmpty([]),
         UPDATE_FAMILIES.out.successful_ids.map { ids -> ids.sort().join('\n') }.collectFile(name: 'successful_ids.txt', newLine: true),
