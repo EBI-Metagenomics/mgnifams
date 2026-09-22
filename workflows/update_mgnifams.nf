@@ -96,8 +96,7 @@ workflow UPDATE_MGNIFAMS {
         ch_versions = ch_versions.mix( COLABFOLD_BATCH_MSA.out.versions )
     }
 
-    // Not ANNOTATE_FAMILIES: its HH-suite model annotation works on the seed MSA, which does not change
-
+    // Not ANNOTATE_FAMILIES: its HH-suite model annotation (ANNOTATE_MODELS) works on the seed MSA, which does not change
     ANNOTATE_REPS( UPDATE_FAMILIES.out.family_ids_fasta, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
