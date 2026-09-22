@@ -76,7 +76,6 @@ workflow UPDATE_MGNIFAMS {
         pdb_chunk_size_long, outdir )
     ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
 
-    // Not ANNOTATE_FAMILIES: its HH-suite model annotation works on the seed MSA, which does not change
     //
     // Optional: AlphaFold2 (ColabFold) from each family's full MSA; published only, not used downstream
     //
@@ -96,6 +95,8 @@ workflow UPDATE_MGNIFAMS {
         COLABFOLD_BATCH_MSA( ch_af2_batches, colabfold_params_path ? file(colabfold_params_path, checkIfExists: true) : [], af2_num_recycles )
         ch_versions = ch_versions.mix( COLABFOLD_BATCH_MSA.out.versions )
     }
+
+    // Not ANNOTATE_FAMILIES: its HH-suite model annotation works on the seed MSA, which does not change
 
     ANNOTATE_REPS( UPDATE_FAMILIES.out.family_ids_fasta, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
