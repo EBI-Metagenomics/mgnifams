@@ -1,6 +1,6 @@
--- One-off migration of an existing MGnifams sqlite DB: adds mgnifam.seed_size and the Foldseek TM-score
--- columns of mgnifam_folds (appended last, like the fresh schema in assets/data/db_schema.sqlite).
--- seed_size is backfilled from seed_msa_blob (aligned FASTA); old fold rows keep NULL TM-scores until
+-- One-off migration of an existing MGnifams sqlite DB: adds mgnifam.seed_size, mgnifam.hmm_length and the
+-- Foldseek TM-score columns of mgnifam_folds (appended last; merge_update_delta.sql uses column names).
+-- seed_size is backfilled from seed_msa_blob (aligned FASTA), hmm_length from consensus; old fold rows keep NULL TM-scores until
 -- their families are updated. Run once, before the first update merge; it is guarded so reruns are no-ops:
 --
 --   db=mgnifams.sqlite3
@@ -12,6 +12,7 @@
 BEGIN IMMEDIATE;
 
 ALTER TABLE mgnifam ADD COLUMN seed_size INTEGER;
+ALTER TABLE mgnifam ADD COLUMN hmm_length INTEGER;
 ALTER TABLE mgnifam_folds ADD COLUMN aln_tmscore REAL;
 ALTER TABLE mgnifam_folds ADD COLUMN q_tmscore REAL;
 ALTER TABLE mgnifam_folds ADD COLUMN t_tmscore REAL;
@@ -19,5 +20,7 @@ ALTER TABLE mgnifam_folds ADD COLUMN t_tmscore REAL;
 UPDATE mgnifam
 SET seed_size = length(CAST(seed_msa_blob AS TEXT)) - length(replace(CAST(seed_msa_blob AS TEXT), '>', ''))
 WHERE seed_msa_blob IS NOT NULL;
+
+UPDATE mgnifam SET hmm_length = length(consensus) WHERE consensus IS NOT NULL;
 
 COMMIT;

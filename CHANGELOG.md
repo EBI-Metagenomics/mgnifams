@@ -10,13 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `--mode update_mgnifams`: refreshes existing families against new MGnify proteins, read from the MGnify proteins sequence and Pfam parquet files, without changing their seed MSAs or HMMs. It recomputes representatives, structures, annotations, Foldseek hits, domain architectures and (with `mgnprotein_db_config`) biomes, and publishes a delta database, `db/<sample>_update.sqlite3`, holding only the successfully updated families. The pipeline never modifies the production DB: `assets/merge_update_delta.sql` merges the delta in a single transaction, and the README documents it. New parameters: `--parquet_chunks`, `--hmm_chunk_size`, `--run_alphafold2`, `--colabfold_params_path`, `--af2_max_msa_seqs`, `--af2_num_recycles`.
   - `--run_alphafold2 true` also predicts each representative with ColabFold from its family full MSA (GPU). These predictions are published under `structures/alphafold2/`.
 - New `mgnifam.seed_size` column: the number of sequences in the family seed MSA.
+- New `mgnifam.hmm_length` column: the number of HMM match states, equal to the consensus length.
 - `mgnifam_folds` gains the Foldseek TM-scores `aln_tmscore`, `q_tmscore` and `t_tmscore`.
-- `assets/migrate_schema_seed_size_tmscores.sql` adds both of these to an existing database and backfills `seed_size`. Run it once, before the first `update_mgnifams` merge.
+- `assets/migrate_schema_seed_size_tmscores.sql` adds these columns to an existing database and backfills `seed_size` and `hmm_length`. Run it once, before the first `update_mgnifams` merge.
 
 ### `Changed`
 
 - **Breaking:** the samplesheet `sample` must match `^[A-Za-z0-9._-]+$`.
 - `hhdb_path` is required only by the default `run_mgnifams_pipeline` mode.
+- `mgnifam` columns in new databases are grouped by topic (family, representative, HMM, structure, composition, blobs). Databases migrated with `assets/migrate_schema_seed_size_tmscores.sql` keep the new columns last, so select columns by name, not `SELECT *` position.
 
 ### `Fixed`
 

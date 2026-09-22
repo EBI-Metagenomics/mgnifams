@@ -235,9 +235,9 @@ The pipeline does not modify the production database. It publishes a delta datab
 
 - Overwritten by the merge: `full_size`, `protein_rep`, `rep_region`, `rep_length`, `rep_sequence`, `plddt`, `ptm`, the secondary structure percents, `cif_blob`, `domain_blob`, `s4pred_blob`, and the `mgnifam_pfams`, `mgnifam_funfams` and `mgnifam_folds` rows of these families.
 - Only when the delta's `update_info` table says they were computed: the transmembrane percents and `tm_blob` (`tm_computed`), and `biome_blob` (`biome_computed`).
-- Kept from production: `consensus`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size` and `mgnifam_model_pfams`.
+- Kept from production: `consensus`, `hmm_length`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size` and `mgnifam_model_pfams`.
 
-To apply it, migrate the production database once (this adds `seed_size` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
+To apply it, migrate the production database once (this adds `seed_size`, `hmm_length` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
 
 ```bash
 db=/path/to/mgnifams.sqlite3

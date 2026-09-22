@@ -4,7 +4,7 @@
 --   sqlite3 -bail prod.sqlite3 -cmd "ATTACH 'delta.sqlite3' AS delta" < assets/merge_update_delta.sql
 --
 -- Any failed check or statement exits before COMMIT (-bail), so prod is left untouched.
--- Kept from prod: consensus, converged, seed_msa_blob, hmm_blob, rf_blob, seed_size, mgnifam_model_pfams,
+-- Kept from prod: consensus, hmm_length, converged, seed_msa_blob, hmm_blob, rf_blob, seed_size, mgnifam_model_pfams,
 -- and the TM columns / biome_blob unless the delta's update_info says they were computed.
 
 PRAGMA foreign_keys = ON;

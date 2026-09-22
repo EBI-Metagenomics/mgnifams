@@ -108,7 +108,10 @@ The `conf/slurm.config` and `conf/local.config` files are gitignored — create 
 ## DB schema
 
 `assets/data/db_schema.sqlite` (SQL text) now has `mgnifam.seed_size` and the Foldseek TM-scores
-`mgnifam_folds.aln_tmscore/q_tmscore/t_tmscore`. New columns are appended last, because `IMPORT_QUERIES` imports the CSVs by position.
+`mgnifam_folds.aln_tmscore/q_tmscore/t_tmscore`. `IMPORT_QUERIES` imports `mgnifam.csv` by position, so the
+`mgnifam` column order in the schema must match the `export_mgnifams.py` header (`bin/test_export_mgnifams.py` checks this).
+Migrated prod DBs have `seed_size`/`hmm_length` last instead; that is fine, since `merge_update_delta.sql` uses column names.
+`mgnifam.hmm_length` = `length(consensus)` (one consensus residue per match state), stored so the website can index/sort on it.
 Existing DBs are migrated once with `assets/migrate_schema_seed_size_tmscores.sql`.
 
 ## Linting & hooks

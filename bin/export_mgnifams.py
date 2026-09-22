@@ -9,10 +9,14 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
     mgnifam_headers = [
         "id",
         "full_size",
+        "seed_size",
+        "converged",
         "protein_rep",
         "rep_region",
         "rep_length",
-        "converged",
+        "rep_sequence",
+        "consensus",
+        "hmm_length",
         "plddt",
         "ptm",
         "helix_percent",
@@ -24,8 +28,6 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
         "signal_percent",
         "membrane_beta_percent",
         "periplasm_percent",
-        "rep_sequence",
-        "consensus",
         "seed_msa_blob",
         "hmm_blob",
         "rf_blob",
@@ -34,7 +36,6 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
         "domain_blob",
         "s4pred_blob",
         "tm_blob",
-        "seed_size",
     ]
 
     df1 = pd.read_csv(metadata, header=None)
@@ -48,6 +49,9 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
         "consensus",
         "converged",
     ]
+
+    # HMM length = one consensus residue per match state
+    df1["hmm_length"] = df1["consensus"].astype("string").str.len().astype("Int64")
 
     df2 = pd.read_csv(structure_scores)
     merged = pd.merge(df1, df2, on="id", how="left")
