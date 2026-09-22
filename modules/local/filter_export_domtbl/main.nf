@@ -20,6 +20,7 @@ process FILTER_EXPORT_DOMTBL {
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def max_evalue = task.ext.max_evalue ?: '' // per-domain i-Evalue cutoff (the exported e_value); empty keeps all
     def is_compressed = domtbl.getExtension() == "gz" ? true : false
     def domtbl_name = is_compressed ? domtbl.getBaseName() : domtbl
     def header = (prefix == "pfam") ?
@@ -33,10 +34,10 @@ process FILTER_EXPORT_DOMTBL {
     (
         echo "${header}"
         grep -v '^#' ${domtbl_name} | \\
-            awk -v thr=${query_hmm_length_threshold} -v pfam=${prefix == "pfam" ? 1 : 0} '{
+            awk -v thr=${query_hmm_length_threshold} -v maxe="${max_evalue}" -v pfam=${prefix == "pfam" ? 1 : 0} '{
                 qlen=\$6; env_from=\$20; env_to=\$21;
                 env_len=env_to - env_from + 1;
-                if (env_len >= thr * qlen) {
+                if (env_len >= thr * qlen && (maxe == "" || \$13 + 0 <= maxe + 0)) {
                     if (pfam) {
                         split(\$5, a, ".");   # split accession by "."
                         acc=a[1];             # keep only first part

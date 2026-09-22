@@ -63,4 +63,31 @@ nextflow_process {
             assert snapshot(process.out.csv).match()
         }
     }
+
+    test("pfam domtbl - max_evalue") {
+
+        config "./nextflow.config"
+
+        when {
+            params {
+                prefix     = "pfam"
+                max_evalue = 0.001
+            }
+            process {
+                """
+                input[0] = channel.of([ [ id:'reps_fasta' ], file("${moduleDir}/tests/fixtures/pfam.domtbl.gz", checkIfExists: true) ])
+                input[1] = 0.8
+                """
+            }
+        }
+
+        then {
+            def rows = path(process.out.csv[0][1]).readLines().drop(1).collect { line -> line.split(',', -1) }
+            // Only domains whose i-Evalue (the exported e_value) passes; the fixture has hits up to 5.4
+            assert process.success
+            assert rows.size() > 0
+            assert rows.every { r -> (r[3] as double) <= 0.001 }
+            assertDomainValues(process.out.csv[0][1], "${moduleDir}/tests/fixtures/pfam.domtbl.gz", 3, 9)
+        }
+    }
 }
