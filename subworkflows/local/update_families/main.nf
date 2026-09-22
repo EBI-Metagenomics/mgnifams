@@ -25,9 +25,11 @@ workflow UPDATE_FAMILIES {
     ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_PARQUET_SLICES.out.versions )
 
     // Zero-padded chunk names: name order is chunk order, so the FASTA is byte-identical across runs
-    ch_fasta = EXTRACT_UNANNOTATED_PARQUET_SLICES.out.fa
+    ch_fasta_file = EXTRACT_UNANNOTATED_PARQUET_SLICES.out.fa
         .map { _meta, fa -> fa }
-        .collectFile(name: 'mgnifams_update.faa', storeDir: "${outdir}/update_families", sort: { fa -> fa.name })
+        .collectFile(name: 'mgnifams_update.faa', sort: { fa -> fa.name })
+    ch_fasta_file.collectFile(name: 'mgnifams_update.faa', storeDir: "${outdir}/update_families") // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
+    ch_fasta = ch_fasta_file
         .combine(ch_meta)
         .map { fa, meta -> [ meta, fa ] }
 

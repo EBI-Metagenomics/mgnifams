@@ -34,7 +34,9 @@ workflow EXTRACT_UNANNOTATED_FASTA {
         .map { _meta, file ->
             file
         }
-        .collectFile(name: "mgnifams_v2.fa", storeDir: outdir)
+        .collectFile(name: "mgnifams_v2.fa")
+    ch_fasta.collectFile(name: "mgnifams_v2.fa", storeDir: outdir) // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
+    ch_fasta = ch_fasta
         .map { file ->
             [[id: 'mgnifams_v2'], file]
         }

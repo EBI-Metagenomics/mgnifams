@@ -30,7 +30,9 @@ workflow ANNOTATE_STRUCTURES {
         .map { _meta, file ->
             file
         }
-        .collectFile(name: 'all_hits.tsv', storeDir: outdir + "/annotation/structures/foldseek")
+        .collectFile(name: 'all_hits.tsv')
+    ch_foldseek_hits.collectFile(name: 'all_hits.tsv', storeDir: outdir + "/annotation/structures/foldseek") // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
+    ch_foldseek_hits = ch_foldseek_hits
         .map { file ->
             [[id: 'foldseek_hits'], file]
         }

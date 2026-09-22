@@ -75,7 +75,9 @@ workflow PREDICT_STRUCTURES {
         .map { _meta, file ->
             file
         }
-        .collectFile(name: "pdb_scores.csv", storeDir: outdir + "/structures/esmfold/", keepHeader: true)
+        .collectFile(name: "pdb_scores.csv", keepHeader: true)
+    ch_scores.collectFile(name: "pdb_scores.csv", storeDir: outdir + "/structures/esmfold/") // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
+    ch_scores = ch_scores
         .map { file ->
             [ [id: "scores"], file ]
         }
