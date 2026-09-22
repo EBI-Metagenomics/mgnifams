@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** the samplesheet `sample` must match `^[A-Za-z0-9._-]+$`.
 - `hhdb_path` is required only by the default `run_mgnifams_pipeline` mode.
+- `family_metadata.csv` (`generate_families/families/` and `update_families/`) now starts with a header row: `family_id,full_msa_size,protein,region,length,sequence,consensus,converged`.
 - `mgnifam` columns in new databases are grouped by topic (family, representative, HMM, structure, composition, blobs). Databases migrated with `assets/migrate_schema_seed_size_tmscores.sql` keep the new columns last, so select columns by name, not `SELECT *` position.
 
 ### `Fixed`

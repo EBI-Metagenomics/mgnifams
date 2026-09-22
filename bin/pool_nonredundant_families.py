@@ -82,11 +82,13 @@ def create_mapping_dict():
     return family_to_id
 
 
-def pool_directory(input_dir, output_filename, splitChar):
+def pool_directory(input_dir, output_filename, splitChar, header=""):
     path_to_folder = os.path.join(arg_families_dir, input_dir)
     output_file = os.path.join(arg_out_dir, output_filename)
 
     with open(output_file, "w", buffering=1 << 20) as outfile:
+        if header:
+            outfile.write(header + "\n")
         for filename in sorted(os.listdir(path_to_folder)):
             filepath = os.path.join(path_to_folder, filename)
             base_filename = os.path.splitext(filename)[0]
@@ -237,7 +239,16 @@ def main(args=None):
     family_to_id = create_mapping_dict()
 
     tasks = [
-        (pool_directory, ("family_metadata", "family_metadata.csv", ",")),
+        # Same header as the update_mgnifams family_metadata.csv (from mgnifam update_families)
+        (
+            pool_directory,
+            (
+                "family_metadata",
+                "family_metadata.csv",
+                ",",
+                "family_id,full_msa_size,protein,region,length,sequence,consensus,converged",
+            ),
+        ),
         (pool_directory, ("refined_families", "refined_families.tsv", "\t")),
         (pool_directory, ("converged_families", "converged_families.txt", "")),
         (pool_clusters_directory, ("successful_clusters", "successful_clusters.txt")),

@@ -32,7 +32,7 @@ nextflow_process {
                 { assert process.success },
                 { assert delta[0].startsWith('family_id,') && delta.count { line -> line.startsWith('family_id,') } == 1 },
                 { assert successful.size() == 9 && ids == successful },
-                { assert !path(process.out.metadata[0][1]).readLines()[0].startsWith('family_id') },
+                { assert path(process.out.metadata[0][1]).readLines()[0] == 'family_id,full_msa_size,protein,region,length,sequence,consensus,converged' },
                 { assert snapshot(process.out.tsv, process.out.metadata, process.out.family_ids_fasta, process.out.delta, process.out.discarded).match() }
             )
         }

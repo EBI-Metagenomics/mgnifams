@@ -38,7 +38,8 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
         "tm_blob",
     ]
 
-    df1 = pd.read_csv(metadata, header=None)
+    # family_metadata.csv header (family_id,full_msa_size,protein,...) renamed to the mgnifam column names
+    df1 = pd.read_csv(metadata)
     df1.columns = [
         "id",
         "full_size",
@@ -83,7 +84,7 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
 
 def main():
     parser = argparse.ArgumentParser(description="Export MGnifams sql-ready table CSV files.")
-    parser.add_argument("--metadata", required=True, help="Generated families metadata mqc CSV")
+    parser.add_argument("--metadata", required=True, help="family_metadata.csv (with header)")
     parser.add_argument("--structure_scores", required=True, help="Tertiary prediction structure scores (plddt, ptm)")
     parser.add_argument("--composition", required=True, help="Predicted compositional features --helix, strand or coil")
     parser.add_argument(

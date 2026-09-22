@@ -39,8 +39,10 @@ process POOL_UPDATED_FAMILIES {
     files() { find -L "\$1" -type f -print0 | sort -z; }
 
     files tsv | xargs -0 -r cat > refined_families.tsv
-    # No header: export_mgnifams.py reads it headerless (same as the run_mgnifams_pipeline family_metadata.csv)
-    files metadata | xargs -0 -r -n 1 tail -n +2 > family_metadata.csv
+    {
+        echo "family_id,full_msa_size,protein,region,length,sequence,consensus,converged"
+        files metadata | xargs -0 -r -n 1 tail -n +2
+    } > family_metadata.csv
     files reps | xargs -0 -r zcat -f > family_reps.fasta
     sed -E 's/^>[^\\t]*\\t/>/' family_reps.fasta > family_ids.fasta
     files converged | xargs -0 -r cat > converged_families.txt
@@ -63,7 +65,8 @@ process POOL_UPDATED_FAMILIES {
     // One synthetic successful family, named like the MGNIFAM_UPDATEFAMILIES stub full MSA (1_7)
     """
     printf '1_7\\t1/1-30\\n' > refined_families.tsv
-    echo '1_7,1,"1",1-30,30,ACDEFGHIKLMNPQRSTVWYACDEFGHIKL,acdefghiklmnpqrstvwyacdefghikl,False' > family_metadata.csv
+    echo 'family_id,full_msa_size,protein,region,length,sequence,consensus,converged' > family_metadata.csv
+    echo '1_7,1,"1",1-30,30,ACDEFGHIKLMNPQRSTVWYACDEFGHIKL,acdefghiklmnpqrstvwyacdefghikl,False' >> family_metadata.csv
     printf '>1/1-30\\t1_7\\nACDEFGHIKLMNPQRSTVWYACDEFGHIKL\\n' > family_reps.fasta
     printf '>1_7\\nACDEFGHIKLMNPQRSTVWYACDEFGHIKL\\n' > family_ids.fasta
     touch converged_families.txt

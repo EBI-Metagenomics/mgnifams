@@ -13,7 +13,10 @@ SCHEMA = (Path(__file__).resolve().parent.parent / "assets/data/db_schema.sqlite
 
 with tempfile.TemporaryDirectory() as tmp:
     d = Path(tmp)
-    (d / "meta.csv").write_text('1,21,"33",357-470,114,QLDP,lldp,True\n')
+    (d / "meta.csv").write_text(
+        "family_id,full_msa_size,protein,region,length,sequence,consensus,converged\n"
+        '1,21,"33",357-470,114,QLDP,lldp,True\n'
+    )
     (d / "scores.csv").write_text("id,plddt,ptm\n1,80.5,0.7\n")
     (d / "comp.csv").write_text("id,helix_percent,strand_percent,coil_percent\n1,10.0,20.0,70.0\n")
     (d / "seeds.csv").write_text("id,seed_size\n1,14\n")
