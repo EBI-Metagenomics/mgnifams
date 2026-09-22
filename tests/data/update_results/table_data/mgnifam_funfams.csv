@@ -1,0 +1,3 @@
+id,funfam,e_value,score,hmm_from,hmm_to,ali_from,ali_to,env_from,env_to,acc
+2,1.10.1140.10-FF-000001,5.2e-66,209.4,1,113,2,114,2,114,0.99
+2,1.10.1140.10-FF-000016,7.6e-15,44.0,1,35,2,36,2,37,0.94

@@ -1,5 +1,5 @@
 # Run with prek (https://github.com/j178/prek) or pre-commit: `prek install && prek run --all-files`
-exclude: ^(modules/nf-core/|.*/tests/fixtures/|subworkflows/nf-core/|assets/data/|\.serena/|assets/(adaptivecard|slackreport)\.json$)|.*\.(snap|sqlite|sqlite3|gz|parquet|png|svg)$
+exclude: ^(modules/nf-core/|tests/data/|.*/tests/fixtures/|subworkflows/nf-core/|assets/data/|\.serena/|assets/(adaptivecard|slackreport)\.json$)|.*\.(snap|sqlite|sqlite3|gz|parquet|png|svg)$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

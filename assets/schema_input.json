@@ -24,7 +24,7 @@
                 "type": "string",
                 "format": "directory-path",
                 "exists": true,
-                "description": "Results from mgnifams analysis pipeline, to be imported in the database."
+                "description": "Results (outdir) of the mgnifams pipeline to import into the database: run_mgnifams_pipeline for init/update_mgnifams_db, update_mgnifams for post_update_mgnifams_update_db."
             },
             "existing_db": {
                 "type": "string",

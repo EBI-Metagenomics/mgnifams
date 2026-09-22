@@ -1,5 +1,6 @@
 -- Merges an update_mgnifams delta DB (db/<sample>_update.sqlite3) into a production MGnifams DB, in one transaction.
--- Prod must be migrated first (assets/migrate_schema_seed_size_tmscores.sql). Run with the delta attached:
+-- Prod must be migrated first (assets/migrate_schema_seed_size_tmscores.sql) and have the has_* columns
+-- (assets/data/db_schema.sqlite; assets/finalize_db.sql fills them). Run with the delta attached:
 --
 --   sqlite3 -bail prod.sqlite3 -cmd "ATTACH 'delta.sqlite3' AS delta" < assets/merge_update_delta.sql
 --
@@ -70,6 +71,13 @@ SELECT mgnifam_id, funfam, e_value, score, hmm_from, hmm_to, ali_from, ali_to, e
 
 INSERT INTO main.mgnifam_folds (mgnifam_id, fold, aligned_length, q_start, q_end, t_start, t_end, e_value, aln_tmscore, q_tmscore, t_tmscore)
 SELECT mgnifam_id, fold, aligned_length, q_start, q_end, t_start, t_end, e_value, aln_tmscore, q_tmscore, t_tmscore FROM delta.mgnifam_folds;
+
+-- Search flags of the replaced child tables; has_model_pfam is kept (mgnifam_model_pfams is kept)
+UPDATE main.mgnifam SET
+    has_pfam      = EXISTS (SELECT 1 FROM main.mgnifam_pfams   WHERE mgnifam_id = main.mgnifam.id),
+    has_funfam    = EXISTS (SELECT 1 FROM main.mgnifam_funfams WHERE mgnifam_id = main.mgnifam.id),
+    has_structure = EXISTS (SELECT 1 FROM main.mgnifam_folds   WHERE mgnifam_id = main.mgnifam.id)
+WHERE id IN (SELECT id FROM delta.mgnifam);
 
 INSERT INTO temp.merge_check (foreign_keys) SELECT NOT EXISTS (SELECT 1 FROM main.pragma_foreign_key_check);
 

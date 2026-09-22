@@ -1,0 +1,43 @@
+nextflow_pipeline {
+
+    name "Test pipeline --mode post_update_mgnifams_update_db"
+    script "../main.nf"
+    tag "pipeline"
+    tag "post_update_mgnifams_update_db"
+    profile "test_post_update_mgnifams_update_db"
+
+    // tests/data/update_results: families 2 and 4 of an update_mgnifams test run (no DeepTMHMM, no biomes)
+    test("-profile test_post_update_mgnifams_update_db") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+                // The profile's samplesheet path is relative to the repo root; nf-test launches elsewhere
+                input  = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,results_folder\nmgnifams_update_test,${projectDir}/tests/data/update_results\n"; ss.toString() }()
+            }
+        }
+
+        then {
+            def db      = "${params.outdir}/db/mgnifams_update_test_update.sqlite3"
+            def sqlite3 = { String query -> ["sqlite3", db, query].execute().text.trim() }
+
+            assertAll(
+                { assert workflow.success },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    sqlite3("SELECT group_concat(id, ',') FROM (SELECT id FROM mgnifam ORDER BY id)"),
+                    // Always-updated blobs and values present; seed/HMM blobs and the TM/biome blobs (not computed) absent
+                    sqlite3(
+                        "SELECT count(*), sum(cif_blob IS NULL), sum(s4pred_blob IS NULL), sum(domain_blob IS NULL), " +
+                        "sum(seed_msa_blob IS NOT NULL OR hmm_blob IS NOT NULL OR rf_blob IS NOT NULL), " +
+                        "sum(tm_blob IS NOT NULL OR biome_blob IS NOT NULL), " +
+                        "sum(plddt IS NULL OR ptm IS NULL OR coil_percent IS NULL OR hmm_length IS NULL) FROM mgnifam"
+                    ),
+                    sqlite3("SELECT (SELECT count(*) FROM mgnifam_pfams), (SELECT count(*) FROM mgnifam_funfams), (SELECT count(*) FROM mgnifam_folds)"),
+                    sqlite3("SELECT group_concat(key || '=' || value, ';') FROM (SELECT key, value FROM update_info ORDER BY key)")
+                ).match() }
+            )
+        }
+    }
+}

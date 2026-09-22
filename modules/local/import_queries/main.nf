@@ -33,13 +33,21 @@ process IMPORT_QUERIES {
 
     cols() { sqlite3 "${prefix}.sqlite3" "SELECT group_concat(name, ',') FROM pragma_table_info('\$1') WHERE name != 'id'"; }
     nullif() { local IFS=,; local out=(); for c in \$1; do out+=("NULLIF(\$c, '')"); done; echo "\${out[*]}"; }
-    set_nullif() { local IFS=,; local out=(); for c in \$1; do out+=("\$c = NULLIF(\$c, '')"); done; echo "\${out[*]}"; }
 
     {
+        # Throwaway build file: a failed task is rerun, so no journal or fsync is needed
+        echo "PRAGMA journal_mode = OFF;"
+        echo "PRAGMA synchronous = OFF;"
+        echo "PRAGMA temp_store = MEMORY;"
+        echo "PRAGMA cache_size = -2000000;"
         echo ".bail on"
         echo "BEGIN;"
-        echo ".import --csv --skip 1 mgnifam.csv mgnifam"
-        echo "UPDATE mgnifam SET \$(set_nullif "\$(cols mgnifam)");"
+        # mgnifam by header name, so its schema column order is free and unlisted columns keep their DEFAULT
+        c=\$(head -n 1 mgnifam.csv | tr -d '\\r')
+        echo ".import --csv mgnifam.csv temp_mgnifam"
+        echo "INSERT INTO mgnifam (\$c) SELECT \$(nullif "\$c") FROM temp_mgnifam;"
+        echo "DROP TABLE temp_mgnifam;"
+        # Child CSVs name their mgnifam_id column 'id', so these are imported by position
         for t in mgnifam_pfams mgnifam_funfams mgnifam_folds mgnifam_model_pfams; do
             [ -f "\$t.csv" ] || continue
             c=\$(cols "\$t")
@@ -51,7 +59,7 @@ process IMPORT_QUERIES {
         echo "COMMIT;"
     } > import.sql
 
-    sqlite3 "${prefix}.sqlite3" < import.sql
+    sqlite3 "${prefix}.sqlite3" < import.sql > /dev/null
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

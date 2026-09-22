@@ -184,6 +184,7 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_in
 ```
 
 Make sure to manually delete any previous `init_db` workflow cached work jobs.
+The last step (`assets/finalize_db.sql`) fills the `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit) search flags, creates the website indexes and runs `ANALYZE`.
 
 ### update_db workflow
 
@@ -230,12 +231,30 @@ mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_proteins_pfa
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_update_mgnifams.csv --mode update_mgnifams --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity,gpu -resume
 ```
 
-Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation).
+Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation), and `update_families/update_info.csv` records what the run computed.
+
+### post_update_mgnifams_update_db workflow
+
+`--mode post_update_mgnifams_update_db` builds the delta database from the `update_mgnifams` outdir; it only runs sqlite and Python, so it can run on the database host.
+The samplesheet has exactly one row:
+
+```csv
+sample,results_folder
+mgnifams_update,/path/to/mgnifams/output_update
+```
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume
+```
+
+It reads the published files, so keep `--publish_dir_mode copy` (the default) for the `update_mgnifams` run, and do not reuse its outdir for a different update.
+It fails instead of publishing a partial database, e.g. when a successful family lacks a blob or the outdir holds blob files of other families.
 The pipeline does not modify the production database. It publishes a delta database, `db/<sample>_update.sqlite3`, holding only the successfully updated families:
 
 - Overwritten by the merge: `full_size`, `protein_rep`, `rep_region`, `rep_length`, `rep_sequence`, `plddt`, `ptm`, the secondary structure percents, `cif_blob`, `domain_blob`, `s4pred_blob`, and the `mgnifam_pfams`, `mgnifam_funfams` and `mgnifam_folds` rows of these families.
 - Only when the delta's `update_info` table says they were computed: the transmembrane percents and `tm_blob` (`tm_computed`), and `biome_blob` (`biome_computed`).
-- Kept from production: `consensus`, `hmm_length`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size` and `mgnifam_model_pfams`.
+- Kept from production: `consensus`, `hmm_length`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size`, `has_model_pfam` and `mgnifam_model_pfams`.
+- Recomputed for these families: `has_pfam`, `has_funfam` and `has_structure`.
 
 To apply it, migrate the production database once (this adds `seed_size`, `hmm_length` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
 
@@ -246,7 +265,9 @@ db=/path/to/mgnifams.sqlite3
 sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/merge_update_delta.sql
 ```
 
-This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`). Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
+This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
+Do not speed up the merge with `PRAGMA journal_mode = OFF`: the rollback on a failed check would no longer work. Such PRAGMAs are only safe on a copy that is swapped in afterwards.
+After changing indexes in `assets/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/finalize_db.sql`; idempotent).
 
 ## Website
 

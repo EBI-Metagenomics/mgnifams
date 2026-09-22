@@ -3,8 +3,8 @@
     UPDATE_MGNIFAMS: refresh full MSAs and representatives of existing families
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Seed MSAs and HMMs are not touched (update_families --skip_refine). Everything derived
-    from the family representatives is recomputed and loaded into a delta sqlite DB with
-    only the successful families, ready to be merged (assets/merge_update_delta.sql).
+    from the family representatives is recomputed and published; --mode
+    post_update_mgnifams_update_db then builds the delta sqlite DB from the outdir.
 ----------------------------------------------------------------------------------------
 */
 
@@ -23,9 +23,6 @@ include { BUILD_PARQUET_DOMAIN_QUERIES } from '../modules/local/build_parquet_do
 include { PARSE_DOMAINS                } from '../modules/local/parse_domains/main'
 include { QUERY_MGNPROTEIN_DB          } from '../modules/local/query_mgnprotein_db/main'
 include { PARSE_BIOMES                 } from '../modules/local/parse_biomes/main'
-include { INIT_SQLITE                  } from '../modules/local/init_sqlite/main'
-include { IMPORT_QUERIES               } from '../modules/local/import_queries/main'
-include { UPDATE_SQLITE_BLOBS_STAGED   } from '../modules/local/update_sqlite_blobs_staged/main'
 include { HHSUITE_REFORMAT as REFORMAT_FULL_MSA_A3M } from '../modules/nf-core/hhsuite/reformat/main'
 include { TRUNCATE_A3M                 } from '../modules/local/truncate_a3m/main'
 include { COLABFOLD_BATCH_MSA          } from '../modules/local/colabfold_batch_msa/main'
@@ -64,7 +61,6 @@ workflow UPDATE_MGNIFAMS {
     main:
     ch_versions      = channel.empty()
     ch_multiqc_files = channel.empty()
-    ch_meta          = ch_samplesheet.map { meta, _sequences, _pfam, _hmms, _db_config -> meta }
     // Same condition ANNOTATE_REPS uses to run DeepTMHMM
     def tm_computed  = !skip_deeptmhmm && !workflow.profile.contains("conda")
 
@@ -142,40 +138,20 @@ workflow UPDATE_MGNIFAMS {
     ch_versions = ch_versions.mix( PARSE_BIOMES.out.versions )
 
     //
-    // Delta DB: tables of the successful families, then their blobs
+    // What this run computed, for the delta DB (post_update_mgnifams_update_db)
     //
-    INIT_SQLITE( ch_meta.map { meta -> [ meta, file("${projectDir}/assets/data/db_schema.sqlite", checkIfExists: true) ] } )
-    ch_versions = ch_versions.mix( INIT_SQLITE.out.versions )
-
-    ch_tables = EXPORT_DATA.out.mgnifam
-        .mix( EXPORT_DATA.out.pfams, EXPORT_DATA.out.funfams, EXPORT_DATA.out.folds )
-        .map { _meta, csv -> csv }
-        .collect()
-    IMPORT_QUERIES( ch_meta.combine( ch_tables.map { csvs -> [ csvs ] } ), INIT_SQLITE.out.db )
-    ch_versions = ch_versions.mix( IMPORT_QUERIES.out.versions )
-
-    ch_update_info = ch_samplesheet.map { _meta, _sequences, _pfam, _hmms, db_config ->
-        [
-            tm_computed     : tm_computed,
-            biome_computed  : db_config ? true : false,
-            child_tables    : 'pfams,funfams,folds',
-            pfam_lib        : file(pfam_path).name,
-            funfams_lib     : file(funfams_path).name,
-            pipeline_version: workflow.manifest.version
-        ]
-    }
-    UPDATE_SQLITE_BLOBS_STAGED(
-        IMPORT_QUERIES.out.db,
-        PREDICT_STRUCTURES.out.cif.map { _meta, cifs -> cifs },
-        // Feature-viewer outputs are directories; stage their <id>.json files flat
-        ANNOTATE_REPS.out.s4pred_features.map { _meta, dir -> files("${dir}/*") }.collect().ifEmpty([]),
-        ANNOTATE_REPS.out.tm_features.map { _meta, dir -> files("${dir}/*") }.collect().ifEmpty([]),
-        PARSE_BIOMES.out.res.map { _meta, files -> files }.collect().ifEmpty([]),
-        PARSE_DOMAINS.out.res.map { _meta, files -> files }.collect().ifEmpty([]),
-        UPDATE_FAMILIES.out.successful_ids.map { ids -> ids.sort().join('\n') }.collectFile(name: 'successful_ids.txt', newLine: true),
-        ch_update_info
-    )
-    ch_versions = ch_versions.mix( UPDATE_SQLITE_BLOBS_STAGED.out.versions )
+    ch_samplesheet
+        .map { _meta, _sequences, _pfam, _hmms, db_config ->
+            [
+                'key,value',
+                "tm_computed,${tm_computed}",
+                "biome_computed,${db_config ? true : false}",
+                "pfam_lib,${file(pfam_path).name}",
+                "funfams_lib,${file(funfams_path).name}",
+                "pipeline_version,${workflow.manifest.version}"
+            ].join('\n')
+        }
+        .collectFile( name: 'update_info.csv', storeDir: "${outdir}/update_families", newLine: true )
 
     //
     // Collate and save software versions

@@ -21,8 +21,11 @@ nextflow run . -c ../conf/slurm.config --input input/samplesheet_init_db.csv --m
 # Update database from MGnify proteins DB
 nextflow run . -c ../conf/slurm.config --input input/samplesheet_update_db.csv --mode update_mgnifams_db --outdir '/path/to/output_db' -profile slurm,singularity -resume
 
-# Update existing families with new MGnify proteins (delta DB)
+# Update existing families with new MGnify proteins
 nextflow run . -c ../conf/local.config -profile test_update_mgnifams,local,singularity -resume
+
+# Delta DB from an update_mgnifams outdir (default: the tests/data/update_results fixture; run from the repo root)
+nextflow run . -profile test_post_update_mgnifams_update_db,singularity
 ```
 
 ## Testing
@@ -31,6 +34,7 @@ nextflow run . -c ../conf/local.config -profile test_update_mgnifams,local,singu
 # End-to-end nf-test
 nf-test test tests/default.nf.test --profile +singularity,test
 nf-test test tests/update_mgnifams.nf.test --profile +singularity
+nf-test test tests/post_update_mgnifams_update_db.nf.test --profile +singularity
 
 # Module tests and script self-checks
 nf-test test modules/local/<module> --profile +singularity
@@ -50,7 +54,7 @@ The test profile requires paths to external databases set in your local config:
 
 ## Pipeline Architecture
 
-Four modes controlled by `--mode` parameter:
+Five modes controlled by `--mode` parameter:
 
 ### `run_mgnifams_pipeline` (default) — `workflows/mgnifams.nf`
 
@@ -71,7 +75,8 @@ Five sequential subworkflows:
 
 ### `init_mgnifams_db` — `workflows/init_db.nf`
 
-Initializes SQLite schema (`assets/data/db_schema.sqlite`) and imports pipeline results.
+Initializes SQLite schema (`assets/data/db_schema.sqlite`), imports pipeline results, then `FINALIZE_SQLITE` runs
+`assets/finalize_db.sql` (`has_*` flags, indexes, `ANALYZE`).
 
 ### `update_mgnifams_db` — `workflows/update_db.nf`
 
@@ -90,10 +95,16 @@ exactly one row: `mgnify_proteins_sequences` and `mgnify_proteins_pfam` (MGnify 
 2. On the successful families: `PREDICT_STRUCTURES`, `ANNOTATE_REPS`, `ANNOTATE_STRUCTURES`, `EXPORT_DATA`; domain
    architectures from the Pfam parquet (`BUILD_PARQUET_DOMAIN_QUERIES` → `PARSE_DOMAINS`); biomes only with
    `mgnprotein_db_config`. `--run_alphafold2` adds ColabFold predictions from the full MSAs (`structures/alphafold2/`, not used downstream).
-3. Delta DB `db/<sample>_update.sqlite3` (`INIT_SQLITE` → `IMPORT_QUERIES` → `UPDATE_SQLITE_BLOBS_STAGED`, which fails
-   instead of publishing a partial DB). Its `update_info` table records `tm_computed` / `biome_computed`.
-   The pipeline never touches prod: `assets/merge_update_delta.sql` merges the delta (see the README for which
-   columns it overwrites and keeps).
+3. `update_families/update_info.csv` records `tm_computed` / `biome_computed` for the DB mode below. No sqlite work.
+
+### `post_update_mgnifams_update_db` — `workflows/post_update_mgnifams_update_db.nf`
+
+Delta DB `db/<sample>_update.sqlite3` from an `update_mgnifams` outdir (samplesheet `sample,results_folder`, one row):
+`INIT_SQLITE` → `IMPORT_QUERIES` → `UPDATE_SQLITE_BLOBS_STAGED` (fails instead of publishing a partial DB), staging the
+published CSVs, CIFs, feature JSONs, domain/biome results and `family_ids.fasta` ids. Its `update_info` table comes from
+`update_info.csv`. The pipeline never touches prod: `assets/merge_update_delta.sql` merges the delta (see the README
+for which columns it overwrites and keeps). Test: `tests/post_update_mgnifams_update_db.nf.test` on the two-family
+fixture `tests/data/update_results` (no external DBs, cheap).
 
 ## Key Configuration
 
@@ -108,9 +119,12 @@ The `conf/slurm.config` and `conf/local.config` files are gitignored — create 
 ## DB schema
 
 `assets/data/db_schema.sqlite` (SQL text) now has `mgnifam.seed_size` and the Foldseek TM-scores
-`mgnifam_folds.aln_tmscore/q_tmscore/t_tmscore`. `IMPORT_QUERIES` imports `mgnifam.csv` by position, so the
-`mgnifam` column order in the schema must match the `export_mgnifams.py` header (`bin/test_export_mgnifams.py` checks this).
+`mgnifam_folds.aln_tmscore/q_tmscore/t_tmscore`. `IMPORT_QUERIES` imports `mgnifam.csv` by header name (every
+`export_mgnifams.py` header column must exist in the schema, checked by `bin/test_export_mgnifams.py`); columns missing
+from the CSV keep their DEFAULT. Child CSVs are imported by position (their `id` column is the `mgnifam_id`).
 Migrated prod DBs have `seed_size`/`hmm_length` last instead; that is fine, since `merge_update_delta.sql` uses column names.
+The `has_*` flags are derived from the child tables: `finalize_db.sql` fills them (init DB), the merge recomputes them
+for the delta families; the delta DB leaves them at 0. Fast PRAGMAs (journal/fsync off) only on throwaway build files, never prod.
 `mgnifam.hmm_length` = `length(consensus)` (one consensus residue per match state), stored so the website can index/sort on it.
 Existing DBs are migrated once with `assets/migrate_schema_seed_size_tmscores.sql`.
 

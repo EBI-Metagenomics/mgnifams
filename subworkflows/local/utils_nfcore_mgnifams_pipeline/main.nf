@@ -71,11 +71,13 @@ workflow PIPELINE_INITIALISATION {
     if (params.mode == "run_mgnifams_pipeline" && !params.hhdb_path) {
         error("run_mgnifams_pipeline: --hhdb_path is required")
     }
-    if (params.mode == "update_mgnifams") {
+    if (params.mode in ["update_mgnifams", "post_update_mgnifams_update_db"]) {
         // All collected outputs and the delta DB are per run
         if (samplesheet_rows.size() != 1) {
-            error("update_mgnifams: the samplesheet must have exactly one row, found ${samplesheet_rows.size()}")
+            error("${params.mode}: the samplesheet must have exactly one row, found ${samplesheet_rows.size()}")
         }
+    }
+    if (params.mode == "update_mgnifams") {
         if (params.parquet_chunks < 1 || params.hmm_chunk_size < 1) {
             error("update_mgnifams: --parquet_chunks and --hmm_chunk_size must be >= 1")
         }
@@ -112,6 +114,15 @@ workflow PIPELINE_INITIALISATION {
                     error("update_mgnifams: samplesheet row '${sample.id}' needs mgnify_proteins_sequences, mgnify_proteins_pfam and mgnifams_hmms")
                 }
                 [ sample, file(sequences), file(pfam), file(hmms), mgnprotein_db_config ? file(mgnprotein_db_config) : [] ]
+            }
+    }
+    else if (params.mode == "post_update_mgnifams_update_db") {
+        ch_samplesheet = ch_samplesheet
+            .map { sample, _protein_input, results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _pfam, _hmms ->
+                if (!results_folder) {
+                    error("post_update_mgnifams_update_db: samplesheet row '${sample.id}' needs results_folder (an update_mgnifams outdir)")
+                }
+                [ sample, results_folder ]
             }
     }
 

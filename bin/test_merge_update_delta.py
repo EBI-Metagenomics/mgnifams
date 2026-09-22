@@ -70,6 +70,10 @@ with tempfile.TemporaryDirectory() as d:
 
     Path(delta).unlink()
     make_db(delta, [(1, 11, b"new"), (2, 22, b"new")], INFO)
+    with sqlite3.connect(delta) as con:
+        con.execute("DELETE FROM mgnifam_folds WHERE mgnifam_id = 2")
+    with sqlite3.connect(prod) as con:
+        con.execute("UPDATE mgnifam SET has_pfam = 1, has_funfam = 1, has_model_pfam = 1, has_structure = 1")
     r = merge(prod, delta)
     assert r.returncode == 0, r.stderr
     con = sqlite3.connect(prod)
@@ -84,5 +88,10 @@ with tempfile.TemporaryDirectory() as d:
     pfams = con.execute("SELECT mgnifam_id, pfam FROM mgnifam_pfams ORDER BY mgnifam_id").fetchall()
     assert pfams == [(1, "PF1_new"), (2, "PF2_new"), (3, "PF3_old")], pfams
     folds = con.execute("SELECT mgnifam_id, fold, q_tmscore FROM mgnifam_folds ORDER BY mgnifam_id").fetchall()
-    assert folds == [(1, "f_new", 0.5), (2, "f_new", 0.5), (3, "f_old", 0.5)], folds
+    assert folds == [(1, "f_new", 0.5), (3, "f_old", 0.5)], folds
+    flags = con.execute(
+        "SELECT id, has_pfam, has_funfam, has_model_pfam, has_structure FROM mgnifam ORDER BY id"
+    ).fetchall()
+    # Recomputed for the delta families only (no funfams, family 2 lost its fold); has_model_pfam is kept
+    assert flags == [(1, 1, 0, 1, 1), (2, 1, 0, 1, 0), (3, 1, 1, 1, 1)], flags
 print("ok")

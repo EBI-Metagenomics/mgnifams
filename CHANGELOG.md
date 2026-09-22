@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
-- New `--mode update_mgnifams`: refreshes existing families against new MGnify proteins, read from the MGnify proteins sequence and Pfam parquet files, without changing their seed MSAs or HMMs. It recomputes representatives, structures, annotations, Foldseek hits, domain architectures and (with `mgnprotein_db_config`) biomes, and publishes a delta database, `db/<sample>_update.sqlite3`, holding only the successfully updated families. The pipeline never modifies the production DB: `assets/merge_update_delta.sql` merges the delta in a single transaction, and the README documents it. New parameters: `--parquet_chunks`, `--hmm_chunk_size`, `--run_alphafold2`, `--colabfold_params_path`, `--af2_max_msa_seqs`, `--af2_num_recycles`.
+- New `--mode update_mgnifams`: refreshes existing families against new MGnify proteins, read from the MGnify proteins sequence and Pfam parquet files, without changing their seed MSAs or HMMs. It recomputes representatives, structures, annotations, Foldseek hits, domain architectures and (with `mgnprotein_db_config`) biomes, and publishes a delta database, `db/<sample>_update.sqlite3`, holding only the successfully updated families (built by the new `--mode post_update_mgnifams_update_db` from the published outdir). The pipeline never modifies the production DB: `assets/merge_update_delta.sql` merges the delta in a single transaction, and the README documents it. New parameters: `--parquet_chunks`, `--hmm_chunk_size`, `--run_alphafold2`, `--colabfold_params_path`, `--af2_max_msa_seqs`, `--af2_num_recycles`.
   - `--run_alphafold2 true` also predicts each representative with ColabFold from its family full MSA (GPU). These predictions are published under `structures/alphafold2/`.
 - New `mgnifam.seed_size` column: the number of sequences in the family seed MSA.
 - New `mgnifam.hmm_length` column: the number of HMM match states, equal to the consensus length.
+- New `--mode post_update_mgnifams_update_db`: builds the `update_mgnifams` delta database from its outdir (`update_families/update_info.csv` records what the update computed), so the update run itself does no sqlite work.
+- New `mgnifam` search flags `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit). `init_mgnifams_db` fills them, creates the website indexes and runs `ANALYZE` (`assets/finalize_db.sql`); `assets/merge_update_delta.sql` recomputes the flags of the updated families.
 - `mgnifam_folds` gains the Foldseek TM-scores `aln_tmscore`, `q_tmscore` and `t_tmscore`.
 - `assets/migrate_schema_seed_size_tmscores.sql` adds these columns to an existing database and backfills `seed_size` and `hmm_length`. Run it once, before the first `update_mgnifams` merge.
 
@@ -19,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking:** the samplesheet `sample` must match `^[A-Za-z0-9._-]+$`.
 - `hhdb_path` is required only by the default `run_mgnifams_pipeline` mode.
 - `family_metadata.csv` (`generate_families/families/` and `update_families/`) now starts with a header row: `family_id,full_msa_size,protein,region,length,sequence,consensus,converged`.
-- `mgnifam` columns in new databases are grouped by topic (family, representative, HMM, structure, composition, blobs). Databases migrated with `assets/migrate_schema_seed_size_tmscores.sql` keep the new columns last, so select columns by name, not `SELECT *` position.
+- `mgnifam` columns in new databases are grouped by topic (family, representative, HMM, structure, composition, flags, blobs). Databases migrated with `assets/migrate_schema_seed_size_tmscores.sql` keep the new columns last, so select columns by name, not `SELECT *` position.
+- `IMPORT_QUERIES` imports `mgnifam.csv` by header name instead of column position, with journaling and fsync off for the throwaway build file. Only the finished database is published (`INIT_SQLITE` / `IMPORT_QUERIES` outputs no longer are).
 
 ### `Fixed`
 

@@ -26,7 +26,13 @@
                     "type": "string",
                     "default": "run_mgnifams_pipeline",
                     "description": "Specifies the mode in which the pipeline will be run",
-                    "enum": ["run_mgnifams_pipeline", "init_mgnifams_db", "update_mgnifams_db", "update_mgnifams"],
+                    "enum": [
+                        "run_mgnifams_pipeline",
+                        "init_mgnifams_db",
+                        "update_mgnifams_db",
+                        "update_mgnifams",
+                        "post_update_mgnifams_update_db"
+                    ],
                     "fa_icon": "fas fa-cogs"
                 },
                 "fasta_input_mode": {

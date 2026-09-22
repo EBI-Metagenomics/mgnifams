@@ -17,20 +17,16 @@ nextflow_pipeline {
         }
 
         then {
-            def db      = "${params.outdir}/db/mgnifams_update_test_update.sqlite3"
-            def sqlite3 = { String query -> ["sqlite3", db, query].execute().text.trim() }
             def lines   = path("${params.outdir}/update_families/updated_delta.csv").readLines()
             def delta   = lines.drop(1).collect { line -> [lines[0].split(',', -1), line.split(',', -1)].transpose().collectEntries() }
             def n_successful = delta.count { row -> row.outcome == 'successful' }
 
             assertAll(
                 { assert workflow.success },
-                // Every successful family, with all its always-updated blobs and values, and no seed/HMM blobs
-                { assert sqlite3(
-                    "SELECT count(*), sum(cif_blob IS NULL), sum(s4pred_blob IS NULL), sum(domain_blob IS NULL), " +
-                    "sum(seed_msa_blob IS NOT NULL OR hmm_blob IS NOT NULL OR rf_blob IS NOT NULL), " +
-                    "sum(plddt IS NULL OR plddt = '' OR ptm IS NULL OR coil_percent IS NULL) FROM mgnifam"
-                ) == "${n_successful}|0|0|0|0|0" },
+                // What post_update_mgnifams_update_db stages: one mgnifam row, CIF, s4pred and domain JSON per successful family
+                { assert path("${params.outdir}/table_data/mgnifam.csv").readLines().size() - 1 == n_successful },
+                { assert ['structures/esmfold/cif', 'annotation/reps/s4pred/json', 'domain_results'].every { dir ->
+                    file("${params.outdir}/${dir}").listFiles().size() == n_successful } },
                 { assert snapshot(
                     workflow.trace.succeeded().size(),
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_pipeline_software_mqc_versions.yml"),
@@ -39,7 +35,7 @@ nextflow_pipeline {
                     path("${params.outdir}/update_families/family_ids.fasta"),
                     path("${params.outdir}/update_families/mgnifams_update.faa"),
                     delta.collect { row -> "${row.family_id},${row.outcome}" },
-                    sqlite3("SELECT group_concat(key || '=' || value, ';') FROM (SELECT key, value FROM update_info WHERE key != 'pipeline_version' ORDER BY key)")
+                    path("${params.outdir}/update_families/update_info.csv").readLines().findAll { line -> !line.startsWith('pipeline_version') }
                 ).match() }
             )
         }
@@ -78,7 +74,7 @@ nextflow_pipeline {
                 { assert workflow.trace.succeeded().any { t -> t.name.contains('COLABFOLD_BATCH_MSA') } },
                 // AlphaFold2 runs exactly on the successful families
                 { assert af2_ids.sort() == successful.sort() },
-                { assert file("${params.outdir}/db/mgnifams_update_test_update.sqlite3").exists() }
+                { assert file("${params.outdir}/update_families/update_info.csv").exists() }
             )
         }
     }

@@ -1,5 +1,6 @@
-include { INIT_SQLITE    } from '../modules/local/init_sqlite/main'
-include { IMPORT_QUERIES } from '../modules/local/import_queries/main.nf'
+include { INIT_SQLITE     } from '../modules/local/init_sqlite/main'
+include { IMPORT_QUERIES  } from '../modules/local/import_queries/main.nf'
+include { FINALIZE_SQLITE } from '../modules/local/finalize_sqlite/main'
 
 workflow INIT_DB {
     take:
@@ -19,4 +20,8 @@ workflow INIT_DB {
 
     IMPORT_QUERIES( ch_queries.pipeline_results, INIT_SQLITE.out.db )
     ch_versions = ch_versions.mix( IMPORT_QUERIES.out.versions )
+
+    // has_* flags, indexes, ANALYZE
+    FINALIZE_SQLITE( IMPORT_QUERIES.out.db, file("${projectDir}/assets/finalize_db.sql", checkIfExists: true) )
+    ch_versions = ch_versions.mix( FINALIZE_SQLITE.out.versions )
 }

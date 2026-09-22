@@ -13,12 +13,13 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { MGNIFAMS                } from './workflows/mgnifams'
-include { INIT_DB                 } from './workflows/init_db'
-include { UPDATE_DB               } from './workflows/update_db'
-include { UPDATE_MGNIFAMS         } from './workflows/update_mgnifams'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
+include { MGNIFAMS                       } from './workflows/mgnifams'
+include { INIT_DB                        } from './workflows/init_db'
+include { UPDATE_DB                      } from './workflows/update_db'
+include { UPDATE_MGNIFAMS                } from './workflows/update_mgnifams'
+include { POST_UPDATE_MGNIFAMS_UPDATE_DB } from './workflows/post_update_mgnifams_update_db'
+include { PIPELINE_INITIALISATION        } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
+include { PIPELINE_COMPLETION            } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,6 +92,14 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
         )
         ch_multiqc = UPDATE_MGNIFAMS.out
+    }
+    //
+    // WORKFLOW: Delta DB from an update_mgnifams outdir
+    //
+    else if (params.mode == 'post_update_mgnifams_update_db') {
+        POST_UPDATE_MGNIFAMS_UPDATE_DB(
+            samplesheet
+        )
     }
 
     emit:
