@@ -231,7 +231,7 @@ mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_proteins_pfa
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_update_mgnifams.csv --mode update_mgnifams --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity,gpu -resume
 ```
 
-Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation), and `update_families/update_info.csv` records what the run computed.
+Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation), the full MSAs are in `update_families/full_msa/<family_id>.sto.gz`, and `update_families/update_info.csv` records what the run computed.
 
 ### post_update_mgnifams_update_db workflow
 
