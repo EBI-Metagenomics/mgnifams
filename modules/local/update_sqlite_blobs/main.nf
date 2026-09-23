@@ -18,7 +18,7 @@ process UPDATE_SQLITE_BLOBS {
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
     """
     update_sqlite_blobs.py \\

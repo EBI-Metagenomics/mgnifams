@@ -1,0 +1,81 @@
+nextflow_pipeline {
+
+    name "Test pipeline --mode update_mgnifams"
+    script "../main.nf"
+    tag "pipeline"
+    tag "update_mgnifams"
+    profile "test_update_mgnifams"
+
+    // Needs the external databases (pfam_path, funfams_path, esmfold_db, esmfold_params_path, foldseek_db_path)
+    // from your local config, like tests/default.nf.test
+    test("-profile test_update_mgnifams") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            def lines   = path("${params.outdir}/update_families/updated_delta.csv").readLines()
+            def delta   = lines.drop(1).collect { line -> [lines[0].split(',', -1), line.split(',', -1)].transpose().collectEntries() }
+            def n_successful = delta.count { row -> row.outcome == 'successful' }
+
+            assertAll(
+                { assert workflow.success },
+                // What post_update_mgnifams_update_db stages: one mgnifam row, CIF, s4pred and domain JSON per successful family
+                { assert path("${params.outdir}/table_data/mgnifam.csv").readLines().size() - 1 == n_successful },
+                { assert ['structures/esmfold/cif', 'annotation/reps/s4pred/json', 'domain_results'].every { dir ->
+                    file("${params.outdir}/${dir}").listFiles().size() == n_successful } },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_pipeline_software_mqc_versions.yml"),
+                    getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}', 'structures/**', 'annotation/**', 'domain_results/*', 'multiqc/**']),
+                    path("${params.outdir}/update_families/refined_families.tsv"),
+                    path("${params.outdir}/update_families/family_ids.fasta"),
+                    path("${params.outdir}/update_families/mgnifams_update.faa"),
+                    delta.collect { row -> "${row.family_id},${row.outcome}" },
+                    path("${params.outdir}/update_families/update_info.csv").readLines().findAll { line -> !line.startsWith('pipeline_version') }
+                ).match() }
+            )
+        }
+    }
+
+    test("-profile test_update_mgnifams --run_alphafold2 - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir              = "$outputDir"
+                run_alphafold2      = true
+                // Stub runs only stage these; foldseek_db_path needs a pdb/ entry
+                esmfold_db          = "${projectDir}/assets/data"
+                esmfold_params_path = "${projectDir}/assets/data/mgnifams_hmm.lib.gz"
+                pfam_path           = "${projectDir}/assets/data/mgnifams_hmm.lib.gz"
+                funfams_path        = "${projectDir}/assets/data/mgnifams_hmm.lib.gz"
+                skip_deeptmhmm      = true
+                foldseek_db_path    = { def db = new File("$outputDir/foldseek_db"); new File(db, 'pdb').mkdirs(); db.toString() }()
+            }
+        }
+
+        then {
+            def lines      = path("${params.outdir}/update_families/updated_delta.csv").readLines()
+            def successful = lines.drop(1)
+                .collect { line -> [lines[0].split(',', -1), line.split(',', -1)].transpose().collectEntries() }
+                .findAll { row -> row.outcome == 'successful' }
+                .collect { row -> row.family_id }
+            def af2_ids = file("${params.outdir}/structures/alphafold2").listFiles()
+                .findAll { f -> f.name.endsWith('.pdb') }
+                .collect { f -> f.name - '.pdb' }
+
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.succeeded().any { t -> t.name.contains('COLABFOLD_BATCH_MSA') } },
+                // AlphaFold2 runs exactly on the successful families
+                { assert af2_ids.sort() == successful.sort() },
+                { assert file("${params.outdir}/update_families/update_info.csv").exists() }
+            )
+        }
+    }
+}

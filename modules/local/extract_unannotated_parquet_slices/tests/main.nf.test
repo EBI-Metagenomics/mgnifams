@@ -1,0 +1,64 @@
+nextflow_process {
+
+    name "Test Process EXTRACT_UNANNOTATED_PARQUET_SLICES"
+    script "../main.nf"
+    process "EXTRACT_UNANNOTATED_PARQUET_SLICES"
+
+    tag "modules"
+    tag "modules_local"
+    tag "extract_unannotated_parquet_slices"
+
+    test("test parquets - chunk 1 of 2") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'mgnifams_update_test' ],
+                    file("${projectDir}/assets/data/mgy_protein_sequences.parquet", checkIfExists: true),
+                    file("${projectDir}/assets/data/mgy_proteins_pfam.parquet", checkIfExists: true),
+                    1
+                ])
+                input[1] = 2
+                input[2] = 100
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert file(process.out.fa[0][1]).name == "chunk_000001.faa" },
+                { assert path(process.out.fa[0][1]).readLines().findAll { line -> line.startsWith('>') }.size() > 0 },
+                { assert snapshot(process.out.fa, path(process.out.versions[0]).yaml).match() }
+            )
+        }
+    }
+
+    test("test parquets - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'mgnifams_update_test' ],
+                    file("${projectDir}/assets/data/mgy_protein_sequences.parquet", checkIfExists: true),
+                    file("${projectDir}/assets/data/mgy_proteins_pfam.parquet", checkIfExists: true),
+                    0
+                ])
+                input[1] = 2
+                input[2] = 100
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out.fa).match() }
+            )
+        }
+    }
+}

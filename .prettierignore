@@ -1,0 +1,8 @@
+modules/nf-core/
+subworkflows/nf-core/
+assets/data/
+assets/adaptivecard.json
+assets/slackreport.json
+.serena/
+*.snap
+tests/data/

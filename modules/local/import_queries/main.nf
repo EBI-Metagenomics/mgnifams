@@ -9,110 +9,68 @@ process IMPORT_QUERIES {
 
     input:
     tuple val(meta) , path(pipeline_results)
-    tuple val(meta2), path(db)
-    
+    tuple val(meta2), path(db, stageAs: 'input/db.sqlite3')
+
     output:
-    tuple val(meta), path(db), emit: db
-    path "versions.yml"      , emit: versions
+    tuple val(meta), path("${prefix}.sqlite3"), emit: db
+    path "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    def required = task.ext.args ?: '' // child CSVs that must be present, e.g. 'mgnifam_pfams.csv mgnifam_folds.csv'
     """
-    # Import mgnifam.csv directly with NULLs for missing columns
-    sqlite3 ${db} <<EOF
-    .mode csv
-    .import 'mgnifam.csv' mgnifam
-    .exit
-    EOF
+    set -euo pipefail
 
-    # Create temporary tables for the other CSV files
-    sqlite3 ${db} <<EOF
-    CREATE TEMP TABLE temp_mgnifam_pfams (
-        mgnifam_id INTEGER,
-        pfam TEXT,
-        name TEXT,
-        e_value REAL,
-        score REAL,
-        hmm_from INTEGER,
-        hmm_to INTEGER,
-        ali_from INTEGER,
-        ali_to INTEGER,
-        env_from INTEGER,
-        env_to INTEGER,
-        acc REAL
-    );
+    for f in mgnifam.csv ${required}; do
+        [ -f "\$f" ] || { echo "IMPORT_QUERIES: required \$f is missing" >&2; exit 1; }
+    done
 
-    CREATE TEMP TABLE temp_mgnifam_funfams (
-        mgnifam_id INTEGER,
-        funfam TEXT,
-        e_value REAL,
-        score REAL,
-        hmm_from INTEGER,
-        hmm_to INTEGER,
-        ali_from INTEGER,
-        ali_to INTEGER,
-        env_from INTEGER,
-        env_to INTEGER,
-        acc REAL
-    );
+    # Work on a copy, so the INIT_SQLITE output stays pristine (-resume safe)
+    cp -L "${db}" "${prefix}.sqlite3"
 
-    CREATE TEMP TABLE temp_mgnifam_folds (
-        mgnifam_id INTEGER,
-        fold TEXT,
-        aligned_length INTEGER,
-        q_start INTEGER,
-        q_end INTEGER,
-        t_start INTEGER,
-        t_end INTEGER,
-        e_value REAL
-    );
+    cols() { sqlite3 "${prefix}.sqlite3" "SELECT group_concat(name, ',') FROM pragma_table_info('\$1') WHERE name != 'id'"; }
+    nullif() { local IFS=,; local out=(); for c in \$1; do out+=("NULLIF(\$c, '')"); done; echo "\${out[*]}"; }
 
-    CREATE TEMP TABLE temp_mgnifam_model_pfams (
-        mgnifam_id INTEGER,
-        pfam TEXT,
-        name TEXT,
-        description TEXT,
-        prob REAL,
-        e_value REAL,
-        length INTEGER,
-        query_hmm TEXT,
-        template_hmm TEXT
-    );
-    .exit
-    EOF
+    {
+        # Throwaway build file: a failed task is rerun, so no journal or fsync is needed
+        echo "PRAGMA journal_mode = OFF;"
+        echo "PRAGMA synchronous = OFF;"
+        echo "PRAGMA temp_store = MEMORY;"
+        echo "PRAGMA cache_size = -2000000;"
+        echo ".bail on"
+        echo "BEGIN;"
+        # mgnifam by header name, so its schema column order is free and unlisted columns keep their DEFAULT
+        c=\$(head -n 1 mgnifam.csv | tr -d '\\r')
+        echo ".import --csv mgnifam.csv temp_mgnifam"
+        echo "INSERT INTO mgnifam (\$c) SELECT \$(nullif "\$c") FROM temp_mgnifam;"
+        echo "DROP TABLE temp_mgnifam;"
+        # Child CSVs name their mgnifam_id column 'id', so these are imported by position
+        for t in mgnifam_pfams mgnifam_funfams mgnifam_folds mgnifam_model_pfams; do
+            [ -f "\$t.csv" ] || continue
+            c=\$(cols "\$t")
+            echo "CREATE TEMP TABLE temp_\$t (\$c);"
+            echo ".import --csv --skip 1 \$t.csv temp_\$t"
+            echo "INSERT INTO \$t (\$c) SELECT \$(nullif "\$c") FROM temp_\$t;"
+            echo "DROP TABLE temp_\$t;"
+        done
+        echo "COMMIT;"
+    } > import.sql
 
-    # Import data into temporary tables
-    sqlite3 ${db} <<EOF
-    .mode csv
-    .import 'mgnifam_pfams.csv' temp_mgnifam_pfams
-    .import 'mgnifam_funfams.csv' temp_mgnifam_funfams
-    .import 'mgnifam_folds.csv' temp_mgnifam_folds
-    .import 'mgnifam_model_pfams.csv' temp_mgnifam_model_pfams
-    .exit
-    EOF
+    sqlite3 "${prefix}.sqlite3" < import.sql > /dev/null
 
-    # Insert data from temporary tables into the main tables
-    sqlite3 ${db} <<EOF
-    INSERT INTO mgnifam_pfams (mgnifam_id, pfam, name, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc)
-    SELECT id, pfam, name, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc FROM temp_mgnifam_pfams;
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        sqlite3: \$(sqlite3 --version | awk '{print \$1}')
+    END_VERSIONS
+    """
 
-    INSERT INTO mgnifam_funfams (mgnifam_id, funfam, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc)
-    SELECT id, funfam, e_value, score, hmm_from, hmm_to, ali_from, ali_to, env_from, env_to, acc FROM temp_mgnifam_funfams;
-
-    INSERT INTO mgnifam_folds (mgnifam_id, fold, aligned_length, q_start, q_end, t_start, t_end, e_value)
-    SELECT id, fold, aligned_length, q_start, q_end, t_start, t_end, e_value FROM temp_mgnifam_folds;
-
-    INSERT INTO mgnifam_model_pfams (mgnifam_id, pfam, name, description, prob, e_value, length, query_hmm, template_hmm)
-    SELECT id, pfam, name, description, prob, e_value, length, query_hmm, template_hmm FROM temp_mgnifam_model_pfams;
-
-    DROP TABLE temp_mgnifam_pfams;
-    DROP TABLE temp_mgnifam_funfams;
-    DROP TABLE temp_mgnifam_folds;
-    DROP TABLE temp_mgnifam_model_pfams;
-    .exit
-    EOF
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    cp -L "${db}" "${prefix}.sqlite3"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

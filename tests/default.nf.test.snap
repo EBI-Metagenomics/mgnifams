@@ -1,13 +1,16 @@
 {
     "-profile test": {
         "content": [
-            87,
+            88,
             {
                 "CALCULATE_CLUSTER_DISTRIBUTION": {
                     "sed": 4.7
                 },
                 "CHUNK_CLUSTERS": {
                     "sed": 4.7
+                },
+                "COUNT_SEED_MSA_SIZES": {
+                    "awk": "mawk 1.3.4 20200120"
                 },
                 "EXPORT_FOLDS": {
                     "sed": 4.7
@@ -127,7 +130,7 @@
                     "sed": 4.7
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v2.0.0dev"
+                    "ebi-metagenomics/mgnifams": "v2.1.0dev"
                 }
             },
             [
@@ -244,6 +247,7 @@
                 "generate_families/families/seed_msa_sto/7.sto",
                 "generate_families/families/seed_msa_sto/8.sto",
                 "generate_families/families/seed_msa_sto/9.sto",
+                "generate_families/families/seed_sizes.csv",
                 "generate_families/families/similarity_mqc.csv",
                 "generate_families/families/successful_clusters.txt",
                 "generate_families/metadata_mqc.csv",
@@ -333,14 +337,14 @@
             ],
             "/structures: 22",
             "/setup_clusters: 3",
-            "/generate_families: 66",
+            "/generate_families: 67",
             "/annotation: 32",
             "/table_data: 5"
         ],
+        "timestamp": "2026-09-21T11:35:58.572421949",
         "meta": {
-            "nf-test": "0.9.3",
-            "nextflow": "25.10.2"
-        },
-        "timestamp": "2026-03-14T19:28:29.370548743"
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
     }
 }

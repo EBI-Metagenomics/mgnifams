@@ -1,0 +1,51 @@
+{
+    "one update_families chunk": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "mgnifams_update_test"
+                    },
+                    "refined_families.tsv:md5,4624dbad54481493be3bc7f4f30a25d6"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "mgnifams_update_test"
+                    },
+                    "family_metadata.csv:md5,c434b3c595665f4586ea28b851552b30"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "mgnifams_update_test"
+                    },
+                    "family_ids.fasta:md5,332dbe57567842bc8c713b29a3eda188"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "mgnifams_update_test"
+                    },
+                    "updated_delta.csv:md5,451d9d3def36ab29f0dcae066946e218"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "mgnifams_update_test"
+                    },
+                    "updated_discarded.csv:md5,f0c7145bc4a8f8c013e1baaf3c0ab593"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-22T09:11:36.546068432",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

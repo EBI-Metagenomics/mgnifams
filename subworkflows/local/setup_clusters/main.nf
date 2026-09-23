@@ -17,7 +17,7 @@ workflow SETUP_CLUSTERS {
     clusters_chunk_size
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     if (!fasta_input_mode) {
         ch_mgnifams_input_fa = EXTRACT_UNANNOTATED_FASTA( input, compress_mode, \

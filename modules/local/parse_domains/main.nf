@@ -6,7 +6,7 @@ process PARSE_DOMAINS {
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/pandas:1.4.3' :
         'biocontainers/pandas:1.4.3' }"
-    
+
     input:
     tuple val(meta) , path(query_results, stageAs: "query_results/*")
     tuple val(meta2), path(pfam_mapping)
@@ -38,7 +38,7 @@ process PARSE_DOMAINS {
     stub:
     """
     mkdir domain_results
-    touch domain_results/test.json
+    for f in query_results/*; do n=\$(basename "\$f"); touch "domain_results/\${n%.*}.json"; done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

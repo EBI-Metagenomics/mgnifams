@@ -1,0 +1,3 @@
+id,pfam,name,e_value,score,hmm_from,hmm_to,ali_from,ali_to,env_from,env_to,acc
+2,PF22919,ATP-synt_VA_C,4.7e-21,64.1,5,98,4,94,1,97,0.93
+2,PF18269,T3SS_ATPase_C,6.7e-07,18.5,1,58,7,63,7,71,0.84

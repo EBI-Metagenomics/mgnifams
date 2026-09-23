@@ -4,6 +4,7 @@ import json
 import csv
 import argparse
 
+
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Extract unannotated protein slices from input CSV.")
     parser.add_argument("-i", "--input_file", required=True, type=str, help="Input CSV file.")
@@ -11,13 +12,14 @@ def parse_args(args=None):
     parser.add_argument("-l", "--min_sequence_length", required=True, type=int, help="Min sequence length.")
     return parser.parse_args(args)
 
+
 def sliceProtein(mgyp, sequence, metadata, min_sequence_length):
     pfams = metadata.get("p", [])
     mgnifams = metadata.get("m", [])
 
     sorted_regions = sorted((region[-2], region[-1]) for region in pfams + mgnifams)
     merged_regions = []
-    
+
     for start, end in sorted_regions:
         if not merged_regions or start > merged_regions[-1][1]:
             merged_regions.append([start, end])
@@ -28,18 +30,19 @@ def sliceProtein(mgyp, sequence, metadata, min_sequence_length):
     current_start = 1
     for start, end in merged_regions:
         if start - current_start >= min_sequence_length:
-            sliced_sequences.append(f">{mgyp}_{current_start}_{start - 1}\n{sequence[current_start - 1:start - 1]}\n")
+            sliced_sequences.append(f">{mgyp}_{current_start}_{start - 1}\n{sequence[current_start - 1 : start - 1]}\n")
         current_start = end + 1
 
     if len(sequence) - current_start + 1 >= min_sequence_length:
-        sliced_sequences.append(f">{mgyp}_{current_start}_{len(sequence)}\n{sequence[current_start - 1:]}\n")
+        sliced_sequences.append(f">{mgyp}_{current_start}_{len(sequence)}\n{sequence[current_start - 1 :]}\n")
 
     return sliced_sequences
+
 
 def main():
     args = parse_args()
     csv.field_size_limit(500000)
-    
+
     with open(args.input_file, "r") as infile, open(args.output_file, "w") as outfile:
         csv_reader = csv.DictReader(infile)
         buffer = []
@@ -63,6 +66,7 @@ def main():
 
         if buffer:
             outfile.writelines(buffer)
+
 
 if __name__ == "__main__":
     main()

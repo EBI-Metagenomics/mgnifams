@@ -18,9 +18,9 @@ workflow PREDICT_STRUCTURES {
     num_recycles_esmfold
     pdb_chunk_size_long
     outdir
-    
+
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     ch_fasta = fasta
         .map { meta, file_path ->
@@ -45,14 +45,14 @@ workflow PREDICT_STRUCTURES {
 
     // Identify CUDA failed very long sequences, and run on CPU
     ch_scores = RUN_ESMFOLD.out.scores
-        .map { meta, files ->
+        .map { _meta, files ->
             files
         }
         .collect()
         .map { file ->
             [ [id:"esm_scores"], file ]
         }
-    
+
     EXTRACT_CUDA_FAILED(fasta, ch_scores)
     ch_versions = ch_versions.mix( EXTRACT_CUDA_FAILED.out.versions )
 
@@ -70,12 +70,14 @@ workflow PREDICT_STRUCTURES {
 
     EXTRACT_ESMFOLD_SCORES( RUN_ESMFOLD.out.scores.concat(RUN_ESMFOLD_CPU.out.scores) )
     ch_versions = ch_versions.mix( EXTRACT_ESMFOLD_SCORES.out.versions )
-    
+
     ch_scores = EXTRACT_ESMFOLD_SCORES.out.csv
-        .map { meta, file ->
+        .map { _meta, file ->
             file
         }
-        .collectFile(name: "pdb_scores.csv", storeDir: outdir + "/structures/esmfold/", keepHeader: true)
+        .collectFile(name: "pdb_scores.csv", keepHeader: true)
+    ch_scores.collectFile(name: "pdb_scores.csv", storeDir: outdir + "/structures/esmfold/") // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
+    ch_scores = ch_scores
         .map { file ->
             [ [id: "scores"], file ]
         }
@@ -84,7 +86,7 @@ workflow PREDICT_STRUCTURES {
     ch_versions = ch_versions.mix( PARSE_CIF.out.versions )
 
     ch_pdb = RUN_ESMFOLD.out.pdb.concat(RUN_ESMFOLD_CPU.out.pdb)
-        .map { meta, file_path ->
+        .map { _meta, file_path ->
             file_path }
         .collect()
         .map { file ->
@@ -92,7 +94,7 @@ workflow PREDICT_STRUCTURES {
         }
 
     ch_cif = PARSE_CIF.out.cif
-        .map { meta, file_path ->
+        .map { _meta, file_path ->
             file_path }
         .collect()
         .map { file ->

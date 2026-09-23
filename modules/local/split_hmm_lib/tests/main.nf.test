@@ -1,0 +1,53 @@
+nextflow_process {
+
+    name "Test Process SPLIT_HMM_LIB"
+    script "../main.nf"
+    process "SPLIT_HMM_LIB"
+
+    tag "modules"
+    tag "modules_local"
+    tag "split_hmm_lib"
+
+    test("mgnifams hmm lib - 3 per chunk") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'mgnifams_update_test' ], file("${projectDir}/assets/data/mgnifams_hmm.lib.gz", checkIfExists: true) ])
+                input[1] = 3
+                """
+            }
+        }
+
+        then {
+            def chunks = process.out.hmms[0][1]
+            assertAll(
+                { assert process.success },
+                { assert chunks.collect { f -> file(f).name } == ["chunk_000000.hmm.lib.gz", "chunk_000001.hmm.lib.gz", "chunk_000002.hmm.lib.gz"] },
+                { assert chunks.every { f -> path(f).linesGzip.count { line -> line.startsWith('//') } == 3 } },
+                { assert chunks.collectMany { f -> path(f).linesGzip.findAll { line -> line.startsWith('NAME') }.collect { line -> line.split(/\s+/)[1] } }.sort() == (1..9).collect { i -> "${i}" } }
+            )
+        }
+    }
+
+    test("mgnifams hmm lib - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'mgnifams_update_test' ], file("${projectDir}/assets/data/mgnifams_hmm.lib.gz", checkIfExists: true) ])
+                input[1] = 3
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert file(process.out.hmms[0][1]).name == "chunk_000000.hmm.lib.gz" }
+            )
+        }
+    }
+}

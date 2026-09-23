@@ -1,0 +1,19 @@
+{
+    "esmfold scores txt": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "2"
+                    },
+                    "2_scores.csv:md5,599bece2c1953f5ffeb415992216049b"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-18T18:12:37.560450582",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

@@ -26,8 +26,8 @@ process EXPORT_FOLDS {
     fi
 
     (
-        echo "id,fold,aligned_length,q_start,q_end,t_start,t_end,e_value"
-        cut -f1,2,4,7,8,9,10,11 ${m8_name} | tr '\t' ','
+        echo "id,fold,aligned_length,q_start,q_end,t_start,t_end,e_value,aln_tmscore,q_tmscore,t_tmscore"
+        tail -n +2 ${m8_name} | cut -f1,2,4,7,8,9,10,11,13,14,15 | tr '\t' ','
     ) > mgnifam_folds.csv
 
     cat <<-END_VERSIONS > versions.yml

@@ -1,0 +1,2 @@
+sample,mgnify_proteins_sequences,mgnify_proteins_pfam,mgnifams_hmms,mgnprotein_db_config
+mgnifams_update_test,/path/to/assets/data/mgy_protein_sequences.parquet,/path/to/assets/data/mgy_proteins_pfam.parquet,/path/to/assets/data/mgnifams_hmm.lib.gz,

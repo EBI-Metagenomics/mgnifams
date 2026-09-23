@@ -1,0 +1,36 @@
+{
+    "pfam domtbl": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "reps_fasta"
+                    },
+                    "mgnifam_pfams.csv:md5,f9ba710d17b177c0881255d185a4d62b"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-18T18:16:46.595405378",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "funfam domtbl": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "reps_fasta"
+                    },
+                    "mgnifam_funfams.csv:md5,144db4f5a4ebcd9367029a93473e537b"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-18T18:16:51.966725034",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

@@ -24,12 +24,14 @@ workflow REMOVE_REDUNDANCY {
     starting_id
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     ch_reps_fasta = reps_fasta
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .flatten()
-        .collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families")
+        .collectFile(name: "pre_redundant_reps.fasta")
+    ch_reps_fasta.collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families") // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
+    ch_reps_fasta = ch_reps_fasta
         .map { file -> [[id: 'pre_redundant'], file] }
 
     FIND_CONCATENATE( hmm )

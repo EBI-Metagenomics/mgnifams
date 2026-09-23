@@ -1,10 +1,13 @@
 # MGnifams
+
 From metagenomics derived amino acid sequences, to protein families.
 
 ## Nextflow pipeline
+
 This pipeline is developed in Nextflow, following nf-core standards.
 
 ### Input
+
 `samplesheet.csv`
 
 First, for a MGnify-specific execution, prepare a samplesheet with input data that looks as follows:
@@ -24,13 +27,17 @@ fasta,/path/to/test.fasta
 ```
 
 ### Test runs
+
 Now, you can run the pipeline either on slurm or locally.
 
 slurm:
+
 ```bash
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_test.csv -profile test,slurm,singularity,gpu -resume -with-tower
 ```
+
 local:
+
 ```bash
 nextflow run mgnifams -c conf/local.config --input mgnifams/input/samplesheet_test.csv -profile test,local,singularity -resume
 ```
@@ -39,21 +46,25 @@ For MGnify-specific executions, the `init_db` adn `update_db` workflows must be 
 to produce the `sqlite` database that hosts all data and metadata for the MGnifams site.
 
 init_db:
+
 ```bash
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_init_db.csv --mode init_mgnifams_db --outdir '/path/to/mgnifams/output_db' -profile slurm,singularity -resume -with-tower
 ```
 
 update_db:
+
 ```bash
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_update_db.csv --mode update_mgnifams_db --outdir '/path/to/mgnifams/output_db' -profile slurm,singularity -resume -with-tower
 ```
 
 #### End-to-end nf-test
+
 ```
 nf-test test tests/default.nf.test --profile +singularity,test
 ```
 
 The test profile will still need to be updated with the following local variables and paths:
+
 ```
     use_gpu             = false
     esmfold_db          = 'path/to/esmfold/'
@@ -70,25 +81,32 @@ The test profile will still need to be updated with the following local variable
 ```
 
 ### Overview
+
 ![alt text](assets/mgnifams_workflow.png)
 
 The end-to-end MGnifams pipeline chains five major subworkflows; `setup_clusters`, `generate_nonredundant_families`, `predict_structures`, `annotate_families` and `export_data`.
 
 For MGnify only; After the main pipeline finishes its execution, `init_db` and `update_db` must be executed. Then, the produced `sqlite` database can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
-After the db has been produced by the pipeline, do the following:  
-* copy database to site/ifs  
-* host online with k8s  
+To refresh the existing families with new MGnify proteins later, run the `update_mgnifams` workflow and merge its delta database into the production one (see [update_mgnifams workflow](#update_mgnifams-workflow)).
+
+After the db has been produced by the pipeline, do the following:
+
+- copy database to site/ifs
+- host online with k8s
 
 ### mgnifams workflow
+
 This is the main pipeline that receives an input file (MGnify proteins `CSV` or `fasta`) and generates MGnifams data along with metadata and annotations.
 
-#### 1. setup_clusters 
+#### 1. setup_clusters
+
 This is the first subworkflow to be executed before the main family generation. It consists of three subworkflows; `extract_unannotated_fasta`, `check_quality` and `execute_clustering`. In a nutshell, this suborkflow converts the initial input (see below) into family-generation-ready input.
 
 The initial input for this pipeline is the output file of the `mgnify-proteins` data generation pipeline, `sequence_explorer_protein.csv` (e.g., `path/to/plp_flatfiles_pgsql_4/sequence_explorer_protein.csv`).
 
 head:
+
 ```bash
 mgyp,sequence,full_length,cluster_size,metadata
 1127097383,MPMRVLYGLMFLSHLTTPSTLIANCWYNQMVRDDEITSSLKLMSLRRRTMEKMIVYGTRWCGDTRRSLRILDGREINYKWIDIDKDPEGEKFVKETNQGNRSVPTILFPDESILVEPSNQELNEKLDALSL,false,2,"{""s"":[[112156,[[781358,[[1218588979,1,396,1]]]]]],""b"":[[120,1]],""p"":[[""PF00462"",7.5e-8,39.0,2,58,53,113]]}"
@@ -109,9 +127,10 @@ Alternatively, an amino acid fasta file can be passed through the samplesheet wh
 Following, a quality statistics report is produced via `seqkit/stats`. Sequences are then clustered via the `mmseqs` suite and are chunked for downstream parallel processing.
 
 #### 2. generate_nonredundant_families
+
 This subworkflow is the essence of MGnifams and is responsible for converting initial sequence clusters into non-redundant protein families. The `TSV` clusters from the previous subworkflow are fed into the `generate_families` subworkflow along with the `mgnifams_input.fa` file.
 The core MGnifams algorithm utilizes the `pyhmmer`, `pyfamsa` and `pytrimal` libraries to produce protein families.
-For a cluster, the algorithm creates an initial seed alignment with `pyfamsa` and then iteratively recruits sequences with `pyhmmer/hmmsearch`. 
+For a cluster, the algorithm creates an initial seed alignment with `pyfamsa` and then iteratively recruits sequences with `pyhmmer/hmmsearch`.
 Sequences that pass set filters are then aligned to the seed HMM via `pyhmmer/hmmalign`.
 Until the model converges (no new sequences added to the alignment or up to three iterations), the aligned sequences are trimmed down with `pytrimal` to create an updated seed alignment to further recruit sequences from the initial fasta set.
 Finally, the full alignment will contain all sequences that matched the final family model (created from the final seed alignment), including smaller sequences (not using a length filter here).
@@ -119,12 +138,14 @@ The results are then pooled and checked for redundancy among families via the `r
 Metadata regarding the remaining families (`Family Id,Size,Representative Id,Region,Representative Length,Sequence,HMM consensus,Converged`) as well as the discarded families (`Cluster Representative,Discard Reason,Value`) are provided.
 
 #### 3. predict_structures
+
 ESMFold is used here on the family representative sequences, similarly to the [nf-core/proteinfold pipeline](https://github.com/nf-core/proteinfold).
 Each predicted structure is kept in the original `pdb` format and also parsed into a `cif` format along with its plddt and ptm scores.
 In some cases, some very long sequences do not receive sufficient GPU virtual memory on the cluster to predict structures.
 These will show in the `pdb*_scores.txt` file as: `24/05/25 22:16:10 | INFO | root | Failed (CUDA out of memory) on sequence 80 of length 1180`. The `EXTRACT_CUDA_FAILED` module gathers these sequences and runs the prediction on the CPU via the `RUN_ESMFOLD_CPU` module.
 
 #### 4. annotate_families
+
 This subworkflow is comprised of three subworkflows that aim to annotate families via model annotation, structural homology and family representative sequence annotation.
 The `annotate_reps` subworkflow, runs the `s4pred` software to predict the secondary structure feature composition of representative sequences.
 It also run the `deeptmhmm` software to predict transmembrane regions.
@@ -136,42 +157,52 @@ The `annotate_structures` subworkflow, performs a `foldseek/easysearch` against 
 Structural homologs are identified and may be further explored for common function.
 
 #### 5. export_data
+
 The final subworkflow of the pipeline, `export_data`, exports all generated data and metadata in tabular format.
 This data consists of family data and metadata, and annotation data for pfam, funfams and structures.
 
 ### init_db workflow
+
 This is a MGnify-only workflow that needs to be executed after `mgnifams.nf` to initialize the database that hosts all data required for the MGnifams website.
 This workflow also appends all data and metadata except for `blob` items.
 
 The samplesheet must be in this format:
+
 ```csv
 sample,schema,results_folder
 mgnifams_test,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/db_schema.sqlite,/path/to/mgnifams/output
 ```
+
 The `sample` column contains a given identifier.
 The `schema` contains the required model attributes for the `sqlite` database tables.
 The `results_folder` is the path to the output folder of the main `mgnifams.nf` execution.
 
 The command to run:
+
 ```bash
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_init_db.csv --mode init_mgnifams_db --outdir '/path/to/mgnifams/output_db' -profile slurm,singularity -resume -with-tower
 ```
 
 Make sure to manually delete any previous `init_db` workflow cached work jobs.
+The last step (`assets/finalize_db.sql`) fills the `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit) search flags, creates the website indexes and runs `ANALYZE`.
 
 ### update_db workflow
+
 The `update_db` workflow connects to the MGnify proteins database, and makes queries for all MGnifams underlying MGnify sequence to retrieve relevant information for their biomes and domain architecture.
 The retrieved data is then parsed and the sqlite mgnifam table entries are updated with all required blob data for the site.
 
 The samplesheet must be in this format:
+
 ```csv
 sample,results_folder,existing_db,mgnprotein_db_config
 mgnifams_update_db,/path/to/mgnifams/output,/path/to/mgnifams_test.sqlite3,/path/to/mgnprotein_db_config.ini
 ```
+
 The `sample` column contains a given identifier.
 The `results_folder` is the path to the output folder of the main `mgnifams.nf` execution.
 The `existing_db` contains the path to the `sqlite` database that was initialized during the `init_db` workflow.
 The `mgnprotein_db_config` is a filepath with the required secrets to connect to the MGnify proteins database, with the following format;
+
 ```
 [database]
 dbname = ***
@@ -181,26 +212,89 @@ host = ***
 port = ***
 ```
 
+### update_mgnifams workflow
+
+The `update_mgnifams` workflow (`--mode update_mgnifams`) refreshes existing families against new MGnify proteins without touching their seed MSAs or HMMs.
+It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and, optionally, biomes (from the MGnify proteins DB).
+`--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
+
+The samplesheet must have exactly one row:
+
+```csv
+sample,mgnify_proteins_sequences,mgnify_proteins_pfam,mgnifams_hmms,mgnprotein_db_config
+mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,
+```
+
+`mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgnprotein_db_config` is optional; when it is empty, biomes are not recomputed.
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_update_mgnifams.csv --mode update_mgnifams --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity,gpu -resume
+```
+
+Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation), the full MSAs are in `update_families/full_msa/<family_id>.sto.gz`, and `update_families/update_info.csv` records what the run computed.
+
+### post_update_mgnifams_update_db workflow
+
+`--mode post_update_mgnifams_update_db` builds the delta database from the `update_mgnifams` outdir; it only runs sqlite and Python, so it can run on the database host.
+The samplesheet has exactly one row:
+
+```csv
+sample,results_folder
+mgnifams_update,/path/to/mgnifams/output_update
+```
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume
+```
+
+It reads the published files, so keep `--publish_dir_mode copy` (the default) for the `update_mgnifams` run, and do not reuse its outdir for a different update.
+It fails instead of publishing a partial database, e.g. when a successful family lacks a blob or the outdir holds blob files of other families.
+The pipeline does not modify the production database. It publishes a delta database, `db/<sample>_update.sqlite3`, holding only the successfully updated families:
+
+- Overwritten by the merge: `full_size`, `protein_rep`, `rep_region`, `rep_length`, `rep_sequence`, `plddt`, `ptm`, the secondary structure percents, `cif_blob`, `domain_blob`, `s4pred_blob`, and the `mgnifam_pfams`, `mgnifam_funfams` and `mgnifam_folds` rows of these families.
+- Only when the delta's `update_info` table says they were computed: the transmembrane percents and `tm_blob` (`tm_computed`), and `biome_blob` (`biome_computed`).
+- Kept from production: `consensus`, `hmm_length`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size`, `has_model_pfam` and `mgnifam_model_pfams`.
+- Recomputed for these families: `has_pfam`, `has_funfam` and `has_structure`.
+
+To apply it, migrate the production database once (this adds `seed_size`, `hmm_length` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
+
+```bash
+db=/path/to/mgnifams.sqlite3
+[ "$(sqlite3 "$db" "SELECT count(*) FROM pragma_table_info('mgnifam') WHERE name = 'seed_size'")" = 0 ] \
+    && sqlite3 -bail "$db" < assets/migrate_schema_seed_size_tmscores.sql
+sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/merge_update_delta.sql
+```
+
+This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
+Do not speed up the merge with `PRAGMA journal_mode = OFF`: the rollback on a failed check would no longer work. Such PRAGMAs are only safe on a copy that is swapped in afterwards.
+After changing indexes in `assets/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/finalize_db.sql`; idempotent).
+
 ## Website
+
 MGnifams site: http://mgnifams-demo.mgnify.org
 
 GitHub repository: https://github.com/EBI-Metagenomics/mgnifams-site
 
 ## Final steps
+
 Manually execute the next steps to finalise setting up the MGnifams website.
 
 ### Testing sqlite locally
+
 Move the `mgnifams.sqlite3` database to the `mgnifams_site/dbs` folder in the mgnifams-site repo.
+
 ```
 export DJANGO_SECRET_KEY="**************"
-python manage.py collectstatic --noinput  
-python manage.py migrate --fake  
+python manage.py collectstatic --noinput
+python manage.py migrate --fake
 python manage.py runserver 0.0.0.0:8000
 ```
 
 ### Hosting with k8s
-Move the sqlite database to `path/to/metagenomics/mgnifams/dbs` while on the datamover queue.  
+
+Move the sqlite database to `path/to/metagenomics/mgnifams/dbs` while on the datamover queue.
 slurm:
+
 ```
 salloc -t 3:30:00 --mem=8G -p datamover
 ```
@@ -208,11 +302,13 @@ salloc -t 3:30:00 --mem=8G -p datamover
 Then, from the deployment folder of the website repository: https://github.com/EBI-Metagenomics/mgnifams-site
 
 k8s:
+
 ```
 kubectl apply -f ebi-wp-k8s-hl.yaml
 ```
 
 or restart:
+
 ```
 kubectl rollout restart deployment mgnifams-site
 ```
@@ -220,38 +316,46 @@ kubectl rollout restart deployment mgnifams-site
 Make sure the `kubeconfig.yaml` at the home directory shows the correct namespace: `mgnifams-hl-exp`
 
 #### If site changes
-From within the main mgnifams-site repository:  
-Update Docker image  
+
+From within the main mgnifams-site repository:
+Update Docker image
+
 ```
-sudo systemctl start docker  
+sudo systemctl start docker
 sudo docker build -t quay.io/microbiome-informatics/mgnifams_site:ebi-wp-k8s-hl .
 ```
 
 Push to quay.io
-``` 
-sudo docker login quay.io  
+
+```
+sudo docker login quay.io
 sudo docker push quay.io/microbiome-informatics/mgnifams_site:ebi-wp-k8s-hl
 ```
 
 #### If the sqlite database was created on a local machine
-Move sqlite database from local machine to `path/to/metagenomics/mgnifams/dbs` 
-slurm: 
-``` 
+
+Move sqlite database from local machine to `path/to/metagenomics/mgnifams/dbs`
+slurm:
+
+```
 salloc -t 3:30:00 --mem=8G -p datamover
 ```
+
 ```
 wormhole send mgnifams_site/dbs/mgnifams.sqlite3
 ```
 
 This needs to be added to `~/.zshrc`:
+
 ```
 MIT_BASERC="path/to/team_environments/codon/baserc.sh"
 
-if [ -f $MIT_BASERC ]; then  
-  . $MIT_BASERC  
+if [ -f $MIT_BASERC ]; then
+  . $MIT_BASERC
 fi
 mitload miniconda; conda activate wormhole
 ```
+
 ```
 wormhole receive code_id
 
@@ -259,6 +363,7 @@ chmod 775 mgnifams.sqlite3
 ```
 
 ## External usage
+
 Transmembrane regions are being predicted with a local installation of the `deeptmhmm` software and models on the EMBL-EBI cluster.
 Currently for external executions this is not supported and the `skip_deeptmhmm` parameter must be set to `true`.
 The HHsuite Pfam database (https://wwwuser.gwdguser.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/pfamA_35.0.tar.gz) and the respective foldseek databases (foldseek downloads command for PDB and optionally AlphaFold and ESMAtlas, https://github.com/steineggerlab/foldseek) must be downloaded by the user and the parameters **hhdb_path** and **foldseek_db_path** must be set accordingly.

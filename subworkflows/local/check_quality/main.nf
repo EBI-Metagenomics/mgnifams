@@ -6,7 +6,7 @@ workflow CHECK_QUALITY {
     fasta // tuple val(meta), path(fasta)
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     SEQKIT_STATS( fasta )
     ch_versions = ch_versions.mix( SEQKIT_STATS.out.versions )

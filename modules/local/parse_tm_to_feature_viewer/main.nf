@@ -8,7 +8,7 @@ process PARSE_TM_TO_FEATURE_VIEWER {
         'community.wave.seqera.io/library/python:b1b4b1f458c605bb' }"
 
     input:
-    tuple val(meta), path(preds) 
+    tuple val(meta), path(preds)
 
     output:
     tuple val(meta), path("${prefix}")         , emit: features
