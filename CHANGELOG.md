@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `family_metadata.csv` (`generate_families/families/` and `update_families/`) now starts with a header row: `family_id,full_msa_size,protein,region,length,sequence,consensus,converged`.
 - `mgnifam` columns in new databases are grouped by topic (family, representative, HMM, structure, composition, flags, blobs). Databases migrated with `assets/migrate_schema_seed_size_tmscores.sql` keep the new columns last, so select columns by name, not `SELECT *` position.
 - `mgnifam_pfams` / `mgnifam_funfams` keep only domains whose i-Evalue (the exported `e_value`) is at most `--hmmsearch_evalue_cutoff`; `hmmsearch -E` filters whole sequences only, so weak domains of a significant sequence got through. The raw `domtbl` outputs are unchanged.
+- Foldseek outputs (`annotation/structures/foldseek/pdb.m8`, `all_hits.tsv`) now start with a header row (`--format-mode 4`): `query,target,fident,alnlen,mismatch,gapopen,qstart,qend,tstart,tend,evalue,bits,alntmscore,qtmscore,ttmscore` (tab-separated).
 - `QUERY_MGNPROTEIN_DB` outputs (`biome_mapping.tsv`, `pfam_mapping.tsv`, `query_results/`) are published under `mgnprotein_db_query/` instead of the outdir root.
 - `IMPORT_QUERIES` imports `mgnifam.csv` by header name instead of column position, with journaling and fsync off for the throwaway build file. Only the finished database is published (`INIT_SQLITE` / `IMPORT_QUERIES` outputs no longer are).
 
