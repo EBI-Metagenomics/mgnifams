@@ -30,27 +30,27 @@ The HMMs within one `MAJOR` release are identical, so `hmmsearch` / `hmmscan` re
 
 ```
 mgnifams/
-├── README                    this file
-├── RELEASES.tsv              one row per release
-├── current_release -> releases/1.1
-└── releases/
-    ├── 1.0/
-    │   ├── README
-    │   ├── release_manifest.json
-    │   ├── md5sums.txt
-    │   ├── families.tsv.gz
-    │   ├── mgnifams_hmm.lib.gz
-    │   ├── seed_msa.tar.gz
-    │   └── pipeline_info/        final parameters (without local paths) and software versions of the run
-    └── 1.1/
-        ├── README                includes the changes since 1.0
-        ├── release_manifest.json
-        ├── md5sums.txt
-        ├── families.tsv.gz
-        ├── mgnifams_hmm.lib.gz   same file as 1.0 (hard link, same md5)
-        ├── seed_msa.tar.gz       same file as 1.0 (hard link, same md5)
-        ├── full_msa.tar          latest release only
-        └── pipeline_info/
+|-- README                    this file
+|-- RELEASES.tsv              one row per release
+|-- current_release -> releases/1.1
+`-- releases/
+    |-- 1.0/
+    |   |-- README
+    |   |-- release_manifest.json
+    |   |-- md5sums.txt
+    |   |-- families.tsv.gz
+    |   |-- mgnifams_hmm.lib.gz
+    |   |-- seed_msa.tar.gz
+    |   `-- pipeline_info/        final parameters (without local paths) and software versions of the run
+    `-- 1.1/
+        |-- README                includes the changes since 1.0
+        |-- release_manifest.json
+        |-- md5sums.txt
+        |-- families.tsv.gz
+        |-- mgnifams_hmm.lib.gz   same file as 1.0 (hard link, same md5)
+        |-- seed_msa.tar.gz       same file as 1.0 (hard link, same md5)
+        |-- full_msa.tar          latest release only
+        `-- pipeline_info/
 ```
 
 `current_release` always points to the latest release. To cite a release, or to download the same files again, use
@@ -110,7 +110,7 @@ Tab-separated, with a header row. Families are never removed or renumbered, and 
 | `members_proteins_release` | MGnify Proteins release of the full MSA members                                               |
 | `full_size`                | number of sequences in the full MSA                                                           |
 | `seed_size`                | number of sequences in the seed MSA                                                           |
-| `rep_id`                   | representative MGnify protein (`MGYP…`)                                                       |
+| `rep_id`                   | representative MGnify protein (`MGYP...`)                                                     |
 | `rep_region`               | representative region, `start-end` (1-based, inclusive)                                       |
 
 MGnify Proteins releases are cited by their numbered folder (`peptide_database/2026_07/`), never by
