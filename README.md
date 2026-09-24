@@ -221,18 +221,19 @@ It slices the known Pfam domains off the new proteins (both read from the MGnify
 The samplesheet must have exactly one row:
 
 ```csv
-sample,mgnify_proteins_sequences,mgnify_proteins_pfam,mgnifams_hmms,mgnprotein_db_config
-mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,
+sample,mgnify_proteins_sequences,mgnify_proteins_pfam,mgnifams_hmms,mgnprotein_db_config,mgnifams_families
+mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,,/path/to/families.tsv.gz
 ```
 
 `mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgnprotein_db_config` is optional; when it is empty, biomes are not recomputed.
+`mgnifams_families` is the `families.tsv.gz` of the release being updated (from its FTP release folder); every family in it must be in `mgnifams_hmms`, and vice versa.
 Set `--mgnifams_release` (the MGnifams release this update produces, `MAJOR.MINOR`; default `1.1`) and `--mgnify_proteins_release` (the MGnify Proteins release of the parquet files, `YYYY_MM`; default `2026_07`) for every run: the merge records them in `release_history`.
 
 ```bash
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_update_mgnifams.csv --mode update_mgnifams --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity,gpu -resume
 ```
 
-Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation), the full MSAs are in `update_families/full_msa/<family_id>.sto.gz`, and `update_families/update_info.csv` records what the run computed.
+Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation), the full MSAs are in `update_families/full_msa/<family_id>.sto.gz`, `update_families/update_info.csv` records what the run computed, and `update_families/families.tsv.gz` is the new release's FTP family table (the previous one with the successful families `updated`, and the others `not_updated` with their discard reason).
 
 ### post_update_mgnifams_update_db workflow
 

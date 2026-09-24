@@ -70,6 +70,14 @@
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.(hmm|lib)(\\.gz)?$",
                 "description": "update_mgnifams: HMM library of the existing MGnifams (NAME = family id)",
                 "errorMessage": "Must be a .hmm/.lib file, optionally gzipped."
+            },
+            "mgnifams_families": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.tsv\\.gz$",
+                "description": "update_mgnifams: families.tsv.gz of the MGnifams release being updated (its FTP release folder)",
+                "errorMessage": "Must be a .tsv.gz file."
             }
         },
         "required": ["sample"]

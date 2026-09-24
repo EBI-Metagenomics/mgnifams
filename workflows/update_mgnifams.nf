@@ -26,11 +26,12 @@ include { PARSE_BIOMES                 } from '../modules/local/parse_biomes/mai
 include { HHSUITE_REFORMAT as REFORMAT_FULL_MSA_A3M } from '../modules/nf-core/hhsuite/reformat/main'
 include { TRUNCATE_A3M                 } from '../modules/local/truncate_a3m/main'
 include { COLABFOLD_BATCH_MSA          } from '../modules/local/colabfold_batch_msa/main'
+include { EXPORT_FAMILIES_TSV          } from '../modules/local/export_families_tsv/main'
 
 workflow UPDATE_MGNIFAMS {
 
     take:
-    ch_samplesheet      // channel: [ meta, sequences_parquet, pfam_parquet, hmm_lib, db_config or [] ]
+    ch_samplesheet      // channel: [ meta, sequences_parquet, pfam_parquet, hmm_lib, db_config or [], families_tsv ]
     parquet_chunks
     min_sequence_length
     hmm_chunk_size
@@ -68,6 +69,17 @@ workflow UPDATE_MGNIFAMS {
 
     UPDATE_FAMILIES( ch_samplesheet, parquet_chunks, min_sequence_length, hmm_chunk_size, outdir )
     ch_versions = ch_versions.mix( UPDATE_FAMILIES.out.versions )
+
+    // FTP families.tsv.gz: the previous release's rows, refreshed for the successful families
+    EXPORT_FAMILIES_TSV(
+        ch_samplesheet
+            .map { meta, _sequences, _pfam, _hmms, _db_config, families -> [ meta, families ] }
+            .join( UPDATE_FAMILIES.out.delta )
+            .combine( UPDATE_FAMILIES.out.metadata.map { _meta, csv -> csv } ),
+        mgnifams_release,
+        mgnify_proteins_release
+    )
+    ch_versions = ch_versions.mix( EXPORT_FAMILIES_TSV.out.versions )
 
     PREDICT_STRUCTURES( UPDATE_FAMILIES.out.family_ids_fasta, pdb_chunk_size, esmfold_db, esmfold_params_path, \
         esmfold_3B_v1, esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression, num_recycles_esmfold, \
@@ -111,7 +123,7 @@ workflow UPDATE_MGNIFAMS {
     // Domain architectures of the new members, from the Pfam parquet
     //
     BUILD_PARQUET_DOMAIN_QUERIES(
-        UPDATE_FAMILIES.out.refined_families.combine( ch_samplesheet.map { _meta, _sequences, pfam, _hmms, _db_config -> pfam } ),
+        UPDATE_FAMILIES.out.refined_families.combine( ch_samplesheet.map { _meta, _sequences, pfam, _hmms, _db_config, _families -> pfam } ),
         file(pfam_path, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( BUILD_PARQUET_DOMAIN_QUERIES.out.versions )
@@ -127,8 +139,8 @@ workflow UPDATE_MGNIFAMS {
     // Biome distributions of the new members, from the MGnify proteins DB (only with mgnprotein_db_config)
     //
     ch_db_config = ch_samplesheet
-        .filter { _meta, _sequences, _pfam, _hmms, db_config -> db_config }
-        .map { meta, _sequences, _pfam, _hmms, db_config -> [ meta, db_config ] }
+        .filter { _meta, _sequences, _pfam, _hmms, db_config, _families -> db_config }
+        .map { meta, _sequences, _pfam, _hmms, db_config, _families -> [ meta, db_config ] }
     QUERY_MGNPROTEIN_DB( ch_db_config.combine( UPDATE_FAMILIES.out.refined_families.map { _meta, tsv -> tsv } ) )
     ch_versions = ch_versions.mix( QUERY_MGNPROTEIN_DB.out.versions )
 
@@ -143,7 +155,7 @@ workflow UPDATE_MGNIFAMS {
     // What this run computed, for the delta DB (post_update_mgnifams_update_db)
     //
     ch_samplesheet
-        .map { _meta, _sequences, _pfam, _hmms, db_config ->
+        .map { _meta, _sequences, _pfam, _hmms, db_config, _families ->
             [
                 'key,value',
                 "tm_computed,${tm_computed}",

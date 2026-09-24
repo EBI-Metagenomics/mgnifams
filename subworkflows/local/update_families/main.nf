@@ -7,7 +7,7 @@ include { POOL_UPDATED_FAMILIES              } from '../../../modules/local/pool
 
 workflow UPDATE_FAMILIES {
     take:
-    ch_samplesheet      // channel: [ meta, sequences_parquet, pfam_parquet, hmm_lib, db_config or [] ]
+    ch_samplesheet      // channel: [ meta, sequences_parquet, pfam_parquet, hmm_lib, db_config or [], families_tsv ]
     n_chunks            // integer: parallel preprocessing tasks
     min_sequence_length // integer
     hmm_chunk_size      // integer: family HMMs per update task
@@ -15,12 +15,12 @@ workflow UPDATE_FAMILIES {
 
     main:
     ch_versions = channel.empty()
-    ch_meta     = ch_samplesheet.map { meta, _sequences, _pfam, _hmms, _db_config -> meta }
+    ch_meta     = ch_samplesheet.map { meta, _sequences, _pfam, _hmms, _db_config, _families -> meta }
 
     // Unannotated slices of the MGnify proteins, one task per group of sequence row groups
     ch_extract_input = ch_samplesheet
         .combine(channel.of(0..<n_chunks))
-        .map { meta, sequences, pfam, _hmms, _db_config, chunk_index -> [ meta, sequences, pfam, chunk_index ] }
+        .map { meta, sequences, pfam, _hmms, _db_config, _families, chunk_index -> [ meta, sequences, pfam, chunk_index ] }
     EXTRACT_UNANNOTATED_PARQUET_SLICES( ch_extract_input, n_chunks, min_sequence_length )
     ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_PARQUET_SLICES.out.versions )
 
@@ -42,7 +42,7 @@ workflow UPDATE_FAMILIES {
             .map { process, tool, version -> "\"${process}\":\n    ${tool}: ${version}" }
     )
 
-    SPLIT_HMM_LIB( ch_samplesheet.map { meta, _sequences, _pfam, hmms, _db_config -> [ meta, hmms ] }, hmm_chunk_size )
+    SPLIT_HMM_LIB( ch_samplesheet.map { meta, _sequences, _pfam, hmms, _db_config, _families -> [ meta, hmms ] }, hmm_chunk_size )
     ch_versions = ch_versions.mix( SPLIT_HMM_LIB.out.versions )
 
     // One update task per HMM chunk, all against the same indexed FASTA

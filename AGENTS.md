@@ -86,12 +86,15 @@ Queries MGnify proteins PostgreSQL DB (`bin/query_mgnprotein_db.py`) to enrich f
 
 Refreshes the full MSAs and representatives of existing families; seed MSAs and HMMs do not change. The samplesheet has
 exactly one row: `mgnify_proteins_sequences` and `mgnify_proteins_pfam` (MGnify proteins parquet files),
-`mgnifams_hmms` (HMM library with numeric `NAME`s) and an optional `mgnprotein_db_config`.
+`mgnifams_hmms` (HMM library with numeric `NAME`s), an optional `mgnprotein_db_config` and `mgnifams_families` (the
+previous release's FTP `families.tsv.gz`).
 
 1. **UPDATE_FAMILIES** (`subworkflows/local/update_families/`) — `EXTRACT_UNANNOTATED_PARQUET_SLICES` slices known Pfam
    domains off the proteins (parquet row groups split into `--parquet_chunks`), `SPLIT_HMM_LIB` chunks the library by
    `--hmm_chunk_size`, nf-core `mgnifam/updatefamilies` (`--skip_refine`) recruits and aligns, and
    `POOL_UPDATED_FAMILIES` pools the chunks (`update_families/updated_delta.csv` holds the outcome per family).
+   `EXPORT_FAMILIES_TSV` then writes the release's `update_families/families.tsv.gz` from `mgnifams_families`, the delta
+   and `family_metadata.csv` (`bin/export_families_tsv.py`; fails unless the previous and updated family sets match).
 2. On the successful families: `PREDICT_STRUCTURES`, `ANNOTATE_REPS`, `ANNOTATE_STRUCTURES`, `EXPORT_DATA`; domain
    architectures from the Pfam parquet (`BUILD_PARQUET_DOMAIN_QUERIES` → `PARSE_DOMAINS`); biomes only with
    `mgnprotein_db_config`. `--run_alphafold2` adds ColabFold predictions from the full MSAs (`structures/alphafold2/`, not used downstream).
@@ -135,10 +138,9 @@ Discarded families are never in the delta, so the merge leaves them at their pre
 ## FTP releases
 
 `ftp/` is the draft of the MGnifams FTP layout (`ftp/README.md` documents it): only READMEs and small metadata files are
-committed. **TODO:** no workflow writes `families.tsv.gz` yet; 1.0's was a one-off export from the prod DB. Generate it
-(columns in `ftp/README.md`) in `update_mgnifams` (from `updated_delta.csv` and the previous release's file: `updated` or
-`not_updated` with the discard reason) and in `run_mgnifams_pipeline` (`workflows/mgnifams.nf`, all `new`) when either
-workflow is next changed.
+committed. `update_mgnifams` writes the release's `families.tsv.gz` (`EXPORT_FAMILIES_TSV`, columns in `ftp/README.md`).
+**TODO:** `run_mgnifams_pipeline` (`workflows/mgnifams.nf`) does not yet; 1.0's was a one-off export from the prod DB.
+Generate it there (all `new`, `first_release` = `model_release` = `members_release`) when that workflow is next changed.
 
 ## Linting & hooks
 

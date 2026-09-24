@@ -73,7 +73,8 @@ From the flat layout (1.0 files at the top level):
 When 1.1 is published:
 
 1. Create `releases/1.1/`: hard-link `mgnifams_hmm.lib.gz` and `seed_msa.tar.gz` from `releases/1.0/`, and add
-   `full_msa.tar` and the metadata files. Check it with `md5sum -c md5sums.txt`.
+   `full_msa.tar` and the metadata files (`families.tsv.gz` is the update run's `update_families/families.tsv.gz`).
+   Check it with `md5sum -c md5sums.txt`.
 2. Point `current_release` to `releases/1.1` and add the 1.1 row to `RELEASES.tsv`.
 3. Remove `releases/1.0/full_msa.tar.gz` and the top-level `full_msa.tar.gz` link.
 

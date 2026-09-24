@@ -91,34 +91,34 @@ workflow PIPELINE_INITIALISATION {
 
     if (params.mode == "run_mgnifams_pipeline") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _pfam, _hmms ->
+            .map { sample, protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _pfam, _hmms, _families ->
                 [ sample, file(protein_input, checkIfExists: true) ]
             }
     }
     else if (params.mode == "init_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, _existing_db, schema, _mgnprotein_db_config, _sequences, _pfam, _hmms ->
+            .map { sample, _protein_input, results_folder, _existing_db, schema, _mgnprotein_db_config, _sequences, _pfam, _hmms, _families ->
                 [ sample, schema, results_folder ]
             }
     }
     else if (params.mode == "update_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config, _sequences, _pfam, _hmms ->
+            .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config, _sequences, _pfam, _hmms, _families ->
                 [ sample, results_folder, existing_db, mgnprotein_db_config ]
             }
     }
     else if (params.mode == "update_mgnifams") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, _results_folder, _existing_db, _schema, mgnprotein_db_config, sequences, pfam, hmms ->
-                if (!sequences || !pfam || !hmms) {
-                    error("update_mgnifams: samplesheet row '${sample.id}' needs mgnify_proteins_sequences, mgnify_proteins_pfam and mgnifams_hmms")
+            .map { sample, _protein_input, _results_folder, _existing_db, _schema, mgnprotein_db_config, sequences, pfam, hmms, families ->
+                if (!sequences || !pfam || !hmms || !families) {
+                    error("update_mgnifams: samplesheet row '${sample.id}' needs mgnify_proteins_sequences, mgnify_proteins_pfam, mgnifams_hmms and mgnifams_families")
                 }
-                [ sample, file(sequences), file(pfam), file(hmms), mgnprotein_db_config ? file(mgnprotein_db_config) : [] ]
+                [ sample, file(sequences), file(pfam), file(hmms), mgnprotein_db_config ? file(mgnprotein_db_config) : [], file(families) ]
             }
     }
     else if (params.mode == "post_update_mgnifams_update_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _pfam, _hmms ->
+            .map { sample, _protein_input, results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _pfam, _hmms, _families ->
                 if (!results_folder) {
                     error("post_update_mgnifams_update_db: samplesheet row '${sample.id}' needs results_folder (an update_mgnifams outdir)")
                 }

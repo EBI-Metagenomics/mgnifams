@@ -27,6 +27,9 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/table_data/mgnifam.csv").readLines().size() - 1 == n_successful },
                 { assert ['structures/esmfold/cif', 'annotation/reps/s4pred/json', 'domain_results'].every { dir ->
                     file("${params.outdir}/${dir}").listFiles().size() == n_successful } },
+                // families.tsv.gz keeps every previous family; the successful ones are `updated`
+                { assert path("${params.outdir}/update_families/families.tsv.gz").linesGzip.drop(1).collect { line -> line.split('\t')[1] }
+                    .countBy { status -> status } == [updated: n_successful, not_updated: delta.size() - n_successful].findAll { _k, v -> v } },
                 { assert snapshot(
                     workflow.trace.succeeded().size(),
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_pipeline_software_mqc_versions.yml"),
