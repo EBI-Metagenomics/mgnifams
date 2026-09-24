@@ -3,4 +3,6 @@ tm_computed,false
 biome_computed,false
 pfam_lib,Pfam-A.38.2.hmm.gz
 funfams_lib,funfam-hmm3-v4_3_0_test.lib.gz
+mgnifams_release,1.1
+mgnify_proteins_release,2026_07
 pipeline_version,2.1.0dev

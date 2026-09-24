@@ -5,9 +5,9 @@
             "2,4",
             "2|0|0|0|0|0|0",
             "2|2|0",
-            "biome_computed=false;child_tables=pfams,funfams,folds;funfams_lib=funfam-hmm3-v4_3_0_test.lib.gz;pfam_lib=Pfam-A.38.2.hmm.gz;pipeline_version=2.1.0dev;tm_computed=false"
+            "biome_computed=false;child_tables=pfams,funfams,folds;funfams_lib=funfam-hmm3-v4_3_0_test.lib.gz;mgnifams_release=1.1;mgnify_proteins_release=2026_07;pfam_lib=Pfam-A.38.2.hmm.gz;pipeline_version=2.1.0dev;tm_computed=false"
         ],
-        "timestamp": "2026-09-22T11:21:57.50632665",
+        "timestamp": "2026-09-24T11:29:03.700578333",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

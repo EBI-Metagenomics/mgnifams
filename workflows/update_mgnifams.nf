@@ -53,6 +53,8 @@ workflow UPDATE_MGNIFAMS {
     colabfold_params_path
     af2_max_msa_seqs
     af2_num_recycles
+    mgnifams_release
+    mgnify_proteins_release
     outdir
     multiqc_config
     multiqc_logo
@@ -148,6 +150,8 @@ workflow UPDATE_MGNIFAMS {
                 "biome_computed,${db_config ? true : false}",
                 "pfam_lib,${file(pfam_path).name}",
                 "funfams_lib,${file(funfams_path).name}",
+                "mgnifams_release,${mgnifams_release}",
+                "mgnify_proteins_release,${mgnify_proteins_release}",
                 "pipeline_version,${workflow.manifest.version}"
             ].join('\n')
         }

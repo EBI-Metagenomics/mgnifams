@@ -92,3 +92,14 @@ CREATE TABLE mgnifam_model_pfams (
     query_hmm TEXT,
     template_hmm TEXT
 );
+-- One row per MGnifams release this DB holds; merge_update_delta.sql adds the update releases (same DDL there)
+CREATE TABLE release_history (
+    release TEXT PRIMARY KEY NOT NULL, -- MGnifams release, MAJOR.MINOR
+    date TEXT NOT NULL, -- YYYY-MM-DD
+    type TEXT NOT NULL, -- initial, update or new_families
+    mgnify_proteins_release TEXT NOT NULL, -- YYYY_MM
+    pipeline_version TEXT,
+    n_families INTEGER,
+    n_updated INTEGER,
+    n_not_updated INTEGER
+);
