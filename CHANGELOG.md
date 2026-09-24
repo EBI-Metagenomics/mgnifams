@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `release_history` table: one row per MGnifams release held by the DB (release, date, type, MGnify Proteins release, pipeline version, family counts). `assets/merge_update_delta.sql` creates it if missing and records the update release; merging the same release twice fails.
 - New `update_mgnifams` parameters `--mgnifams_release` (default `1.1`) and `--mgnify_proteins_release` (default `2026_07`), validated as `MAJOR.MINOR` and `YYYY_MM` and written to `update_info.csv`.
 - `mgnifam_folds` gains the Foldseek TM-scores `aln_tmscore`, `q_tmscore` and `t_tmscore`.
+- `ftp/`: draft of the versioned MGnifams FTP layout (`releases/<MAJOR.MINOR>/`, `RELEASES.tsv`, per-release READMEs and `release_manifest.json`), with 1.0 filled in from the existing release.
 - `assets/migrate_schema_seed_size_tmscores.sql` adds these columns to an existing database and backfills `seed_size` and `hmm_length`. Run it once, before the first `update_mgnifams` merge.
 
 ### `Changed`

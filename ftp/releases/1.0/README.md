@@ -16,4 +16,18 @@ stays in `release_manifest.json`. For the current full MSAs, see [`current_relea
 
 The HMMs and seed MSAs are the same in every `1.x` release.
 
+## Known issues
+
+These come from the pipeline version that built 1.0 (`v2.0.0dev`); later versions fixed them. `families.tsv.gz`
+reports the published data as it is.
+
+| Families | Issue                                               |
+| -------- | --------------------------------------------------- |
+| 544      | seed MSA with a single sequence                     |
+| 3,126    | seed MSA above the 2,000-sequence cap (up to 2,086) |
+| 2        | full MSA smaller than the seed MSA (12187, 12923)   |
+| 397      | no representative region (`rep_region` is `-`)      |
+
+1.1 recomputes the representatives of the families it updates. The seed MSAs stay as they are in every `1.x` release.
+
 Format details are in the [top-level README](../../README.md).

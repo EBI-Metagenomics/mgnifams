@@ -132,6 +132,14 @@ Existing DBs are migrated once with `assets/migrate_schema_seed_size_tmscores.sq
 `update_info` (`mgnifams_release`, `mgnify_proteins_release` come from the `update_mgnifams` params of the same names).
 Discarded families are never in the delta, so the merge leaves them at their previous version.
 
+## FTP releases
+
+`ftp/` is the draft of the MGnifams FTP layout (`ftp/README.md` documents it): only READMEs and small metadata files are
+committed. **TODO:** no workflow writes `families.tsv.gz` yet; 1.0's was a one-off export from the prod DB. Generate it
+(columns in `ftp/README.md`) in `update_mgnifams` (from `updated_delta.csv` and the previous release's file: `updated` or
+`not_updated` with the discard reason) and in `run_mgnifams_pipeline` (`workflows/mgnifams.nf`, all `new`) when either
+workflow is next changed.
+
 ## Linting & hooks
 
 - `prek install` once, then `prek run --all-files` (config: `.pre-commit-config.yaml`): ruff check/format for `bin/`,

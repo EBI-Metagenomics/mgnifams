@@ -57,7 +57,25 @@ mgnifams/
 its numbered folder, since `current_release` moves.
 
 The files that used to sit at the top level (`mgnifams_hmm.lib.gz`, `seed_msa.tar.gz`) link to `releases/1.0/`, so
-existing links still return the same files. The old `full_msa.tar.gz` link points to `current_release/full_msa.tar`.
+existing links still return the same files. The old top-level `full_msa.tar.gz` link is removed together with
+`releases/1.0/full_msa.tar.gz` when 1.1 is published.
+
+### Moving to this layout
+
+From the flat layout (1.0 files at the top level):
+
+1. Create `releases/1.0/` and move `mgnifams_hmm.lib.gz`, `seed_msa.tar.gz` and `full_msa.tar.gz` into it. Add its
+   `README`, `release_manifest.json`, `families.tsv.gz`, `md5sums.txt` and `pipeline_info/`, then run `md5sum -c md5sums.txt`
+   there.
+2. Link `current_release -> releases/1.0`, and the three old top-level names to their files in `releases/1.0/`.
+3. Replace the top-level `README` with this file, and add `RELEASES.tsv` with the 1.0 row only.
+
+When 1.1 is published:
+
+1. Create `releases/1.1/`: hard-link `mgnifams_hmm.lib.gz` and `seed_msa.tar.gz` from `releases/1.0/`, and add
+   `full_msa.tar` and the metadata files. Check it with `md5sum -c md5sums.txt`.
+2. Point `current_release` to `releases/1.1` and add the 1.1 row to `RELEASES.tsv`.
+3. Remove `releases/1.0/full_msa.tar.gz` and the top-level `full_msa.tar.gz` link.
 
 ## Files
 

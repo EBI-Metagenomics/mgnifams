@@ -1,0 +1,4 @@
+e548bb393757af9fe9937367b92b91e5  full_msa.tar.gz
+f06909acd4856bed7b2b13113e065ba1  mgnifams_hmm.lib.gz
+8e5b13133b7166537d77693a923f74c6  seed_msa.tar.gz
+7e6ef1d551d139efe942397cbc99ff37  families.tsv.gz
