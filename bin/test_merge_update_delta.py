@@ -43,7 +43,14 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-INFO = {"tm_computed": "false", "biome_computed": "true", "child_tables": "pfams,funfams,folds"}
+INFO = {
+    "tm_computed": "false",
+    "biome_computed": "true",
+    "child_tables": "pfams,funfams,folds",
+    "mgnifams_release": "1.1",
+    "mgnify_proteins_release": "2026_07",
+    "pipeline_version": "2.1.0dev",
+}
 
 with tempfile.TemporaryDirectory() as d:
     prod, delta = f"{d}/prod.sqlite3", f"{d}/delta.sqlite3"
@@ -94,4 +101,35 @@ with tempfile.TemporaryDirectory() as d:
     ).fetchall()
     # Recomputed for the delta families only (no funfams, family 2 lost its fold); has_model_pfam is kept
     assert flags == [(1, 1, 0, 1, 1), (2, 1, 0, 1, 0), (3, 1, 1, 1, 1)], flags
+    history = con.execute(
+        "SELECT release, type, mgnify_proteins_release, pipeline_version, n_families, n_updated, n_not_updated FROM release_history"
+    ).fetchall()
+    assert history == [("1.1", "update", "2026_07", "2.1.0dev", 3, 2, 1)], history
+    con.close()
+
+    # The same release cannot be merged twice
+    merged = sha(prod)
+    r = merge(prod, delta)
+    assert r.returncode != 0 and "UNIQUE constraint failed: release_history.release" in r.stderr, r.stderr
+    assert sha(prod) == merged, "a repeated release must leave prod unchanged"
+
+    # A delta without the release keys is rejected; a prod without release_history gets it created
+    for key in ("mgnifams_release", "mgnify_proteins_release"):
+        Path(delta).unlink()
+        make_db(delta, [(1, 11, b"new")], {k: v for k, v in INFO.items() if k != key})
+        r = merge(prod, delta)
+        assert r.returncode != 0 and "NOT NULL constraint failed: release_history" in r.stderr, r.stderr
+        assert sha(prod) == merged
+
+    Path(prod).unlink()
+    make_db(prod, [(1, 10, b"old")])
+    with sqlite3.connect(prod) as con:
+        con.execute("DROP TABLE release_history")
+    Path(delta).unlink()
+    make_db(delta, [(1, 11, b"new")], {**INFO, "mgnifams_release": "1.2"})
+    r = merge(prod, delta)
+    assert r.returncode == 0, r.stderr
+    con = sqlite3.connect(prod)
+    assert con.execute("SELECT release, n_not_updated FROM release_history").fetchall() == [("1.2", 0)]
+    con.close()
 print("ok")

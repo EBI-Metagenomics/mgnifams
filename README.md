@@ -226,6 +226,7 @@ mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_proteins_pfa
 ```
 
 `mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgnprotein_db_config` is optional; when it is empty, biomes are not recomputed.
+Set `--mgnifams_release` (the MGnifams release this update produces, `MAJOR.MINOR`; default `1.1`) and `--mgnify_proteins_release` (the MGnify Proteins release of the parquet files, `YYYY_MM`; default `2026_07`) for every run: the merge records them in `release_history`.
 
 ```bash
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_update_mgnifams.csv --mode update_mgnifams --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity,gpu -resume
@@ -255,6 +256,8 @@ The pipeline does not modify the production database. It publishes a delta datab
 - Only when the delta's `update_info` table says they were computed: the transmembrane percents and `tm_blob` (`tm_computed`), and `biome_blob` (`biome_computed`).
 - Kept from production: `consensus`, `hmm_length`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size`, `has_model_pfam` and `mgnifam_model_pfams`.
 - Recomputed for these families: `has_pfam`, `has_funfam` and `has_structure`.
+- Families the update discarded are not in the delta, so they keep their previous version.
+- Recorded: one `release_history` row (the table is created if missing) with the release, merge date, MGnify Proteins release, pipeline version and the counts of families, updated families and not updated families. Merging the same release twice fails and changes nothing.
 
 To apply it, migrate the production database once (this adds `seed_size`, `hmm_length` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
 

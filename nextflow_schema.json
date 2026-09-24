@@ -548,6 +548,19 @@
             "fa_icon": "fas fa-sync",
             "description": "Options of the update_mgnifams mode (refresh full MSAs and representatives of existing families).",
             "properties": {
+                "mgnifams_release": {
+                    "type": "string",
+                    "default": "1.1",
+                    "pattern": "^\\d+\\.\\d+$",
+                    "description": "MGnifams release produced by this update (MAJOR.MINOR), recorded in the DB release_history by the merge",
+                    "help_text": "Bump MINOR for a membership refresh of the existing families, MAJOR when the family set or its HMMs change."
+                },
+                "mgnify_proteins_release": {
+                    "type": "string",
+                    "default": "2026_07",
+                    "pattern": "^\\d{4}_\\d{2}$",
+                    "description": "MGnify Proteins release (YYYY_MM) of the input parquet files, recorded in the DB release_history by the merge"
+                },
                 "parquet_chunks": {
                     "type": "integer",
                     "default": 100,

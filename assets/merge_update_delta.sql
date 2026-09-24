@@ -5,6 +5,7 @@
 --   sqlite3 -bail prod.sqlite3 -cmd "ATTACH 'delta.sqlite3' AS delta" < assets/merge_update_delta.sql
 --
 -- Any failed check or statement exits before COMMIT (-bail), so prod is left untouched.
+-- Records the release in release_history (created if missing); merging a release twice fails on its primary key.
 -- Kept from prod: consensus, hmm_length, converged, seed_msa_blob, hmm_blob, rf_blob, seed_size, mgnifam_model_pfams,
 -- and the TM columns / biome_blob unless the delta's update_info says they were computed.
 
@@ -24,6 +25,30 @@ INSERT INTO temp.merge_check (delta_complete) SELECT
     (SELECT value FROM delta.update_info WHERE key = 'child_tables') = 'pfams,funfams,folds';
 INSERT INTO temp.merge_check (ids_in_prod) SELECT
     NOT EXISTS (SELECT 1 FROM delta.mgnifam WHERE id NOT IN (SELECT id FROM main.mgnifam));
+
+-- Same DDL as assets/data/db_schema.sqlite. NOT NULL fails a delta without the release keys in update_info
+CREATE TABLE IF NOT EXISTS main.release_history (
+    release TEXT PRIMARY KEY NOT NULL, -- MGnifams release, MAJOR.MINOR
+    date TEXT NOT NULL, -- YYYY-MM-DD
+    type TEXT NOT NULL, -- initial, update or new_families
+    mgnify_proteins_release TEXT NOT NULL, -- YYYY_MM
+    pipeline_version TEXT,
+    n_families INTEGER,
+    n_updated INTEGER,
+    n_not_updated INTEGER
+);
+
+INSERT INTO main.release_history
+    (release, date, type, mgnify_proteins_release, pipeline_version, n_families, n_updated, n_not_updated)
+SELECT
+    (SELECT value FROM delta.update_info WHERE key = 'mgnifams_release'),
+    date('now'),
+    'update',
+    (SELECT value FROM delta.update_info WHERE key = 'mgnify_proteins_release'),
+    (SELECT value FROM delta.update_info WHERE key = 'pipeline_version'),
+    (SELECT count(*) FROM main.mgnifam),
+    (SELECT count(*) FROM delta.mgnifam),
+    (SELECT count(*) FROM main.mgnifam) - (SELECT count(*) FROM delta.mgnifam);
 
 UPDATE main.mgnifam AS m SET
     full_size      = d.full_size,

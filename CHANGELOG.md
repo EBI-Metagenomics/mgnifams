@@ -13,7 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `mgnifam.hmm_length` column: the number of HMM match states, equal to the consensus length.
 - New `--mode post_update_mgnifams_update_db`: builds the `update_mgnifams` delta database from its outdir (`update_families/update_info.csv` records what the update computed), so the update run itself does no sqlite work.
 - New `mgnifam` search flags `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit). `init_mgnifams_db` fills them, creates the website indexes and runs `ANALYZE` (`assets/finalize_db.sql`); `assets/merge_update_delta.sql` recomputes the flags of the updated families.
+- New `release_history` table: one row per MGnifams release held by the DB (release, date, type, MGnify Proteins release, pipeline version, family counts). `assets/merge_update_delta.sql` creates it if missing and records the update release; merging the same release twice fails.
+- New `update_mgnifams` parameters `--mgnifams_release` (default `1.1`) and `--mgnify_proteins_release` (default `2026_07`), validated as `MAJOR.MINOR` and `YYYY_MM` and written to `update_info.csv`.
 - `mgnifam_folds` gains the Foldseek TM-scores `aln_tmscore`, `q_tmscore` and `t_tmscore`.
+- `ftp/`: draft of the versioned MGnifams FTP layout (`releases/<MAJOR.MINOR>/`, `RELEASES.tsv`, per-release READMEs and `release_manifest.json`), with 1.0 filled in from the existing release.
 - `assets/migrate_schema_seed_size_tmscores.sql` adds these columns to an existing database and backfills `seed_size` and `hmm_length`. Run it once, before the first `update_mgnifams` merge.
 
 ### `Changed`

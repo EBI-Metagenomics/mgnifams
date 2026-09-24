@@ -1,0 +1,71 @@
+{
+    "release": "1.1",
+    "type": "update",
+    "parent_release": "1.0",
+    "date": null,
+    "n_families": 35459,
+    "family_counts": {
+        "new": 0,
+        "updated": null,
+        "not_updated": null
+    },
+    "mgnify_proteins": {
+        "models": {
+            "release": "2024_04",
+            "url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/peptide_database/2024_04/"
+        },
+        "members": {
+            "release": "2026_07",
+            "url": "https://ftp.ebi.ac.uk/pub/databases/metagenomics/peptide_database/2026_07/",
+            "files": {
+                "sequences": "mgy_protein_sequences.parquet",
+                "pfam": "mgy_proteins_pfam.parquet"
+            },
+            "pfam_release": "Pfam 38.2"
+        }
+    },
+    "pipeline": {
+        "repository": "https://github.com/EBI-Metagenomics/mgnifams",
+        "mode": "update_mgnifams",
+        "version": null,
+        "commit": null,
+        "nextflow_version": null
+    },
+    "databases": {
+        "pfam": null,
+        "funfams": null,
+        "foldseek": {
+            "search_version": null,
+            "databases_dir": null,
+            "pdb": {
+                "database": null,
+                "pdb_date": null,
+                "foldseek_commit": null
+            },
+            "alphafold_db": {
+                "version": null
+            }
+        },
+        "esmfold_weights": null
+    },
+    "files": {
+        "mgnifams_hmm.lib.gz": {
+            "md5": "f06909acd4856bed7b2b13113e065ba1",
+            "bytes": null,
+            "same_as": "1.0"
+        },
+        "seed_msa.tar.gz": {
+            "md5": "8e5b13133b7166537d77693a923f74c6",
+            "bytes": null,
+            "same_as": "1.0"
+        },
+        "families.tsv.gz": {
+            "md5": null,
+            "bytes": null
+        },
+        "full_msa.tar": {
+            "md5": null,
+            "bytes": null
+        }
+    }
+}

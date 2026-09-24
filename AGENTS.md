@@ -127,6 +127,18 @@ The `has_*` flags are derived from the child tables: `finalize_db.sql` fills the
 for the delta families; the delta DB leaves them at 0. Fast PRAGMAs (journal/fsync off) only on throwaway build files, never prod.
 `mgnifam.hmm_length` = `length(consensus)` (one consensus residue per match state), stored so the website can index/sort on it.
 Existing DBs are migrated once with `assets/migrate_schema_seed_size_tmscores.sql`.
+`release_history` has one row per MGnifams release in the DB (`release` is `MAJOR.MINOR`, independent of the MGnify Proteins
+`YYYY_MM` release it records). `merge_update_delta.sql` creates it if missing and adds the update row from the delta's
+`update_info` (`mgnifams_release`, `mgnify_proteins_release` come from the `update_mgnifams` params of the same names).
+Discarded families are never in the delta, so the merge leaves them at their previous version.
+
+## FTP releases
+
+`ftp/` is the draft of the MGnifams FTP layout (`ftp/README.md` documents it): only READMEs and small metadata files are
+committed. **TODO:** no workflow writes `families.tsv.gz` yet; 1.0's was a one-off export from the prod DB. Generate it
+(columns in `ftp/README.md`) in `update_mgnifams` (from `updated_delta.csv` and the previous release's file: `updated` or
+`not_updated` with the discard reason) and in `run_mgnifams_pipeline` (`workflows/mgnifams.nf`, all `new`) when either
+workflow is next changed.
 
 ## Linting & hooks
 
