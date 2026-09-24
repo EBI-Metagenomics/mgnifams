@@ -17,7 +17,7 @@
                     },
                     "foldseek/easysearch": {
                         "branch": "master",
-                        "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+                        "git_sha": "ef60b708c7b9871dd6ca6d526fec183faf645dc5",
                         "installed_by": ["modules"]
                     },
                     "hhsuite/hhblits": {

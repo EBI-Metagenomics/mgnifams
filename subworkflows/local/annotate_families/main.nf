@@ -14,7 +14,8 @@ workflow ANNOTATE_FAMILIES {
     hh_mode
     hhdb_path
     pdb
-    foldseek_db_path
+    foldseek_pdb_db
+    foldseek_alphafold_db
     outdir
 
     main:
@@ -26,7 +27,7 @@ workflow ANNOTATE_FAMILIES {
     ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path )
     ch_versions = ch_versions.mix( ANNOTATE_MODELS.out.versions )
 
-    ANNOTATE_STRUCTURES( pdb, foldseek_db_path, outdir )
+    ANNOTATE_STRUCTURES( pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
 
     emit:

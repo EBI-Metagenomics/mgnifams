@@ -538,6 +538,16 @@
                 "foldseek_db_path": {
                     "type": "string",
                     "description": "annotate_structures"
+                },
+                "foldseek_pdb_db": {
+                    "type": "string",
+                    "default": "pdb",
+                    "description": "Subdirectory of foldseek_db_path holding the PDB foldseek database"
+                },
+                "foldseek_alphafold_db": {
+                    "type": "string",
+                    "default": "afdb50",
+                    "description": "Subdirectory of foldseek_db_path holding the AlphaFold/UniProt50 foldseek database (searched on SLURM non-test runs only)"
                 }
             },
             "required": ["pfam_path", "funfams_path", "foldseek_db_path"]

@@ -59,7 +59,8 @@ workflow MGNIFAMS {
     funfams_path
     hh_mode
     hhdb_path
-    foldseek_db_path
+    foldseek_pdb_db
+    foldseek_alphafold_db
     query_hmm_length_threshold
     multiqc_config
     multiqc_logo
@@ -93,7 +94,7 @@ workflow MGNIFAMS {
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, \
         skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, \
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
-        hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_db_path, outdir )
+        hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
     COUNT_SEED_MSA_SIZES( GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa_sto )

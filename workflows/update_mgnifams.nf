@@ -47,7 +47,8 @@ workflow UPDATE_MGNIFAMS {
     deeptmhmm_path
     pfam_path
     funfams_path
-    foldseek_db_path
+    foldseek_pdb_db
+    foldseek_alphafold_db
     query_hmm_length_threshold
     query_result_chunks
     run_alphafold2
@@ -110,7 +111,7 @@ workflow UPDATE_MGNIFAMS {
     ANNOTATE_REPS( UPDATE_FAMILIES.out.family_ids_fasta, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
-    ANNOTATE_STRUCTURES( PREDICT_STRUCTURES.out.pdb, foldseek_db_path, outdir )
+    ANNOTATE_STRUCTURES( PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
 
     EXPORT_DATA( UPDATE_FAMILIES.out.metadata, PREDICT_STRUCTURES.out.scores, \

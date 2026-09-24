@@ -38,6 +38,8 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     main:
 
     ch_multiqc = channel.empty()
+    def foldseek_pdb_db       = "${params.foldseek_db_path}/${params.foldseek_pdb_db}"
+    def foldseek_alphafold_db = "${params.foldseek_db_path}/${params.foldseek_alphafold_db}"
 
     //
     // WORKFLOW: Run main pipeline
@@ -56,7 +58,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.esmfold_3B_v1, params.esm2_t36_3B_UR50D, params.esm2_t36_3B_UR50D_contact_regression, \
             params.num_recycles_esmfold, params.pdb_chunk_size_long, \
             params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, \
-            params.hh_mode, params.hhdb_path, params.foldseek_db_path, params.query_hmm_length_threshold, \
+            params.hh_mode, params.hhdb_path, foldseek_pdb_db, foldseek_alphafold_db, params.query_hmm_length_threshold, \
             params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
         )
         ch_multiqc = MGNIFAMS.out.multiqc_report
@@ -87,7 +89,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.esmfold_3B_v1, params.esm2_t36_3B_UR50D, params.esm2_t36_3B_UR50D_contact_regression, \
             params.num_recycles_esmfold, params.pdb_chunk_size_long, \
             params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, \
-            params.foldseek_db_path, params.query_hmm_length_threshold, params.query_result_chunks, \
+            foldseek_pdb_db, foldseek_alphafold_db, params.query_hmm_length_threshold, params.query_result_chunks, \
             params.run_alphafold2, params.colabfold_params_path, params.af2_max_msa_seqs, params.af2_num_recycles, \
             params.mgnifams_release, params.mgnify_proteins_release, params.outdir, \
             params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
