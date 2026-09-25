@@ -4,7 +4,7 @@ process BUILD_PARQUET_DOMAIN_QUERIES {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/python_pyarrow:f6040e789f1cc7b8' :
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e4/e415e86f361373d5bf62a587c79daada9fa797ce076c764f1ccadb32ba2c3861/data' :
         'community.wave.seqera.io/library/python_pyarrow:a33176f6cf91c593' }"
 
     input:
