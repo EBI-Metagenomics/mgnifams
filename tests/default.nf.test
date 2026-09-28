@@ -4,6 +4,8 @@ nextflow_pipeline {
     script "../main.nf"
     tag "pipeline"
 
+    // Needs the external databases (pfam_path, funfams_path, esmfold_db, esmfold_params_path, foldseek_db_path)
+    // from local config, to be temporarily put in the test profile
     test("-profile test") {
 
         when {

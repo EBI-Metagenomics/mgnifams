@@ -8,7 +8,7 @@ process EXTRACT_UNANNOTATED_PARQUET_SLICES {
         'community.wave.seqera.io/library/python_pyarrow:a33176f6cf91c593' }"
 
     input:
-    tuple val(meta), path(sequences), path(pfam), val(chunk_index)
+    tuple val(meta), path(sequences), path(clusters), path(pfam), val(chunk_index)
     val n_chunks
     val min_sequence_length
 
@@ -24,6 +24,7 @@ process EXTRACT_UNANNOTATED_PARQUET_SLICES {
     """
     extract_unannotated_parquet_slices.py \\
         --sequences "${sequences}" \\
+        --clusters "${clusters}" \\
         --pfam "${pfam}" \\
         --chunk_index ${chunk_index} \\
         --n_chunks ${n_chunks} \\

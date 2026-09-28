@@ -1,0 +1,269 @@
+{
+    "-profile test_update_mgnifams": {
+        "content": [
+            34,
+            {
+                "BUILD_PARQUET_DOMAIN_QUERIES": {
+                    "python": "3.13.1",
+                    "pyarrow": "21.0.0"
+                },
+                "EXPORT_FAMILIES_TSV": {
+                    "python": "3.13.1"
+                },
+                "EXPORT_FOLDS": {
+                    "sed": 4.7
+                },
+                "EXPORT_MGNIFAMS": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
+                },
+                "EXTRACT_CUDA_FAILED": {
+                    "python": "3.13.0"
+                },
+                "EXTRACT_ESMFOLD_SCORES": {
+                    "sed": 4.7
+                },
+                "EXTRACT_UNANNOTATED_PARQUET_SLICES": {
+                    "python": "3.13.1",
+                    "pyarrow": "21.0.0"
+                },
+                "FILTER_EXPORT_FUNFAMS": {
+                    "sed": 4.7
+                },
+                "FILTER_EXPORT_PFAMS": {
+                    "sed": 4.7
+                },
+                "FOLDSEEK_EASYSEARCH_PDB": {
+                    "foldseek": "10.941cd33"
+                },
+                "HMMER_ESLSFETCHINDEX": {
+                    "hmmer": 3.4
+                },
+                "HMMER_HMMSEARCH_FUNFAMS": {
+                    "hmmer": 3.4
+                },
+                "HMMER_HMMSEARCH_PFAM": {
+                    "hmmer": 3.4
+                },
+                "MGNIFAM_UPDATEFAMILIES": {
+                    "mgnifam": "3.0.0"
+                },
+                "PARSE_BIOMES": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
+                },
+                "PARSE_CIF": {
+                    "python": "3.13.1",
+                    "numpy": "2.3.1",
+                    "biopython": 1.85
+                },
+                "PARSE_DOMAINS": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
+                },
+                "PARSE_S4PRED_TO_FEATURE_VIEWER": {
+                    "python": "3.13.0"
+                },
+                "POOL_UPDATED_FAMILIES": {
+                    "sed": 4.7
+                },
+                "QUERY_MGNPROTEIN_DB": {
+                    "python": "3.13.5",
+                    "psycopg2": "2.9.10"
+                },
+                "RUN_ESMFOLD": {
+                    "esm-fold": "1.0.3"
+                },
+                "S4PRED_RUNMODEL": {
+                    "s4pred": "1.2.1"
+                },
+                "SEQKIT_STATS": {
+                    "seqkit": "2.9.0"
+                },
+                "SEQKIT_STATS_TO_MQC": {
+                    "sed": 4.7
+                },
+                "SPLIT_HMM_LIB": {
+                    "awk": "mawk 1.3.4 20200120",
+                    "gzip": 1.1
+                },
+                "TRIM_REPS": {
+                    "sed": 4.7
+                },
+                "Workflow": {
+                    "ebi-metagenomics/mgnifams": "v2.1.0dev"
+                }
+            },
+            [
+                "annotation",
+                "annotation/reps",
+                "annotation/reps/funfams",
+                "annotation/reps/funfams/reps_fasta.domtbl.gz",
+                "annotation/reps/pfam",
+                "annotation/reps/pfam/reps_fasta.domtbl.gz",
+                "annotation/reps/s4pred",
+                "annotation/reps/s4pred/composition.csv",
+                "annotation/reps/s4pred/horiz",
+                "annotation/reps/s4pred/horiz/1.horiz",
+                "annotation/reps/s4pred/horiz/2.horiz",
+                "annotation/reps/s4pred/horiz/3.horiz",
+                "annotation/reps/s4pred/horiz/4.horiz",
+                "annotation/reps/s4pred/horiz/5.horiz",
+                "annotation/reps/s4pred/horiz/6.horiz",
+                "annotation/reps/s4pred/horiz/7.horiz",
+                "annotation/reps/s4pred/horiz/8.horiz",
+                "annotation/reps/s4pred/horiz/9.horiz",
+                "annotation/reps/s4pred/json",
+                "annotation/reps/s4pred/json/1.json",
+                "annotation/reps/s4pred/json/2.json",
+                "annotation/reps/s4pred/json/3.json",
+                "annotation/reps/s4pred/json/4.json",
+                "annotation/reps/s4pred/json/5.json",
+                "annotation/reps/s4pred/json/6.json",
+                "annotation/reps/s4pred/json/7.json",
+                "annotation/reps/s4pred/json/8.json",
+                "annotation/reps/s4pred/json/9.json",
+                "annotation/structures",
+                "annotation/structures/foldseek",
+                "annotation/structures/foldseek/all_hits.tsv",
+                "annotation/structures/foldseek/pdb.m8",
+                "biome_results",
+                "biome_results/1.csv",
+                "biome_results/2.csv",
+                "biome_results/3.csv",
+                "biome_results/4.csv",
+                "biome_results/5.csv",
+                "biome_results/6.csv",
+                "biome_results/7.csv",
+                "biome_results/8.csv",
+                "biome_results/9.csv",
+                "domain_results",
+                "domain_results/1.json",
+                "domain_results/2.json",
+                "domain_results/3.json",
+                "domain_results/4.json",
+                "domain_results/5.json",
+                "domain_results/6.json",
+                "domain_results/7.json",
+                "domain_results/8.json",
+                "domain_results/9.json",
+                "mgnprotein_db_query",
+                "mgnprotein_db_query/biome_mapping.tsv",
+                "mgnprotein_db_query/pfam_mapping.tsv",
+                "mgnprotein_db_query/query_results",
+                "mgnprotein_db_query/query_results/1.tsv",
+                "mgnprotein_db_query/query_results/2.tsv",
+                "mgnprotein_db_query/query_results/3.tsv",
+                "mgnprotein_db_query/query_results/4.tsv",
+                "mgnprotein_db_query/query_results/5.tsv",
+                "mgnprotein_db_query/query_results/6.tsv",
+                "mgnprotein_db_query/query_results/7.tsv",
+                "mgnprotein_db_query/query_results/8.tsv",
+                "mgnprotein_db_query/query_results/9.tsv",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/BETA-multiqc.parquet",
+                "multiqc/multiqc_data/multiqc.log",
+                "multiqc/multiqc_data/multiqc_citations.txt",
+                "multiqc/multiqc_data/multiqc_data.json",
+                "multiqc/multiqc_data/multiqc_seqkit_stats_summary.txt",
+                "multiqc/multiqc_data/multiqc_software_versions.txt",
+                "multiqc/multiqc_data/multiqc_sources.txt",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/pdf",
+                "multiqc/multiqc_plots/pdf/seqkit_stats_summary.pdf",
+                "multiqc/multiqc_plots/png",
+                "multiqc/multiqc_plots/png/seqkit_stats_summary.png",
+                "multiqc/multiqc_plots/svg",
+                "multiqc/multiqc_plots/svg/seqkit_stats_summary.svg",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/nf_core_pipeline_software_mqc_versions.yml",
+                "qc",
+                "qc/mgnifams_update_test.tsv",
+                "structures",
+                "structures/esmfold",
+                "structures/esmfold/cif",
+                "structures/esmfold/cif/1.cif",
+                "structures/esmfold/cif/2.cif",
+                "structures/esmfold/cif/3.cif",
+                "structures/esmfold/cif/4.cif",
+                "structures/esmfold/cif/5.cif",
+                "structures/esmfold/cif/6.cif",
+                "structures/esmfold/cif/7.cif",
+                "structures/esmfold/cif/8.cif",
+                "structures/esmfold/cif/9.cif",
+                "structures/esmfold/cuda_failed",
+                "structures/esmfold/cuda_failed/cuda_failed_reps.fasta",
+                "structures/esmfold/pdb",
+                "structures/esmfold/pdb/1.pdb",
+                "structures/esmfold/pdb/2.pdb",
+                "structures/esmfold/pdb/3.pdb",
+                "structures/esmfold/pdb/4.pdb",
+                "structures/esmfold/pdb/5.pdb",
+                "structures/esmfold/pdb/6.pdb",
+                "structures/esmfold/pdb/7.pdb",
+                "structures/esmfold/pdb/8.pdb",
+                "structures/esmfold/pdb/9.pdb",
+                "structures/esmfold/pdb_scores.csv",
+                "structures/esmfold/scores",
+                "structures/esmfold/scores/1_scores.txt",
+                "structures/esmfold/scores/2_scores.txt",
+                "table_data",
+                "table_data/mgnifam.csv",
+                "table_data/mgnifam_folds.csv",
+                "table_data/mgnifam_funfams.csv",
+                "table_data/mgnifam_pfams.csv",
+                "trim",
+                "trim/family_ids.1_trimmed.fasta",
+                "trim/family_ids.2_trimmed.fasta",
+                "update_families",
+                "update_families/converged_families.txt",
+                "update_families/families.tsv.gz",
+                "update_families/family_ids.fasta",
+                "update_families/family_metadata.csv",
+                "update_families/family_reps.fasta",
+                "update_families/full_msa",
+                "update_families/full_msa/1.sto.gz",
+                "update_families/full_msa/2.sto.gz",
+                "update_families/full_msa/3.sto.gz",
+                "update_families/full_msa/4.sto.gz",
+                "update_families/full_msa/5.sto.gz",
+                "update_families/full_msa/6.sto.gz",
+                "update_families/full_msa/7.sto.gz",
+                "update_families/full_msa/8.sto.gz",
+                "update_families/full_msa/9.sto.gz",
+                "update_families/mgnifams_update.faa",
+                "update_families/refined_families.tsv",
+                "update_families/update_info.csv",
+                "update_families/updated_delta.csv",
+                "update_families/updated_discarded.csv"
+            ],
+            [
+                "1.json:md5,81ee9422fb78265892b009a67802d0ad",
+                "2.json:md5,5ca5baae2e5bd05b2869eb3228210800",
+                "3.json:md5,4c0e2d3d01f8caccbdb63c716893feb0",
+                "4.json:md5,20ae1c27e34ef2c0792b65feb108aeae",
+                "5.json:md5,803e2744ec3a94a74c326c14006d1a59",
+                "6.json:md5,aa88c55298efbd51cdc12804c19a356f",
+                "7.json:md5,a5d561c07ad6c4e9859d64dff30c3ffc",
+                "8.json:md5,fa3ff69063e0d5c0d86f7f325f183ca6",
+                "9.json:md5,2714ae154fb56b9cca110eeec53ad66b",
+                "biome_mapping.tsv:md5,65ff966ee76df9fba449d68f343b5075",
+                "pfam_mapping.tsv:md5,df81e15cbe5f9261a3250bffc4910cf9",
+                "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
+                "multiqc_seqkit_stats_summary.txt:md5,f37b91be46a91aaf80eacc2b4d33f320",
+                "mgnifams_update_test.tsv:md5,9aa428cecc4d3e3fdffa56755e8546cc",
+                "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
+            ],
+            "/update_families: 19",
+            "/annotation: 23",
+            "/table_data: 4"
+        ],
+        "timestamp": "2026-09-28T10:20:35.09973871",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

@@ -54,12 +54,14 @@ with tempfile.TemporaryDirectory() as d:
         check=True,
     )
 
-    ids = list(proteins)
+    # protein 8 is a cluster member, not a representative: the parquet slicer must drop it
+    ids = [*proteins, 8]
     pq.write_table(
-        pa.table({"protein_id": pa.array(ids, pa.int64()), "sequence": [seqs[p] for p in ids]}),
+        pa.table({"protein_id": pa.array(ids, pa.int64()), "sequence": [seqs.get(p, seq) for p in ids]}),
         d / "seqs.parquet",
         row_group_size=2,  # 4 row groups
     )
+    pq.write_table(pa.table({"cluster_rep": pa.array(list(proteins), pa.int64())}), d / "clusters.parquet")
     rows = [(p, s, e) for p, regs in proteins.items() for s, e in regs]
     pq.write_table(
         pa.table({k: pa.array(v, pa.int64()) for k, v in zip(["protein_id", "env_from", "env_to"], zip(*rows))}),
@@ -76,6 +78,8 @@ with tempfile.TemporaryDirectory() as d:
                     BIN / "extract_unannotated_parquet_slices.py",
                     "--sequences",
                     d / "seqs.parquet",
+                    "--clusters",
+                    d / "clusters.parquet",
                     "--pfam",
                     d / "pfam.parquet",
                     "--chunk_index",
@@ -99,6 +103,8 @@ with tempfile.TemporaryDirectory() as d:
             BIN / "extract_unannotated_parquet_slices.py",
             "--sequences",
             d / "seqs.parquet",
+            "--clusters",
+            d / "clusters.parquet",
             "--pfam",
             d / "pfam.parquet",
             "--chunk_index",

@@ -21,5 +21,9 @@ setup_clusters/**/*
 setup_clusters/*
 generate_families/**/*
 generate_families/*
+update_families/**/*
+update_families/*
+biome_results/*
+mgnprotein_db_query/query_results/*
 annotation/**/*
 table_data/*

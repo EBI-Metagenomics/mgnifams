@@ -85,12 +85,13 @@ Queries MGnify proteins PostgreSQL DB (`bin/query_mgnprotein_db.py`) to enrich f
 ### `update_mgnifams` — `workflows/update_mgnifams.nf`
 
 Refreshes the full MSAs and representatives of existing families; seed MSAs and HMMs do not change. The samplesheet has
-exactly one row: `mgnify_proteins_sequences` and `mgnify_proteins_pfam` (MGnify proteins parquet files),
+exactly one row: `mgnify_proteins_sequences`, `mgnify_proteins_clusters` and `mgnify_proteins_pfam` (MGnify proteins parquet files),
 `mgnifams_hmms` (HMM library with numeric `NAME`s), an optional `mgnprotein_db_config` and `mgnifams_families` (the
 previous release's FTP `families.tsv.gz`).
 
 1. **UPDATE_FAMILIES** (`subworkflows/local/update_families/`) — `EXTRACT_UNANNOTATED_PARQUET_SLICES` slices known Pfam
-   domains off the proteins (parquet row groups split into `--parquet_chunks`), `SPLIT_HMM_LIB` chunks the library by
+   domains off the MGnify90 cluster representatives only (`cluster_rep` of `mgy_clusters.parquet`, as in 1.0; parquet row
+   groups split into `--parquet_chunks`), `SPLIT_HMM_LIB` chunks the library by
    `--hmm_chunk_size`, nf-core `mgnifam/updatefamilies` (`--skip_refine`) recruits and aligns, and
    `POOL_UPDATED_FAMILIES` pools the chunks (`update_families/updated_delta.csv` holds the outcome per family).
    `EXPORT_FAMILIES_TSV` then writes the release's `update_families/families.tsv.gz` from `mgnifams_families`, the delta
