@@ -55,6 +55,14 @@
                 "description": "update_mgnifams: MGnify protein sequences parquet (protein_id, sequence)",
                 "errorMessage": "Must be a .parquet file."
             },
+            "mgnify_proteins_clusters": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.parquet$",
+                "description": "update_mgnifams: MGnify protein clusters parquet (cluster_rep); only the cluster representatives are searched",
+                "errorMessage": "Must be a .parquet file."
+            },
             "mgnify_proteins_pfam": {
                 "type": "string",
                 "format": "file-path",

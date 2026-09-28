@@ -16,6 +16,7 @@ nextflow_process {
                 input[0] = channel.of([
                     [ id:'mgnifams_update_test' ],
                     file("${projectDir}/assets/data/mgy_protein_sequences.parquet", checkIfExists: true),
+                    file("${projectDir}/assets/data/mgy_clusters.parquet", checkIfExists: true),
                     file("${projectDir}/assets/data/mgy_proteins_pfam.parquet", checkIfExists: true),
                     1
                 ])
@@ -45,6 +46,7 @@ nextflow_process {
                 input[0] = channel.of([
                     [ id:'mgnifams_update_test' ],
                     file("${projectDir}/assets/data/mgy_protein_sequences.parquet", checkIfExists: true),
+                    file("${projectDir}/assets/data/mgy_clusters.parquet", checkIfExists: true),
                     file("${projectDir}/assets/data/mgy_proteins_pfam.parquet", checkIfExists: true),
                     0
                 ])
