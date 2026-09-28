@@ -38,7 +38,7 @@ workflow UPDATE_FAMILIES {
 
     HMMER_ESLSFETCHINDEX( ch_fasta )
     ch_versions = ch_versions.mix(
-        HMMER_ESLSFETCHINDEX.out.versions_hmmer.mix( HMMER_ESLSFETCHINDEX.out.versions_easel )
+        HMMER_ESLSFETCHINDEX.out.versions_hmmer.mix( HMMER_ESLSFETCHINDEX.out.versions_easel, HMMER_ESLSFETCHINDEX.out.versions_coreutils )
             .map { process, tool, version -> "\"${process}\":\n    ${tool}: ${version}" }
     )
 

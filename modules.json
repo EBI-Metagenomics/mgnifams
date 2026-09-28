@@ -37,7 +37,7 @@
                     },
                     "hmmer/eslsfetchindex": {
                         "branch": "master",
-                        "git_sha": "d3d8e0c6c33925e69f96f44fc6204302841f3562",
+                        "git_sha": "f179ce7da20507dcddbd8e8eaa07a89ebebf95c0",
                         "installed_by": ["modules"]
                     },
                     "hmmer/hmmsearch": {
