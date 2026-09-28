@@ -240,15 +240,6 @@
                 "update_families/updated_discarded.csv"
             ],
             [
-                "1.csv:md5,a863657a256e5ccfa68880a7a30901a2",
-                "2.csv:md5,f920d5468536665c225d5c64f09f45a3",
-                "3.csv:md5,261b328739e5732ca62c61600062fcee",
-                "4.csv:md5,2a98c711bd60901e5cccdc6e4467959d",
-                "5.csv:md5,69053f008f7dfab7288c29a7cc9577d9",
-                "6.csv:md5,53d2d66d3f98c2674625a84f57a503de",
-                "7.csv:md5,878485ca0b77c5ae0c48378066a5607d",
-                "8.csv:md5,ef62dd6d9a9794b0b0a9a6cfa5436d50",
-                "9.csv:md5,3b0842b45685deefec708dfbf506d430",
                 "1.json:md5,81ee9422fb78265892b009a67802d0ad",
                 "2.json:md5,5ca5baae2e5bd05b2869eb3228210800",
                 "3.json:md5,4c0e2d3d01f8caccbdb63c716893feb0",
@@ -260,15 +251,6 @@
                 "9.json:md5,2714ae154fb56b9cca110eeec53ad66b",
                 "biome_mapping.tsv:md5,65ff966ee76df9fba449d68f343b5075",
                 "pfam_mapping.tsv:md5,df81e15cbe5f9261a3250bffc4910cf9",
-                "1.tsv:md5,ce6c8d72cc5ab202a654c40f8672eebd",
-                "2.tsv:md5,7ced468efb382caddf21fb9658c81d24",
-                "3.tsv:md5,b4d4cc7085f529bfdae7298b9a1e59b0",
-                "4.tsv:md5,1b022ff3494d8c3ba376c665f71cca9e",
-                "5.tsv:md5,5f4df2ca502ee61b7ca6905c4b70fe46",
-                "6.tsv:md5,fcb29fadc8dddf170726486e6ccfbfe4",
-                "7.tsv:md5,9b8df563f79f82c187a2763304906423",
-                "8.tsv:md5,3be99d55f7bf0b514bb4a2dda6c23cb4",
-                "9.tsv:md5,d7bca322b3a6e5b27b065e523c37942e",
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
                 "multiqc_seqkit_stats_summary.txt:md5,f37b91be46a91aaf80eacc2b4d33f320",
                 "mgnifams_update_test.tsv:md5,9aa428cecc4d3e3fdffa56755e8546cc",
@@ -278,7 +260,7 @@
             "/annotation: 23",
             "/table_data: 4"
         ],
-        "timestamp": "2026-09-28T10:02:35.532513639",
+        "timestamp": "2026-09-28T10:20:35.09973871",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
