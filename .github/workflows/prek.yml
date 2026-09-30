@@ -1,0 +1,23 @@
+# Lint only: the nf-tests need local database paths (see AGENTS.md), so they run outside CI
+name: prek
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prek:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: nf-core/setup-nextflow@v3 # for the nextflow-lint hook
+        with:
+          version: "26.04.6"
+      - uses: j178/prek-action@v3
