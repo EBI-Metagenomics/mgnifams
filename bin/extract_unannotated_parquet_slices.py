@@ -35,7 +35,9 @@ def main(args=None):
     sequences = pq.ParquetFile(a.sequences)
     clusters = ds.dataset(a.clusters, format="parquet")
     if not pa.types.is_integer(clusters.schema.field("cluster_rep").type):
-        raise SystemExit(f"{a.clusters}: cluster_rep must be an integer protein_id, not {clusters.schema.field('cluster_rep').type}")
+        raise SystemExit(
+            f"{a.clusters}: cluster_rep must be an integer protein_id, not {clusters.schema.field('cluster_rep').type}"
+        )
     pfam = ds.dataset(a.pfam, format="parquet")
     pid = ds.field("protein_id")
     rep = ds.field("cluster_rep")
