@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** the samplesheet `sample` must match `^[A-Za-z0-9._-]+$`.
 - `hhdb_path` is required only by the default `run_mgnifams_pipeline` mode.
-- `family_metadata.csv` (`generate_families/families/` and `update_families/`) now starts with a header row: `family_id,full_msa_size,protein,region,length,sequence,consensus,converged`.
+- `generate_families/families/family_metadata.csv` now starts with a header row: `family_id,full_msa_size,protein,region,length,sequence,consensus,converged`. `update_families/family_metadata.csv` keeps the mgnifam 4.0.0 `update_families` header: `family_id,converged,seed_msa_size,full_msa_size,rep_protein,rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence` (`converged` and `seed_msa_size` are empty, as `--skip_refine` builds no seed).
 - `mgnifam` columns in new databases are grouped by topic (family, representative, HMM, structure, composition, flags, blobs). Databases migrated with `assets/migrate_schema_seed_size_tmscores.sql` keep the new columns last, so select columns by name, not `SELECT *` position.
 - `mgnifam_pfams` / `mgnifam_funfams` keep only domains whose i-Evalue (the exported `e_value`) is at most `--hmmsearch_evalue_cutoff`; `hmmsearch -E` filters whole sequences only, so weak domains of a significant sequence got through. The raw `domtbl` outputs are unchanged.
 - Foldseek outputs (`annotation/structures/foldseek/pdb.m8`, `all_hits.tsv`) now start with a header row (`--format-mode 4`): `query,target,fident,alnlen,mismatch,gapopen,qstart,qend,tstart,tend,evalue,bits,alntmscore,qtmscore,ttmscore` (tab-separated).

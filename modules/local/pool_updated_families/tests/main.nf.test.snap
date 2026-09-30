@@ -14,7 +14,7 @@
                     {
                         "id": "mgnifams_update_test"
                     },
-                    "family_metadata.csv:md5,c434b3c595665f4586ea28b851552b30"
+                    "family_metadata.csv:md5,dba6dc7d70a89f9070dd65c0ec48794c"
                 ]
             ],
             [
@@ -42,7 +42,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-09-22T09:11:36.546068432",
+        "timestamp": "2026-09-30T14:42:04.418337373",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
