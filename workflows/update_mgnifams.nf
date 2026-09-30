@@ -196,15 +196,6 @@ workflow UPDATE_MGNIFAMS {
     //
     // MODULE: MultiQC
     //
-    ch_multiqc_config        = channel.fromPath(
-        "$projectDir/assets/multiqc_config.yml", checkIfExists: true)
-    ch_multiqc_custom_config = multiqc_config ?
-        channel.fromPath(multiqc_config, checkIfExists: true) :
-        channel.empty()
-    ch_multiqc_logo          = multiqc_logo ?
-        channel.fromPath(multiqc_logo, checkIfExists: true) :
-        channel.empty()
-
     summary_params      = paramsSummaryMap(
         workflow, parameters_schema: "nextflow_schema.json")
     ch_workflow_summary = channel.value(paramsSummaryMultiqc(summary_params))
@@ -225,15 +216,21 @@ workflow UPDATE_MGNIFAMS {
     )
     ch_multiqc_files = ch_multiqc_files.mix(UPDATE_FAMILIES.out.seqkit_stats_mqc.collect { t -> t[1] }.ifEmpty([]))
 
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList(),
-        [],
-        []
+    MULTIQC(
+        ch_multiqc_files.flatten().collect().map { files ->
+            [
+                [id: 'mgnifams'],
+                files,
+                // The custom config goes last, so its settings take precedence over the default one
+                [ file("${projectDir}/assets/multiqc_config.yml", checkIfExists: true) ] +
+                    (multiqc_config ? [ file(multiqc_config, checkIfExists: true) ] : []),
+                multiqc_logo ? file(multiqc_logo, checkIfExists: true) : [],
+                [],
+                [],
+            ]
+        }
     )
 
     emit:
-    MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
+    MULTIQC.out.report.map { _meta, report -> report }.toList() // channel: /path/to/multiqc_report.html
 }
