@@ -12,5 +12,5 @@ workflow EXECUTE_CLUSTERING {
     MMSEQS_CREATETSV( MMSEQS_LINCLUST.out.db_cluster, MMSEQS_CREATEDB.out.db, MMSEQS_CREATEDB.out.db )
 
     emit:
-    clusters_tsv = MMSEQS_CREATETSV.out.tsv
+    MMSEQS_CREATETSV.out.tsv
 }

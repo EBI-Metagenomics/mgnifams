@@ -32,10 +32,10 @@ workflow SETUP_CLUSTERS {
 
     EXECUTE_CLUSTERING( ch_mgnifams_input_fa )
 
-    CALCULATE_CLUSTER_DISTRIBUTION( EXECUTE_CLUSTERING.out.clusters_tsv )
+    CALCULATE_CLUSTER_DISTRIBUTION( EXECUTE_CLUSTERING.out )
     ch_versions = ch_versions.mix( CALCULATE_CLUSTER_DISTRIBUTION.out.versions )
 
-    EXTRACT_UNIQUE_CLUSTER_REPS( EXECUTE_CLUSTERING.out.clusters_tsv, minimum_members )
+    EXTRACT_UNIQUE_CLUSTER_REPS( EXECUTE_CLUSTERING.out, minimum_members )
     ch_versions = ch_versions.mix( EXTRACT_UNIQUE_CLUSTER_REPS.out.versions )
 
     ch_cluster_reps_chunks = EXTRACT_UNIQUE_CLUSTER_REPS.out.reps
@@ -44,7 +44,7 @@ workflow SETUP_CLUSTERS {
             [[id: meta.id, chunk: file.getBaseName(1).split('\\.')[-1]], file]
         }
 
-    CHUNK_CLUSTERS( ch_cluster_reps_chunks, EXECUTE_CLUSTERING.out.clusters_tsv.first() )
+    CHUNK_CLUSTERS( ch_cluster_reps_chunks, EXECUTE_CLUSTERING.out.first() )
     ch_versions = ch_versions.mix( CHUNK_CLUSTERS.out.versions )
 
     emit:

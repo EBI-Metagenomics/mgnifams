@@ -13,13 +13,13 @@ workflow ANNOTATE_MODELS {
 
     ch_hhdb = channel.of([ [ id: 'pfam_hh_db' ], file(hhdb_path, checkIfExists: true) ])
     if (hh_mode == "hhblits") {
-        ch_hhr = HHSUITE_HHBLITS( HHSUITE_REFORMAT.out.msa, ch_hhdb.first() ).hhr
+        HHSUITE_HHBLITS( HHSUITE_REFORMAT.out.msa, ch_hhdb.first() )
     } else if (hh_mode == "hhsearch") {
-        ch_hhr = HHSUITE_HHSEARCH( HHSUITE_REFORMAT.out.msa, ch_hhdb.first() ).hhr
+        HHSUITE_HHSEARCH( HHSUITE_REFORMAT.out.msa, ch_hhdb.first() )
     } else {
         throw new Exception("Invalid hh_mode value. Should be 'hhblits' or 'hhsearch'.")
     }
 
     emit:
-    pfam_hits = ch_hhr
+    hh_mode == "hhblits" ? HHSUITE_HHBLITS.out.hhr : HHSUITE_HHSEARCH.out.hhr
 }
