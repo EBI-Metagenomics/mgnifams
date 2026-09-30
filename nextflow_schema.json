@@ -563,7 +563,7 @@
                     "default": "1.1",
                     "pattern": "^\\d+\\.\\d+$",
                     "description": "MGnifams release produced by this update (MAJOR.MINOR), recorded in the DB release_history by the merge",
-                    "help_text": "Bump MINOR for a membership refresh of the existing families, MAJOR when the family set or its HMMs change."
+                    "help_text": "Bump MINOR for a membership refresh of the existing families, MAJOR when the family set or its HMMs change. Set it in a config or -params-file: on the command line Nextflow reads a value like 1.2 as a number, which fails validation."
                 },
                 "mgnify_proteins_release": {
                     "type": "string",

@@ -227,7 +227,7 @@ mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_clusters.par
 
 `mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgnprotein_db_config` is optional; when it is empty, biomes are not recomputed.
 `mgnifams_families` is the `families.tsv.gz` of the release being updated (from its FTP release folder); every family in it must be in `mgnifams_hmms`, and vice versa.
-Set `--mgnifams_release` (the MGnifams release this update produces, `MAJOR.MINOR`; default `1.1`) and `--mgnify_proteins_release` (the MGnify Proteins release of the parquet files, `YYYY_MM`; default `2026_07`) for every run: the merge records them in `release_history`.
+Set `--mgnifams_release` (the MGnifams release this update produces, `MAJOR.MINOR`; default `1.1`) and `--mgnify_proteins_release` (the MGnify Proteins release of the parquet files, `YYYY_MM`; default `2026_07`) for every run: the merge records them in `release_history`. Set `mgnifams_release` in a config (`params { mgnifams_release = '1.2' }`) or a `-params-file`, not on the command line: Nextflow reads `--mgnifams_release 1.2` as a number, which fails validation.
 
 ```bash
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_update_mgnifams.csv --mode update_mgnifams --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity,gpu -resume
