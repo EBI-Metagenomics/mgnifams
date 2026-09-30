@@ -6,6 +6,8 @@ Guidance for coding agents (Claude Code, Codex and others) working in this repos
 
 MGnifams is a Nextflow (DSL2) pipeline that converts metagenomics-derived amino acid sequences into protein families. It follows nf-core standards and is deployed at EMBL-EBI for the MGnify platform.
 
+`dev` is `3.0.0dev`: the next release is a major, because `dev` already holds breaking changes (see the CHANGELOG). `CHANGELOG.md` entries link their PR, newest first, with same-PR points of one category grouped as a sub-list; tool version changes go in the `Dependencies` table.
+
 ## Running the Pipeline
 
 ```bash
@@ -62,7 +64,7 @@ Five sequential subworkflows:
 
 1. **SETUP_CLUSTERS** (`subworkflows/local/setup_clusters/`) — Extract unannotated sequences from MGnify CSV (or use FASTA directly via `--fasta_input_mode`), filter by length, quality check with seqkit, cluster with mmseqs linclust, distribute into chunks.
 
-2. **GENERATE_NONREDUNDANT_FAMILIES** (`subworkflows/local/generate_nonredundant_families/`) — Core algorithm in `bin/generate_families.py`. Iteratively builds families: seed MSA (pyfamsa) → HMM (pyhmmer) → recruit sequences → align (pyhmmer/hmmalign) → trim (pytrimal), repeated up to 3 times. Redundancy removed via `subworkflows/local/remove_redundancy/` using `bin/identify_redundant_fams.py`.
+2. **GENERATE_NONREDUNDANT_FAMILIES** (`subworkflows/local/generate_nonredundant_families/`) — Core algorithm in `bin/generate_families.py` (to be replaced by nf-core `mgnifam/generatefamilies` 4.0.0, [#68](https://github.com/EBI-Metagenomics/mgnifams/issues/68)). Iteratively builds families: seed MSA (pyfamsa) → HMM (pyhmmer) → recruit sequences → align (pyhmmer/hmmalign) → trim (pytrimal), repeated up to 3 times. Redundancy removed via `subworkflows/local/remove_redundancy/` using `bin/identify_redundant_fams.py`.
 
 3. **PREDICT_STRUCTURES** (`subworkflows/local/predict_structures/`) — ESMFold protein structure prediction with GPU support. CUDA OOM failures are caught and re-run on CPU (`bin/extract_cuda_failed.py`). Outputs PDB/CIF files with pLDDT and pTM scores.
 
@@ -93,7 +95,11 @@ previous release's FTP `families.tsv.gz`).
    domains off the MGnify90 cluster representatives only (`cluster_rep` of `mgy_clusters.parquet`, as in 1.0; parquet row
    groups split into `--parquet_chunks`), `SPLIT_HMM_LIB` chunks the library by
    `--hmm_chunk_size`, nf-core `mgnifam/updatefamilies` (`--skip_refine`) recruits and aligns, and
-   `POOL_UPDATED_FAMILIES` pools the chunks (`update_families/updated_delta.csv` holds the outcome per family).
+   `POOL_UPDATED_FAMILIES` pools the chunks (`update_families/updated_delta.csv` holds the outcome per family), failing
+   if a chunk's CSV header is not the expected one. `family_metadata.csv` keeps the mgnifam 4.0.0 header
+   (`family_id,converged,seed_msa_size,full_msa_size,rep_protein,rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence`;
+   `converged`/`seed_msa_size` empty under `--skip_refine`). Default mode still writes the old 8-column header; readers
+   (`bin/export_mgnifams.py`, `bin/export_families_tsv.py`) select columns by name.
    `EXPORT_FAMILIES_TSV` then writes the release's `update_families/families.tsv.gz` from `mgnifams_families`, the delta
    and `family_metadata.csv` (`bin/export_families_tsv.py`; fails unless the previous and updated family sets match).
 2. On the successful families: `PREDICT_STRUCTURES`, `ANNOTATE_REPS`, `ANNOTATE_STRUCTURES`, `EXPORT_DATA`; domain
@@ -112,8 +118,8 @@ fixture `tests/data/update_results` (no external DBs, cheap).
 
 ## Key Configuration
 
-- **`nextflow.config`** — Main config with 80+ parameters, profiles (docker/singularity/conda/slurm/gpu/test), and nf-schema v2.3.0 plugin
-- **`conf/base.config`** — Resource tiers: single (1 CPU/6GB/4h), low, medium, high, plus custom GENERATE_FAMILIES (4 CPU/400GB/35h, 5 retries)
+- **`nextflow.config`** — Main config with 80+ parameters, profiles (docker/singularity/conda/slurm/gpu/test), and the nf-schema 2.7.2 plugin
+- **`conf/base.config`** — Resource tiers: single (1 CPU/6GB/4h), low, medium, high, plus custom GENERATE_FAMILIES (4 CPU, 1400 GB/72 h × attempt, 3 retries)
 - **`conf/modules.config`** — Per-process resource overrides and tool parameters
 - **`nextflow_schema.json`** — Full parameter validation schema
 - **`assets/schema_input.json`** — Samplesheet validation
@@ -140,8 +146,9 @@ Discarded families are never in the delta, so the merge leaves them at their pre
 
 `ftp/` is the draft of the MGnifams FTP layout (`ftp/README.md` documents it): only READMEs and small metadata files are
 committed. `update_mgnifams` writes the release's `families.tsv.gz` (`EXPORT_FAMILIES_TSV`, columns in `ftp/README.md`).
-**TODO:** `run_mgnifams_pipeline` (`workflows/mgnifams.nf`) does not yet; 1.0's was a one-off export from the prod DB.
-Generate it there (all `new`, `first_release` = `model_release` = `members_release`) when that workflow is next changed.
+**TODO (with [#68](https://github.com/EBI-Metagenomics/mgnifams/issues/68)):** `run_mgnifams_pipeline` (`workflows/mgnifams.nf`)
+does not yet; 1.0's was a one-off export from the prod DB. Generate it there (all `new`, `first_release` = `model_release` =
+`members_release`) when that workflow switches to `mgnifam/generatefamilies`.
 
 ## Linting & hooks
 
@@ -149,6 +156,9 @@ Generate it there (all `new`, `first_release` = `model_release` = `members_relea
   prettier for YAML/JSON/Markdown, and `nextflow lint`.
 - `nextflow lint . -o concise | grep -E '^(Warn|Error)' | grep -v nf-core/` must print nothing: 0 warnings in
   pipeline-owned files (`main.nf`, `workflows/`, `subworkflows/local/`, `modules/local/`).
+- A workflow with one emit must leave it unnamed. A bare identifier (`emit: ch_x`) still counts as named, so emit an
+  expression instead (e.g. `hh_mode == "hhblits" ? HHSUITE_HHBLITS.out.hhr : HHSUITE_HHSEARCH.out.hhr`) and read it
+  with `.out` in the caller.
 
 ## Code Layout
 
@@ -164,3 +174,17 @@ Generate it there (all `new`, `first_release` = `model_release` = `members_relea
 ## nf-core Conventions
 
 This pipeline follows nf-core DSL2 conventions. When adding modules, use `nf-core modules install` or follow patterns in `modules/local/`. The `modules.json` tracks nf-core module versions. nf-test is used for testing; nf-core module tests in `modules/nf-core/**/tests/` are excluded from the local nf-test config.
+
+- **Software versions:** nf-core modules emit `[process, tool, version]` tuples to the `versions` topic; local modules
+  still emit `versions.yml` into `ch_versions`. Never mix topic outputs into `ch_versions`: each top-level workflow
+  (`workflows/mgnifams.nf`, `workflows/update_mgnifams.nf`) reads `channel.topic("versions")` once, before MultiQC,
+  and merges it with `softwareVersionsToYAML(ch_versions)`.
+- **MultiQC** (nf-core module) takes one tuple `[meta, files, configs, logo, replace_names, sample_names]`; the custom
+  `--multiqc_config` goes after `assets/multiqc_config.yml` so it takes precedence.
+- **Patches:** only `s4pred/runmodel` is patched (`s4pred-runmodel.diff`, FASTA header cleanup). After
+  `nf-core modules update`, re-apply and regenerate it with `nf-core modules patch`. Lines starting with `---` inside a
+  patch break nf-core tools' parser.
+- `conf/containers_*.config` are written by nf-core tools (`nf-core modules patch/update`); they are committed but not
+  included by `nextflow.config`.
+- Local module/subworkflow tests pull test data from nf-core/test-datasets, branch `proteinfamilies`
+  (`params.pipelines_testdata_base_path`), e.g. `test_data/mgnifams_input_small.faa`.
