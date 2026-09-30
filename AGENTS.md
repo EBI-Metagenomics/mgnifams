@@ -6,7 +6,7 @@ Guidance for coding agents (Claude Code, Codex and others) working in this repos
 
 MGnifams is a Nextflow (DSL2) pipeline that converts metagenomics-derived amino acid sequences into protein families. It follows nf-core standards and is deployed at EMBL-EBI for the MGnify platform.
 
-`dev` is `3.0.0dev`: the next release is a major, because `dev` already holds breaking changes (see the CHANGELOG). `CHANGELOG.md` entries link their PR, newest first, with same-PR points of one category grouped as a sub-list; tool version changes go in the `Dependencies` table.
+`dev` is at `3.0.0`, the release candidate: the version was bumped before the SLURM update run because `workflow.manifest.version` is written into `update_info.csv` and from there into `release_history.pipeline_version` of MGnifams 1.1. After the tag, `dev` goes to `3.1.0dev`. The release is a major because it holds breaking changes (see the CHANGELOG). `CHANGELOG.md` entries link their PR, newest first, with same-PR points of one category grouped as a sub-list; tool version changes go in the `Dependencies` table.
 
 ## Running the Pipeline
 
