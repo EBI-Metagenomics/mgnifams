@@ -20,4 +20,4 @@ jobs:
       - uses: nf-core/setup-nextflow@v3 # for the nextflow-lint hook
         with:
           version: "26.04.6"
-      - uses: j178/prek-action@v3
+      - uses: j178/prek-action@v3.0.0 # no floating major tag
