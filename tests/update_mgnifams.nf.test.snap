@@ -37,6 +37,8 @@
                     "foldseek": "10.941cd33"
                 },
                 "HMMER_ESLSFETCHINDEX": {
+                    "coreutils": 9.5,
+                    "easel": 0.49,
                     "hmmer": 3.4
                 },
                 "HMMER_HMMSEARCH_FUNFAMS": {
@@ -46,7 +48,7 @@
                     "hmmer": 3.4
                 },
                 "MGNIFAM_UPDATEFAMILIES": {
-                    "mgnifam": "3.0.0"
+                    "mgnifam": "4.0.0"
                 },
                 "PARSE_BIOMES": {
                     "python": "3.10.6",
@@ -78,7 +80,7 @@
                     "s4pred": "1.2.1"
                 },
                 "SEQKIT_STATS": {
-                    "seqkit": "2.9.0"
+                    "seqkit": "2.13.0"
                 },
                 "SEQKIT_STATS_TO_MQC": {
                     "sed": 4.7
@@ -162,8 +164,9 @@
                 "mgnprotein_db_query/query_results/9.tsv",
                 "multiqc",
                 "multiqc/multiqc_data",
-                "multiqc/multiqc_data/BETA-multiqc.parquet",
+                "multiqc/multiqc_data/llms-full.txt",
                 "multiqc/multiqc_data/multiqc.log",
+                "multiqc/multiqc_data/multiqc.parquet",
                 "multiqc/multiqc_data/multiqc_citations.txt",
                 "multiqc/multiqc_data/multiqc_data.json",
                 "multiqc/multiqc_data/multiqc_seqkit_stats_summary.txt",
@@ -252,15 +255,15 @@
                 "biome_mapping.tsv:md5,65ff966ee76df9fba449d68f343b5075",
                 "pfam_mapping.tsv:md5,df81e15cbe5f9261a3250bffc4910cf9",
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
-                "multiqc_seqkit_stats_summary.txt:md5,f37b91be46a91aaf80eacc2b4d33f320",
-                "mgnifams_update_test.tsv:md5,9aa428cecc4d3e3fdffa56755e8546cc",
+                "multiqc_seqkit_stats_summary.txt:md5,6b2b1cd54fbd941f39d70ed148dd0dfb",
+                "mgnifams_update_test.tsv:md5,9d89f4960f83efbc6c8c5101443abe2b",
                 "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
             ],
             "/update_families: 19",
             "/annotation: 23",
             "/table_data: 4"
         ],
-        "timestamp": "2026-09-28T10:20:35.09973871",
+        "timestamp": "2026-09-30T15:12:51.880919708",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
