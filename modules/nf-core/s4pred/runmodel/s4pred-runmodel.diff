@@ -4,9 +4,9 @@ Changes in component 'nf-core/s4pred/runmodel'
 Changes in 's4pred/runmodel/main.nf':
 --- modules/nf-core/s4pred/runmodel/main.nf
 +++ modules/nf-core/s4pred/runmodel/main.nf
-@@ -22,6 +22,9 @@
+@@ -23,6 +23,9 @@
+     def args    = task.ext.args   ?: ''
      prefix      = task.ext.prefix ?: "${meta.id}"
-     def VERSION = '1.2.1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
      """
 +    # Replace fasta protein names with family IDs (description)
 +    sed -E 's/^>([^[:space:]]+)[[:space:]]+(.+)/>\\2/' ${fasta} > cleaned.fasta
@@ -14,15 +14,15 @@ Changes in 's4pred/runmodel/main.nf':
      mkdir ${prefix}
  
      run_model \\
-@@ -29,7 +32,7 @@
+@@ -30,7 +33,7 @@
          --threads $task.cpus \\
          --save-files \\
          --outdir ${prefix} \\
 -        ${fasta}
 +        cleaned.fasta
+     """
  
-     cat <<-END_VERSIONS > versions.yml
-     "${task.process}":
+     stub:
 
 'modules/nf-core/s4pred/runmodel/tests/main.nf.test.snap' is unchanged
 'modules/nf-core/s4pred/runmodel/tests/main.nf.test' is unchanged

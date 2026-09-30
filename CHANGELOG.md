@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `mgnifam_pfams` / `mgnifam_funfams` keep only domains whose i-Evalue (the exported `e_value`) is at most `--hmmsearch_evalue_cutoff`; `hmmsearch -E` filters whole sequences only, so weak domains of a significant sequence got through. The raw `domtbl` outputs are unchanged.
 - Foldseek outputs (`annotation/structures/foldseek/pdb.m8`, `all_hits.tsv`) now start with a header row (`--format-mode 4`): `query,target,fident,alnlen,mismatch,gapopen,qstart,qend,tstart,tend,evalue,bits,alntmscore,qtmscore,ttmscore` (tab-separated).
 - `foldseek/easysearch` bumped to foldseek 10.941cd33. New `--foldseek_pdb_db` (default `pdb`) and `--foldseek_alphafold_db` (default `afdb50`, was hardcoded `alphafold`) name the database subdirectories under `--foldseek_db_path`.
+- nf-core modules updated: mmseqs2 18.8cc5c (was 17.b804f), mgnifam 4.0.0 (was 3.0.0), seqkit 2.13.0 (was 2.9.0), MultiQC 1.35 (was 1.29), aria2 1.37.0 (was 1.36.0), plus newer `hhsuite`, `hmmer/hmmsearch`, `find/concatenate` and `pigz/uncompress` containers. These modules report their versions through topic channels.
 - `QUERY_MGNPROTEIN_DB` outputs (`biome_mapping.tsv`, `pfam_mapping.tsv`, `query_results/`) are published under `mgnprotein_db_query/` instead of the outdir root.
 - `IMPORT_QUERIES` imports `mgnifam.csv` by header name instead of column position, with journaling and fsync off for the throwaway build file. Only the finished database is published (`INIT_SQLITE` / `IMPORT_QUERIES` outputs no longer are).
 
