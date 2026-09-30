@@ -100,7 +100,6 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
             [[id: meta.id, chunk: file.getSimpleName()], file]
         }
     REFORMAT_SEED_MSA(ch_input_for_reformat_seed, "sto", "fas")
-    ch_versions = ch_versions.mix( REFORMAT_SEED_MSA.out.versions )
 
     ch_input_for_reformat_full = REMOVE_REDUNDANCY.out.full_msa_sto
         .transpose()
@@ -108,7 +107,6 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
             [[id: meta.id, chunk: file.getSimpleName()], file]
         }
     REFORMAT_FULL_MSA(ch_input_for_reformat_full, "sto", "fas")
-    ch_versions = ch_versions.mix( REFORMAT_FULL_MSA.out.versions )
 
     PRESENT_DISCARDED_FAMILIES( REMOVE_REDUNDANCY.out.discarded )
     ch_versions = ch_versions.mix( PRESENT_DISCARDED_FAMILIES.out.versions )

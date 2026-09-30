@@ -92,7 +92,6 @@ workflow UPDATE_MGNIFAMS {
     //
     if (run_alphafold2) {
         REFORMAT_FULL_MSA_A3M( UPDATE_FAMILIES.out.full_msa, 'sto', 'a3m' )
-        ch_versions = ch_versions.mix( REFORMAT_FULL_MSA_A3M.out.versions )
 
         TRUNCATE_A3M( REFORMAT_FULL_MSA_A3M.out.msa, af2_max_msa_seqs )
         ch_versions = ch_versions.mix( TRUNCATE_A3M.out.versions )
@@ -173,7 +172,20 @@ workflow UPDATE_MGNIFAMS {
     //
     // Collate and save software versions
     //
+    // nf-core modules emit [ process, tool, version ] tuples to the `versions` topic;
+    // local modules still emit versions.yml files through ch_versions
+    def topic_versions_string = channel.topic("versions")
+        .distinct()
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by:0)
+        .map { process, tool_versions ->
+            "${process}:\n${tool_versions.unique().sort().join('\n')}"
+        }
+
     softwareVersionsToYAML(ch_versions)
+        .mix(topic_versions_string)
         .collectFile(
             storeDir: "${outdir}/pipeline_info",
             name: 'nf_core_pipeline_software_mqc_versions.yml',

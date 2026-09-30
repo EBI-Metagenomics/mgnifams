@@ -9,23 +9,17 @@ workflow ANNOTATE_MODELS {
     hhdb_path
 
     main:
-    ch_versions = channel.empty()
-
     HHSUITE_REFORMAT( seed_msa, "fas", "a3m" )
-    ch_versions = ch_versions.mix( HHSUITE_REFORMAT.out.versions )
 
     ch_hhdb = channel.of([ [ id: 'pfam_hh_db' ], file(hhdb_path, checkIfExists: true) ])
     if (hh_mode == "hhblits") {
         ch_hhr = HHSUITE_HHBLITS( HHSUITE_REFORMAT.out.msa, ch_hhdb.first() ).hhr
-        ch_versions = ch_versions.mix( HHSUITE_HHBLITS.out.versions )
     } else if (hh_mode == "hhsearch") {
         ch_hhr = HHSUITE_HHSEARCH( HHSUITE_REFORMAT.out.msa, ch_hhdb.first() ).hhr
-        ch_versions = ch_versions.mix( HHSUITE_HHSEARCH.out.versions )
     } else {
         throw new Exception("Invalid hh_mode value. Should be 'hhblits' or 'hhsearch'.")
     }
 
     emit:
-    versions  = ch_versions
     pfam_hits = ch_hhr
 }

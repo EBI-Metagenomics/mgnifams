@@ -109,7 +109,20 @@ workflow MGNIFAMS {
     //
     // Collate and save software versions
     //
+    // nf-core modules emit [ process, tool, version ] tuples to the `versions` topic;
+    // local modules still emit versions.yml files through ch_versions
+    def topic_versions_string = channel.topic("versions")
+        .distinct()
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by:0)
+        .map { process, tool_versions ->
+            "${process}:\n${tool_versions.unique().sort().join('\n')}"
+        }
+
     softwareVersionsToYAML(ch_versions)
+        .mix(topic_versions_string)
         .collectFile(
             storeDir: "${outdir}/pipeline_info",
             name: 'nf_core_pipeline_software_mqc_versions.yml',

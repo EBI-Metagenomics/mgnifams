@@ -31,7 +31,6 @@ workflow SETUP_CLUSTERS {
     ch_versions = ch_versions.mix( CHECK_QUALITY.out.versions )
 
     EXECUTE_CLUSTERING( ch_mgnifams_input_fa )
-    ch_versions = ch_versions.mix( EXECUTE_CLUSTERING.out.versions )
 
     CALCULATE_CLUSTER_DISTRIBUTION( EXECUTE_CLUSTERING.out.clusters_tsv )
     ch_versions = ch_versions.mix( CALCULATE_CLUSTER_DISTRIBUTION.out.versions )

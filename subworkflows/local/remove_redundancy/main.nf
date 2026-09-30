@@ -35,14 +35,12 @@ workflow REMOVE_REDUNDANCY {
         .map { file -> [[id: 'pre_redundant'], file] }
 
     FIND_CONCATENATE( hmm )
-    ch_versions = ch_versions.mix( FIND_CONCATENATE.out.versions )
 
     ch_input_for_hmmsearch = FIND_CONCATENATE.out.file_out
         .combine(ch_reps_fasta, by: 0)
         .map { meta, model, seqs -> [meta, model, seqs, false, false, true] }
 
     HMMER_HMMSEARCH( ch_input_for_hmmsearch )
-    ch_versions = ch_versions.mix( HMMER_HMMSEARCH.out.versions )
 
     POOL_PREREDUNDANT_FAMILIES_TSV( tsv )
     ch_versions = ch_versions.mix( POOL_PREREDUNDANT_FAMILIES_TSV.out.versions )

@@ -16,18 +16,10 @@ workflow ANNOTATE_STRUCTURES {
 
     ch_pdb_db = channel.of(file(foldseek_pdb_db, checkIfExists: true)).map { db -> [ [ id:db.name ], db ] }
     FOLDSEEK_EASYSEARCH_PDB( pdb, ch_pdb_db ).aln
-    ch_versions = ch_versions.mix(
-        FOLDSEEK_EASYSEARCH_PDB.out.versions_foldseek
-            .map { process, tool, version -> "\"${process}\":\n    ${tool}: ${version}" }
-    )
 
     if (workflow.profile.contains("slurm") && !workflow.profile.contains("test")) {
         ch_alphafold_db = channel.of(file(foldseek_alphafold_db, checkIfExists: true)).map { db -> [ [ id:db.name ], db ] }
         ch_alphafold_aln = FOLDSEEK_EASYSEARCH_ALPHAFOLDDB( pdb, ch_alphafold_db ).aln
-        ch_versions = ch_versions.mix(
-            FOLDSEEK_EASYSEARCH_ALPHAFOLDDB.out.versions_foldseek
-                .map { process, tool, version -> "\"${process}\":\n    ${tool}: ${version}" }
-        )
     }
 
     ch_foldseek_hits = FOLDSEEK_EASYSEARCH_PDB.out.aln

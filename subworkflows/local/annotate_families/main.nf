@@ -25,7 +25,6 @@ workflow ANNOTATE_FAMILIES {
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
     ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path )
-    ch_versions = ch_versions.mix( ANNOTATE_MODELS.out.versions )
 
     ANNOTATE_STRUCTURES( pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
