@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
+- `conf/base.config` sets resources for every process. The ones added (the update mode, AlphaFold2, the delta DB build, the aliased `HMMER_HMMSEARCH`, `MULTIQC`, `ARIA2`) are estimates that have not yet run at MGnify Proteins scale.
 - [#67](https://github.com/EBI-Metagenomics/mgnifams/pull/67) - nf-core modules update:
   - nf-core modules updated (new versions under `Dependencies`), plus newer `hhsuite`, `hmmer/hmmsearch`, `find/concatenate` and `pigz/uncompress` containers. These modules report their versions through topic channels.
   - `update_families/family_metadata.csv` keeps the mgnifam 4.0.0 `update_families` header: `family_id,converged,seed_msa_size,full_msa_size,rep_protein,rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence` (`converged` and `seed_msa_size` are empty, as `--skip_refine` builds no seed).
@@ -41,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- `-stub-run` of the default mode with `--fasta_input_mode` failed: the `EXTRACT_UNIQUE_CLUSTER_REPS` stub called `python` in an image without it, so its `versions.yml` held a shell error.
 - `RUN_ESMFOLD_CPU` (the CPU fallback for long sequences and CUDA OOM failures) inherited the `process_gpu` label of `RUN_ESMFOLD` and requested a GPU with `-profile gpu`. Its `accelerator` is now cleared; SLURM site configs should request GPUs with `clusterOptions = { task.accelerator ? '--gres=gpu:1' : '' }` under `withLabel: process_gpu`.
 - [#64](https://github.com/EBI-Metagenomics/mgnifams/pull/64) - Bugs found while building the update mechanism:
   - [#62](https://github.com/EBI-Metagenomics/mgnifams/issues/62) - `mgnifam_pfams` / `mgnifam_funfams` `e_value` and `score` held the full-sequence values. They now hold the per-domain i-Evalue and domain score. Rows in existing databases keep the old values until their families are updated.
