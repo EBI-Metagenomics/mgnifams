@@ -49,7 +49,7 @@ INFO = {
     "child_tables": "pfams,funfams,folds",
     "mgnifams_release": "1.1",
     "mgnify_proteins_release": "2026_07",
-    "pipeline_version": "2.1.0dev",
+    "pipeline_version": "3.0.0dev",
 }
 
 with tempfile.TemporaryDirectory() as d:
@@ -104,7 +104,7 @@ with tempfile.TemporaryDirectory() as d:
     history = con.execute(
         "SELECT release, type, mgnify_proteins_release, pipeline_version, n_families, n_updated, n_not_updated FROM release_history"
     ).fetchall()
-    assert history == [("1.1", "update", "2026_07", "2.1.0dev", 3, 2, 1)], history
+    assert history == [("1.1", "update", "2026_07", "3.0.0dev", 3, 2, 1)], history
     con.close()
 
     # The same release cannot be merged twice

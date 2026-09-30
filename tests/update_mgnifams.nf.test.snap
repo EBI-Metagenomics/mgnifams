@@ -93,7 +93,7 @@
                     "sed": 4.7
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v2.1.0dev"
+                    "ebi-metagenomics/mgnifams": "v3.0.0dev"
                 }
             },
             [
