@@ -15,7 +15,7 @@ nextflow_process {
                 ])
                 input[1] = Channel.of([
                     [ id: 'fasta' ],
-                    file(params.pipelines_testdata_base_path + 'test_data/mgnifams_input_small.fa', checkIfExists: true)
+                    file(params.pipelines_testdata_base_path + 'test_data/mgnifams_input_small.faa', checkIfExists: true)
                 ])
                 input[2] = 100   // discard_min_rep_length
                 input[3] = 2000  // discard_max_rep_length
@@ -103,7 +103,7 @@ nextflow_process {
                 ])
                 input[1] = Channel.of([
                     [ id: 'fasta' ],
-                    file(params.pipelines_testdata_base_path + 'test_data/mgnifams_input_small.fa', checkIfExists: true)
+                    file(params.pipelines_testdata_base_path + 'test_data/mgnifams_input_small.faa', checkIfExists: true)
                 ])
                 input[2] = 100   // discard_min_rep_length
                 input[3] = 2000  // discard_max_rep_length
