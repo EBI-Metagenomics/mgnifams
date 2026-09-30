@@ -38,9 +38,8 @@ workflow PREDICT_STRUCTURES {
 
     PREPARE_ESMFOLD_DBS( esmfold_db, esmfold_params_path, esmfold_3B_v1, \
         esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression )
-    ch_versions = ch_versions.mix( PREPARE_ESMFOLD_DBS.out.versions )
 
-    RUN_ESMFOLD( ch_fasta, PREPARE_ESMFOLD_DBS.out.params, num_recycles_esmfold )
+    RUN_ESMFOLD( ch_fasta, PREPARE_ESMFOLD_DBS.out, num_recycles_esmfold )
     ch_versions = ch_versions.mix( RUN_ESMFOLD.out.versions )
 
     // Identify CUDA failed very long sequences, and run on CPU
@@ -65,7 +64,7 @@ workflow PREDICT_STRUCTURES {
             [ [id: meta.id, chunk: file(file_path, checkIfExists: true).getBaseName().split('\\.')[-1]], file_path ]
         }
 
-    RUN_ESMFOLD_CPU( ch_fasta_long, PREPARE_ESMFOLD_DBS.out.params, num_recycles_esmfold )
+    RUN_ESMFOLD_CPU( ch_fasta_long, PREPARE_ESMFOLD_DBS.out, num_recycles_esmfold )
     ch_versions = ch_versions.mix( RUN_ESMFOLD_CPU.out.versions )
 
     EXTRACT_ESMFOLD_SCORES( RUN_ESMFOLD.out.scores.concat(RUN_ESMFOLD_CPU.out.scores) )

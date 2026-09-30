@@ -19,7 +19,6 @@ workflow ANNOTATE_REPS {
     ch_tm_features    = channel.empty()
 
     S4PRED_RUNMODEL( fasta )
-    ch_versions = ch_versions.mix( S4PRED_RUNMODEL.out.versions )
 
     PARSE_S4PRED_TO_FEATURE_VIEWER( S4PRED_RUNMODEL.out.preds )
     ch_versions = ch_versions.mix( PARSE_S4PRED_TO_FEATURE_VIEWER.out.versions )
@@ -39,7 +38,6 @@ workflow ANNOTATE_REPS {
         .map { meta, model, seqs -> [meta, model, seqs, false, false, true] }
 
     HMMER_HMMSEARCH_PFAM( ch_input_for_hmmsearch_pfam )
-    ch_versions = ch_versions.mix( HMMER_HMMSEARCH_PFAM.out.versions )
 
     ch_funfams = channel.of([ [ id: 'reps_fasta' ], file(funfams_path, checkIfExists: true) ])
     ch_input_for_hmmsearch_funfams = ch_funfams
@@ -47,7 +45,6 @@ workflow ANNOTATE_REPS {
         .map { meta, model, seqs -> [meta, model, seqs, false, false, true] }
 
     HMMER_HMMSEARCH_FUNFAMS( ch_input_for_hmmsearch_funfams )
-    ch_versions = ch_versions.mix( HMMER_HMMSEARCH_FUNFAMS.out.versions )
 
     emit:
     versions        = ch_versions

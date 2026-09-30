@@ -38,21 +38,32 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
         "tm_blob",
     ]
 
-    # family_metadata.csv header (family_id,full_msa_size,protein,...) renamed to the mgnifam column names
-    df1 = pd.read_csv(metadata)
-    df1.columns = [
-        "id",
-        "full_size",
-        "protein_rep",
-        "rep_region",
-        "rep_length",
-        "rep_sequence",
-        "consensus",
-        "converged",
-    ]
+    # family_metadata.csv columns renamed to the mgnifam column names. Default mode writes
+    # family_id,full_msa_size,protein,region,length,sequence,consensus,converged (bin/generate_families.py);
+    # update mode writes mgnifam update_families' family_id,converged,seed_msa_size,full_msa_size,rep_protein,
+    # rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence
+    df1 = pd.read_csv(metadata).rename(
+        columns={
+            "family_id": "id",
+            "full_msa_size": "full_size",
+            "seed_msa_size": "seed_size",
+            "protein": "protein_rep",
+            "rep_protein": "protein_rep",
+            "region": "rep_region",
+            "length": "rep_length",
+            "sequence": "rep_sequence",
+            "consensus_sequence": "consensus",
+            "consensus_length": "hmm_length",
+        }
+    )
 
     # HMM length = one consensus residue per match state
-    df1["hmm_length"] = df1["consensus"].astype("string").str.len().astype("Int64")
+    if "hmm_length" not in df1.columns:
+        df1["hmm_length"] = df1["consensus"].astype("string").str.len()
+    df1["hmm_length"] = df1["hmm_length"].astype("Int64")
+    # Empty under update_families --skip_refine (no seed built); the merge keeps prod's value
+    if "seed_size" in df1.columns:
+        df1["seed_size"] = df1["seed_size"].astype("Int64")
 
     df2 = pd.read_csv(structure_scores)
     merged = pd.merge(df1, df2, on="id", how="left")

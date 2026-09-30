@@ -15,7 +15,6 @@ workflow EXTRACT_UNANNOTATED_FASTA {
 
     if (compress_mode == 'gz') {
         ch_sequence_explorer_protein = PIGZ_UNCOMPRESS( ch_sequence_explorer_protein ).file
-        ch_versions = ch_versions.mix( PIGZ_UNCOMPRESS.out.versions )
     } else if (compress_mode == 'bz2') {
         ch_sequence_explorer_protein = BZ2_UNCOMPRESS( ch_sequence_explorer_protein ).file
         ch_versions = ch_versions.mix( BZ2_UNCOMPRESS.out.versions )

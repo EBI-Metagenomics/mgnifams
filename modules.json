@@ -7,12 +7,12 @@
                 "nf-core": {
                     "aria2": {
                         "branch": "master",
-                        "git_sha": "48c86d92fe761cb3faafdb38e4d8ca3bf6d1c657",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": ["modules"]
                     },
                     "find/concatenate": {
                         "branch": "master",
-                        "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": ["modules"]
                     },
                     "foldseek/easysearch": {
@@ -22,17 +22,17 @@
                     },
                     "hhsuite/hhblits": {
                         "branch": "master",
-                        "git_sha": "ec969dbd5a778b5b2c1204f14d5622edc064b805",
+                        "git_sha": "0a0d038765a622ae970b3eb08c6fa0be48c7d24d",
                         "installed_by": ["modules"]
                     },
                     "hhsuite/hhsearch": {
                         "branch": "master",
-                        "git_sha": "b3c8ac6683cbb871ec8ab4bd83a9bb7974681d85",
+                        "git_sha": "0a0d038765a622ae970b3eb08c6fa0be48c7d24d",
                         "installed_by": ["modules"]
                     },
                     "hhsuite/reformat": {
                         "branch": "master",
-                        "git_sha": "42a304570b75122f9948dde6c34182e4d6bb22b3",
+                        "git_sha": "0a0d038765a622ae970b3eb08c6fa0be48c7d24d",
                         "installed_by": ["modules"]
                     },
                     "hmmer/eslsfetchindex": {
@@ -42,49 +42,48 @@
                     },
                     "hmmer/hmmsearch": {
                         "branch": "master",
-                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "git_sha": "3a42d4fbb69436f53e0f06d2fe65b48f9d0085cc",
                         "installed_by": ["modules"]
                     },
                     "mgnifam/updatefamilies": {
                         "branch": "master",
-                        "git_sha": "d550e1da9436d4cc3b6489872e10dfe082cb811e",
+                        "git_sha": "b2b539f0e91c55f67502cf389eac872766bcc915",
                         "installed_by": ["modules"]
                     },
                     "mmseqs/createdb": {
                         "branch": "master",
-                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": ["modules"]
                     },
                     "mmseqs/createtsv": {
                         "branch": "master",
-                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-                        "installed_by": ["modules"],
-                        "patch": "modules/nf-core/mmseqs/createtsv/mmseqs-createtsv.diff"
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "installed_by": ["modules"]
                     },
                     "mmseqs/linclust": {
                         "branch": "master",
-                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": ["modules"]
                     },
                     "multiqc": {
                         "branch": "master",
-                        "git_sha": "e594e9dfaffa7572afc11bafc634984fd4cbd87b",
+                        "git_sha": "98403d15b0e50edae1f3fec5eae5e24982f1fade",
                         "installed_by": ["modules"]
                     },
                     "pigz/uncompress": {
                         "branch": "master",
-                        "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": ["modules"]
                     },
                     "s4pred/runmodel": {
                         "branch": "master",
-                        "git_sha": "712d3f4d6c1b430c6a3eab7c1f92c8df63ad9a35",
+                        "git_sha": "5aec38f88fcc09d05e4315b51eb2f7a1f94b5a28",
                         "installed_by": ["modules"],
                         "patch": "modules/nf-core/s4pred/runmodel/s4pred-runmodel.diff"
                     },
                     "seqkit/stats": {
                         "branch": "master",
-                        "git_sha": "9fe7867a4f012db581d7bd560228ded1074eb0e5",
+                        "git_sha": "d07a945f421a4a91ce4e5a22db63e0e7f8741607",
                         "installed_by": ["modules"]
                     }
                 }

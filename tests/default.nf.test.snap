@@ -41,12 +41,12 @@
                     "sed": 4.7
                 },
                 "FIND_CONCATENATE": {
+                    "coreutils": 9.4,
                     "find": "4.6.0",
-                    "pigz": 2.8,
-                    "coreutils": 9.4
+                    "pigz": 2.8
                 },
                 "FOLDSEEK_EASYSEARCH_PDB": {
-                    "foldseek": "9.427df8a"
+                    "foldseek": "10.941cd33"
                 },
                 "GENERATE_FAMILIES": {
                     "python": "3.13.5",
@@ -58,7 +58,7 @@
                     "biopython": 1.85
                 },
                 "HHSUITE_HHBLITS": {
-                    "hh-suite": "3.3.0"
+                    "hhsuite": "3.3.0"
                 },
                 "HHSUITE_REFORMAT": {
                     "hhsuite": "3.3.0"
@@ -77,13 +77,13 @@
                     "pandas": "1.4.3"
                 },
                 "MMSEQS_CREATEDB": {
-                    "mmseqs": "17.b804f"
+                    "mmseqs": "18.8cc5c"
                 },
                 "MMSEQS_CREATETSV": {
-                    "mmseqs": "17.b804f"
+                    "mmseqs": "18.8cc5c"
                 },
                 "MMSEQS_LINCLUST": {
-                    "mmseqs": "17.b804f"
+                    "mmseqs": "18.8cc5c"
                 },
                 "PARSE_CIF": {
                     "python": "3.13.1",
@@ -121,7 +121,7 @@
                     "s4pred": "1.2.1"
                 },
                 "SEQKIT_STATS": {
-                    "seqkit": "2.9.0"
+                    "seqkit": "2.13.0"
                 },
                 "SEQKIT_STATS_TO_MQC": {
                     "sed": 4.7
@@ -130,7 +130,7 @@
                     "sed": 4.7
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v2.1.0dev"
+                    "ebi-metagenomics/mgnifams": "v3.0.0dev"
                 }
             },
             [
@@ -255,8 +255,9 @@
                 "mgnifams_v2.fa",
                 "multiqc",
                 "multiqc/multiqc_data",
-                "multiqc/multiqc_data/BETA-multiqc.parquet",
+                "multiqc/multiqc_data/llms-full.txt",
                 "multiqc/multiqc_data/multiqc.log",
+                "multiqc/multiqc_data/multiqc.parquet",
                 "multiqc/multiqc_data/multiqc_citations.txt",
                 "multiqc/multiqc_data/multiqc_cluster_distribution.txt",
                 "multiqc/multiqc_data/multiqc_data.json",
@@ -331,8 +332,8 @@
             ],
             [
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
-                "multiqc_seqkit_stats_summary.txt:md5,f35e5022d9be7fbf86e664149c054290",
-                "mgnifams_v2.tsv:md5,57739343a6c2d595dce56e4c5ff08ef6",
+                "multiqc_seqkit_stats_summary.txt:md5,4618d86bd1669a76fae7308d827743ac",
+                "mgnifams_v2.tsv:md5,1a51d6374f085bb4f8b084b39464b402",
                 "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
             ],
             "/structures: 22",
@@ -341,7 +342,7 @@
             "/annotation: 32",
             "/table_data: 5"
         ],
-        "timestamp": "2026-09-21T11:35:58.572421949",
+        "timestamp": "2026-09-30T15:49:40.056538449",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

@@ -37,10 +37,6 @@ workflow UPDATE_FAMILIES {
     ch_versions = ch_versions.mix( CHECK_QUALITY.out.versions )
 
     HMMER_ESLSFETCHINDEX( ch_fasta )
-    ch_versions = ch_versions.mix(
-        HMMER_ESLSFETCHINDEX.out.versions_hmmer.mix( HMMER_ESLSFETCHINDEX.out.versions_easel, HMMER_ESLSFETCHINDEX.out.versions_coreutils )
-            .map { process, tool, version -> "\"${process}\":\n    ${tool}: ${version}" }
-    )
 
     SPLIT_HMM_LIB( ch_samplesheet.map { meta, _sequences, _clusters, _pfam, hmms, _db_config, _families -> [ meta, hmms ] }, hmm_chunk_size )
     ch_versions = ch_versions.mix( SPLIT_HMM_LIB.out.versions )
@@ -50,10 +46,6 @@ workflow UPDATE_FAMILIES {
         .flatMap { meta, libs -> [libs].flatten().collect { lib -> [ meta + [chunk: lib.name.tokenize('._')[1]], lib ] } }
         .combine( ch_fasta.join( HMMER_ESLSFETCHINDEX.out.ssi ).map { _meta, fa, ssi -> [ fa, ssi ] } )
     MGNIFAM_UPDATEFAMILIES( ch_update_input )
-    ch_versions = ch_versions.mix(
-        MGNIFAM_UPDATEFAMILIES.out.versions_mgnifam
-            .map { process, tool, version -> "\"${process}\":\n    ${tool}: ${version}" }
-    )
 
     POOL_UPDATED_FAMILIES(
         ch_meta,

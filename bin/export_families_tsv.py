@@ -48,8 +48,8 @@ def update_rows(previous, outcomes, metadata, release, proteins_release):
                 "members_release": release,
                 "members_proteins_release": proteins_release,
                 "full_size": meta["full_msa_size"],
-                "rep_id": f"MGYP{int(meta['protein']):012d}",
-                "rep_region": meta["region"],
+                "rep_id": f"MGYP{int(meta['rep_protein']):012d}",
+                "rep_region": meta["rep_region"],
             }
         else:
             row = row | {"status": "not_updated", "not_updated_reason": outcomes[family]}

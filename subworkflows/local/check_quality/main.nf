@@ -9,7 +9,6 @@ workflow CHECK_QUALITY {
     ch_versions = channel.empty()
 
     SEQKIT_STATS( fasta )
-    ch_versions = ch_versions.mix( SEQKIT_STATS.out.versions )
 
     SEQKIT_STATS_TO_MQC( SEQKIT_STATS.out.stats )
     ch_versions = ch_versions.mix( SEQKIT_STATS_TO_MQC.out.versions )

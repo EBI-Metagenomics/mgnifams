@@ -33,7 +33,7 @@ with tempfile.TemporaryDirectory() as tmp:
     outcomes = read_delta(delta)
 assert outcomes == {"1": "successful", "2": "internal error during a, b"}, outcomes
 
-metadata = {"1": {"full_msa_size": "47", "protein": "1814953751", "region": "541-660"}}
+metadata = {"1": {"full_msa_size": "47", "rep_protein": "1814953751", "rep_region": "541-660"}}
 updated, not_updated = update_rows(previous, outcomes, metadata, "1.1", "2026_07")
 assert updated == row | {
     "family_id": "1",
