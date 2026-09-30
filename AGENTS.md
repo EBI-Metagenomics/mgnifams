@@ -66,7 +66,7 @@ Five sequential subworkflows:
 
 2. **GENERATE_NONREDUNDANT_FAMILIES** (`subworkflows/local/generate_nonredundant_families/`) — Core algorithm in `bin/generate_families.py` (to be replaced by nf-core `mgnifam/generatefamilies` 4.0.0, [#68](https://github.com/EBI-Metagenomics/mgnifams/issues/68)). Iteratively builds families: seed MSA (pyfamsa) → HMM (pyhmmer) → recruit sequences → align (pyhmmer/hmmalign) → trim (pytrimal), repeated up to 3 times. Redundancy removed via `subworkflows/local/remove_redundancy/` using `bin/identify_redundant_fams.py`.
 
-3. **PREDICT_STRUCTURES** (`subworkflows/local/predict_structures/`) — ESMFold protein structure prediction with GPU support. CUDA OOM failures are caught and re-run on CPU (`bin/extract_cuda_failed.py`). Outputs PDB/CIF files with pLDDT and pTM scores.
+3. **PREDICT_STRUCTURES** (`subworkflows/local/predict_structures/`) — ESMFold protein structure prediction with GPU support. CUDA OOM failures are caught and re-run on CPU (`bin/extract_cuda_failed.py`). The CPU re-run (`RUN_ESMFOLD_CPU`) is an alias of `RUN_ESMFOLD`, so it carries the static `process_gpu` label; `conf/base.config` clears its `accelerator` (a config `withName` cannot remove a label). Site configs must therefore request GPUs from `task.accelerator` (`clusterOptions = { task.accelerator ? '--gres=gpu:1' : '' }`), because the Nextflow SLURM executor ignores `accelerator` itself. Outputs PDB/CIF files with pLDDT and pTM scores.
 
 4. **ANNOTATE_FAMILIES** (`subworkflows/local/annotate_families/`) — Three parallel annotation streams:
    - `ANNOTATE_REPS`: secondary structure (s4pred), transmembrane (deeptmhmm), Pfam/FunFams hmmsearch

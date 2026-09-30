@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- `RUN_ESMFOLD_CPU` (the CPU fallback for long sequences and CUDA OOM failures) inherited the `process_gpu` label of `RUN_ESMFOLD` and requested a GPU with `-profile gpu`. Its `accelerator` is now cleared; SLURM site configs should request GPUs with `clusterOptions = { task.accelerator ? '--gres=gpu:1' : '' }` under `withLabel: process_gpu`.
 - [#64](https://github.com/EBI-Metagenomics/mgnifams/pull/64) - Bugs found while building the update mechanism:
   - [#62](https://github.com/EBI-Metagenomics/mgnifams/issues/62) - `mgnifam_pfams` / `mgnifam_funfams` `e_value` and `score` held the full-sequence values. They now hold the per-domain i-Evalue and domain score. Rows in existing databases keep the old values until their families are updated.
   - [#58](https://github.com/EBI-Metagenomics/mgnifams/issues/58), [#59](https://github.com/EBI-Metagenomics/mgnifams/issues/59) - Domain architectures placed MGnifam domains of `<mgyp>/<start>-<end>` members at the wrong start, and ordered Pfam domains by HMM position instead of their position on the protein.
