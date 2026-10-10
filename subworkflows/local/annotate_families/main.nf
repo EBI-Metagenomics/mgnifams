@@ -9,6 +9,7 @@ workflow ANNOTATE_FAMILIES {
     deeptmhmm_path
     pfam_path
     funfams_path
+    s4pred_chunk_size
     seed_msa
     _full_msa
     hh_mode
@@ -21,7 +22,7 @@ workflow ANNOTATE_FAMILIES {
     main:
     ch_versions = channel.empty()
 
-    ANNOTATE_REPS( reps, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path )
+    ANNOTATE_REPS( reps, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
     ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path )

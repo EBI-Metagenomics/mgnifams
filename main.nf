@@ -57,7 +57,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.pdb_chunk_size, params.esmfold_db, params.esmfold_params_path, \
             params.esmfold_3B_v1, params.esm2_t36_3B_UR50D, params.esm2_t36_3B_UR50D_contact_regression, \
             params.num_recycles_esmfold, params.pdb_chunk_size_long, \
-            params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, \
+            params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, params.s4pred_chunk_size, \
             params.hh_mode, params.hhdb_path, foldseek_pdb_db, foldseek_alphafold_db, params.query_hmm_length_threshold, \
             params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
         )
@@ -90,6 +90,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.num_recycles_esmfold, params.pdb_chunk_size_long, \
             params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, \
             foldseek_pdb_db, foldseek_alphafold_db, params.query_hmm_length_threshold, params.query_result_chunks, \
+            params.family_query_chunks, params.s4pred_chunk_size, \
             params.run_alphafold2, params.colabfold_params_path, params.af2_max_msa_seqs, params.af2_num_recycles, \
             params.mgnifams_release, params.mgnify_proteins_release, params.outdir, \
             params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description

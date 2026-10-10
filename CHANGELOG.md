@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- `update_mgnifams` at MGnify Proteins scale: `QUERY_MGNPROTEIN_DB` held every member's metadata in memory before writing any output (no output after 2 days, close to its 280 GB), `BUILD_PARQUET_DOMAIN_QUERIES` ran out of memory and `S4PRED_RUNMODEL` ran out of time. All three now run in parallel tasks that resume independently:
+  - The domain and biome queries run in `--family_query_chunks` tasks (default 20), each over whole `MGNIFAM_UPDATEFAMILIES` chunks. `QUERY_MGNPROTEIN_DB` also queries and writes one chunk of families at a time over `task.cpus` DB connections, fetching only the `b` and `p` metadata keys; `maxForks = 4` in `conf/base.config` caps the connections to the shared DB.
+  - `S4PRED_RUNMODEL` runs on `--s4pred_chunk_size` representatives per task (default 1000), in both modes. Its raw output is published as `annotation/reps/s4pred/horiz_<n>/` instead of `horiz/`.
 - `-stub-run` of the default mode with `--fasta_input_mode` failed: the `EXTRACT_UNIQUE_CLUSTER_REPS` stub called `python` in an image without it, so its `versions.yml` held a shell error.
 - `RUN_ESMFOLD_CPU` (the CPU fallback for long sequences and CUDA OOM failures) inherited the `process_gpu` label of `RUN_ESMFOLD` and requested a GPU with `-profile gpu`. Its `accelerator` is now cleared; SLURM site configs should request GPUs with `clusterOptions = { task.accelerator ? '--gres=gpu:1' : '' }` under `withLabel: process_gpu`.
 - [#64](https://github.com/EBI-Metagenomics/mgnifams/pull/64) - Bugs found while building the update mechanism:

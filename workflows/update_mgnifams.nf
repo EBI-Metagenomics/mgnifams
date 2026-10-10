@@ -51,6 +51,8 @@ workflow UPDATE_MGNIFAMS {
     foldseek_alphafold_db
     query_hmm_length_threshold
     query_result_chunks
+    family_query_chunks
+    s4pred_chunk_size
     run_alphafold2
     colabfold_params_path
     af2_max_msa_seqs
@@ -107,7 +109,7 @@ workflow UPDATE_MGNIFAMS {
     }
 
     // Not ANNOTATE_FAMILIES: its HH-suite model annotation (ANNOTATE_MODELS) works on the seed MSA, which does not change
-    ANNOTATE_REPS( UPDATE_FAMILIES.out.family_ids_fasta, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path )
+    ANNOTATE_REPS( UPDATE_FAMILIES.out.family_ids_fasta, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
     ANNOTATE_STRUCTURES( PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
@@ -120,17 +122,30 @@ workflow UPDATE_MGNIFAMS {
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
 
     //
+    // Per-family queries in about family_query_chunks tasks, each over whole update chunks
+    // (a family never spans two chunks), so memory is bounded and a failed task reruns alone
+    //
+    ch_family_chunks = UPDATE_FAMILIES.out.family_tsvs
+        .map { _meta, tsv -> tsv }
+        .filter { tsv -> tsv.size() > 0 } // a chunk whose families were all discarded has nothing to query
+        .toSortedList { a, b -> a.name <=> b.name }
+        .flatMap { tsvs ->
+            def size = Math.max( 1, Math.ceil( tsvs.size() / family_query_chunks ) as int )
+            tsvs.collate( size ).withIndex().collect { batch, index -> [ [id: "families_${index}"], batch ] }
+        }
+
+    //
     // Domain architectures of the new members, from the Pfam parquet
     //
     BUILD_PARQUET_DOMAIN_QUERIES(
-        UPDATE_FAMILIES.out.refined_families.combine( ch_samplesheet.map { _meta, _sequences, _clusters, pfam, _hmms, _db_config, _families -> pfam } ),
+        ch_family_chunks.combine( ch_samplesheet.map { _meta, _sequences, _clusters, pfam, _hmms, _db_config, _families -> pfam } ),
         file(pfam_path, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( BUILD_PARQUET_DOMAIN_QUERIES.out.versions )
 
     ch_domain_batches = BUILD_PARQUET_DOMAIN_QUERIES.out.res
-        .flatMap { _meta, files ->
-            [files].flatten().collate( query_result_chunks ).withIndex().collect { flist, index -> [ [id: "batch_${index}"], flist ] }
+        .flatMap { meta, files ->
+            [files].flatten().collate( query_result_chunks ).withIndex().collect { flist, index -> [ [id: "${meta.id}_batch_${index}"], flist ] }
         }
     PARSE_DOMAINS( ch_domain_batches, BUILD_PARQUET_DOMAIN_QUERIES.out.pfam_mapping.first(), UPDATE_FAMILIES.out.refined_families.first() )
     ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
@@ -141,12 +156,14 @@ workflow UPDATE_MGNIFAMS {
     ch_db_config = ch_samplesheet
         .filter { _meta, _sequences, _clusters, _pfam, _hmms, db_config, _families -> db_config }
         .map { meta, _sequences, _clusters, _pfam, _hmms, db_config, _families -> [ meta, db_config ] }
-    QUERY_MGNPROTEIN_DB( ch_db_config.combine( UPDATE_FAMILIES.out.refined_families.map { _meta, tsv -> tsv } ) )
+    QUERY_MGNPROTEIN_DB(
+        ch_db_config.combine( ch_family_chunks ).map { _meta, db_config, chunk_meta, tsvs -> [ chunk_meta, db_config, tsvs ] }
+    )
     ch_versions = ch_versions.mix( QUERY_MGNPROTEIN_DB.out.versions )
 
     ch_biome_batches = QUERY_MGNPROTEIN_DB.out.res
-        .flatMap { _meta, files ->
-            [files].flatten().collate( query_result_chunks ).withIndex().collect { flist, index -> [ [id: "batch_${index}"], flist ] }
+        .flatMap { meta, files ->
+            [files].flatten().collate( query_result_chunks ).withIndex().collect { flist, index -> [ [id: "${meta.id}_batch_${index}"], flist ] }
         }
     PARSE_BIOMES( ch_biome_batches, QUERY_MGNPROTEIN_DB.out.biome_mapping.first() )
     ch_versions = ch_versions.mix( PARSE_BIOMES.out.versions )

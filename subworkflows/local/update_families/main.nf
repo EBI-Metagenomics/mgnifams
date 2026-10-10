@@ -93,6 +93,7 @@ workflow UPDATE_FAMILIES {
     family_ids_fasta = POOL_UPDATED_FAMILIES.out.family_ids_fasta.map { _meta, fa -> [ [id: 'reps_fasta'], fa ] }
     successful_ids   = ch_checked_ids                    // value: Set of family ids
     refined_families = POOL_UPDATED_FAMILIES.out.tsv
+    family_tsvs      = MGNIFAM_UPDATEFAMILIES.out.tsv    // per update chunk; refined_families is their concatenation
     metadata         = POOL_UPDATED_FAMILIES.out.metadata.map { _meta, csv -> [ [id: 'metadata'], csv ] }
     delta            = POOL_UPDATED_FAMILIES.out.delta
     full_msa         = ch_successful_full_msa            // [ [id: family], full_msa.sto.gz ]

@@ -24,7 +24,7 @@ process BUILD_PARQUET_DOMAIN_QUERIES {
     set -euo pipefail
 
     build_parquet_domain_queries.py \\
-        --refined_families "${refined_families}" \\
+        --refined_families ${refined_families} \\
         --pfam "${pfam}" \\
         --output_dir query_results
 
@@ -55,7 +55,7 @@ process BUILD_PARQUET_DOMAIN_QUERIES {
     stub:
     """
     mkdir query_results
-    cut -f1 "${refined_families}" | sort -u | while read -r family; do touch "query_results/\${family}.tsv"; done
+    cat ${refined_families} | cut -f1 | sort -u | while read -r family; do touch "query_results/\${family}.tsv"; done
     touch pfam_mapping.tsv
 
     cat <<-END_VERSIONS > versions.yml

@@ -12,15 +12,25 @@ workflow ANNOTATE_REPS {
     deeptmhmm_path
     pfam_path
     funfams_path
+    s4pred_chunk_size // integer: sequences per S4PRED_RUNMODEL task
 
     main:
     ch_versions       = channel.empty()
     ch_tm_composition = channel.of([ [ id: 'reps_fasta' ], [] ])
     ch_tm_features    = channel.empty()
 
-    S4PRED_RUNMODEL( fasta )
+    // Chunk files are named <name>.<n>.<ext>; n keeps each chunk's output dir (horiz_<n>) distinct
+    S4PRED_RUNMODEL(
+        fasta
+            .splitFasta( by: s4pred_chunk_size, file: true, elem: 1 )
+            .map { meta, chunk -> [ meta + [chunk: chunk.baseName.tokenize('.').last()], chunk ] }
+    )
 
-    PARSE_S4PRED_TO_FEATURE_VIEWER( S4PRED_RUNMODEL.out.preds )
+    PARSE_S4PRED_TO_FEATURE_VIEWER(
+        S4PRED_RUNMODEL.out.preds
+            .map { meta, preds -> [ meta.findAll { key, _value -> key != 'chunk' }, preds ] }
+            .groupTuple( sort: true )
+    )
     ch_versions = ch_versions.mix( PARSE_S4PRED_TO_FEATURE_VIEWER.out.versions )
 
     if (!skip_deeptmhmm && !workflow.profile.contains("conda")) {

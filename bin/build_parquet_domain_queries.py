@@ -17,16 +17,17 @@ COLUMNS = ["protein_id", "pfam_accession", "i_evalue", "score", "hmm_from", "hmm
 
 def main(args=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--refined_families", required=True, help="family<TAB>member TSV")
+    parser.add_argument("--refined_families", required=True, nargs="+", help="family<TAB>member TSV(s)")
     parser.add_argument("--pfam", required=True, help="MGnify Pfam hits parquet")
     parser.add_argument("--output_dir", default="query_results")
     a = parser.parse_args(args)
 
     families = defaultdict(set)
-    with open(a.refined_families) as fh:
-        for line in fh:
-            family, member = line.rstrip("\n").split("\t")
-            families[family].add(int(extract_mgyp(member)))  # non-numeric protein ids fail here
+    for refined_families in a.refined_families:
+        with open(refined_families) as fh:
+            for line in fh:
+                family, member = line.rstrip("\n").split("\t")
+                families[family].add(int(extract_mgyp(member)))  # non-numeric protein ids fail here
 
     ids = sorted({p for members in families.values() for p in members})
     pfams = defaultdict(list)

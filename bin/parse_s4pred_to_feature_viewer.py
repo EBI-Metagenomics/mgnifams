@@ -75,28 +75,31 @@ def parse_s4pred_to_feature_viewer(input_file, output_file):
     return helix_percentage, strand_percentage, coil_percentage
 
 
-def process_directory(input_dir, output_dir, csv_out):
+def process_directories(input_dirs, output_dir, csv_out):
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
     csv_rows = [("id", "helix_percent", "strand_percent", "coil_percent")]
 
-    # Iterate over all files in the input directory
-    for filename in os.listdir(input_dir):
-        input_file = os.path.join(input_dir, filename)
+    # Iterate over all files in the input directories (one per S4Pred chunk)
+    for input_dir in input_dirs:
+        for filename in os.listdir(input_dir):
+            input_file = os.path.join(input_dir, filename)
 
-        # Only process files (skip directories)
-        if os.path.isfile(input_file):
-            # Construct the output file path (same basename + .json)
-            base_name = os.path.splitext(filename)[0]
-            output_file = os.path.join(output_dir, f"{base_name}.json")
+            # Only process files (skip directories)
+            if os.path.isfile(input_file):
+                # Construct the output file path (same basename + .json)
+                base_name = os.path.splitext(filename)[0]
+                output_file = os.path.join(output_dir, f"{base_name}.json")
 
-            # Process the file and save the output JSON
-            try:
-                helix_percent, strand_percent, coil_percentage = parse_s4pred_to_feature_viewer(input_file, output_file)
-                csv_rows.append((base_name, helix_percent, strand_percent, coil_percentage))
-            except Exception as e:
-                print(f"Error processing {filename}: {e}")
+                # Process the file and save the output JSON
+                try:
+                    helix_percent, strand_percent, coil_percentage = parse_s4pred_to_feature_viewer(
+                        input_file, output_file
+                    )
+                    csv_rows.append((base_name, helix_percent, strand_percent, coil_percentage))
+                except Exception as e:
+                    print(f"Error processing {filename}: {e}")
 
     with open(csv_out, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
@@ -107,10 +110,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Parse S4Pred output to JSON for FeatureViewer and collect coil % per protein."
     )
-    parser.add_argument("--input_dir", help="Directory with S4Pred input horiz files", required=True)
+    parser.add_argument("--input_dir", nargs="+", help="Directories with S4Pred input horiz files", required=True)
     parser.add_argument("--output_dir", help="Directory for output JSON files", required=True)
     parser.add_argument("--csv_out", help="Path to output CSV summary file with coil percentages", required=True)
 
     args = parser.parse_args()
 
-    process_directory(args.input_dir, args.output_dir, args.csv_out)
+    process_directories(args.input_dir, args.output_dir, args.csv_out)

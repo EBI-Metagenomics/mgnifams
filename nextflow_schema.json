@@ -456,6 +456,12 @@
                     "type": "boolean",
                     "description": "Skip deeptmhmm transmemrane protein prediction from family reps"
                 },
+                "s4pred_chunk_size": {
+                    "type": "integer",
+                    "default": 1000,
+                    "minimum": 1,
+                    "description": "Number of family representative sequences per S4PRED secondary structure prediction task"
+                },
                 "hh_mode": {
                     "type": "string",
                     "default": "hhsearch",
@@ -582,6 +588,12 @@
                     "default": 5000,
                     "minimum": 1,
                     "description": "Number of family HMMs per update_families task"
+                },
+                "family_query_chunks": {
+                    "type": "integer",
+                    "default": 20,
+                    "minimum": 1,
+                    "description": "Number of parallel tasks for the per-family domain (Pfam parquet) and biome (MGnify proteins DB) queries; each Pfam parquet task scans the whole parquet"
                 },
                 "run_alphafold2": {
                     "type": "boolean",
