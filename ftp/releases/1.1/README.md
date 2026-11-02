@@ -26,7 +26,30 @@ produced by the `update_mgnifams` mode of the [MGnifams pipeline](https://github
 
 | Status        | Families |
 | ------------- | -------- |
-| `updated`     | TBD      |
-| `not_updated` | TBD      |
+| `updated`     | 34,419   |
+| `not_updated` | 1,040    |
+
+A family is `not_updated` when its 1.0 HMM, searched against 2026_07, did not give a usable new full MSA:
+
+| `not_updated_reason`                         | Families | Meaning in an update                                                                                     |
+| -------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `family representative length too small`     | 788      | the new representative (row 0 of the new full MSA) is shorter than 75 residues                           |
+| `low complexity model - confounding cluster` | 215      | the HMM found hits in 2026_07, but none covered at least 90% of the model                                |
+| `family representative length too large`     | 37       | the new representative is longer than 2,000 residues                                                     |
+
+The name `low complexity model - confounding cluster` comes from family generation, where it has the same test (no
+hit covering 90% of the model); in an update it does not mean that the model is low complexity.
+
+## Known limitations
+
+- **Representative choice.** The representative is the best-scoring domain of the top-scoring sequence. When that
+  sequence is a long repeat protein, its best domain can be a fragment of the model, or one long region spanning many
+  repeats: 19.1% of the updated representatives are shorter than 90% of the model length (17.6% in 1.0), and most of
+  the length-based `not_updated` families above come from this. It will change in the next family remake
+  ([mgnifam#23](https://github.com/vagkaratzas/mgnifam/issues/23)).
+- **Full MSAs include partial matches.** As in 1.0, the full MSA keeps every domain with E-value <= 0.001, whatever
+  its length; the 90% length requirement only applies while the family is built.
+- **`rep_region` `-`.** 397 families kept from 1.0 have `rep_region` = `-`: their representative is the whole
+  protein. Families updated in 1.1 write it as `1-<length>`.
 
 Format details are in the [top-level README](../../README.md).

@@ -111,7 +111,7 @@ Tab-separated, with a header row. Families are never removed or renumbered, and 
 | `full_size`                | number of sequences in the full MSA                                                           |
 | `seed_size`                | number of sequences in the seed MSA                                                           |
 | `rep_id`                   | representative MGnify protein (`MGYP...`)                                                     |
-| `rep_region`               | representative region, `start-end` (1-based, inclusive)                                       |
+| `rep_region`               | representative region, `start-end` (1-based, inclusive); `-` = the whole protein (1.0 only)   |
 
 MGnify Proteins releases are cited by their numbered folder (`peptide_database/2026_07/`), never by
 `current_release`.
