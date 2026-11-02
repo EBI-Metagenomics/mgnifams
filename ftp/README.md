@@ -70,13 +70,27 @@ From the flat layout (1.0 files at the top level):
 2. Link `current_release -> releases/1.0`, and the three old top-level names to their files in `releases/1.0/`.
 3. Replace the top-level `README` with this file, and add `RELEASES.tsv` with the 1.0 row only.
 
-When 1.1 is published:
+### Publishing an update release
 
-1. Create `releases/1.1/`: hard-link `mgnifams_hmm.lib.gz` and `seed_msa.tar.gz` from `releases/1.0/`, and add
-   `full_msa.tar` and the metadata files (`families.tsv.gz` is the update run's `update_families/families.tsv.gz`).
-   Check it with `md5sum -c md5sums.txt`.
-2. Point `current_release` to `releases/1.1` and add the 1.1 row to `RELEASES.tsv`.
-3. Remove `releases/1.0/full_msa.tar.gz` and the top-level `full_msa.tar.gz` link.
+How 1.1 was published (2026-11-02), for the next `X.Y` after `X.(Y-1)`. On Codon, `/nfs/ftp` is mounted only on the
+datamover nodes, so every step that touches it runs there (`sbatch -p datamover`). The FTP is a separate filesystem
+from `/nfs/production`, so files are copied to it, not hard-linked.
+
+1. **Back up** the previous release's `full_msa.tar*` outside the FTP, and check it against that release's `md5sums.txt`.
+2. **Stage** the new files outside the public tree:
+   `sbatch -p datamover build_update_release.sh <update outdir> <FTP>/releases/X.(Y-1) <stage dir>`. It builds the
+   complete `full_msa.tar` (the previous alignments of the `not_updated` families), copies `families.tsv.gz` and
+   `pipeline_info/`, and writes `md5sums.txt`. It stops on any count mismatch.
+3. **Fill** `releases/X.Y/release_manifest.json`, `README.md` and the `RELEASES.tsv` row in this repository, from the
+   staging log (md5s and sizes) and the run's `pipeline_info/`.
+4. **Copy into a hidden folder** `<FTP>/releases/.X.Y_tmp`: hard-link `mgnifams_hmm.lib.gz` and `seed_msa.tar.gz` from
+   `releases/X.(Y-1)/`, copy the staged files and the metadata from this repository, then run `md5sum -c md5sums.txt`
+   there.
+5. **Go live:** rename `.X.Y_tmp` to `X.Y`, swap the link in one step
+   (`ln -s releases/X.Y .cr && mv -T .cr current_release`), and replace `RELEASES.tsv` and the top-level `README.md`
+   (without this repository's "Draft" note).
+6. **Retire** the previous `full_msa.tar*`: remove it and its line in that release's `md5sums.txt` (the checksum stays
+   in its `release_manifest.json`). Then delete the stage dir.
 
 ## Files
 

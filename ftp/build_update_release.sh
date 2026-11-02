@@ -3,7 +3,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=2
-# Stage the files of an update release for the FTP (README.md, "When 1.1 is published", step 1), outside the
+# Stage the files of an update release for the FTP (README.md, "Publishing an update release", step 2), outside the
 # public tree. Hard links to the previous release's HMMs and seeds are made later, inside the FTP tree.
 #
 #   sbatch build_update_release.sh <update outdir> <previous release dir on the FTP> <stage dir>
