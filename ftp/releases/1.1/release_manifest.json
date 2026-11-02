@@ -2,12 +2,12 @@
     "release": "1.1",
     "type": "update",
     "parent_release": "1.0",
-    "date": null,
+    "date": "2026-11-02",
     "n_families": 35459,
     "family_counts": {
         "new": 0,
-        "updated": null,
-        "not_updated": null
+        "updated": 34419,
+        "not_updated": 1040
     },
     "mgnify_proteins": {
         "models": {
@@ -28,45 +28,47 @@
     "pipeline": {
         "repository": "https://github.com/EBI-Metagenomics/mgnifams",
         "mode": "update_mgnifams",
-        "version": null,
-        "commit": null,
-        "nextflow_version": null
+        "version": "v3.0.0",
+        "commit": "ae4d6d7ba4e130d11ac667e00dc75ca73280933b",
+        "nextflow_version": "26.04.6",
+        "release_tag": "3.0.0"
     },
     "databases": {
-        "pfam": null,
-        "funfams": null,
+        "pfam": "Pfam-A 38.2",
+        "funfams": "FunFams v4.3.0",
         "foldseek": {
-            "search_version": null,
-            "databases_dir": null,
+            "search_version": "10.941cd33",
+            "databases_dir": "10-941cd33",
             "pdb": {
-                "database": null,
-                "pdb_date": null,
-                "foldseek_commit": null
+                "database": "pdb100",
+                "pdb_date": "2025-01-01",
+                "foldseek_commit": "1815f0d76d7b5807e63b13f9d446dcef43c1f3b1"
             },
             "alphafold_db": {
-                "version": null
+                "database": "afdb50",
+                "version": "v6 2025_03"
             }
         },
-        "esmfold_weights": null
+        "esmfold_weights": "esmfold_3B_v1"
     },
     "files": {
         "mgnifams_hmm.lib.gz": {
             "md5": "f06909acd4856bed7b2b13113e065ba1",
-            "bytes": null,
+            "bytes": 1145075775,
             "same_as": "1.0"
         },
         "seed_msa.tar.gz": {
             "md5": "8e5b13133b7166537d77693a923f74c6",
-            "bytes": null,
+            "bytes": 7372332411,
             "same_as": "1.0"
         },
         "families.tsv.gz": {
-            "md5": null,
-            "bytes": null
+            "md5": "622fba7ff0fed86b8f27cc176be51a6e",
+            "bytes": 659905
         },
         "full_msa.tar": {
-            "md5": null,
-            "bytes": null
+            "md5": "690c5c02649f9c96a6d654554c839b56",
+            "bytes": 626352291840
         }
     }
 }
