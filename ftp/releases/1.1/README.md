@@ -31,11 +31,11 @@ produced by the `update_mgnifams` mode of the [MGnifams pipeline](https://github
 
 A family is `not_updated` when its 1.0 HMM, searched against 2026_07, did not give a usable new full MSA:
 
-| `not_updated_reason`                         | Families | Meaning in an update                                                                                     |
-| -------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- |
-| `family representative length too small`     | 788      | the new representative (row 0 of the new full MSA) is shorter than 75 residues                           |
-| `low complexity model - confounding cluster` | 215      | the HMM found hits in 2026_07, but none covered at least 90% of the model                                |
-| `family representative length too large`     | 37       | the new representative is longer than 2,000 residues                                                     |
+| `not_updated_reason`                         | Families | Meaning in an update                                                           |
+| -------------------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `family representative length too small`     | 788      | the new representative (row 0 of the new full MSA) is shorter than 75 residues |
+| `low complexity model - confounding cluster` | 215      | the HMM found hits in 2026_07, but none covered at least 90% of the model      |
+| `family representative length too large`     | 37       | the new representative is longer than 2,000 residues                           |
 
 The name `low complexity model - confounding cluster` comes from family generation, where it has the same test (no
 hit covering 90% of the model); in an update it does not mean that the model is low complexity.
