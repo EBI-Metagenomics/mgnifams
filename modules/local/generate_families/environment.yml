@@ -8,6 +8,6 @@ dependencies:
   - conda-forge::python=3.13.5
   - pip
   - pip:
-    - biopython==1.85
-    - pyfamsa==0.6.0
-    - pytrimal==0.8.2
+      - biopython==1.85
+      - pyfamsa==0.6.0
+      - pytrimal==0.8.2

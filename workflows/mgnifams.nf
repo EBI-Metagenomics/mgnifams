@@ -14,6 +14,7 @@ include { GENERATE_NONREDUNDANT_FAMILIES } from '../subworkflows/local/generate_
 include { PREDICT_STRUCTURES             } from '../subworkflows/local/predict_structures'
 include { ANNOTATE_FAMILIES              } from '../subworkflows/local/annotate_families'
 include { EXPORT_DATA                    } from '../subworkflows/local/export_data'
+include { COUNT_SEED_MSA_SIZES           } from '../modules/local/count_seed_msa_sizes/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -22,7 +23,7 @@ include { EXPORT_DATA                    } from '../subworkflows/local/export_da
 */
 
 workflow MGNIFAMS {
-    
+
     take:
     ch_samplesheet // channel: samplesheet read in from --input
     fasta_input_mode
@@ -56,18 +57,20 @@ workflow MGNIFAMS {
     deeptmhmm_path
     pfam_path
     funfams_path
+    s4pred_chunk_size
     hh_mode
     hhdb_path
-    foldseek_db_path
+    foldseek_pdb_db
+    foldseek_alphafold_db
     query_hmm_length_threshold
     multiqc_config
     multiqc_logo
     multiqc_methods_description
 
     main:
-    
-    ch_versions      = Channel.empty()
-    ch_multiqc_files = Channel.empty()
+
+    ch_versions      = channel.empty()
+    ch_multiqc_files = channel.empty()
 
     SETUP_CLUSTERS( ch_samplesheet, fasta_input_mode, compress_mode, \
         input_csv_chunk_size, min_sequence_length, outdir, \
@@ -90,13 +93,16 @@ workflow MGNIFAMS {
     ch_versions = ch_versions.mix( PREDICT_STRUCTURES.out.versions )
 
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, \
-        skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, \
+        skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size, \
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
-        hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_db_path, outdir )
+        hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
+    COUNT_SEED_MSA_SIZES( GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa_sto )
+    ch_versions = ch_versions.mix( COUNT_SEED_MSA_SIZES.out.versions )
+
     EXPORT_DATA( GENERATE_NONREDUNDANT_FAMILIES.out.metadata, PREDICT_STRUCTURES.out.scores, \
-        ANNOTATE_FAMILIES.out.composition, ANNOTATE_FAMILIES.out.tm_composition, \
+        ANNOTATE_FAMILIES.out.composition, ANNOTATE_FAMILIES.out.tm_composition, COUNT_SEED_MSA_SIZES.out.csv, \
         ANNOTATE_FAMILIES.out.pfam_domains, ANNOTATE_FAMILIES.out.funfam_domains, query_hmm_length_threshold, \
         ANNOTATE_FAMILIES.out.pfam_model_hits, ANNOTATE_FAMILIES.out.foldseek_hits, outdir )
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
@@ -104,7 +110,20 @@ workflow MGNIFAMS {
     //
     // Collate and save software versions
     //
+    // nf-core modules emit [ process, tool, version ] tuples to the `versions` topic;
+    // local modules still emit versions.yml files through ch_versions
+    def topic_versions_string = channel.topic("versions")
+        .distinct()
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by:0)
+        .map { process, tool_versions ->
+            "${process}:\n${tool_versions.unique().sort().join('\n')}"
+        }
+
     softwareVersionsToYAML(ch_versions)
+        .mix(topic_versions_string)
         .collectFile(
             storeDir: "${outdir}/pipeline_info",
             name: 'nf_core_pipeline_software_mqc_versions.yml',
@@ -115,24 +134,15 @@ workflow MGNIFAMS {
     //
     // MODULE: MultiQC
     //
-    ch_multiqc_config        = Channel.fromPath(
-        "$projectDir/assets/multiqc_config.yml", checkIfExists: true)
-    ch_multiqc_custom_config = multiqc_config ?
-        Channel.fromPath(multiqc_config, checkIfExists: true) :
-        Channel.empty()
-    ch_multiqc_logo          = multiqc_logo ?
-        Channel.fromPath(multiqc_logo, checkIfExists: true) :
-        Channel.empty()
-
     summary_params      = paramsSummaryMap(
         workflow, parameters_schema: "nextflow_schema.json")
-    ch_workflow_summary = Channel.value(paramsSummaryMultiqc(summary_params))
+    ch_workflow_summary = channel.value(paramsSummaryMultiqc(summary_params))
     ch_multiqc_files = ch_multiqc_files.mix(
         ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_custom_methods_description = multiqc_methods_description ?
         file(multiqc_methods_description, checkIfExists: true) :
         file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
-    ch_methods_description                = Channel.value(
+    ch_methods_description                = channel.value(
         methodsDescriptionText(ch_multiqc_custom_methods_description))
 
     ch_multiqc_files = ch_multiqc_files.mix(ch_collated_versions)
@@ -143,23 +153,29 @@ workflow MGNIFAMS {
         )
     )
 
-    ch_multiqc_files = ch_multiqc_files.mix(SETUP_CLUSTERS.out.seqkit_stats_mqc.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(SETUP_CLUSTERS.out.cluster_distr_mqc.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.discarded_mqc.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.metadata_mqc.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.similarity_mqc.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(SETUP_CLUSTERS.out.seqkit_stats_mqc.collect { t -> t[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(SETUP_CLUSTERS.out.cluster_distr_mqc.collect { t -> t[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.discarded_mqc.collect { t -> t[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.metadata_mqc.collect { t -> t[1] }.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.similarity_mqc.collect { t -> t[1] }.ifEmpty([]))
 
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList(),
-        [],
-        []
+    MULTIQC(
+        ch_multiqc_files.flatten().collect().map { files ->
+            [
+                [id: 'mgnifams'],
+                files,
+                // The custom config goes last, so its settings take precedence over the default one
+                [ file("${projectDir}/assets/multiqc_config.yml", checkIfExists: true) ] +
+                    (multiqc_config ? [ file(multiqc_config, checkIfExists: true) ] : []),
+                multiqc_logo ? file(multiqc_logo, checkIfExists: true) : [],
+                [],
+                [],
+            ]
+        }
     )
 
     emit:
-    multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
+    multiqc_report = MULTIQC.out.report.map { _meta, report -> report }.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions // channel: [ path(versions.yml) ]
 }
 

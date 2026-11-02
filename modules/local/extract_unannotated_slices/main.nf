@@ -17,7 +17,7 @@ process EXTRACT_UNANNOTATED_SLICES {
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """

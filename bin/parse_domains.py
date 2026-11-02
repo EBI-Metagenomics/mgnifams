@@ -2,91 +2,89 @@
 
 import argparse
 import os
+import re
 import ast
 import json
 import logging
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 log = logging.getLogger(__name__)
 
+
 def extract_mgyp(protein_name):
-    parts = protein_name.split('/')
+    parts = protein_name.split("/")
 
     if len(parts) > 1:
-        first_part = parts[0].split('_')[0]
+        first_part = parts[0].split("_")[0]
         return first_part
     elif "_" in protein_name:
-        return protein_name.split('_')[0]
+        return protein_name.split("_")[0]
 
     return protein_name
 
+
 def calculate_mgnifam_start(protein_name):
-    number_of_underscores = protein_name.count('_')
+    """1-based start of the MGnifam region on the full protein.
 
-    if (number_of_underscores == 0): # 250671917
-        start = 1
-    elif (number_of_underscores == 1): # 250671917/1_50
-        parts = protein_name.split('/')
-        start = parts[1].split('_')[0]
-    elif (number_of_underscores == 2): # 250671917_50_150
-        start = protein_name.split('_')[1]
-    elif (number_of_underscores == 3): # 250671917_50_200/2_34
-        start  = int(protein_name.split('_')[1])
-        region = protein_name.split('/')[1].split('_')
-        start  = start + int(region[0]) - 1
+    Forms: 250671917 | 250671917_50_150 (slice) | <base>/2_34 or <base>/2-34 (region within base).
+    """
+    base, _, region = protein_name.partition("/")
+    parts = base.split("_")
+    offset = int(parts[1]) if len(parts) == 3 else 1
+    if not region:
+        return offset
+    return offset + int(re.split(r"[-_]", region)[0]) - 1
 
-    return start
 
 def construct_domain_architecture(pfams, family_id, mgnifam_starts):
-    pfams        = ast.literal_eval(pfams)
-    fam_names    = []
+    pfams = ast.literal_eval(pfams)
+    fam_names = []
     start_points = []
 
     for pfam in pfams:
         fam_names.append(pfam[0])
-        start_points.append(pfam[3])
+        start_points.append(int(pfam[5]))  # env_from
 
     for mgnifam_start in mgnifam_starts:
         fam_names.append(str(family_id))
         start_points.append(int(mgnifam_start))
 
-    sorted_data             = sorted(zip(start_points, fam_names))
+    sorted_data = sorted(zip(start_points, fam_names))
     start_points, fam_names = zip(*sorted_data)
-    domain_architecture     = '\t'.join(map(str, fam_names))
+    domain_architecture = "\t".join(map(str, fam_names))
 
     return domain_architecture
+
 
 def construct_solo_domain_architecture(family_id, mgnifam_starts):
-    fam_names           = [str(family_id)] * len(mgnifam_starts)
-    domain_architecture = '\t'.join(fam_names)
+    fam_names = [str(family_id)] * len(mgnifam_starts)
+    domain_architecture = "\t".join(fam_names)
 
     return domain_architecture
+
 
 def count_domain_architectures(file_path, family_id, mgyp_lookup):
     """mgyp_lookup: {mgyp: [mgnifam_start, ...]} for this family only."""
     family_domain_architectures = []
 
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         for line in file:
-            parts           = line.strip().split('\t')
-            mgyp            = parts[0]
-            mgnifam_starts  = mgyp_lookup.get(mgyp, [])
+            parts = line.strip().split("\t")
+            mgyp = parts[0]
+            mgnifam_starts = mgyp_lookup.get(mgyp, [])
 
-            if len(parts) == 3: # aka pfams not empty
-                pfams               = parts[2]
+            if len(parts) == 3:  # aka pfams not empty
+                pfams = parts[2]
                 domain_architecture = construct_domain_architecture(pfams, family_id, mgnifam_starts)
-            else: # no pfams
+            else:  # no pfams
                 domain_architecture = construct_solo_domain_architecture(family_id, mgnifam_starts)
 
             family_domain_architectures.append(domain_architecture)
 
     return Counter(family_domain_architectures)
+
 
 def string_to_hex_color(s):
     hash_val = 0
@@ -94,13 +92,14 @@ def string_to_hex_color(s):
     for char in s:
         hash_val = ord(char) + ((hash_val << 5) - hash_val)
 
-    color = '#'
+    color = "#"
 
     for i in range(3):
         value = (hash_val >> (i * 8)) & 0xFF
-        color += ('00' + format(value, 'x'))[-2:]
+        color += ("00" + format(value, "x"))[-2:]
 
     return color
+
 
 def construct_architecture_json(domain_architecture_counts):
     architecture_containers = []
@@ -108,7 +107,7 @@ def construct_architecture_json(domain_architecture_counts):
     for architecture_text, count in domain_architecture_counts.most_common():
         domains = []
 
-        for domain in architecture_text.split('\t'):
+        for domain in architecture_text.split("\t"):
             domains.append({"id": domain, "color": string_to_hex_color(domain)})
         architecture_containers.append({"architecture_text": str(count), "domains": domains})
 
@@ -116,23 +115,27 @@ def construct_architecture_json(domain_architecture_counts):
 
     return output_json
 
-def subset_json(json_items, threshold = 15):
-    return json_items['architecture_containers'][:threshold]
+
+def subset_json(json_items, threshold=15):
+    return json_items["architecture_containers"][:threshold]
+
 
 def construct_name(mgnifam_id):
-    formatted_number = '{:010d}'.format(mgnifam_id)
-    mgnifam_id       = 'MGYF' + formatted_number
+    formatted_number = "{:010d}".format(mgnifam_id)
+    mgnifam_id = "MGYF" + formatted_number
 
     return mgnifam_id
 
+
 def hex_to_rgb(hex_color):
-    hex_color = hex_color.lstrip('#')
+    hex_color = hex_color.lstrip("#")
 
     r = int(hex_color[0:2], 16)
     g = int(hex_color[2:4], 16)
     b = int(hex_color[4:6], 16)
 
     return (r, g, b)
+
 
 def calculate_luminosity(rgb):
     def linearize(color):
@@ -146,55 +149,61 @@ def calculate_luminosity(rgb):
 
     return luminance
 
+
 def decide_font_color(hex_color):
-    rgb        = hex_to_rgb(hex_color)
+    rgb = hex_to_rgb(hex_color)
     luminosity = calculate_luminosity(rgb)
 
     if luminosity > 0.2:
-        return 'black'
+        return "black"
     else:
-        return 'white'
+        return "white"
+
 
 def load_pfam_mapping(pfam_mapping_file):
     log.info(f"Loading pfam mapping from {pfam_mapping_file}")
     pfam_mapping = {}
-    with open(pfam_mapping_file, 'r') as f:
+    with open(pfam_mapping_file, "r") as f:
         for line in f:
-            pfam_id, name = line.strip().split('\t', 1)
+            pfam_id, name = line.strip().split("\t", 1)
             pfam_mapping[pfam_id] = name
     log.info(f"Loaded {len(pfam_mapping)} pfam entries")
     return pfam_mapping
+
 
 def translate_architecture(architecture_json, pfam_mapping):
     translated_top_json = subset_json(architecture_json)
 
     for architecture_container in translated_top_json:
-        for domain in architecture_container['domains']:
-            if 'PF' in domain['id']: # pfam
-                domain['link']  = f'https://www.ebi.ac.uk/interpro/entry/pfam/{domain["id"]}'
-                domain['name']  = pfam_mapping[domain['id']]
-                domain['color'] = string_to_hex_color(domain['name'])
-            else: # mgnifam
-                domain['link'] = f'http://mgnifams-demo.mgnify.org/details/{construct_name(int(domain["id"]))}'
-                domain['name'] = f'MGnifam{domain["id"]}'
-            domain['font_color'] = decide_font_color(domain['color'])
+        for domain in architecture_container["domains"]:
+            if "PF" in domain["id"]:  # pfam
+                domain["link"] = f"https://www.ebi.ac.uk/interpro/entry/pfam/{domain['id']}"
+                domain["name"] = pfam_mapping.get(domain["id"], domain["id"])  # hits may predate the Pfam release
+                domain["color"] = string_to_hex_color(domain["name"])
+            else:  # mgnifam
+                domain["link"] = f"http://mgnifams-demo.mgnify.org/details/{construct_name(int(domain['id']))}"
+                domain["name"] = f"MGnifam{domain['id']}"
+            domain["font_color"] = decide_font_color(domain["color"])
 
     return translated_top_json
+
 
 def write_out(translated_json, out_file):
     translated_json = {"architecture_containers": translated_json}
 
-    with open(out_file, 'w') as f:
+    with open(out_file, "w") as f:
         json.dump(translated_json, f, indent=4)
+
 
 def process_family(family_id, mgyp_lookup, query_results_dir, pfam_mapping, output_dir):
     domain_architecture_counts = count_domain_architectures(
         os.path.join(query_results_dir, f"{family_id}.tsv"), family_id, mgyp_lookup
     )
-    architecture_json   = construct_architecture_json(domain_architecture_counts)
+    architecture_json = construct_architecture_json(domain_architecture_counts)
     translated_top_json = translate_architecture(architecture_json, pfam_mapping)
 
     write_out(translated_top_json, os.path.join(output_dir, f"{family_id}.json"))
+
 
 def stream_and_process(refined_families_file, query_results_dir, pfam_mapping, output_dir, threads):
     """Stream refined_families batch-by-batch (all rows for one family_id are contiguous,
@@ -202,31 +211,33 @@ def stream_and_process(refined_families_file, query_results_dir, pfam_mapping, o
     Main thread streams and builds mgyp_lookup; worker threads process and write JSON.
     Peak memory = threads * largest single family."""
     current_family_id = None
-    mgyp_lookup       = defaultdict(list)  # {mgyp: [mgnifam_start, ...]}
-    families_done     = 0
-    futures           = {}
+    mgyp_lookup = defaultdict(list)  # {mgyp: [mgnifam_start, ...]}
+    families_done = 0
+    futures = {}
 
     def submit(family_id, lookup):
         tsv_path = os.path.join(query_results_dir, f"{family_id}.tsv")
         if not os.path.exists(tsv_path):
             log.warning(f"No query result TSV for family {family_id}, skipping")
             return
-        futures[executor.submit(process_family, family_id, lookup, query_results_dir, pfam_mapping, output_dir)] = family_id
+        futures[executor.submit(process_family, family_id, lookup, query_results_dir, pfam_mapping, output_dir)] = (
+            family_id
+        )
 
     log.info(f"Streaming {refined_families_file} with {threads} worker threads")
     with ThreadPoolExecutor(max_workers=threads) as executor:
-        with open(refined_families_file, 'r') as f:
+        with open(refined_families_file, "r") as f:
             for line in f:
-                family_id_str, protein_name = line.strip().split('\t')
+                family_id_str, protein_name = line.strip().split("\t")
                 family_id = int(family_id_str)
 
                 if family_id != current_family_id:
                     if current_family_id is not None:
                         submit(current_family_id, mgyp_lookup)
                     current_family_id = family_id
-                    mgyp_lookup       = defaultdict(list)
+                    mgyp_lookup = defaultdict(list)
 
-                mgyp          = extract_mgyp(protein_name)
+                mgyp = extract_mgyp(protein_name)
                 mgnifam_start = calculate_mgnifam_start(protein_name)
                 mgyp_lookup[mgyp].append(mgnifam_start)
 
@@ -242,13 +253,18 @@ def stream_and_process(refined_families_file, query_results_dir, pfam_mapping, o
 
     log.info(f"Finished: processed {families_done} families total")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse the protein query TSV results into domain architecture JSONs.")
-    parser.add_argument("--query_results",    help="Path to the output query results dir generated by the query_mgnprotein_db module")
-    parser.add_argument("--pfam_mapping",     help="Path to the biome id to names mapping tsv file")
+    parser.add_argument(
+        "--query_results", help="Path to the output query results dir generated by the query_mgnprotein_db module"
+    )
+    parser.add_argument("--pfam_mapping", help="Path to the biome id to names mapping tsv file")
     parser.add_argument("--refined_families", help="Path to the family-proteins TSV file with two columns")
-    parser.add_argument("--output_dir",       help="Path to the output directory with per family JSON domain architectures")
-    parser.add_argument("--threads", type=int, default=1, help="Number of worker threads for parallel family processing")
+    parser.add_argument("--output_dir", help="Path to the output directory with per family JSON domain architectures")
+    parser.add_argument(
+        "--threads", type=int, default=1, help="Number of worker threads for parallel family processing"
+    )
 
     args = parser.parse_args()
 

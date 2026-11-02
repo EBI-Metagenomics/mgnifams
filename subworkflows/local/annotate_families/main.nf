@@ -9,24 +9,25 @@ workflow ANNOTATE_FAMILIES {
     deeptmhmm_path
     pfam_path
     funfams_path
+    s4pred_chunk_size
     seed_msa
-    full_msa
+    _full_msa
     hh_mode
     hhdb_path
     pdb
-    foldseek_db_path
+    foldseek_pdb_db
+    foldseek_alphafold_db
     outdir
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
-    ANNOTATE_REPS( reps, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path )
+    ANNOTATE_REPS( reps, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
     ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path )
-    ch_versions = ch_versions.mix( ANNOTATE_MODELS.out.versions )
 
-    ANNOTATE_STRUCTURES( pdb, foldseek_db_path, outdir )
+    ANNOTATE_STRUCTURES( pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
 
     emit:
@@ -37,6 +38,6 @@ workflow ANNOTATE_FAMILIES {
     tm_composition     = ANNOTATE_REPS.out.tm_composition
     pfam_domains       = ANNOTATE_REPS.out.pfam_domains
     funfam_domains     = ANNOTATE_REPS.out.funfam_domains
-    pfam_model_hits    = ANNOTATE_MODELS.out.pfam_hits
+    pfam_model_hits    = ANNOTATE_MODELS.out
     foldseek_hits      = ANNOTATE_STRUCTURES.out.foldseek_hits
 }

@@ -24,7 +24,7 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     starting_id
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     ch_families = GENERATE_FAMILIES( cluster_chunks, mgnifams_fa.first(), \
         mgnifams_discard_min_rep_length, mgnifams_discard_max_rep_length, mgnifams_discard_min_starting_membership, \
@@ -33,57 +33,57 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     ch_versions = ch_versions.mix( GENERATE_FAMILIES.out.versions )
 
     ch_hmm = ch_families.hmm
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"pre_redundant"], file ] }
 
     ch_reps_fasta = ch_families.fasta
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map{ file -> [[id: 'reps_fasta'], file] }
 
     ch_metadata = ch_families.metadata
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"metadata"], file ] }
 
     ch_seed_msa_sto = ch_families.seed_msa_sto
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"seed_msa_sto"], file ] }
 
     ch_full_msa_sto = ch_families.full_msa_sto
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"full_msa_sto"], file ] }
 
     ch_rf = ch_families.rf
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"rf"], file ] }
 
     ch_tsv = ch_families.tsv
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"tsv"], file ] }
 
     ch_discarded = ch_families.discarded
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"discarded"], file ] }
 
     ch_successful = ch_families.successful
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"successful"], file ] }
 
     ch_converged = ch_families.converged
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"converged"], file ] }
 
     ch_logs = ch_families.logs
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .collect()
         .map { file -> [ [id:"logs"], file ] }
 
@@ -100,7 +100,6 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
             [[id: meta.id, chunk: file.getSimpleName()], file]
         }
     REFORMAT_SEED_MSA(ch_input_for_reformat_seed, "sto", "fas")
-    ch_versions = ch_versions.mix( REFORMAT_SEED_MSA.out.versions )
 
     ch_input_for_reformat_full = REMOVE_REDUNDANCY.out.full_msa_sto
         .transpose()
@@ -108,7 +107,6 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
             [[id: meta.id, chunk: file.getSimpleName()], file]
         }
     REFORMAT_FULL_MSA(ch_input_for_reformat_full, "sto", "fas")
-    ch_versions = ch_versions.mix( REFORMAT_FULL_MSA.out.versions )
 
     PRESENT_DISCARDED_FAMILIES( REMOVE_REDUNDANCY.out.discarded )
     ch_versions = ch_versions.mix( PRESENT_DISCARDED_FAMILIES.out.versions )

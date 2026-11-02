@@ -24,23 +24,23 @@ workflow REMOVE_REDUNDANCY {
     starting_id
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     ch_reps_fasta = reps_fasta
-        .map { meta, files -> files }
+        .map { _meta, files -> files }
         .flatten()
-        .collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families")
+        .collectFile(name: "pre_redundant_reps.fasta")
+    ch_reps_fasta.collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families") // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
+    ch_reps_fasta = ch_reps_fasta
         .map { file -> [[id: 'pre_redundant'], file] }
 
     FIND_CONCATENATE( hmm )
-    ch_versions = ch_versions.mix( FIND_CONCATENATE.out.versions )
 
     ch_input_for_hmmsearch = FIND_CONCATENATE.out.file_out
         .combine(ch_reps_fasta, by: 0)
         .map { meta, model, seqs -> [meta, model, seqs, false, false, true] }
 
     HMMER_HMMSEARCH( ch_input_for_hmmsearch )
-    ch_versions = ch_versions.mix( HMMER_HMMSEARCH.out.versions )
 
     POOL_PREREDUNDANT_FAMILIES_TSV( tsv )
     ch_versions = ch_versions.mix( POOL_PREREDUNDANT_FAMILIES_TSV.out.versions )

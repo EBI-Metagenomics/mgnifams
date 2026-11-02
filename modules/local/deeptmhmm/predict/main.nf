@@ -46,7 +46,6 @@ process DEEPTMHMM_PREDICT {
     """
 
     stub:
-    def args = task.ext.args ?: ''
 
     """
     mkdir biolib_results

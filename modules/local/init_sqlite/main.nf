@@ -9,14 +9,14 @@ process INIT_SQLITE {
 
     input:
     tuple val(meta), path(schema_file)
-    
+
     output:
     tuple val(meta), path("${prefix}.sqlite3"), emit: db
     path "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """

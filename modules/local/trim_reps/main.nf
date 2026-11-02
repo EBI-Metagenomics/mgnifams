@@ -16,7 +16,7 @@ process TRIM_REPS {
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
     def filename = reps.getBaseName()
     """

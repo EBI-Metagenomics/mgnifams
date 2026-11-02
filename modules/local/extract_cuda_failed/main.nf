@@ -17,14 +17,14 @@ process EXTRACT_CUDA_FAILED {
 
     when:
     task.ext.when == null || task.ext.when
-    
+
     script:
     """
     extract_cuda_failed.py \\
         --input_fasta ${fasta} \\
         --input_scores_folder scores \\
         --output_fasta cuda_failed_reps.fasta
-    
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')

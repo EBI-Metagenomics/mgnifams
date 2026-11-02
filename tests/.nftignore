@@ -1,5 +1,5 @@
 .DS_Store
-multiqc/multiqc_data/BETA-multiqc.parquet
+multiqc/multiqc_data/multiqc.parquet
 multiqc/multiqc_data/multiqc.log
 multiqc/multiqc_data/multiqc_data.json
 multiqc/multiqc_data/multiqc_sources.txt
@@ -8,6 +8,7 @@ multiqc/multiqc_data/multiqc_family_metadata.txt
 multiqc/multiqc_data/multiqc_cluster_distribution.txt
 multiqc/multiqc_data/multiqc_discarded_clusters.txt
 multiqc/multiqc_data/multiqc_family_similarities.txt
+multiqc/multiqc_data/llms-full.txt
 multiqc/multiqc_plots/{svg,pdf,png}/*.{svg,pdf,png}
 multiqc/multiqc_report.html
 pipeline_info/*.{html,json,txt,yml}
@@ -21,5 +22,9 @@ setup_clusters/**/*
 setup_clusters/*
 generate_families/**/*
 generate_families/*
+update_families/**/*
+update_families/*
+biome_results/*
+mgnprotein_db_query/query_results/*
 annotation/**/*
 table_data/*

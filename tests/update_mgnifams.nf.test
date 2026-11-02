@@ -1,0 +1,52 @@
+nextflow_pipeline {
+
+    name "Test pipeline --mode update_mgnifams"
+    script "../main.nf"
+    tag "pipeline"
+    tag "update_mgnifams"
+    profile "test_update_mgnifams"
+
+    // Needs the external databases (pfam_path, funfams_path, esmfold_db, esmfold_params_path, foldseek_db_path)
+    // from local config, to be temporarily put in the test_update_mgnifams profile
+    test("-profile test_update_mgnifams") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+            }
+        }
+
+
+        then {
+            // stable_name: All files + folders in ${params.outdir}/ with a stable name
+            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
+            // stable_path: All files in ${params.outdir}/ with stable content
+            def stable_path = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
+            // paths to check for sizes
+            def families_path           = "/update_families"
+            def stable_families_size    = getAllFilesFromDir(params.outdir + families_path, ignoreFile: 'tests/.nftignore')
+            def annotations_path        = "/annotation"
+            def stable_annotations_size = getAllFilesFromDir(params.outdir + annotations_path, ignoreFile: 'tests/.nftignore')
+            def table_data_path         = "/table_data"
+            def stable_table_data_size  = getAllFilesFromDir(params.outdir + table_data_path, ignoreFile: 'tests/.nftignore')
+
+            assertAll(
+                { assert workflow.success},
+                { assert snapshot(
+                    // Number of successful tasks
+                    workflow.trace.succeeded().size(),
+                    // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_pipeline_software_mqc_versions.yml"),
+                    // All stable path name, with a relative path
+                    stable_name,
+                    // All files with stable contents
+                    stable_path,
+                    // Rest of the folders, counting result files because names can be mixed
+                    families_path    + ": " + stable_families_size.size(),
+                    annotations_path + ": " + stable_annotations_size.size(),
+                    table_data_path  + ": " + stable_table_data_size.size()
+                ).match() }
+            )
+        }
+    }
+}

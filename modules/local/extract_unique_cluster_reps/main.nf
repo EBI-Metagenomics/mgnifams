@@ -36,7 +36,7 @@ process EXTRACT_UNIQUE_CLUSTER_REPS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(python --version 2>&1 | sed 's/Python //g')
+        sed: \$(sed --version 2>&1 | sed -n 1p | sed 's/sed (GNU sed) //')
     END_VERSIONS
     """
 }

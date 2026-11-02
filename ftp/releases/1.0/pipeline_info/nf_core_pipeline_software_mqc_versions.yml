@@ -1,0 +1,97 @@
+CALCULATE_CLUSTER_DISTRIBUTION:
+  sed: 4.7
+CHUNK_CLUSTERS:
+  sed: 4.7
+DEEPTMHMM_PREDICT:
+  python: 3.9.22
+  numpy: 1.23.4
+  biopython: 1.79
+  torch: 1.13.1+cu117
+  tqdm: 4.64.1
+EXPORT_FOLDS:
+  sed: 4.7
+EXPORT_MGNIFAMS:
+  python: 3.10.6
+  pandas: 2.0.3
+EXPORT_MODEL_PFAMS:
+  python: 3.13.0
+EXTRACT_CUDA_FAILED:
+  python: 3.13.0
+EXTRACT_ESMFOLD_SCORES:
+  sed: 4.7
+EXTRACT_UNANNOTATED_SLICES:
+  python: 3.13.0
+EXTRACT_UNIQUE_CLUSTER_REPS:
+  sed: 4.7
+FILTER_EXPORT_FUNFAMS:
+  sed: 4.7
+FILTER_EXPORT_PFAMS:
+  sed: 4.7
+FIND_CONCATENATE:
+  find: 4.6.0
+  pigz: 2.8
+  coreutils: 9.4
+FOLDSEEK_EASYSEARCH_ALPHAFOLDDB:
+  foldseek: 9.427df8a
+FOLDSEEK_EASYSEARCH_PDB:
+  foldseek: 9.427df8a
+GENERATE_FAMILIES:
+  python: 3.13.5
+  pandas: 2.3.2
+  pyfamsa: 0.6.0
+  pyhmmer: 0.11.1
+  pytrimal: 0.8.2
+  numpy: 2.3.2
+  biopython: 1.85
+HHSUITE_HHSEARCH:
+  hh-suite: 3.3.0
+HHSUITE_REFORMAT:
+  hhsuite: 3.3.0
+HMMER_HMMSEARCH:
+  hmmer: 3.4
+HMMER_HMMSEARCH_FUNFAMS:
+  hmmer: 3.4
+HMMER_HMMSEARCH_PFAM:
+  hmmer: 3.4
+IDENTIFY_REDUNDANT_FAMS:
+  python: 3.10.6
+  pandas: 2.0.3
+MMSEQS_CREATEDB:
+  mmseqs: 17.b804f
+MMSEQS_CREATETSV:
+  mmseqs: 17.b804f
+MMSEQS_LINCLUST:
+  mmseqs: 17.b804f
+PARSE_CIF:
+  python: 3.13.1
+  numpy: 2.3.1
+  biopython: 1.85
+PARSE_S4PRED_TO_FEATURE_VIEWER:
+  python: 3.13.0
+PARSE_TM_TO_FEATURE_VIEWER:
+  python: 3.13.0
+POOL_NONREDUNDANT_FAMILIES:
+  python: 3.13.0
+POOL_PREREDUNDANT_FAMILIES_TSV:
+  python: 3.13.0
+PRESENT_DISCARDED_FAMILIES:
+  sed: 4.7
+PRESENT_FAMILY_METADATA:
+  sed: 4.7
+REFORMAT_FULL_MSA:
+  hhsuite: 3.3.0
+REFORMAT_SEED_MSA:
+  hhsuite: 3.3.0
+RUN_ESMFOLD:
+  esm-fold: 1.0.3
+RUN_ESMFOLD_CPU:
+  esm-fold: 1.0.3
+S4PRED_RUNMODEL:
+  s4pred: 1.2.1
+SEQKIT_STATS:
+  seqkit: 2.9.0
+SEQKIT_STATS_TO_MQC:
+  sed: 4.7
+Workflow:
+  ebi-metagenomics/mgnifams: v2.0.0dev
+  Nextflow: 25.04.7

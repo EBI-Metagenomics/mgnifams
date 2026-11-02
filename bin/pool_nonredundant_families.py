@@ -9,6 +9,7 @@ import re
 import csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -62,93 +63,106 @@ def parse_args(args=None):
     )
     return parser.parse_args(args)
 
+
 def read_non_redundant_fam_ids(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         return set(file.read().splitlines())
 
-def create_mapping_dict():
-    hmm_folder = os.path.join(arg_families_dir, 'hmm')
-    hmm_files = sorted([name for name in os.listdir(hmm_folder) if os.path.basename(name).split('.')[0] not in redundant_fam_ids])
 
-    family_to_id = {os.path.basename(filename).split('.')[0]: idx + arg_starting_id for idx, filename in enumerate(hmm_files)}
+def create_mapping_dict():
+    hmm_folder = os.path.join(arg_families_dir, "hmm")
+    hmm_files = sorted(
+        [name for name in os.listdir(hmm_folder) if os.path.basename(name).split(".")[0] not in redundant_fam_ids]
+    )
+
+    family_to_id = {
+        os.path.basename(filename).split(".")[0]: idx + arg_starting_id for idx, filename in enumerate(hmm_files)
+    }
 
     return family_to_id
-    
-def pool_directory(input_dir, output_filename, splitChar):
-    path_to_folder = os.path.join(arg_families_dir, input_dir)
-    output_file    = os.path.join(arg_out_dir, output_filename)
 
-    with open(output_file, 'w', buffering=1 << 20) as outfile:
+
+def pool_directory(input_dir, output_filename, splitChar, header=""):
+    path_to_folder = os.path.join(arg_families_dir, input_dir)
+    output_file = os.path.join(arg_out_dir, output_filename)
+
+    with open(output_file, "w", buffering=1 << 20) as outfile:
+        if header:
+            outfile.write(header + "\n")
         for filename in sorted(os.listdir(path_to_folder)):
             filepath = os.path.join(path_to_folder, filename)
             base_filename = os.path.splitext(filename)[0]
-            with open(filepath, 'r', buffering=1 << 20) as infile:
+            with open(filepath, "r", buffering=1 << 20) as infile:
                 if splitChar:
                     for line in infile:
                         value = line.strip()
                         if not value:
                             continue
                         first_element, _, remaining_elements = value.partition(splitChar)
-                        fam_id = base_filename + '_' + first_element
+                        fam_id = base_filename + "_" + first_element
                         if fam_id in redundant_fam_ids:
                             continue
-                        outfile.write(str(family_to_id[fam_id]) + splitChar + remaining_elements + '\n')
+                        outfile.write(str(family_to_id[fam_id]) + splitChar + remaining_elements + "\n")
                 else:  # converged_families: one value per line
                     for line in infile:
                         value = line.strip()
                         if not value:
                             continue
-                        fam_id = base_filename + '_' + value
+                        fam_id = base_filename + "_" + value
                         if fam_id in redundant_fam_ids or fam_id not in family_to_id:
                             continue
-                        outfile.write(str(family_to_id[fam_id]) + '\n')
+                        outfile.write(str(family_to_id[fam_id]) + "\n")
+
 
 def pool_clusters_directory(input_dir, output_filename):
     path_to_folder = os.path.join(arg_families_dir, input_dir)
-    output_file    = os.path.join(arg_out_dir, output_filename)
-    
-    with open(output_file, 'w') as outfile:
+    output_file = os.path.join(arg_out_dir, output_filename)
+
+    with open(output_file, "w") as outfile:
         for filename in sorted(os.listdir(path_to_folder)):
             filepath = os.path.join(path_to_folder, filename)
-            with open(filepath, 'r') as infile:
+            with open(filepath, "r") as infile:
                 content = infile.read().strip()  # Read and strip leading/trailing whitespace
                 if content:  # Only write if the file is not empty
-                    outfile.write(content + '\n')
+                    outfile.write(content + "\n")
+
 
 def update_hmm_name_inplace(hmm_file):
     for line in fileinput.input(hmm_file, inplace=True):
-        match = re.match(r'^(NAME\s+)(\S+)', line)
+        match = re.match(r"^(NAME\s+)(\S+)", line)
         if match:
             original_name = match.group(2)
             if original_name in family_to_id:
                 line = f"{match.group(1)}{family_to_id[original_name]}\n"
-        print(line, end='') 
+        print(line, end="")
+
 
 def translate_directory(input_dir):
-    input_folder  = os.path.join(arg_families_dir, input_dir)
+    input_folder = os.path.join(arg_families_dir, input_dir)
     os.makedirs(os.path.join(arg_out_dir, input_dir), exist_ok=True)
     output_folder = os.path.join(arg_out_dir, input_dir)
 
     filenames = sorted(os.listdir(input_folder))
     for filename in filenames:
-        basename         = os.path.splitext(filename)[0]
-        if (basename in redundant_fam_ids):
+        basename = os.path.splitext(filename)[0]
+        if basename in redundant_fam_ids:
             continue
-        source_path      = os.path.join(input_folder, filename)
-        new_filename     = f'{family_to_id[basename]}{os.path.splitext(filename)[1]}'
+        source_path = os.path.join(input_folder, filename)
+        new_filename = f"{family_to_id[basename]}{os.path.splitext(filename)[1]}"
         destination_path = os.path.join(output_folder, new_filename)
-        
+
         shutil.copy(source_path, destination_path)
 
-        if (input_dir == 'hmm'):
+        if input_dir == "hmm":
             update_hmm_name_inplace(destination_path)
+
 
 def translate_edgelist(file_path, out_path):
     if os.path.getsize(file_path) == 0:
         shutil.copy(file_path, out_path)
         return
 
-    with open(file_path, newline='') as infile, open(out_path, 'w', newline='') as outfile:
+    with open(file_path, newline="") as infile, open(out_path, "w", newline="") as outfile:
         for line in infile:
             if line.startswith("#") or line.startswith("Row"):
                 # Write comment or header lines as-is
@@ -168,28 +182,29 @@ def translate_edgelist(file_path, out_path):
                 # Preserve quotes in output
                 outfile.write(f'{row_num},"{mapped_fam1}","{mapped_fam2}",{score}\n')
 
+
 def pool_nonredundant_reps(input_folder, output_file, ids_only_file):
     path_to_folder = os.path.join(arg_families_dir, input_folder)
-    output_file    = os.path.join(arg_out_dir, output_file)
-    ids_only_file  = os.path.join(arg_out_dir, ids_only_file)
+    output_file = os.path.join(arg_out_dir, output_file)
+    ids_only_file = os.path.join(arg_out_dir, ids_only_file)
 
-    with open(output_file, 'w') as out_f, open(ids_only_file, 'w') as ids_f:
+    with open(output_file, "w") as out_f, open(ids_only_file, "w") as ids_f:
         for filename in sorted(os.listdir(path_to_folder)):
             file_path = os.path.join(path_to_folder, filename)
-            if not os.path.isfile(file_path) or not filename.endswith(('.fa', '.fasta', '.faa')):
+            if not os.path.isfile(file_path) or not filename.endswith((".fa", ".fasta", ".faa")):
                 continue
-            
-            with open(file_path, 'r') as fasta_file:
+
+            with open(file_path, "r") as fasta_file:
                 write_sequence = False
                 for line in fasta_file:
-                    if line.startswith('>'):
-                        parts = line.strip().split('\t')
+                    if line.startswith(">"):
+                        parts = line.strip().split("\t")
                         seq_id = parts[0]
                         fam_id = parts[1] if len(parts) > 1 else None
 
                         # Skip if description is missing or marked redundant
                         write_sequence = fam_id and fam_id not in redundant_fam_ids
-                        
+
                         if write_sequence:
                             # Map description to new ID
                             mapped_id = family_to_id.get(fam_id, fam_id)
@@ -199,12 +214,17 @@ def pool_nonredundant_reps(input_folder, output_file, ids_only_file):
                         out_f.write(line)
                         ids_f.write(line)
 
+
 def main(args=None):
     args = parse_args(args)
 
-    global arg_families_dir, arg_out_dir, \
-        arg_non_redundant_fam_ids_file, arg_starting_id, \
-        redundant_fam_ids, family_to_id
+    global \
+        arg_families_dir, \
+        arg_out_dir, \
+        arg_non_redundant_fam_ids_file, \
+        arg_starting_id, \
+        redundant_fam_ids, \
+        family_to_id
 
     arg_families_dir = args.input_dir
     arg_out_dir = args.output_dir
@@ -216,33 +236,42 @@ def main(args=None):
     os.makedirs(arg_out_dir, exist_ok=True)
 
     redundant_fam_ids = read_non_redundant_fam_ids(arg_non_redundant_fam_ids_file)
-    family_to_id      = create_mapping_dict()
+    family_to_id = create_mapping_dict()
 
     tasks = [
-        (pool_directory,         ("family_metadata",   "family_metadata.csv",        ",")),
-        (pool_directory,         ("refined_families",  "refined_families.tsv",        "\t")),
-        (pool_directory,         ("converged_families","converged_families.txt",      "")),
-        (pool_clusters_directory,("successful_clusters","successful_clusters.txt")),
-        (pool_clusters_directory,("discarded_clusters", "discarded_clusters.txt")),
-        (translate_directory,    ('rf',)),
-        (translate_directory,    ('hmm',)),
-        (translate_directory,    ('full_msa_sto',)),
-        (translate_directory,    ('seed_msa_sto',)),
-        (translate_edgelist,     (arg_similarity_edgelist,
-                                  os.path.join(arg_out_dir, 'similarity_mqc.csv'))),
+        # Same header as the update_mgnifams family_metadata.csv (from mgnifam update_families)
+        (
+            pool_directory,
+            (
+                "family_metadata",
+                "family_metadata.csv",
+                ",",
+                "family_id,full_msa_size,protein,region,length,sequence,consensus,converged",
+            ),
+        ),
+        (pool_directory, ("refined_families", "refined_families.tsv", "\t")),
+        (pool_directory, ("converged_families", "converged_families.txt", "")),
+        (pool_clusters_directory, ("successful_clusters", "successful_clusters.txt")),
+        (pool_clusters_directory, ("discarded_clusters", "discarded_clusters.txt")),
+        (translate_directory, ("rf",)),
+        (translate_directory, ("hmm",)),
+        (translate_directory, ("full_msa_sto",)),
+        (translate_directory, ("seed_msa_sto",)),
+        (translate_edgelist, (arg_similarity_edgelist, os.path.join(arg_out_dir, "similarity_mqc.csv"))),
     ]
 
     with ThreadPoolExecutor(max_workers=min(len(tasks), arg_threads or os.cpu_count() or 4)) as executor:
         futures = {executor.submit(fn, *args): (fn.__name__, args) for fn, args in tasks}
         for future in as_completed(futures):
             future.result()  # re-raise any exception
-    
-    json_mapping = 'family_to_id.json'
-    output_file  = os.path.join(arg_out_dir, json_mapping)
-    with open(output_file, 'w') as f:
+
+    json_mapping = "family_to_id.json"
+    output_file = os.path.join(arg_out_dir, json_mapping)
+    with open(output_file, "w") as f:
         json.dump(family_to_id, f)
 
     pool_nonredundant_reps("family_reps", "family_reps.fasta", "family_ids.fasta")
+
 
 if __name__ == "__main__":
     main()

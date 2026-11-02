@@ -1,0 +1,50 @@
+nextflow_process {
+
+    name "Test Process EXTRACT_ESMFOLD_SCORES"
+    script "../main.nf"
+    process "EXTRACT_ESMFOLD_SCORES"
+
+    tag "modules"
+    tag "modules_local"
+    tag "extract_esmfold_scores"
+
+    test("esmfold scores txt") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'2' ], file("${moduleDir}/tests/fixtures/2_scores.txt", checkIfExists: true) ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.csv[0][1]).readLines()[0] == "id,plddt,ptm" },
+                { assert snapshot(process.out.csv).match() }
+            )
+        }
+    }
+
+    test("esmfold scores txt - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'2' ], file("${moduleDir}/tests/fixtures/2_scores.txt", checkIfExists: true) ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert file(process.out.csv[0][1]).name == "2_scores.csv" },
+                { assert path(process.out.csv[0][1]).readLines() == ["id,plddt,ptm"] }
+            )
+        }
+    }
+}

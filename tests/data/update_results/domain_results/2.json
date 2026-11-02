@@ -1,0 +1,94 @@
+{
+    "architecture_containers": [
+        {
+            "architecture_text": "9",
+            "domains": [
+                {
+                    "id": "PF00006",
+                    "color": "#8b5115",
+                    "link": "https://www.ebi.ac.uk/interpro/entry/pfam/PF00006",
+                    "name": "ATP synthase alpha/beta family, nucleotide-binding domain",
+                    "font_color": "white"
+                },
+                {
+                    "id": "2",
+                    "color": "#320000",
+                    "link": "http://mgnifams-demo.mgnify.org/details/MGYF0000000002",
+                    "name": "MGnifam2",
+                    "font_color": "white"
+                }
+            ]
+        },
+        {
+            "architecture_text": "5",
+            "domains": [
+                {
+                    "id": "PF02874",
+                    "color": "#12d79e",
+                    "link": "https://www.ebi.ac.uk/interpro/entry/pfam/PF02874",
+                    "name": "ATP synthase alpha/beta family, beta-barrel domain",
+                    "font_color": "black"
+                },
+                {
+                    "id": "PF00006",
+                    "color": "#8b5115",
+                    "link": "https://www.ebi.ac.uk/interpro/entry/pfam/PF00006",
+                    "name": "ATP synthase alpha/beta family, nucleotide-binding domain",
+                    "font_color": "white"
+                },
+                {
+                    "id": "2",
+                    "color": "#320000",
+                    "link": "http://mgnifams-demo.mgnify.org/details/MGYF0000000002",
+                    "name": "MGnifam2",
+                    "font_color": "white"
+                }
+            ]
+        },
+        {
+            "architecture_text": "2",
+            "domains": [
+                {
+                    "id": "PF02874",
+                    "color": "#12d79e",
+                    "link": "https://www.ebi.ac.uk/interpro/entry/pfam/PF02874",
+                    "name": "ATP synthase alpha/beta family, beta-barrel domain",
+                    "font_color": "black"
+                },
+                {
+                    "id": "PF16886",
+                    "color": "#119100",
+                    "link": "https://www.ebi.ac.uk/interpro/entry/pfam/PF16886",
+                    "name": "ATPsynthase alpha/beta subunit barrel-sandwich domain",
+                    "font_color": "black"
+                },
+                {
+                    "id": "PF00006",
+                    "color": "#8b5115",
+                    "link": "https://www.ebi.ac.uk/interpro/entry/pfam/PF00006",
+                    "name": "ATP synthase alpha/beta family, nucleotide-binding domain",
+                    "font_color": "white"
+                },
+                {
+                    "id": "2",
+                    "color": "#320000",
+                    "link": "http://mgnifams-demo.mgnify.org/details/MGYF0000000002",
+                    "name": "MGnifam2",
+                    "font_color": "white"
+                }
+            ]
+        },
+        {
+            "architecture_text": "1",
+            "domains": [
+                {
+                    "id": "2",
+                    "color": "#320000",
+                    "link": "http://mgnifams-demo.mgnify.org/details/MGYF0000000002",
+                    "name": "MGnifam2",
+                    "font_color": "white"
+                }
+            ]
+        }
+    ]
+}

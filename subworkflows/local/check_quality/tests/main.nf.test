@@ -11,7 +11,7 @@ nextflow_workflow {
                 """
                 input[0] = Channel.of([
                     [ id: 'test' ],
-                    file(params.pipelines_testdata_base_path + 'test_data/mgnifams_input_small.fa', checkIfExists: true)
+                    file(params.pipelines_testdata_base_path + 'test_data/mgnifams_input_small.faa', checkIfExists: true)
                 ])
                 """
             }

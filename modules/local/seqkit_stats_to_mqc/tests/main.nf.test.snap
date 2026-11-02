@@ -18,11 +18,11 @@
                 }
             }
         ],
+        "timestamp": "2025-08-01T15:18:46.42441909",
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "25.04.4"
-        },
-        "timestamp": "2025-08-01T15:18:46.42441909"
+        }
     },
     "proteinfamilies - fasta": {
         "content": [
@@ -31,7 +31,7 @@
                     {
                         "id": "fasta"
                     },
-                    "fasta_stats_mqc.csv:md5,5f33427a3dc0b0e0b38df473612e269e"
+                    "fasta_stats_mqc.csv:md5,d0af014bc10d28c1ead79c11ab26e14a"
                 ]
             ],
             [
@@ -43,10 +43,10 @@
                 }
             }
         ],
+        "timestamp": "2026-09-30T15:30:55.357516587",
         "meta": {
-            "nf-test": "0.9.2",
-            "nextflow": "25.04.4"
-        },
-        "timestamp": "2025-08-01T15:18:39.362154509"
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
     }
 }

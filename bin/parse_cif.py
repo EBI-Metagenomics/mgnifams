@@ -6,6 +6,7 @@ import numpy as np
 from Bio.PDB import PDBParser, MMCIFIO
 import subprocess
 
+
 def write_header(output_file):
     header = (
         "loop_\n"
@@ -24,16 +25,17 @@ def write_header(output_file):
         "_ma_qa_metric_local.model_id\n"
         "_ma_qa_metric_local.ordinal_id\n"
     )
-    with open(output_file, 'w') as f:
+    with open(output_file, "w") as f:
         f.write(header)
 
+
 def process_pdb(pdb_file, output_file):
-    with open(pdb_file, 'r') as file:
+    with open(pdb_file, "r") as file:
         lines = file.readlines()[1:]  # Skip the first line
 
     asym_id, comp_id, seq_id, metric_values = None, None, None, []
 
-    with open(output_file, 'a') as f:
+    with open(output_file, "a") as f:
         for line in lines:
             if line.startswith("TER"):
                 break
@@ -43,24 +45,25 @@ def process_pdb(pdb_file, output_file):
             if line[0:4] != "ATOM":
                 continue
 
-            new_comp_id  = line[17:20].strip()
-            new_asym_id  = line[20:22].strip()
-            new_seq_id   = line[22:26].strip()
+            new_comp_id = line[17:20].strip()
+            new_asym_id = line[20:22].strip()
+            new_seq_id = line[22:26].strip()
             metric_value = float(line[60:66].strip())
-            
+
             if asym_id is not None and (new_asym_id != asym_id or new_comp_id != comp_id or new_seq_id != seq_id):
                 # Write previous residue's data
                 mean_metric_value = np.mean(metric_values)
                 f.write(f"{asym_id} {comp_id} {seq_id} 2 {mean_metric_value:.2f} 1 1\n")
                 metric_values = []
-            
+
             asym_id, comp_id, seq_id = new_asym_id, new_comp_id, new_seq_id
             metric_values.append(metric_value)
-            
+
         # Write last residue's data
         if metric_values:
             mean_metric_value = np.mean(metric_values)
             f.write(f"{asym_id} {comp_id} {seq_id} 2 {mean_metric_value:.2f} 1 1\n")
+
 
 def append_cif_model(pdb_file, output_file):
     parser = PDBParser()
@@ -70,9 +73,11 @@ def append_cif_model(pdb_file, output_file):
     io.set_structure(structure)
     io.save("temp2.cif")
 
+
 def concat_files(file1, file2, output_file):
     command = f"cat {file1} <(tail -n +2 {file2}) > {output_file}"
-    subprocess.run(command, shell=True, check=True, executable='/bin/bash')
+    subprocess.run(command, shell=True, check=True, executable="/bin/bash")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Convert a PDB file to a combined CIF format.")
@@ -80,10 +85,10 @@ def main():
     parser.add_argument("--output_file", help="Path to the output CIF file")
     args = parser.parse_args()
 
-    pdb_file    = args.pdb_file
+    pdb_file = args.pdb_file
     output_file = args.output_file
-    file1       = "temp1.cif"
-    file2       = "temp2.cif"
+    file1 = "temp1.cif"
+    file2 = "temp2.cif"
 
     write_header(file1)
     process_pdb(pdb_file, file1)
@@ -92,6 +97,7 @@ def main():
 
     os.remove(file1)
     os.remove(file2)
+
 
 if __name__ == "__main__":
     main()
