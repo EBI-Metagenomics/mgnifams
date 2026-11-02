@@ -153,16 +153,16 @@
                 "annotation/reps/pfam/reps_fasta.domtbl.gz",
                 "annotation/reps/s4pred",
                 "annotation/reps/s4pred/composition.csv",
-                "annotation/reps/s4pred/horiz",
-                "annotation/reps/s4pred/horiz/1.horiz",
-                "annotation/reps/s4pred/horiz/2.horiz",
-                "annotation/reps/s4pred/horiz/3.horiz",
-                "annotation/reps/s4pred/horiz/4.horiz",
-                "annotation/reps/s4pred/horiz/5.horiz",
-                "annotation/reps/s4pred/horiz/6.horiz",
-                "annotation/reps/s4pred/horiz/7.horiz",
-                "annotation/reps/s4pred/horiz/8.horiz",
-                "annotation/reps/s4pred/horiz/9.horiz",
+                "annotation/reps/s4pred/horiz_1",
+                "annotation/reps/s4pred/horiz_1/1.horiz",
+                "annotation/reps/s4pred/horiz_1/2.horiz",
+                "annotation/reps/s4pred/horiz_1/3.horiz",
+                "annotation/reps/s4pred/horiz_1/4.horiz",
+                "annotation/reps/s4pred/horiz_1/5.horiz",
+                "annotation/reps/s4pred/horiz_1/6.horiz",
+                "annotation/reps/s4pred/horiz_1/7.horiz",
+                "annotation/reps/s4pred/horiz_1/8.horiz",
+                "annotation/reps/s4pred/horiz_1/9.horiz",
                 "annotation/reps/s4pred/json",
                 "annotation/reps/s4pred/json/1.json",
                 "annotation/reps/s4pred/json/2.json",
@@ -342,10 +342,10 @@
             "/annotation: 32",
             "/table_data: 5"
         ],
-        "timestamp": "2026-09-30T15:49:40.056538449",
+        "timestamp": "2026-11-02T09:37:15.362967119",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
+            "nextflow": "26.10.3"
         }
     }
 }
