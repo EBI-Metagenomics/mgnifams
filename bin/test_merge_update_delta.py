@@ -16,9 +16,9 @@ def make_db(path, rows, info=None):
     con.executescript(SCHEMA)
     for i, full_size, blob in rows:
         con.execute(
-            "INSERT INTO mgnifam (id, full_size, cif_blob, tm_blob, biome_blob, seed_msa_blob, seed_size)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (i, full_size, blob, blob, blob, blob if info is None else None, 5 if info is None else None),
+            "INSERT INTO mgnifam (id, full_size, cif_blob, tm_blob, biome_blob, seed_msa_blob, seed_size, s4pred_blob,"
+            " coil_percent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (i, full_size, blob, blob, blob, blob if info is None else None, 5 if info is None else None, blob, full_size),
         )
         con.execute(
             "INSERT INTO mgnifam_pfams (mgnifam_id, pfam, e_value) VALUES (?, ?, 1e-5)", (i, f"PF{i}_{blob.decode()}")
@@ -132,4 +132,63 @@ with tempfile.TemporaryDirectory() as d:
     con = sqlite3.connect(prod)
     assert con.execute("SELECT release, n_not_updated FROM release_history").fetchall() == [("1.2", 0)]
     con.close()
+
+# Annotation-only deltas (annotate_not_updated): only s4pred, TM (when computed) and the child tables change
+INFO_ANN = {**INFO, "annotation_only": "true", "tm_computed": "false"}
+KEPT = "SELECT id, full_size, cif_blob, tm_blob, biome_blob, seed_msa_blob, seed_size FROM mgnifam ORDER BY id"
+
+
+def content(path):
+    """Rows that matter, without the child tables' AUTOINCREMENT ids (re-inserted rows get new ones)."""
+    con = sqlite3.connect(path)
+    out = [
+        con.execute("SELECT * FROM mgnifam ORDER BY id").fetchall(),
+        con.execute("SELECT mgnifam_id, pfam, e_value FROM mgnifam_pfams ORDER BY mgnifam_id, pfam").fetchall(),
+        con.execute("SELECT mgnifam_id, fold, q_tmscore FROM mgnifam_folds ORDER BY mgnifam_id, fold").fetchall(),
+        con.execute("SELECT * FROM release_history ORDER BY release").fetchall(),
+    ]
+    con.close()
+    return out
+
+
+with tempfile.TemporaryDirectory() as d:
+    prod, delta, ann = f"{d}/prod.sqlite3", f"{d}/delta.sqlite3", f"{d}/ann.sqlite3"
+    make_db(prod, [(1, 10, b"old"), (2, 20, b"old"), (3, 30, b"old")])
+    make_db(delta, [(1, 11, b"upd")], INFO)  # the release's update delta goes first
+    assert merge(prod, delta).returncode == 0
+    con = sqlite3.connect(prod)
+    kept_before = con.execute(KEPT).fetchall()
+    history_before = con.execute("SELECT * FROM release_history").fetchall()
+    con.close()
+
+    make_db(ann, [(2, 22, b"new"), (3, 33, b"new")], INFO_ANN)
+    r = merge(prod, ann)
+    assert r.returncode == 0, r.stderr
+    con = sqlite3.connect(prod)
+    # ann_keeps_columns: rep / size / structure / TM (not computed) / biome / seed columns untouched
+    assert con.execute(KEPT).fetchall() == kept_before, con.execute(KEPT).fetchall()
+    # ann_updates_s4pred
+    s4 = con.execute("SELECT id, s4pred_blob, coil_percent FROM mgnifam ORDER BY id").fetchall()
+    assert s4 == [(1, b"upd", 11.0), (2, b"new", 22.0), (3, b"new", 33.0)], s4
+    # ann_child_tables: replaced for 2 and 3, family 1 keeps the update's rows; flags recomputed
+    pfams = con.execute("SELECT mgnifam_id, pfam FROM mgnifam_pfams ORDER BY mgnifam_id").fetchall()
+    assert pfams == [(1, "PF1_upd"), (2, "PF2_new"), (3, "PF3_new")], pfams
+    flags = con.execute("SELECT id, has_pfam, has_funfam, has_structure FROM mgnifam ORDER BY id").fetchall()
+    assert flags == [(1, 1, 0, 1), (2, 1, 0, 1), (3, 1, 0, 1)], flags
+    # ann_no_history
+    assert con.execute("SELECT * FROM release_history").fetchall() == history_before
+    con.close()
+
+    # ann_twice: a repeated annotation-only merge succeeds and changes no content
+    once = content(prod)
+    r = merge(prod, ann)
+    assert r.returncode == 0, r.stderr
+    assert content(prod) == once
+
+    # An annotation-only delta on a prod without any update merged: no release_history row
+    Path(prod).unlink()
+    make_db(prod, [(2, 20, b"old"), (3, 30, b"old")])
+    r = merge(prod, ann)
+    assert r.returncode == 0, r.stderr
+    assert sqlite3.connect(prod).execute("SELECT count(*) FROM release_history").fetchone()[0] == 0
 print("ok")

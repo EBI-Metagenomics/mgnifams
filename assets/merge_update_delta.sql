@@ -8,6 +8,11 @@
 -- Records the release in release_history (created if missing); merging a release twice fails on its primary key.
 -- Kept from prod: consensus, hmm_length, converged, seed_msa_blob, hmm_blob, rf_blob, seed_size, mgnifam_model_pfams,
 -- and the TM columns / biome_blob unless the delta's update_info says they were computed.
+--
+-- An annotation-only delta (update_info annotation_only = 'true', from an annotate_not_updated outdir) changes only
+-- the s4pred columns, the TM columns (when computed) and the pfams / funfams / folds rows of its families; it keeps
+-- the representative, size, structure, domain and biome columns and writes no release_history row. Merge a release's
+-- update delta first, then its annotation-only delta. Re-merging an annotation-only delta changes no content.
 
 PRAGMA foreign_keys = ON;
 
@@ -48,7 +53,8 @@ SELECT
     (SELECT value FROM delta.update_info WHERE key = 'pipeline_version'),
     (SELECT count(*) FROM main.mgnifam),
     (SELECT count(*) FROM delta.mgnifam),
-    (SELECT count(*) FROM main.mgnifam) - (SELECT count(*) FROM delta.mgnifam);
+    (SELECT count(*) FROM main.mgnifam) - (SELECT count(*) FROM delta.mgnifam)
+WHERE coalesce((SELECT value FROM delta.update_info WHERE key = 'annotation_only'), 'false') <> 'true';
 
 UPDATE main.mgnifam AS m SET
     full_size      = d.full_size,
@@ -58,11 +64,15 @@ UPDATE main.mgnifam AS m SET
     rep_sequence   = d.rep_sequence,
     plddt          = d.plddt,
     ptm            = d.ptm,
+    cif_blob       = d.cif_blob,
+    domain_blob    = d.domain_blob
+FROM delta.mgnifam AS d
+WHERE m.id = d.id AND coalesce((SELECT value FROM delta.update_info WHERE key = 'annotation_only'), 'false') <> 'true';
+
+UPDATE main.mgnifam AS m SET
     helix_percent  = d.helix_percent,
     strand_percent = d.strand_percent,
     coil_percent   = d.coil_percent,
-    cif_blob       = d.cif_blob,
-    domain_blob    = d.domain_blob,
     s4pred_blob    = d.s4pred_blob
 FROM delta.mgnifam AS d
 WHERE m.id = d.id;
@@ -81,7 +91,7 @@ WHERE m.id = d.id AND (SELECT value FROM delta.update_info WHERE key = 'tm_compu
 UPDATE main.mgnifam AS m SET
     biome_blob = d.biome_blob
 FROM delta.mgnifam AS d
-WHERE m.id = d.id AND (SELECT value FROM delta.update_info WHERE key = 'biome_computed') = 'true';
+WHERE m.id = d.id AND (SELECT value FROM delta.update_info WHERE key = 'biome_computed') = 'true' AND coalesce((SELECT value FROM delta.update_info WHERE key = 'annotation_only'), 'false') <> 'true';
 
 -- Child tables are replaced for the updated families; the AUTOINCREMENT id is left to prod
 DELETE FROM main.mgnifam_pfams   WHERE mgnifam_id IN (SELECT id FROM delta.mgnifam);

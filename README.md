@@ -278,6 +278,7 @@ The pipeline does not modify the production database. It publishes a delta datab
 - Recomputed for these families: `has_pfam`, `has_funfam` and `has_structure`.
 - Families the update discarded are not in the delta, so they keep their previous version.
 - Recorded: one `release_history` row (the table is created if missing) with the release, merge date, MGnify Proteins release, pipeline version and the counts of families, updated families and not updated families. Merging the same release twice fails and changes nothing.
+- An annotation-only delta (`annotation_only=true`, built from an `annotate_not_updated/` folder) overwrites only the secondary structure percents and `s4pred_blob`, the transmembrane columns when `tm_computed`, and the `mgnifam_pfams`, `mgnifam_funfams` and `mgnifam_folds` rows of its families, and recomputes their `has_pfam`, `has_funfam` and `has_structure`. It records no `release_history` row, and merging it again changes no content. Merge a release's update delta first, then its annotation-only delta.
 
 To apply it, migrate the production database once (this adds `seed_size`, `hmm_length` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
 
