@@ -101,7 +101,9 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
 def main():
     parser = argparse.ArgumentParser(description="Export MGnifams sql-ready table CSV files.")
     parser.add_argument("--metadata", required=True, help="family_metadata.csv (with header)")
-    parser.add_argument("--structure_scores", default="", help="Optional tertiary prediction structure scores (plddt, ptm)")
+    parser.add_argument(
+        "--structure_scores", default="", help="Optional tertiary prediction structure scores (plddt, ptm)"
+    )
     parser.add_argument("--composition", required=True, help="Predicted compositional features --helix, strand or coil")
     parser.add_argument(
         "--tm_composition", default="", help="Predicted transmembrane features --inside, membrane or outside"

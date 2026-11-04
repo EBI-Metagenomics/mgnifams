@@ -30,7 +30,9 @@ def imported_row(metadata, seed_sizes, scores=True):
         if seed_sizes is not None:
             seeds = d / "seeds.csv"
             seeds.write_text(seed_sizes)
-        write_mgnifam_csv(d / "meta.csv", d / "scores.csv" if scores else "", d / "comp.csv", "", d / "mgnifam.csv", seeds)
+        write_mgnifam_csv(
+            d / "meta.csv", d / "scores.csv" if scores else "", d / "comp.csv", "", d / "mgnifam.csv", seeds
+        )
 
         db = d / "db.sqlite3"
         sqlite3.connect(db).executescript(SCHEMA)

@@ -18,7 +18,17 @@ def make_db(path, rows, info=None):
         con.execute(
             "INSERT INTO mgnifam (id, full_size, cif_blob, tm_blob, biome_blob, seed_msa_blob, seed_size, s4pred_blob,"
             " coil_percent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (i, full_size, blob, blob, blob, blob if info is None else None, 5 if info is None else None, blob, full_size),
+            (
+                i,
+                full_size,
+                blob,
+                blob,
+                blob,
+                blob if info is None else None,
+                5 if info is None else None,
+                blob,
+                full_size,
+            ),
         )
         con.execute(
             "INSERT INTO mgnifam_pfams (mgnifam_id, pfam, e_value) VALUES (?, ?, 1e-5)", (i, f"PF{i}_{blob.decode()}")

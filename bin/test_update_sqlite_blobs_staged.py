@@ -72,9 +72,14 @@ with tempfile.TemporaryDirectory() as d:
     base += ["--s4pred_dir", d / "s4pred", "--required", "s4pred"]
     r = subprocess.run([*base, "--info", "child_tables=pfams,funfams,folds"], capture_output=True, text=True)
     assert r.returncode == 1 and "lack a required blob" in r.stderr, r.stderr
-    r = subprocess.run([*base, "--info", "annotation_only=true", "child_tables=pfams,funfams,folds"], capture_output=True, text=True)
+    r = subprocess.run(
+        [*base, "--info", "annotation_only=true", "child_tables=pfams,funfams,folds"], capture_output=True, text=True
+    )
     assert r.returncode == 0, r.stderr
     con = sqlite3.connect(d / "db.sqlite3")
-    assert con.execute("SELECT count(*) FROM mgnifam WHERE cif_blob IS NULL AND length(s4pred_blob) > 0").fetchone()[0] == 2
+    assert (
+        con.execute("SELECT count(*) FROM mgnifam WHERE cif_blob IS NULL AND length(s4pred_blob) > 0").fetchone()[0]
+        == 2
+    )
     assert dict(con.execute("SELECT key, value FROM update_info"))["annotation_only"] == "true"
 print("ok")

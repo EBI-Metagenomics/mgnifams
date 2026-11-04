@@ -32,12 +32,18 @@ def run(d):
         try:
             code = main(
                 [
-                    "--families", str(d / "families.tsv.gz"),
-                    "--reps", str(d / "reps.fasta"),
-                    "--structures", str(d / "structures"),
-                    "--status", "not_updated",
-                    "--out_fasta", str(d / "family_ids.fasta"),
-                    "--out_structures", str(d / "pdb"),
+                    "--families",
+                    str(d / "families.tsv.gz"),
+                    "--reps",
+                    str(d / "reps.fasta"),
+                    "--structures",
+                    str(d / "structures"),
+                    "--status",
+                    "not_updated",
+                    "--out_fasta",
+                    str(d / "family_ids.fasta"),
+                    "--out_structures",
+                    str(d / "pdb"),
                 ]
             )
         except SystemExit as e:
