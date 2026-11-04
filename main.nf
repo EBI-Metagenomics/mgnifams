@@ -18,6 +18,7 @@ include { INIT_DB                        } from './workflows/init_db'
 include { UPDATE_DB                      } from './workflows/update_db'
 include { UPDATE_MGNIFAMS                } from './workflows/update_mgnifams'
 include { POST_UPDATE_MGNIFAMS_UPDATE_DB } from './workflows/post_update_mgnifams_update_db'
+include { ANNOTATE_NOT_UPDATED           } from './workflows/annotate_not_updated'
 include { PIPELINE_INITIALISATION        } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 include { PIPELINE_COMPLETION            } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
@@ -100,6 +101,16 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     //
     // WORKFLOW: Delta DB from an update_mgnifams outdir
     //
+    //
+    // WORKFLOW: Re-annotate the not-updated families of a finished update
+    //
+    else if (params.mode == 'annotate_not_updated') {
+        ANNOTATE_NOT_UPDATED(
+            samplesheet, params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, \
+            params.s4pred_chunk_size, foldseek_pdb_db, foldseek_alphafold_db, params.query_hmm_length_threshold, \
+            params.mgnifams_release, params.mgnify_proteins_release, params.outdir
+        )
+    }
     else if (params.mode == 'post_update_mgnifams_update_db') {
         POST_UPDATE_MGNIFAMS_UPDATE_DB(
             samplesheet

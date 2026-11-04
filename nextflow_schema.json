@@ -31,7 +31,8 @@
                         "init_mgnifams_db",
                         "update_mgnifams_db",
                         "update_mgnifams",
-                        "post_update_mgnifams_update_db"
+                        "post_update_mgnifams_update_db",
+                        "annotate_not_updated"
                     ],
                     "fa_icon": "fas fa-cogs"
                 },

@@ -84,8 +84,20 @@
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.tsv\\.gz$",
-                "description": "update_mgnifams: families.tsv.gz of the MGnifams release being updated (its FTP release folder)",
+                "description": "update_mgnifams: families.tsv.gz of the MGnifams release being updated (its FTP release folder). annotate_not_updated: families.tsv.gz of a finished update; its not_updated families are re-annotated",
                 "errorMessage": "Must be a .tsv.gz file."
+            },
+            "reps_fasta": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "description": "annotate_not_updated, update_mgnifams (optional): FASTA of the previous family representatives, headers starting with the family id"
+            },
+            "structures": {
+                "type": "string",
+                "format": "directory-path",
+                "exists": true,
+                "description": "annotate_not_updated, update_mgnifams (optional): folder of the previous representatives' structures, <family_id>.pdb"
             }
         },
         "required": ["sample"]

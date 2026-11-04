@@ -71,7 +71,7 @@ workflow PIPELINE_INITIALISATION {
     if (params.mode == "run_mgnifams_pipeline" && !params.hhdb_path) {
         error("run_mgnifams_pipeline: --hhdb_path is required")
     }
-    if (params.mode in ["update_mgnifams", "post_update_mgnifams_update_db"]) {
+    if (params.mode in ["update_mgnifams", "post_update_mgnifams_update_db", "annotate_not_updated"]) {
         // All collected outputs and the delta DB are per run
         if (samplesheet_rows.size() != 1) {
             error("${params.mode}: the samplesheet must have exactly one row, found ${samplesheet_rows.size()}")
@@ -91,34 +91,47 @@ workflow PIPELINE_INITIALISATION {
 
     if (params.mode == "run_mgnifams_pipeline") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families ->
+            .map { sample, protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures ->
                 [ sample, file(protein_input, checkIfExists: true) ]
             }
     }
     else if (params.mode == "init_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, _existing_db, schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families ->
+            .map { sample, _protein_input, results_folder, _existing_db, schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures ->
                 [ sample, schema, results_folder ]
             }
     }
     else if (params.mode == "update_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families ->
+            .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures ->
                 [ sample, results_folder, existing_db, mgnprotein_db_config ]
             }
     }
     else if (params.mode == "update_mgnifams") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, _results_folder, _existing_db, _schema, mgnprotein_db_config, sequences, clusters, pfam, hmms, families ->
+            .map { sample, _protein_input, _results_folder, _existing_db, _schema, mgnprotein_db_config, sequences, clusters, pfam, hmms, families, _reps, _structures ->
                 if (!sequences || !clusters || !pfam || !hmms || !families) {
                     error("update_mgnifams: samplesheet row '${sample.id}' needs mgnify_proteins_sequences, mgnify_proteins_clusters, mgnify_proteins_pfam, mgnifams_hmms and mgnifams_families")
                 }
                 [ sample, file(sequences), file(clusters), file(pfam), file(hmms), mgnprotein_db_config ? file(mgnprotein_db_config) : [], file(families) ]
             }
     }
+    else if (params.mode == "annotate_not_updated") {
+        // The annotation-only merge replaces all fold rows of the families; AlphaFoldDB is searched only under slurm
+        if (!workflow.profile.contains("slurm") && !workflow.profile.contains("test")) {
+            error("annotate_not_updated: the AlphaFoldDB Foldseek search runs only under a slurm profile; without it the merge would drop the families' AlphaFoldDB hits")
+        }
+        ch_samplesheet = ch_samplesheet
+            .map { sample, _protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, families, reps, structures ->
+                if (!families || !reps || !structures) {
+                    error("annotate_not_updated: samplesheet row '${sample.id}' needs mgnifams_families, reps_fasta and structures")
+                }
+                [ sample, file(families), file(reps), file(structures) ]
+            }
+    }
     else if (params.mode == "post_update_mgnifams_update_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families ->
+            .map { sample, _protein_input, results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures ->
                 if (!results_folder) {
                     error("post_update_mgnifams_update_db: samplesheet row '${sample.id}' needs results_folder (an update_mgnifams outdir)")
                 }
@@ -188,6 +201,15 @@ workflow PIPELINE_COMPLETION {
 //
 // Validate channels from input samplesheet
 //
+//
+// Number of families in a release's families.tsv.gz (data rows, header excluded): hmmsearch -Z for the reps searches
+//
+def countFamilies(families) {
+    return families.withInputStream { stream ->
+        new java.util.zip.GZIPInputStream(stream).newReader().readLines().findAll { line -> line.trim() }.size() - 1
+    }
+}
+
 def validateInputSamplesheet(input) {
     def (metas, fastqs) = input[1..2]
 

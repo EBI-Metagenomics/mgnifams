@@ -235,6 +235,25 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_up
 
 Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation), the full MSAs are in `update_families/full_msa/<family_id>.sto.gz`, `update_families/update_info.csv` records what the run computed, and `update_families/families.tsv.gz` is the new release's FTP family table (the previous one with the successful families `updated`, and the others `not_updated` with their discard reason).
 
+### annotate_not_updated workflow
+
+`--mode annotate_not_updated` re-annotates the families an update left as they were (`status` `not_updated` in its `families.tsv.gz`) with the current databases. Their representatives and structures don't change, so only the annotations rerun: s4pred, DeepTMHMM, Pfam and FunFam (`hmmsearch`) and Foldseek. ESMFold, hhsearch model Pfams, biomes and domain architectures don't rerun. The run never touches the update's work directory.
+The samplesheet has exactly one row:
+
+```csv
+sample,mgnifams_families,reps_fasta,structures
+mgnifams_annotate,/path/to/output_update/update_families/families.tsv.gz,/path/to/previous/family_ids.fasta,/path/to/previous/structures/esmfold/pdb
+```
+
+`reps_fasta` holds the representatives (headers start with the family id) and `structures` the `<family_id>.pdb` files of the release that last computed them. Both may hold more families. A selected family missing from either fails the run, and so does a `families.tsv.gz` with no `not_updated` row.
+Pfam and FunFam `hmmsearch` get `-Z` = the number of families in `mgnifams_families`, so their E-values share the search space of a whole-release search. Run it under a `slurm` profile: the AlphaFoldDB Foldseek search runs only there, and the merge replaces all fold rows of these families.
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_annotate_not_updated.csv --mode annotate_not_updated --outdir '/path/to/mgnifams/output_annotate' -profile slurm,singularity -resume
+```
+
+Everything is published under `annotate_not_updated/`. `update_families/update_info.csv` there has `annotation_only,true`, and `post_update_mgnifams_update_db` run on that folder builds the annotation-only delta database.
+
 ### post_update_mgnifams_update_db workflow
 
 `--mode post_update_mgnifams_update_db` builds the delta database from the `update_mgnifams` outdir; it only runs sqlite and Python, so it can run on the database host.

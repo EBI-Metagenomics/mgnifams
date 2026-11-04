@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- New `--mode annotate_not_updated`: re-annotates the not-updated families of a finished update (`status` `not_updated` in its `families.tsv.gz`) from their previous representatives and structures, with the current Pfam, FunFam, Foldseek, s4pred and DeepTMHMM. Everything is published under `annotate_not_updated/` (subworkflow `ANNOTATE_FAMILY_SUBSET`, module `SELECT_FAMILY_SUBSET`). New samplesheet columns `reps_fasta` and `structures`. The mode needs a `slurm` profile, where AlphaFoldDB is searched.
+
 ### `Changed`
+
+- Pfam and FunFam `hmmsearch` of the representatives take `-Z` from `meta.z` when it is set: the number of families of the release, so a search of a subset of the representatives reports E-values on the same base as a whole-release search. `ANNOTATE_REPS` builds the `hmmsearch` inputs from the FASTA channel's `meta`.
+- `export_mgnifams.py` takes the structure scores (`--structure_scores`) as optional, and accepts metadata with only `family_id`.
 
 ## v3.0.0 - [2026/11/02]
 
