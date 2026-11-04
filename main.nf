@@ -35,6 +35,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
 
     take:
     samplesheet // channel: samplesheet read in from --input
+    reannotate  // channel: update_mgnifams [ meta, reps fasta or [], structures folder or [] ]
 
     main:
 
@@ -94,7 +95,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.family_query_chunks, params.s4pred_chunk_size, \
             params.run_alphafold2, params.colabfold_params_path, params.af2_max_msa_seqs, params.af2_num_recycles, \
             params.mgnifams_release, params.mgnify_proteins_release, params.outdir, \
-            params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
+            params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description, reannotate
         )
         ch_multiqc = UPDATE_MGNIFAMS.out
     }
@@ -148,7 +149,8 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     EBIMETAGENOMICS_MGNIFAMS (
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.samplesheet,
+        PIPELINE_INITIALISATION.out.reannotate
     )
 
     //

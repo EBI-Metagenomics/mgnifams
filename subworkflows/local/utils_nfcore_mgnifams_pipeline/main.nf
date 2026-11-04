@@ -84,6 +84,18 @@ workflow PIPELINE_INITIALISATION {
         if (params.run_alphafold2 && !workflow.stubRun && !params.colabfold_params_path) {
             error("update_mgnifams: --run_alphafold2 needs --colabfold_params_path")
         }
+        // Optional reps_fasta / structures (the last two schema columns): re-annotate the not-updated families
+        def row = samplesheet_rows[0]
+        if (!row[11] != !row[12]) {
+            error("update_mgnifams: set both reps_fasta and structures, or neither")
+        }
+        if (!row[11]) {
+            log.warn("update_mgnifams: no reps_fasta/structures, not-updated families keep their previous annotations")
+        }
+        // The annotation-only merge replaces all fold rows of the families; AlphaFoldDB is searched only under slurm
+        else if (!workflow.profile.contains("slurm") && !workflow.profile.contains("test")) {
+            error("update_mgnifams: the AlphaFoldDB Foldseek search runs only under a slurm profile; without it the merge would drop the not-updated families' AlphaFoldDB hits")
+        }
     }
 
     // Rows follow the schema_input.json property order
@@ -139,8 +151,14 @@ workflow PIPELINE_INITIALISATION {
             }
     }
 
+    // update_mgnifams: [ meta, reps fasta or [], structures folder or [] ]; empty for the other modes
+    ch_reannotate = params.mode == "update_mgnifams" ?
+        channel.fromList(samplesheet_rows).map { row -> [ row[0], row[11] ? file(row[11]) : [], row[12] ? file(row[12]) : [] ] } :
+        channel.empty()
+
     emit:
     samplesheet = ch_samplesheet
+    reannotate  = ch_reannotate
     versions    = ch_versions
 }
 

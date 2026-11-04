@@ -27,6 +27,8 @@ include { HHSUITE_REFORMAT as REFORMAT_FULL_MSA_A3M } from '../modules/nf-core/h
 include { TRUNCATE_A3M                 } from '../modules/local/truncate_a3m/main'
 include { COLABFOLD_BATCH_MSA          } from '../modules/local/colabfold_batch_msa/main'
 include { EXPORT_FAMILIES_TSV          } from '../modules/local/export_families_tsv/main'
+include { ANNOTATE_FAMILY_SUBSET       } from '../subworkflows/local/annotate_family_subset'
+include { countFamilies                } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
 workflow UPDATE_MGNIFAMS {
 
@@ -63,12 +65,17 @@ workflow UPDATE_MGNIFAMS {
     multiqc_config
     multiqc_logo
     multiqc_methods_description
+    reannotate          // channel: [ meta, previous reps fasta or [], previous structures folder or [] ]
 
     main:
     ch_versions      = channel.empty()
     ch_multiqc_files = channel.empty()
     // Same condition ANNOTATE_REPS uses to run DeepTMHMM
     def tm_computed  = !skip_deeptmhmm && !workflow.profile.contains("conda")
+    // hmmsearch -Z: every family of the release, so updated and re-annotated reps share one E-value base
+    ch_z = ch_samplesheet
+        .map { _meta, _sequences, _clusters, _pfam, _hmms, _db_config, families -> countFamilies(families) }
+        .first()
 
     UPDATE_FAMILIES( ch_samplesheet, parquet_chunks, min_sequence_length, hmm_chunk_size, outdir )
     ch_versions = ch_versions.mix( UPDATE_FAMILIES.out.versions )
@@ -109,7 +116,10 @@ workflow UPDATE_MGNIFAMS {
     }
 
     // Not ANNOTATE_FAMILIES: its HH-suite model annotation (ANNOTATE_MODELS) works on the seed MSA, which does not change
-    ANNOTATE_REPS( UPDATE_FAMILIES.out.family_ids_fasta, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size )
+    ANNOTATE_REPS(
+        UPDATE_FAMILIES.out.family_ids_fasta.combine( ch_z ).map { meta, fa, n -> [ meta + [ z: n ], fa ] },
+        skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size
+    )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
     ANNOTATE_STRUCTURES( PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
@@ -120,6 +130,22 @@ workflow UPDATE_MGNIFAMS {
         ANNOTATE_REPS.out.pfam_domains, ANNOTATE_REPS.out.funfam_domains, query_hmm_length_threshold, \
         channel.empty(), ANNOTATE_STRUCTURES.out.foldseek_hits, outdir )
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
+
+    //
+    // Optional: re-annotate the not-updated families from the previous reps and structures, under annotate_not_updated/
+    //
+    ch_reannotate = EXPORT_FAMILIES_TSV.out.tsv
+        .join( reannotate.filter { _meta, reps, structures -> reps && structures } )
+    ANNOTATE_FAMILY_SUBSET(
+        ch_reannotate.map { meta, families, _reps, _structures -> [ meta, families ] },
+        ch_reannotate.map { meta, _families, reps, _structures -> [ meta, reps ] },
+        ch_reannotate.map { meta, _families, _reps, structures -> [ meta, structures ] },
+        ch_z,
+        skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size,
+        foldseek_pdb_db, foldseek_alphafold_db, query_hmm_length_threshold,
+        mgnifams_release, mgnify_proteins_release, outdir
+    )
+    ch_versions = ch_versions.mix( ANNOTATE_FAMILY_SUBSET.out.versions )
 
     //
     // Per-family queries in about family_query_chunks tasks, each over whole update chunks

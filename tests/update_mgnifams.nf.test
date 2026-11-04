@@ -49,4 +49,63 @@ nextflow_pipeline {
             )
         }
     }
+
+    // Stub runs (no external tools): the not-updated re-annotation hook, with and without not_updated families
+    def stubSamplesheet = { String outputDir, String root, String families ->
+        def d  = "${root}/assets/data"
+        def fx = "${root}/tests/data/annotate_not_updated"
+        families = "${root}/${families}"
+        def ss = new File("${outputDir}/samplesheet.csv"); ss.parentFile.mkdirs()
+        ss.text = "sample,mgnify_proteins_sequences,mgnify_proteins_clusters,mgnify_proteins_pfam,mgnifams_hmms,mgnifams_families,reps_fasta,structures\n" +
+            "mgnifams_update_test,${d}/mgy_protein_sequences.parquet,${d}/mgy_clusters.parquet,${d}/mgy_proteins_pfam.parquet,${d}/mgnifams_hmm.lib.gz,${families},${fx}/family_ids.fasta,${fx}/pdb\n"
+        ss.toString()
+    }
+
+    test("-profile test_update_mgnifams -stub, reannotate") {
+        tag "stub"
+        options "-stub"
+
+        when {
+            params {
+                outdir              = "$outputDir"
+                input               = stubSamplesheet("$outputDir", "${projectDir}", "tests/data/annotate_not_updated/families.tsv.gz")
+                esmfold_db          = "$outputDir"
+                esmfold_params_path = "$outputDir"
+            }
+        }
+
+        then {
+            def base = "${params.outdir}/annotate_not_updated/update_families"
+            assertAll(
+                { assert workflow.success },
+                { assert path("${base}/family_ids.fasta").readLines().findAll { l -> l.startsWith('>') } == ['>2', '>3'] },
+                { assert 'annotation_only,true' in path("${base}/update_info.csv").readLines() },
+                { assert 'hmmsearch_z,3' in path("${base}/update_info.csv").readLines() }
+            )
+        }
+    }
+
+    test("-profile test_update_mgnifams -stub, reannotate_none") {
+        tag "stub"
+        options "-stub"
+
+        when {
+            params {
+                outdir              = "$outputDir"
+                input               = stubSamplesheet("$outputDir", "${projectDir}", "assets/data/mgnifams_families.tsv.gz")
+                esmfold_db          = "$outputDir"
+                esmfold_params_path = "$outputDir"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                // collectFile storeDir creates its folders up front: no file may be published there
+                { def dir = new File("${params.outdir}/annotate_not_updated"); def files = []
+                    if (dir.exists()) { dir.eachFileRecurse(groovy.io.FileType.FILES) { f -> files << f.name } }
+                    assert files == [] }
+            )
+        }
+    }
 }
