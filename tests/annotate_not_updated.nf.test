@@ -49,4 +49,24 @@ nextflow_pipeline {
             )
         }
     }
+
+    // No not_updated row in families.tsv.gz: the mode fails and says so (stub: nothing downstream runs)
+    test("-profile test_annotate_not_updated -stub, no not_updated families") {
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                input  = { def d = "${projectDir}/tests/data/annotate_not_updated"; def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,mgnifams_families,reps_fasta,structures\nmgnifams_annotate_test,${projectDir}/assets/data/mgnifams_families.tsv.gz,${d}/family_ids.fasta,${d}/pdb\n"; ss.toString() }()
+            }
+        }
+
+        then {
+            assertAll(
+                { assert !workflow.success },
+                { assert (workflow.stdout + workflow.stderr).any { line -> line.contains('annotate_not_updated: no not_updated families in') } }
+            )
+        }
+    }
 }

@@ -22,7 +22,8 @@ BEGIN IMMEDIATE;
 CREATE TEMP TABLE merge_check (
     delta_complete INTEGER DEFAULT 1 CONSTRAINT delta_lacks_update_info_child_tables CHECK (delta_complete IS 1),
     ids_in_prod    INTEGER DEFAULT 1 CONSTRAINT delta_has_ids_missing_from_prod CHECK (ids_in_prod IS 1),
-    foreign_keys   INTEGER DEFAULT 1 CONSTRAINT merge_breaks_foreign_keys CHECK (foreign_keys IS 1)
+    foreign_keys   INTEGER DEFAULT 1 CONSTRAINT merge_breaks_foreign_keys CHECK (foreign_keys IS 1),
+    afdb_searched  INTEGER DEFAULT 1 CONSTRAINT annotation_delta_lacks_afdb CHECK (afdb_searched IS 1)
 );
 
 -- Preflight: a complete delta (update_info written last by UPDATE_SQLITE_BLOBS_STAGED) of existing families only
@@ -30,6 +31,10 @@ INSERT INTO temp.merge_check (delta_complete) SELECT
     (SELECT value FROM delta.update_info WHERE key = 'child_tables') = 'pfams,funfams,folds';
 INSERT INTO temp.merge_check (ids_in_prod) SELECT
     NOT EXISTS (SELECT 1 FROM delta.mgnifam WHERE id NOT IN (SELECT id FROM main.mgnifam));
+-- An annotation-only delta replaces all fold rows of its families: without the AlphaFoldDB search it would drop them
+INSERT INTO temp.merge_check (afdb_searched) SELECT
+    coalesce((SELECT value FROM delta.update_info WHERE key = 'annotation_only'), 'false') <> 'true'
+    OR coalesce((SELECT value FROM delta.update_info WHERE key = 'afdb_computed'), 'false') = 'true';
 
 -- Same DDL as assets/data/db_schema.sqlite. NOT NULL fails a delta without the release keys in update_info
 CREATE TABLE IF NOT EXISTS main.release_history (

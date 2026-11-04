@@ -134,7 +134,7 @@ with tempfile.TemporaryDirectory() as d:
     con.close()
 
 # Annotation-only deltas (annotate_not_updated): only s4pred, TM (when computed) and the child tables change
-INFO_ANN = {**INFO, "annotation_only": "true", "tm_computed": "false"}
+INFO_ANN = {**INFO, "annotation_only": "true", "tm_computed": "false", "afdb_computed": "true"}
 KEPT = "SELECT id, full_size, cif_blob, tm_blob, biome_blob, seed_msa_blob, seed_size FROM mgnifam ORDER BY id"
 
 
@@ -191,4 +191,17 @@ with tempfile.TemporaryDirectory() as d:
     r = merge(prod, ann)
     assert r.returncode == 0, r.stderr
     assert sqlite3.connect(prod).execute("SELECT count(*) FROM release_history").fetchone()[0] == 0
+
+# ann_afdb_required: an annotation-only delta without the AlphaFoldDB search would drop prod's AFDB folds
+with tempfile.TemporaryDirectory() as d:
+    prod, ann = f"{d}/prod.sqlite3", f"{d}/ann.sqlite3"
+    make_db(prod, [(2, 20, b"old"), (3, 30, b"old")])
+    before = sha(prod)
+    for afdb in ("false", None):
+        Path(ann).unlink(missing_ok=True)
+        info = {k: v for k, v in INFO_ANN.items() if k != "afdb_computed"} | ({"afdb_computed": afdb} if afdb else {})
+        make_db(ann, [(2, 22, b"new")], info)
+        r = merge(prod, ann)
+        assert r.returncode != 0 and "annotation_delta_lacks_afdb" in r.stderr, (afdb, r.stderr)
+        assert sha(prod) == before, "a rejected annotation-only delta must leave prod unchanged"
 print("ok")
