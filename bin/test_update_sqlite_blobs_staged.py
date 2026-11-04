@@ -54,4 +54,27 @@ with tempfile.TemporaryDirectory() as d:
     con = sqlite3.connect(d / "db.sqlite3")
     assert con.execute("SELECT count(*) FROM mgnifam WHERE length(s4pred_blob) > 0").fetchone()[0] == 2
     assert dict(con.execute("SELECT key, value FROM update_info"))["child_tables"] == "pfams,funfams,folds"
+
+# annotation_only_needs_no_cif: annotate_not_updated deltas carry s4pred (and TM) only; rep / structure scalars empty
+with tempfile.TemporaryDirectory() as d:
+    d = Path(d)
+    con = sqlite3.connect(d / "db.sqlite3")
+    con.executescript(SCHEMA.read_text())
+    for i in (2, 3):
+        con.execute("INSERT INTO mgnifam (id, helix_percent, strand_percent, coil_percent) VALUES (?, 1, 2, 97)", (i,))
+    con.commit()
+    con.close()
+    (d / "ids.txt").write_text("2\n3\n")
+    (d / "s4pred").mkdir()
+    for i in (2, 3):
+        (d / "s4pred" / f"{i}.json").write_text(f"s4pred {i}")
+    base = [sys.executable, BIN / "update_sqlite_blobs_staged.py", "--db", d / "db.sqlite3", "--ids", d / "ids.txt"]
+    base += ["--s4pred_dir", d / "s4pred", "--required", "s4pred"]
+    r = subprocess.run([*base, "--info", "child_tables=pfams,funfams,folds"], capture_output=True, text=True)
+    assert r.returncode == 1 and "lack a required blob" in r.stderr, r.stderr
+    r = subprocess.run([*base, "--info", "annotation_only=true", "child_tables=pfams,funfams,folds"], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    con = sqlite3.connect(d / "db.sqlite3")
+    assert con.execute("SELECT count(*) FROM mgnifam WHERE cif_blob IS NULL AND length(s4pred_blob) > 0").fetchone()[0] == 2
+    assert dict(con.execute("SELECT key, value FROM update_info"))["annotation_only"] == "true"
 print("ok")

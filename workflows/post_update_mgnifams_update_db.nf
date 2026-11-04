@@ -1,6 +1,6 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    POST_UPDATE_MGNIFAMS_UPDATE_DB: delta sqlite DB from an update_mgnifams outdir
+    POST_UPDATE_MGNIFAMS_UPDATE_DB: delta sqlite DB from an update_mgnifams or annotate_not_updated outdir
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Only the successful families (update_families/family_ids.fasta), with the tables and
     blobs the update run published, ready to be merged (assets/merge_update_delta.sql).
@@ -20,16 +20,18 @@ workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
     main:
     ch_versions = channel.empty()
 
+    // An annotate_not_updated outdir (annotation_only,true) has no structures, domains or biomes: prod keeps them
     ch_input = samplesheet
         .map { meta, results -> [ meta, results.toUriString() ] }
-        .multiMap { meta, r ->
+        .map { meta, r -> [ meta, r, file("${r}/update_families/update_info.csv").exists() && file("${r}/update_families/update_info.csv").readLines().contains('annotation_only,true') ] }
+        .multiMap { meta, r, annotation_only ->
             schema : [ meta, file("${projectDir}/assets/data/db_schema.sqlite", checkIfExists: true) ]
             tables : [ meta, files("${r}/table_data/*.csv", checkIfExists: true) ]
-            cifs   : files("${r}/structures/esmfold/cif/*.cif", checkIfExists: true)
+            cifs   : annotation_only ? [] : files("${r}/structures/esmfold/cif/*.cif", checkIfExists: true)
             s4pred : files("${r}/annotation/reps/s4pred/json/*.json", checkIfExists: true)
             tm     : files("${r}/annotation/reps/deeptmhmm/json/*.json")
-            biomes : files("${r}/biome_results/*")
-            domains: files("${r}/domain_results/*", checkIfExists: true)
+            biomes : annotation_only ? [] : files("${r}/biome_results/*")
+            domains: annotation_only ? [] : files("${r}/domain_results/*", checkIfExists: true)
             ids    : file("${r}/update_families/family_ids.fasta", checkIfExists: true)
             // Written by update_mgnifams; also tells an update outdir apart from a run_mgnifams_pipeline one
             info   : file("${r}/update_families/update_info.csv", checkIfExists: true)
@@ -53,7 +55,7 @@ workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
                 tm_computed   : info.tm_computed == 'true',
                 biome_computed: info.biome_computed == 'true',
                 child_tables  : 'pfams,funfams,folds'
-            ]
+            ] + ( info.annotation_only == 'true' ? [ annotation_only: true ] : [:] )
         }
 
     UPDATE_SQLITE_BLOBS_STAGED(

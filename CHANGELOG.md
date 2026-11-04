@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - New `--mode annotate_not_updated`: re-annotates the not-updated families of a finished update (`status` `not_updated` in its `families.tsv.gz`) from their previous representatives and structures, with the current Pfam, FunFam, Foldseek, s4pred and DeepTMHMM. Everything is published under `annotate_not_updated/` (subworkflow `ANNOTATE_FAMILY_SUBSET`, module `SELECT_FAMILY_SUBSET`). New samplesheet columns `reps_fasta` and `structures`. The mode needs a `slurm` profile, where AlphaFoldDB is searched.
+- `--mode post_update_mgnifams_update_db` on an `annotate_not_updated/` folder builds an annotation-only delta database (`update_info` `annotation_only=true`): s4pred, TM, Pfam, FunFam and Foldseek results only, with no structure, domain or biome blobs.
 
 ### `Changed`
 

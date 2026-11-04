@@ -40,4 +40,32 @@ nextflow_pipeline {
             )
         }
     }
+    // tests/data/annotate_results: families 2 and 3 of an annotate_not_updated test run (annotate_not_updated/ folder)
+    test("-profile test_post_update_mgnifams_update_db, annotation-only") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+                input  = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,results_folder\nmgnifams_annotate_test,${projectDir}/tests/data/annotate_results\n"; ss.toString() }()
+            }
+        }
+
+        then {
+            def db      = "${params.outdir}/db/mgnifams_annotate_test_update.sqlite3"
+            def sqlite3 = { String query -> ["sqlite3", db, query].execute().text.trim() }
+
+            assertAll(
+                { assert workflow.success },
+                { assert sqlite3("SELECT group_concat(id, ',') FROM (SELECT id FROM mgnifam ORDER BY id)") == '2,3' },
+                // s4pred blobs and percents present; no structure, domain or biome blob, no rep columns
+                { assert sqlite3("SELECT sum(s4pred_blob IS NULL), sum(coil_percent IS NULL), sum(cif_blob IS NOT NULL OR domain_blob IS NOT NULL OR biome_blob IS NOT NULL), sum(protein_rep IS NOT NULL OR full_size IS NOT NULL) FROM mgnifam") == '0|0|0|0' },
+                { assert sqlite3("SELECT value FROM update_info WHERE key = 'annotation_only'") == 'true' },
+                { assert snapshot(
+                    sqlite3("SELECT (SELECT count(*) FROM mgnifam_pfams), (SELECT count(*) FROM mgnifam_funfams), (SELECT count(*) FROM mgnifam_folds)"),
+                    sqlite3("SELECT group_concat(key || '=' || value, ';') FROM (SELECT key, value FROM update_info ORDER BY key)")
+                ).match() }
+            )
+        }
+    }
 }
