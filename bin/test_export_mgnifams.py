@@ -18,8 +18,9 @@ QUERY = (
 )
 
 
-def imported_row(metadata, seed_sizes):
-    """Export one family and import it; `seed_sizes` is the id,seed_size CSV text, or None."""
+def imported_row(metadata, seed_sizes, scores=True):
+    """Export one family and import it; `seed_sizes` is the id,seed_size CSV text, or None; scores=False passes no
+    structure scores (annotate_not_updated)."""
     with tempfile.TemporaryDirectory() as tmp:
         d = Path(tmp)
         (d / "meta.csv").write_text(metadata)
@@ -29,7 +30,7 @@ def imported_row(metadata, seed_sizes):
         if seed_sizes is not None:
             seeds = d / "seeds.csv"
             seeds.write_text(seed_sizes)
-        write_mgnifam_csv(d / "meta.csv", d / "scores.csv", d / "comp.csv", "", d / "mgnifam.csv", seeds)
+        write_mgnifam_csv(d / "meta.csv", d / "scores.csv" if scores else "", d / "comp.csv", "", d / "mgnifam.csv", seeds)
 
         db = d / "db.sqlite3"
         sqlite3.connect(db).executescript(SCHEMA)
@@ -56,5 +57,9 @@ row = imported_row(
     None,
 )
 assert row == (21, None, None, 33, "357-470", 114, "QLDP", "lldp", 4, 80.5, 0.7, 70.0, 0, None), row
+
+# ids_only_metadata (annotate_not_updated): only family_id and no structure scores; only the s4pred columns are filled
+row = imported_row("family_id\n1\n", None, scores=False)
+assert row == (None, None, None, None, None, None, None, None, None, None, None, 70.0, 0, None), row
 
 print("ok")
