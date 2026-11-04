@@ -89,6 +89,7 @@ The end-to-end MGnifams pipeline chains five major subworkflows; `setup_clusters
 For MGnify only; After the main pipeline finishes its execution, `init_db` and `update_db` must be executed. Then, the produced `sqlite` database can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
 To refresh the existing families with new MGnify proteins later, run the `update_mgnifams` workflow and merge its delta database into the production one (see [update_mgnifams workflow](#update_mgnifams-workflow)).
+Families an update leaves as they were keep their previous annotations unless they are re-annotated: with `update_mgnifams`' `reps_fasta` / `structures` columns, or afterwards with [`annotate_not_updated`](#annotate_not_updated-workflow), whose annotation-only delta is merged after the update delta.
 
 After the db has been produced by the pipeline, do the following:
 
