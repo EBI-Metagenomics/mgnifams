@@ -88,7 +88,7 @@ Queries MGnify proteins PostgreSQL DB (`bin/query_mgnprotein_db.py`) to enrich f
 
 Refreshes the full MSAs and representatives of existing families; seed MSAs and HMMs do not change. The samplesheet has
 exactly one row: `mgnify_proteins_sequences`, `mgnify_proteins_clusters` and `mgnify_proteins_pfam` (MGnify proteins parquet files),
-`mgnifams_hmms` (HMM library with numeric `NAME`s), an optional `mgnprotein_db_config` and `mgnifams_families` (the
+`mgnifams_hmms` (HMM library with numeric `NAME`s) and `mgnifams_families` (the
 previous release's FTP `families.tsv.gz`).
 
 1. **UPDATE_FAMILIES** (`subworkflows/local/update_families/`) — `EXTRACT_UNANNOTATED_PARQUET_SLICES` slices known Pfam
@@ -103,8 +103,9 @@ previous release's FTP `families.tsv.gz`).
    `EXPORT_FAMILIES_TSV` then writes the release's `update_families/families.tsv.gz` from `mgnifams_families`, the delta
    and `family_metadata.csv` (`bin/export_families_tsv.py`; fails unless the previous and updated family sets match).
 2. On the successful families: `PREDICT_STRUCTURES`, `ANNOTATE_REPS`, `ANNOTATE_STRUCTURES`, `EXPORT_DATA`; domain
-   architectures from the Pfam parquet (`BUILD_PARQUET_DOMAIN_QUERIES` → `PARSE_DOMAINS`); biomes only with
-   `mgnprotein_db_config`. `--run_alphafold2` adds ColabFold predictions from the full MSAs (`structures/alphafold2/`, not used downstream).
+   architectures from the Pfam parquet (`BUILD_PARQUET_DOMAIN_QUERIES` → `PARSE_DOMAINS`); biomes from the clusters
+   parquet (`BIOMES_FROM_PARQUET`: `BUILD_PARQUET_BIOME_QUERIES` → `PARSE_BIOMES` without a mapping; each member's own
+   `cluster_rep_biomes`, members being cluster reps). `mgnprotein_db_config` is deprecated here (ignored with a warning). `--run_alphafold2` adds ColabFold predictions from the full MSAs (`structures/alphafold2/`, not used downstream).
 3. `update_families/update_info.csv` records `tm_computed` / `biome_computed` for the DB mode below. No sqlite work.
 
 ### `post_update_mgnifams_update_db` — `workflows/post_update_mgnifams_update_db.nf`

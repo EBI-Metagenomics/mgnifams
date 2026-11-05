@@ -594,7 +594,7 @@
                     "type": "integer",
                     "default": 20,
                     "minimum": 1,
-                    "description": "Number of parallel tasks for the per-family domain (Pfam parquet) and biome (MGnify proteins DB) queries; each Pfam parquet task scans the whole parquet"
+                    "description": "Number of parallel tasks for the per-family domain (Pfam parquet) and biome (clusters parquet) queries; each task scans the whole parquet"
                 },
                 "run_alphafold2": {
                     "type": "boolean",

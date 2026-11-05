@@ -125,7 +125,10 @@ workflow PIPELINE_INITIALISATION {
                 if (!sequences || !clusters || !pfam || !hmms || !families) {
                     error("update_mgnifams: samplesheet row '${sample.id}' needs mgnify_proteins_sequences, mgnify_proteins_clusters, mgnify_proteins_pfam, mgnifams_hmms and mgnifams_families")
                 }
-                [ sample, file(sequences), file(clusters), file(pfam), file(hmms), mgnprotein_db_config ? file(mgnprotein_db_config) : [], file(families) ]
+                if (mgnprotein_db_config) {
+                    log.warn("update_mgnifams: mgnprotein_db_config is deprecated and ignored; biomes come from mgnify_proteins_clusters (cluster_rep_biomes)")
+                }
+                [ sample, file(sequences), file(clusters), file(pfam), file(hmms), file(families) ]
             }
     }
     else if (params.mode == "annotate_not_updated") {

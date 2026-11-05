@@ -80,7 +80,9 @@ nextflow_pipeline {
                 { assert workflow.success },
                 { assert path("${base}/family_ids.fasta").readLines().findAll { l -> l.startsWith('>') } == ['>2', '>3'] },
                 { assert 'annotation_only,true' in path("${base}/update_info.csv").readLines() },
-                { assert 'hmmsearch_z,3' in path("${base}/update_info.csv").readLines() }
+                { assert 'hmmsearch_z,3' in path("${base}/update_info.csv").readLines() },
+                // Biomes come from the clusters parquet, without mgnprotein_db_config (stub chunk TSVs are empty: no biome tasks)
+                { assert 'biome_computed,true' in path("${params.outdir}/update_families/update_info.csv").readLines() }
             )
         }
     }

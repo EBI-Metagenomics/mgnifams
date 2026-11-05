@@ -216,17 +216,17 @@ port = ***
 ### update_mgnifams workflow
 
 The `update_mgnifams` workflow (`--mode update_mgnifams`) refreshes existing families against new MGnify proteins without touching their seed MSAs or HMMs.
-It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`; only the MGnify90 cluster representatives listed in `mgy_clusters.parquet` are kept, as for MGnifams 1.0), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and, optionally, biomes (from the MGnify proteins DB).
+It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`; only the MGnify90 cluster representatives listed in `mgy_clusters.parquet` are kept, as for MGnifams 1.0), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and biomes (each member's own `cluster_rep_biomes` lineages in `mgy_clusters.parquet`).
 `--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
 
 The samplesheet must have exactly one row:
 
 ```csv
-sample,mgnify_proteins_sequences,mgnify_proteins_clusters,mgnify_proteins_pfam,mgnifams_hmms,mgnprotein_db_config,mgnifams_families
-mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_clusters.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,,/path/to/families.tsv.gz
+sample,mgnify_proteins_sequences,mgnify_proteins_clusters,mgnify_proteins_pfam,mgnifams_hmms,mgnifams_families
+mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_clusters.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,/path/to/families.tsv.gz
 ```
 
-`mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgnprotein_db_config` is optional; when it is empty, biomes are not recomputed.
+`mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgy_clusters.parquet` needs `cluster_rep` and `cluster_rep_biomes` (`;`-joined biome lineages, as in MGnify Proteins 2026_07). `mgnprotein_db_config` is deprecated for this mode: a value is ignored with a warning.
 `mgnifams_families` is the `families.tsv.gz` of the release being updated (from its FTP release folder); every family in it must be in `mgnifams_hmms`, and vice versa.
 Optional `reps_fasta` and `structures` columns (the previous release's representatives and `<family_id>.pdb` structures, as for [`annotate_not_updated`](#annotate_not_updated-workflow)) make the run re-annotate its not-updated families too, under `annotate_not_updated/`. Without them those families keep their previous annotations. Pfam and FunFam `hmmsearch` use `-Z` = the number of families in `mgnifams_families`.
 Set `--mgnifams_release` (the MGnifams release this update produces, `MAJOR.MINOR`; default `1.1`) and `--mgnify_proteins_release` (the MGnify Proteins release of the parquet files, `YYYY_MM`; default `2026_07`) for every run: the merge records them in `release_history`. Set `mgnifams_release` in a config (`params { mgnifams_release = '1.2' }`) or a `-params-file`, not on the command line: Nextflow reads `--mgnifams_release 1.2` as a number, which fails validation.
