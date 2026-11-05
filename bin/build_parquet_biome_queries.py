@@ -7,10 +7,11 @@ representatives: their own biomes are their row's cluster_rep_biomes, as the MGn
 
 import argparse
 import os
-from collections import defaultdict
 
+import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.dataset as ds
-from parse_domains import extract_mgyp
+from parse_domains import load_families
 
 
 def main(args=None):
@@ -20,27 +21,41 @@ def main(args=None):
     parser.add_argument("--output_dir", default="query_results")
     a = parser.parse_args(args)
 
-    families = defaultdict(set)
-    for tsv in a.families:
-        with open(tsv) as fh:
-            for line in fh:
-                family, member = line.rstrip("\n").split("\t")
-                families[family].add(int(extract_mgyp(member)))  # non-numeric protein ids fail here
+    families = load_families(a.families)
+    # All members, family after family (sorted within each), as one int64 array: no Python object per member
+    members = pa.chunked_array(
+        [pa.array(sorted(m), pa.int64()) for m in families.values()], pa.int64()
+    ).combine_chunks()
 
-    ids = sorted({p for members in families.values() for p in members})
-    table = ds.dataset(a.clusters, format="parquet").to_table(
-        columns=["cluster_rep", "cluster_rep_biomes"], filter=ds.field("cluster_rep").isin(ids)
+    # Read dictionary-encoded: the column holds few distinct lineage strings, one Python string each
+    fmt = ds.ParquetFileFormat(read_options={"dictionary_columns": ["cluster_rep_biomes"]})
+    table = (
+        ds.dataset(a.clusters, format=fmt)
+        .to_table(
+            columns=["cluster_rep", "cluster_rep_biomes"], filter=ds.field("cluster_rep").isin(pc.unique(members))
+        )
+        .unify_dictionaries()
+        .combine_chunks()
     )
-    biomes = dict(zip(table.column("cluster_rep").to_pylist(), table.column("cluster_rep_biomes").to_pylist()))
-    missing = [p for p in ids if p not in biomes]
-    if missing:
-        raise SystemExit(f"{len(missing)} members are not cluster_rep rows of {a.clusters}, e.g. {missing[:10]}")
+    positions = pc.index_in(members, value_set=table.column("cluster_rep"))
+    missing = pc.unique(pc.filter(members, pc.is_null(positions)))
+    if len(missing):
+        raise SystemExit(
+            f"{len(missing)} members are not cluster_rep rows of {a.clusters}, e.g. {missing[:10].to_pylist()}"
+        )
+
+    biomes = table.column("cluster_rep_biomes").combine_chunks()
+    lineages = biomes.dictionary.to_pylist() + [""]  # last: members without biomes (null)
+    codes = pc.take(biomes.indices, positions).fill_null(len(lineages) - 1)
 
     os.makedirs(a.output_dir, exist_ok=True)
-    for family, members in families.items():
+    offset = 0
+    for family, family_members in families.items():
+        n = len(family_members)
         with open(os.path.join(a.output_dir, f"{family}.tsv"), "w") as out:
-            for protein in sorted(members):
-                out.write(f"{protein}\t{biomes[protein] or ''}\n")
+            for protein, code in zip(members.slice(offset, n).to_pylist(), codes.slice(offset, n).to_pylist()):
+                out.write(f"{protein}\t{lineages[code]}\n")
+        offset += n
 
 
 if __name__ == "__main__":
