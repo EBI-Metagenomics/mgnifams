@@ -14,8 +14,11 @@ from build_parquet_biome_queries import main
 A, B = "root:Host-associated:Human", "root:Host-associated:Human:Skin"
 with tempfile.TemporaryDirectory() as d:
     clusters = os.path.join(d, "clusters.parquet")
+    # Two-row row groups: each chunk has its own biome dictionary
     pq.write_table(
-        pa.table({"cluster_rep": [1, 2, 3, 4], "cluster_rep_biomes": [f"{A};{B};{B}", B, None, ""]}), clusters
+        pa.table({"cluster_rep": [1, 2, 3, 4], "cluster_rep_biomes": [f"{A};{B};{B}", B, None, ""]}),
+        clusters,
+        row_group_size=2,
     )
     families = os.path.join(d, "families.tsv")
     with open(families, "w") as fh:
@@ -50,4 +53,12 @@ with tempfile.TemporaryDirectory() as d:
         ]
     ), rows
     assert open(f"{res}/8.csv").read() == "ids,labels,parents,counts\n"
+
+    # Lineage mode rejects biome-ID query results (QUERY_MGNPROTEIN_DB output given without a mapping)
+    with open(f"{out}/7.tsv", "w") as fh:
+        fh.write("1\t[[12, 3], [45, 1]]\n")
+    r = subprocess.run(
+        [sys.executable, script, "--query_results", out, "--output_dir", res], capture_output=True, text=True
+    )
+    assert r.returncode != 0 and "biome IDs" in r.stderr, r.stderr
 print("ok")

@@ -35,6 +35,8 @@ def count_lineages_per_family(file_path):
     counts = {}
     for biomes in biomes_df["biomes"]:
         if isinstance(biomes, str):  # NaN when the member has no biome
+            if biomes.startswith("["):
+                raise SystemExit(f"{file_path}: biome IDs ({biomes[:40]}) in lineage mode; pass --biome_mapping")
             for name in dict.fromkeys(biomes.split(";")):
                 if name:
                     counts[name] = counts.get(name, 0) + 1
