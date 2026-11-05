@@ -220,7 +220,7 @@ workflow PIPELINE_COMPLETION {
 // Validate channels from input samplesheet
 //
 //
-// Number of families in a release's families.tsv.gz (data rows, header excluded): hmmsearch -Z for the reps searches
+// Number of families (one rep per family) in a release's families.tsv.gz (data rows, header excluded): hmmsearch -Z for the reps searches
 //
 def countFamilies(families) {
     return families.withInputStream { stream ->
