@@ -26,7 +26,7 @@ nextflow run . -c ../conf/slurm.config --input input/samplesheet_update_db.csv -
 # Update existing families with new MGnify proteins
 nextflow run . -c ../conf/local.config -profile test_update_mgnifams,local,singularity -resume
 
-# Delta DB from an update_mgnifams outdir (default: the tests/data/update_results fixture; run from the repo root)
+# Delta DB from an update_mgnifams outdir (default: the tests/fixtures/update_results fixture; run from the repo root)
 nextflow run . -profile test_post_update_mgnifams_update_db,singularity
 ```
 
@@ -77,8 +77,8 @@ Five sequential subworkflows:
 
 ### `init_mgnifams_db` — `workflows/init_db.nf`
 
-Initializes SQLite schema (`assets/data/db_schema.sqlite`), imports pipeline results, then `FINALIZE_SQLITE` runs
-`assets/finalize_db.sql` (`has_*` flags, indexes, `ANALYZE`).
+Initializes SQLite schema (`assets/sql/db_schema.sqlite`), imports pipeline results, then `FINALIZE_SQLITE` runs
+`assets/sql/finalize_db.sql` (`has_*` flags, indexes, `ANALYZE`).
 
 ### `update_mgnifams_db` — `workflows/update_db.nf`
 
@@ -112,9 +112,9 @@ previous release's FTP `families.tsv.gz`).
 Delta DB `db/<sample>_update.sqlite3` from an `update_mgnifams` outdir (samplesheet `sample,results_folder`, one row):
 `INIT_SQLITE` → `IMPORT_QUERIES` → `UPDATE_SQLITE_BLOBS_STAGED` (fails instead of publishing a partial DB), staging the
 published CSVs, CIFs, feature JSONs, domain/biome results and `family_ids.fasta` ids. Its `update_info` table comes from
-`update_info.csv`. The pipeline never touches prod: `assets/merge_update_delta.sql` merges the delta (see the README
+`update_info.csv`. The pipeline never touches prod: `assets/sql/merge_update_delta.sql` merges the delta (see the README
 for which columns it overwrites and keeps). Test: `tests/post_update_mgnifams_update_db.nf.test` on the two-family
-fixture `tests/data/update_results` (no external DBs, cheap).
+fixture `tests/fixtures/update_results` (no external DBs, cheap).
 
 ## Key Configuration
 
@@ -128,7 +128,7 @@ The `conf/slurm.config` and `conf/local.config` files are gitignored — create 
 
 ## DB schema
 
-`assets/data/db_schema.sqlite` (SQL text) now has `mgnifam.seed_size` and the Foldseek TM-scores
+`assets/sql/db_schema.sqlite` (SQL text) now has `mgnifam.seed_size` and the Foldseek TM-scores
 `mgnifam_folds.aln_tmscore/q_tmscore/t_tmscore`. `IMPORT_QUERIES` imports `mgnifam.csv` by header name (every
 `export_mgnifams.py` header column must exist in the schema, checked by `bin/test_export_mgnifams.py`); columns missing
 from the CSV keep their DEFAULT. Child CSVs are imported by position (their `id` column is the `mgnifam_id`).
@@ -136,7 +136,7 @@ Migrated prod DBs have `seed_size`/`hmm_length` last instead; that is fine, sinc
 The `has_*` flags are derived from the child tables: `finalize_db.sql` fills them (init DB), the merge recomputes them
 for the delta families; the delta DB leaves them at 0. Fast PRAGMAs (journal/fsync off) only on throwaway build files, never prod.
 `mgnifam.hmm_length` = `length(consensus)` (one consensus residue per match state), stored so the website can index/sort on it.
-Existing DBs are migrated once with `assets/migrate_schema_seed_size_tmscores.sql`.
+Existing DBs are migrated once with `assets/sql/migrate_schema_seed_size_tmscores.sql`.
 `release_history` has one row per MGnifams release in the DB (`release` is `MAJOR.MINOR`, independent of the MGnify Proteins
 `YYYY_MM` release it records). `merge_update_delta.sql` creates it if missing and adds the update row from the delta's
 `update_info` (`mgnifams_release`, `mgnify_proteins_release` come from the `update_mgnifams` params of the same names).
@@ -165,7 +165,10 @@ does not yet; 1.0's was a one-off export from the prod DB. Generate it there (al
 - **`bin/`** — Python helper scripts called by Nextflow processes. `generate_families.py` is the core algorithm (~26KB).
 - **`bin/test_*.py`** — Assert-based self-checks of the scripts next to them (`python3 bin/test_<name>.py`)
 - **`modules/local/`** — Custom Nextflow process definitions
-- **`assets/*.sql`** — Out-of-pipeline SQL for production DBs: schema migration, update-delta merge
+- **`assets/sql/`** — DB schema (`db_schema.sqlite`, SQL text), `finalize_db.sql`, and out-of-pipeline SQL for production DBs: schema migration, update-delta merge
+- **`assets/data/`** — Small input test data for the test profiles (parquets, HMM library, families TSV, protein CSV)
+- **`assets/samplesheets/`** — Samplesheets of the `test*` profiles and examples per mode
+- **`tests/fixtures/`** — Only fixtures of the end-to-end nf-tests (`tests/*.nf.test`); module fixtures stay in `modules/local/<name>/tests/fixtures/`
 - **`modules/nf-core/`** — Standard nf-core modules (don't modify directly)
 - **`subworkflows/local/`** — Custom subworkflow logic
 - **`subworkflows/nf-core/`** — Standard nf-core subworkflows

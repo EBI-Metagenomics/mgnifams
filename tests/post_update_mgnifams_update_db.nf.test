@@ -6,7 +6,7 @@ nextflow_pipeline {
     tag "post_update_mgnifams_update_db"
     profile "test_post_update_mgnifams_update_db"
 
-    // tests/data/update_results: families 2 and 4 of an update_mgnifams test run (no DeepTMHMM, no biomes)
+    // tests/fixtures/update_results: families 2 and 4 of an update_mgnifams test run (no DeepTMHMM, no biomes)
     test("-profile test_post_update_mgnifams_update_db") {
 
         when {
@@ -14,7 +14,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 // The profile's samplesheet path is relative to the repo root; nf-test launches elsewhere
                 input  = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
-                    ss.text = "sample,results_folder\nmgnifams_update_test,${projectDir}/tests/data/update_results\n"; ss.toString() }()
+                    ss.text = "sample,results_folder\nmgnifams_update_test,${projectDir}/tests/fixtures/update_results\n"; ss.toString() }()
             }
         }
 
@@ -40,14 +40,14 @@ nextflow_pipeline {
             )
         }
     }
-    // tests/data/annotate_results: families 2 and 3 of an annotate_not_updated test run (annotate_not_updated/ folder)
+    // tests/fixtures/annotate_results: families 2 and 3 of an annotate_not_updated test run (annotate_not_updated/ folder)
     test("-profile test_post_update_mgnifams_update_db, annotation-only") {
 
         when {
             params {
                 outdir = "$outputDir"
                 input  = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
-                    ss.text = "sample,results_folder\nmgnifams_annotate_test,${projectDir}/tests/data/annotate_results\n"; ss.toString() }()
+                    ss.text = "sample,results_folder\nmgnifams_annotate_test,${projectDir}/tests/fixtures/annotate_results\n"; ss.toString() }()
             }
         }
 

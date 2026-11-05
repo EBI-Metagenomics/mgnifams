@@ -22,6 +22,6 @@ workflow INIT_DB {
     ch_versions = ch_versions.mix( IMPORT_QUERIES.out.versions )
 
     // has_* flags, indexes, ANALYZE
-    FINALIZE_SQLITE( IMPORT_QUERIES.out.db, file("${projectDir}/assets/finalize_db.sql", checkIfExists: true) )
+    FINALIZE_SQLITE( IMPORT_QUERIES.out.db, file("${projectDir}/assets/sql/finalize_db.sql", checkIfExists: true) )
     ch_versions = ch_versions.mix( FINALIZE_SQLITE.out.versions )
 }

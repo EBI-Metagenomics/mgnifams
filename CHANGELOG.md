@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - New `--mode annotate_not_updated`: re-annotates the not-updated families of a finished update (`status` `not_updated` in its `families.tsv.gz`) from their previous representatives and structures, with the current Pfam, FunFam, Foldseek, s4pred and DeepTMHMM. Everything is published under `annotate_not_updated/` (subworkflow `ANNOTATE_FAMILY_SUBSET`, module `SELECT_FAMILY_SUBSET`). New samplesheet columns `reps_fasta` and `structures`. The mode needs a `slurm` profile, where AlphaFoldDB is searched.
 - `--mode post_update_mgnifams_update_db` on an `annotate_not_updated/` folder builds an annotation-only delta database (`update_info` `annotation_only=true`): s4pred, TM, Pfam, FunFam and Foldseek results only, with no structure, domain or biome blobs.
-- `assets/merge_update_delta.sql` merges annotation-only deltas: the representative, size, structure, domain and biome columns are kept, and no `release_history` row is written. An annotation-only delta without the AlphaFoldDB search (`afdb_computed` not `true`) is rejected, because it replaces all fold rows. The update-delta merge is unchanged.
+- `assets/sql/merge_update_delta.sql` merges annotation-only deltas: the representative, size, structure, domain and biome columns are kept, and no `release_history` row is written. An annotation-only delta without the AlphaFoldDB search (`afdb_computed` not `true`) is rejected, because it replaces all fold rows. The update-delta merge is unchanged.
 - `update_mgnifams` takes the optional samplesheet columns `reps_fasta` and `structures` (the previous release's representatives and `<family_id>.pdb` structures). With both set, it also re-annotates its own not-updated families with `ANNOTATE_FAMILY_SUBSET` under `annotate_not_updated/`. With neither set, it warns and behaves as before. Setting only one fails.
 
 ### `Changed`
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `update_mgnifams` runs Pfam and FunFam `hmmsearch` with `-Z` = the number of families in `mgnifams_families`, so updated and re-annotated families share one E-value base.
 - `EXPORT_FAMILIES_TSV` stub copies the previous `families.tsv.gz` (it wrote an empty file), so stub runs keep real statuses.
 - `export_mgnifams.py` takes the structure scores (`--structure_scores`) as optional, and accepts metadata with only `family_id`.
+- The SQL files moved to `assets/sql/` (`db_schema.sqlite`, `finalize_db.sql`, `merge_update_delta.sql`, `migrate_schema_seed_size_tmscores.sql`) and the samplesheets to `assets/samplesheets/`. Update the paths in hand-run `sqlite3` commands and in custom samplesheets that use the raw GitHub URL of `db_schema.sqlite`.
 
 ## v3.0.0 - [2026/11/02]
 

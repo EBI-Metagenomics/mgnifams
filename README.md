@@ -171,7 +171,7 @@ The samplesheet must be in this format:
 
 ```csv
 sample,schema,results_folder
-mgnifams_test,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/db_schema.sqlite,/path/to/mgnifams/output
+mgnifams_test,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/sql/db_schema.sqlite,/path/to/mgnifams/output
 ```
 
 The `sample` column contains a given identifier.
@@ -185,7 +185,7 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_in
 ```
 
 Make sure to manually delete any previous `init_db` workflow cached work jobs.
-The last step (`assets/finalize_db.sql`) fills the `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit) search flags, creates the website indexes and runs `ANALYZE`.
+The last step (`assets/sql/finalize_db.sql`) fills the `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit) search flags, creates the website indexes and runs `ANALYZE`.
 
 ### update_db workflow
 
@@ -287,13 +287,13 @@ To apply it, migrate the production database once (this adds `seed_size`, `hmm_l
 ```bash
 db=/path/to/mgnifams.sqlite3
 [ "$(sqlite3 "$db" "SELECT count(*) FROM pragma_table_info('mgnifam') WHERE name = 'seed_size'")" = 0 ] \
-    && sqlite3 -bail "$db" < assets/migrate_schema_seed_size_tmscores.sql
-sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/merge_update_delta.sql
+    && sqlite3 -bail "$db" < assets/sql/migrate_schema_seed_size_tmscores.sql
+sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/sql/merge_update_delta.sql
 ```
 
 This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
 Do not speed up the merge with `PRAGMA journal_mode = OFF`: the rollback on a failed check would no longer work. Such PRAGMAs are only safe on a copy that is swapped in afterwards.
-After changing indexes in `assets/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/finalize_db.sql`; idempotent).
+After changing indexes in `assets/sql/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/sql/finalize_db.sql`; idempotent).
 
 ## Website
 

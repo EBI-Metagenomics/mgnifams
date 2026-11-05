@@ -1,8 +1,8 @@
 -- Merges an update_mgnifams delta DB (db/<sample>_update.sqlite3) into a production MGnifams DB, in one transaction.
--- Prod must be migrated first (assets/migrate_schema_seed_size_tmscores.sql) and have the has_* columns
--- (assets/data/db_schema.sqlite; assets/finalize_db.sql fills them). Run with the delta attached:
+-- Prod must be migrated first (assets/sql/migrate_schema_seed_size_tmscores.sql) and have the has_* columns
+-- (assets/sql/db_schema.sqlite; assets/sql/finalize_db.sql fills them). Run with the delta attached:
 --
---   sqlite3 -bail prod.sqlite3 -cmd "ATTACH 'delta.sqlite3' AS delta" < assets/merge_update_delta.sql
+--   sqlite3 -bail prod.sqlite3 -cmd "ATTACH 'delta.sqlite3' AS delta" < assets/sql/merge_update_delta.sql
 --
 -- Any failed check or statement exits before COMMIT (-bail), so prod is left untouched.
 -- Records the release in release_history (created if missing); merging a release twice fails on its primary key.
@@ -36,7 +36,7 @@ INSERT INTO temp.merge_check (afdb_searched) SELECT
     coalesce((SELECT value FROM delta.update_info WHERE key = 'annotation_only'), 'false') <> 'true'
     OR coalesce((SELECT value FROM delta.update_info WHERE key = 'afdb_computed'), 'false') = 'true';
 
--- Same DDL as assets/data/db_schema.sqlite. NOT NULL fails a delta without the release keys in update_info
+-- Same DDL as assets/sql/db_schema.sqlite. NOT NULL fails a delta without the release keys in update_info
 CREATE TABLE IF NOT EXISTS main.release_history (
     release TEXT PRIMARY KEY NOT NULL, -- MGnifams release, MAJOR.MINOR
     date TEXT NOT NULL, -- YYYY-MM-DD

@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 
 BIN = Path(__file__).resolve().parent
-SCHEMA = BIN.parent / "assets/data/db_schema.sqlite"
+SCHEMA = BIN.parent / "assets/sql/db_schema.sqlite"
 
 
 def run(d, *extra):

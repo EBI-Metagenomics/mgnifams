@@ -53,7 +53,7 @@ nextflow_pipeline {
     // Stub runs (no external tools): the not-updated re-annotation hook, with and without not_updated families
     def stubSamplesheet = { String outputDir, String root, String families ->
         def d  = "${root}/assets/data"
-        def fx = "${root}/tests/data/annotate_not_updated"
+        def fx = "${root}/tests/fixtures/annotate_not_updated"
         families = "${root}/${families}"
         def ss = new File("${outputDir}/samplesheet.csv"); ss.parentFile.mkdirs()
         ss.text = "sample,mgnify_proteins_sequences,mgnify_proteins_clusters,mgnify_proteins_pfam,mgnifams_hmms,mgnifams_families,reps_fasta,structures\n" +
@@ -68,7 +68,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir              = "$outputDir"
-                input               = stubSamplesheet("$outputDir", "${projectDir}", "tests/data/annotate_not_updated/families.tsv.gz")
+                input               = stubSamplesheet("$outputDir", "${projectDir}", "tests/fixtures/annotate_not_updated/families.tsv.gz")
                 esmfold_db          = "$outputDir"
                 esmfold_params_path = "$outputDir"
             }

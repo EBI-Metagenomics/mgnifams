@@ -1,2 +1,0 @@
-sample,mgnifams_families,reps_fasta,structures
-mgnifams_annotate_test,tests/data/annotate_not_updated/families.tsv.gz,tests/data/annotate_not_updated/family_ids.fasta,tests/data/annotate_not_updated/pdb

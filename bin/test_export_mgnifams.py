@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Self-check: mgnifam.csv from export_mgnifams.py imports into assets/data/db_schema.sqlite the way IMPORT_QUERIES
+"""Self-check: mgnifam.csv from export_mgnifams.py imports into assets/sql/db_schema.sqlite the way IMPORT_QUERIES
 does it (by header name), so every header column exists in the schema. Needs the sqlite3 CLI.
 Run: python3 bin/test_export_mgnifams.py"""
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 from export_mgnifams import write_mgnifam_csv
 
-SCHEMA = (Path(__file__).resolve().parent.parent / "assets/data/db_schema.sqlite").read_text()
+SCHEMA = (Path(__file__).resolve().parent.parent / "assets/sql/db_schema.sqlite").read_text()
 
 QUERY = (
     "SELECT full_size, seed_size, converged, protein_rep, rep_region, rep_length, rep_sequence, consensus, hmm_length,"

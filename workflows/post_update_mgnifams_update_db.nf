@@ -3,7 +3,7 @@
     POST_UPDATE_MGNIFAMS_UPDATE_DB: delta sqlite DB from an update_mgnifams or annotate_not_updated outdir
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Only the successful families (update_families/family_ids.fasta), with the tables and
-    blobs the update run published, ready to be merged (assets/merge_update_delta.sql).
+    blobs the update run published, ready to be merged (assets/sql/merge_update_delta.sql).
     UPDATE_SQLITE_BLOBS_STAGED fails instead of publishing a partial DB.
 ----------------------------------------------------------------------------------------
 */
@@ -25,7 +25,7 @@ workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
         .map { meta, results -> [ meta, results.toUriString() ] }
         .map { meta, r -> [ meta, r, file("${r}/update_families/update_info.csv").exists() && file("${r}/update_families/update_info.csv").readLines().contains('annotation_only,true') ] }
         .multiMap { meta, r, annotation_only ->
-            schema : [ meta, file("${projectDir}/assets/data/db_schema.sqlite", checkIfExists: true) ]
+            schema : [ meta, file("${projectDir}/assets/sql/db_schema.sqlite", checkIfExists: true) ]
             tables : [ meta, files("${r}/table_data/*.csv", checkIfExists: true) ]
             cifs   : annotation_only ? [] : files("${r}/structures/esmfold/cif/*.cif", checkIfExists: true)
             s4pred : files("${r}/annotation/reps/s4pred/json/*.json", checkIfExists: true)

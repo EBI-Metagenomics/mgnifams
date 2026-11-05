@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Self-check for assets/merge_update_delta.sql (needs the sqlite3 CLI). Run: python3 bin/test_merge_update_delta.py"""
+"""Self-check for assets/sql/merge_update_delta.sql (needs the sqlite3 CLI). Run: python3 bin/test_merge_update_delta.py"""
 
 import hashlib
 import sqlite3
@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
-SCHEMA = (ASSETS / "data/db_schema.sqlite").read_text()
+SCHEMA = (ASSETS / "sql/db_schema.sqlite").read_text()
 
 
 def make_db(path, rows, info=None):
@@ -44,7 +44,7 @@ def make_db(path, rows, info=None):
 
 
 def merge(prod, delta):
-    sql = (ASSETS / "merge_update_delta.sql").read_text()
+    sql = (ASSETS / "sql/merge_update_delta.sql").read_text()
     cmd = ["sqlite3", "-bail", prod, "-cmd", f"ATTACH '{delta}' AS delta"]
     return subprocess.run(cmd, input=sql, capture_output=True, text=True)
 

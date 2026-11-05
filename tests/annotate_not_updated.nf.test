@@ -6,7 +6,7 @@ nextflow_pipeline {
     tag "annotate_not_updated"
     profile "test_annotate_not_updated"
 
-    // tests/data/annotate_not_updated: family 1 updated, 2 and 3 not_updated; reps and ESMFold PDBs of all three.
+    // tests/fixtures/annotate_not_updated: family 1 updated, 2 and 3 not_updated; reps and ESMFold PDBs of all three.
     // Needs the external databases (pfam_path, funfams_path, foldseek_db_path) from local config, to be
     // temporarily put in the test_annotate_not_updated profile
     test("-profile test_annotate_not_updated") {
@@ -15,7 +15,7 @@ nextflow_pipeline {
             params {
                 outdir = "$outputDir"
                 // The profile's samplesheet paths are relative to the repo root; nf-test launches elsewhere
-                input  = { def d = "${projectDir}/tests/data/annotate_not_updated"; def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                input  = { def d = "${projectDir}/tests/fixtures/annotate_not_updated"; def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
                     ss.text = "sample,mgnifams_families,reps_fasta,structures\nmgnifams_annotate_test,${d}/families.tsv.gz,${d}/family_ids.fasta,${d}/pdb\n"; ss.toString() }()
             }
         }
@@ -57,7 +57,7 @@ nextflow_pipeline {
         when {
             params {
                 outdir = "$outputDir"
-                input  = { def d = "${projectDir}/tests/data/annotate_not_updated"; def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                input  = { def d = "${projectDir}/tests/fixtures/annotate_not_updated"; def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
                     ss.text = "sample,mgnifams_families,reps_fasta,structures\nmgnifams_annotate_test,${projectDir}/assets/data/mgnifams_families.tsv.gz,${d}/family_ids.fasta,${d}/pdb\n"; ss.toString() }()
             }
         }
