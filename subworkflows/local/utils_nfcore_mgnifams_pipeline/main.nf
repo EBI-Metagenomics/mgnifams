@@ -116,7 +116,8 @@ workflow PIPELINE_INITIALISATION {
     else if (params.mode == "update_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
             .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures, _refined_families, _biome_results ->
-                [ sample, results_folder, existing_db, mgnprotein_db_config ]
+                // Not checked by the schema: update_mgnifams ignores the column
+                [ sample, results_folder, existing_db, file(mgnprotein_db_config, checkIfExists: true) ]
             }
     }
     else if (params.mode == "update_mgnifams") {

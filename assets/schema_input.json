@@ -43,8 +43,7 @@
             "mgnprotein_db_config": {
                 "type": "string",
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.ini$",
-                "exists": true,
-                "description": "The mgnify proteins database config file with secrets (update_mgnifams_db; deprecated and ignored in update_mgnifams)",
+                "description": "The mgnify proteins database config file with secrets (update_mgnifams_db, which checks it exists; deprecated and ignored in update_mgnifams)",
                 "errorMessage": "Must be a .ini file."
             },
             "mgnify_proteins_sequences": {
