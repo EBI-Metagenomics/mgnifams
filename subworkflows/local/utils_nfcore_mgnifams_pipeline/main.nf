@@ -84,7 +84,7 @@ workflow PIPELINE_INITIALISATION {
         if (params.run_alphafold2 && !workflow.stubRun && !params.colabfold_params_path) {
             error("update_mgnifams: --run_alphafold2 needs --colabfold_params_path")
         }
-        // Optional reps_fasta / structures (the last two schema columns): re-annotate the not-updated families
+        // Optional reps_fasta / structures (schema columns 11 and 12): re-annotate the not-updated families
         def row = samplesheet_rows[0]
         if (!row[11] != !row[12]) {
             error("update_mgnifams: set both reps_fasta and structures, or neither")
