@@ -89,6 +89,7 @@ The end-to-end MGnifams pipeline chains five major subworkflows; `setup_clusters
 For MGnify only; After the main pipeline finishes its execution, `init_db` and `update_db` must be executed. Then, the produced `sqlite` database can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
 To refresh the existing families with new MGnify proteins later, run the `update_mgnifams` workflow and merge its delta database into the production one (see [update_mgnifams workflow](#update_mgnifams-workflow)).
+Families an update leaves as they were keep their previous annotations unless they are re-annotated: with `update_mgnifams`' `reps_fasta` / `structures` columns, or afterwards with [`annotate_not_updated`](#annotate_not_updated-workflow), whose annotation-only delta is merged after the update delta.
 
 After the db has been produced by the pipeline, do the following:
 
@@ -170,7 +171,7 @@ The samplesheet must be in this format:
 
 ```csv
 sample,schema,results_folder
-mgnifams_test,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/db_schema.sqlite,/path/to/mgnifams/output
+mgnifams_test,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/sql/db_schema.sqlite,/path/to/mgnifams/output
 ```
 
 The `sample` column contains a given identifier.
@@ -184,7 +185,7 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_in
 ```
 
 Make sure to manually delete any previous `init_db` workflow cached work jobs.
-The last step (`assets/finalize_db.sql`) fills the `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit) search flags, creates the website indexes and runs `ANALYZE`.
+The last step (`assets/sql/finalize_db.sql`) fills the `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit) search flags, creates the website indexes and runs `ANALYZE`.
 
 ### update_db workflow
 
@@ -227,6 +228,7 @@ mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_clusters.par
 
 `mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgnprotein_db_config` is optional; when it is empty, biomes are not recomputed.
 `mgnifams_families` is the `families.tsv.gz` of the release being updated (from its FTP release folder); every family in it must be in `mgnifams_hmms`, and vice versa.
+Optional `reps_fasta` and `structures` columns (the previous release's representatives and `<family_id>.pdb` structures, as for [`annotate_not_updated`](#annotate_not_updated-workflow)) make the run re-annotate its not-updated families too, under `annotate_not_updated/`. Without them those families keep their previous annotations. Pfam and FunFam `hmmsearch` use `-Z` = the number of families in `mgnifams_families`.
 Set `--mgnifams_release` (the MGnifams release this update produces, `MAJOR.MINOR`; default `1.1`) and `--mgnify_proteins_release` (the MGnify Proteins release of the parquet files, `YYYY_MM`; default `2026_07`) for every run: the merge records them in `release_history`. Set `mgnifams_release` in a config (`params { mgnifams_release = '1.2' }`) or a `-params-file`, not on the command line: Nextflow reads `--mgnifams_release 1.2` as a number, which fails validation.
 
 ```bash
@@ -234,6 +236,25 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_up
 ```
 
 Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation), the full MSAs are in `update_families/full_msa/<family_id>.sto.gz`, `update_families/update_info.csv` records what the run computed, and `update_families/families.tsv.gz` is the new release's FTP family table (the previous one with the successful families `updated`, and the others `not_updated` with their discard reason).
+
+### annotate_not_updated workflow
+
+`--mode annotate_not_updated` re-annotates the families an update left as they were (`status` `not_updated` in its `families.tsv.gz`) with the current databases. Their representatives and structures don't change, so only the annotations rerun: s4pred, DeepTMHMM, Pfam and FunFam (`hmmsearch`) and Foldseek. ESMFold, hhsearch model Pfams, biomes and domain architectures don't rerun. The run never touches the update's work directory.
+The samplesheet has exactly one row:
+
+```csv
+sample,mgnifams_families,reps_fasta,structures
+mgnifams_annotate,/path/to/output_update/update_families/families.tsv.gz,/path/to/previous/family_ids.fasta,/path/to/previous/structures/esmfold/pdb
+```
+
+`reps_fasta` holds the representatives (headers start with the family id) and `structures` the `<family_id>.pdb` files of the release that last computed them. Both may hold more families. A selected family missing from either fails the run, and so does a `families.tsv.gz` with no `not_updated` row.
+Pfam and FunFam `hmmsearch` get `-Z` = the number of families in `mgnifams_families`, so their E-values share the search space of a whole-release search. Run it under a `slurm` profile: the AlphaFoldDB Foldseek search runs only there, and the merge replaces all fold rows of these families.
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_annotate_not_updated.csv --mode annotate_not_updated --outdir '/path/to/mgnifams/output_annotate' -profile slurm,singularity -resume
+```
+
+Everything is published under `annotate_not_updated/`. `update_families/update_info.csv` there has `annotation_only,true`, and `post_update_mgnifams_update_db` run on that folder builds the annotation-only delta database.
 
 ### post_update_mgnifams_update_db workflow
 
@@ -259,19 +280,20 @@ The pipeline does not modify the production database. It publishes a delta datab
 - Recomputed for these families: `has_pfam`, `has_funfam` and `has_structure`.
 - Families the update discarded are not in the delta, so they keep their previous version.
 - Recorded: one `release_history` row (the table is created if missing) with the release, merge date, MGnify Proteins release, pipeline version and the counts of families, updated families and not updated families. Merging the same release twice fails and changes nothing.
+- An annotation-only delta (`annotation_only=true`, built from an `annotate_not_updated/` folder) overwrites only the secondary structure percents and `s4pred_blob`, the transmembrane columns when `tm_computed`, and the `mgnifam_pfams`, `mgnifam_funfams` and `mgnifam_folds` rows of its families, and recomputes their `has_pfam`, `has_funfam` and `has_structure`. It records no `release_history` row, and merging it again changes no content. The merge rejects it (`annotation_delta_lacks_afdb`) unless its `update_info` has `afdb_computed=true`, because it replaces all fold rows of these families. Merge a release's update delta first, then its annotation-only delta.
 
 To apply it, migrate the production database once (this adds `seed_size`, `hmm_length` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
 
 ```bash
 db=/path/to/mgnifams.sqlite3
 [ "$(sqlite3 "$db" "SELECT count(*) FROM pragma_table_info('mgnifam') WHERE name = 'seed_size'")" = 0 ] \
-    && sqlite3 -bail "$db" < assets/migrate_schema_seed_size_tmscores.sql
-sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/merge_update_delta.sql
+    && sqlite3 -bail "$db" < assets/sql/migrate_schema_seed_size_tmscores.sql
+sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/sql/merge_update_delta.sql
 ```
 
 This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
 Do not speed up the merge with `PRAGMA journal_mode = OFF`: the rollback on a failed check would no longer work. Such PRAGMAs are only safe on a copy that is swapped in afterwards.
-After changing indexes in `assets/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/finalize_db.sql`; idempotent).
+After changing indexes in `assets/sql/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/sql/finalize_db.sql`; idempotent).
 
 ## Website
 

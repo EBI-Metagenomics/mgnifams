@@ -1,0 +1,93 @@
+{
+    "-profile test_annotate_not_updated": {
+        "content": [
+            10,
+            {
+                "EXPORT_FOLDS": {
+                    "sed": 4.7
+                },
+                "EXPORT_MGNIFAMS": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
+                },
+                "FILTER_EXPORT_FUNFAMS": {
+                    "sed": 4.7
+                },
+                "FILTER_EXPORT_PFAMS": {
+                    "sed": 4.7
+                },
+                "FOLDSEEK_EASYSEARCH_PDB": {
+                    "foldseek": "10.941cd33"
+                },
+                "HMMER_HMMSEARCH_FUNFAMS": {
+                    "hmmer": 3.4
+                },
+                "HMMER_HMMSEARCH_PFAM": {
+                    "hmmer": 3.4
+                },
+                "PARSE_S4PRED_TO_FEATURE_VIEWER": {
+                    "python": "3.13.0"
+                },
+                "S4PRED_RUNMODEL": {
+                    "s4pred": "1.2.1"
+                },
+                "SELECT_FAMILY_SUBSET": {
+                    "python": "3.13.1"
+                },
+                "Workflow": {
+                    "ebi-metagenomics/mgnifams": "v3.1.0dev"
+                }
+            },
+            [
+                "annotate_not_updated",
+                "annotate_not_updated/annotation",
+                "annotate_not_updated/annotation/reps",
+                "annotate_not_updated/annotation/reps/funfams",
+                "annotate_not_updated/annotation/reps/funfams/reps_fasta.domtbl.gz",
+                "annotate_not_updated/annotation/reps/pfam",
+                "annotate_not_updated/annotation/reps/pfam/reps_fasta.domtbl.gz",
+                "annotate_not_updated/annotation/reps/s4pred",
+                "annotate_not_updated/annotation/reps/s4pred/composition.csv",
+                "annotate_not_updated/annotation/reps/s4pred/horiz_1",
+                "annotate_not_updated/annotation/reps/s4pred/horiz_1/2.horiz",
+                "annotate_not_updated/annotation/reps/s4pred/horiz_1/3.horiz",
+                "annotate_not_updated/annotation/reps/s4pred/json",
+                "annotate_not_updated/annotation/reps/s4pred/json/2.json",
+                "annotate_not_updated/annotation/reps/s4pred/json/3.json",
+                "annotate_not_updated/annotation/structures",
+                "annotate_not_updated/annotation/structures/foldseek",
+                "annotate_not_updated/annotation/structures/foldseek/all_hits.tsv",
+                "annotate_not_updated/annotation/structures/foldseek/mgnifams_annotate_test.m8",
+                "annotate_not_updated/table_data",
+                "annotate_not_updated/table_data/mgnifam.csv",
+                "annotate_not_updated/table_data/mgnifam_folds.csv",
+                "annotate_not_updated/table_data/mgnifam_funfams.csv",
+                "annotate_not_updated/table_data/mgnifam_pfams.csv",
+                "annotate_not_updated/update_families",
+                "annotate_not_updated/update_families/family_ids.fasta",
+                "annotate_not_updated/update_families/update_info.csv",
+                "pipeline_info",
+                "pipeline_info/nf_core_pipeline_software_mqc_versions.yml",
+                "samplesheet.csv"
+            ],
+            [
+                "key,value",
+                "annotation_only,true",
+                "tm_computed,false",
+                "biome_computed,false",
+                "afdb_computed,false",
+                "hmmsearch_z,3",
+                "pfam_lib,Pfam-A.38.2.hmm.gz",
+                "funfams_lib,funfam-hmm3-v4_3_0_test.lib.gz",
+                "mgnifams_release,1.1",
+                "mgnify_proteins_release,2026_07",
+                "pipeline_version,3.1.0dev"
+            ]
+        ],
+        "timestamp": "2026-11-04T13:58:47.53755905",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.3"
+        }
+    }
+}

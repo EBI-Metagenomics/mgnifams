@@ -1,0 +1,72 @@
+nextflow_pipeline {
+
+    name "Test pipeline --mode annotate_not_updated"
+    script "../main.nf"
+    tag "pipeline"
+    tag "annotate_not_updated"
+    profile "test_annotate_not_updated"
+
+    // tests/fixtures/annotate_not_updated: family 1 updated, 2 and 3 not_updated; reps and ESMFold PDBs of all three.
+    // Needs the external databases (pfam_path, funfams_path, foldseek_db_path) from local config, to be
+    // temporarily put in the test_annotate_not_updated profile
+    test("-profile test_annotate_not_updated") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+                // The profile's samplesheet paths are relative to the repo root; nf-test launches elsewhere
+                input  = { def d = "${projectDir}/tests/fixtures/annotate_not_updated"; def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,mgnifams_families,reps_fasta,structures\nmgnifams_annotate_test,${d}/families.tsv.gz,${d}/family_ids.fasta,${d}/pdb\n"; ss.toString() }()
+            }
+        }
+
+        then {
+            def base       = "${params.outdir}/annotate_not_updated"
+            def info       = path("${base}/update_families/update_info.csv").readLines()
+            def domtblOpts = { String lib -> new File("${base}/annotation/reps/${lib}").listFiles().findAll { f -> f.name.endsWith('.domtbl.gz') }
+                .collectMany { f -> path(f.toString()).linesGzip.findAll { line -> line.startsWith('# Option settings:') } } }
+            // Everything but the run reports lives under annotate_not_updated/
+            def topLevel   = new File(params.outdir.toString()).list().findAll { n -> !(n in ['annotate_not_updated', 'pipeline_info', 'multiqc', 'samplesheet.csv']) }
+            def stable_name = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
+
+            assertAll(
+                { assert workflow.success },
+                { assert path("${base}/update_families/family_ids.fasta").readLines().findAll { l -> l.startsWith('>') } == ['>2', '>3'] },
+                { assert 'annotation_only,true' in info },
+                { assert 'hmmsearch_z,3' in info },
+                { assert 'afdb_computed,false' in info },
+                // -Z = families.tsv row count (3), on both hmmsearch libraries
+                { assert domtblOpts('pfam').size() == 1 && domtblOpts('pfam')[0].contains('-Z 3') },
+                { assert domtblOpts('funfams').size() == 1 && domtblOpts('funfams')[0].contains('-Z 3') },
+                { assert path("${base}/table_data/mgnifam.csv").readLines().drop(1).collect { l -> l.tokenize(',')[0] } == ['2', '3'] },
+                { assert topLevel == [] },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_pipeline_software_mqc_versions.yml"),
+                    stable_name,
+                    info
+                ).match() }
+            )
+        }
+    }
+
+    // No not_updated row in families.tsv.gz: the mode fails and says so (stub: nothing downstream runs)
+    test("-profile test_annotate_not_updated -stub, no not_updated families") {
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                input  = { def d = "${projectDir}/tests/fixtures/annotate_not_updated"; def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,mgnifams_families,reps_fasta,structures\nmgnifams_annotate_test,${projectDir}/assets/data/mgnifams_families.tsv.gz,${d}/family_ids.fasta,${d}/pdb\n"; ss.toString() }()
+            }
+        }
+
+        then {
+            assertAll(
+                { assert !workflow.success },
+                { assert (workflow.stdout + workflow.stderr).any { line -> line.contains('annotate_not_updated: no not_updated families in') } }
+            )
+        }
+    }
+}

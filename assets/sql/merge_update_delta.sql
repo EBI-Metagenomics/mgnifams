@@ -1,13 +1,18 @@
 -- Merges an update_mgnifams delta DB (db/<sample>_update.sqlite3) into a production MGnifams DB, in one transaction.
--- Prod must be migrated first (assets/migrate_schema_seed_size_tmscores.sql) and have the has_* columns
--- (assets/data/db_schema.sqlite; assets/finalize_db.sql fills them). Run with the delta attached:
+-- Prod must be migrated first (assets/sql/migrate_schema_seed_size_tmscores.sql) and have the has_* columns
+-- (assets/sql/db_schema.sqlite; assets/sql/finalize_db.sql fills them). Run with the delta attached:
 --
---   sqlite3 -bail prod.sqlite3 -cmd "ATTACH 'delta.sqlite3' AS delta" < assets/merge_update_delta.sql
+--   sqlite3 -bail prod.sqlite3 -cmd "ATTACH 'delta.sqlite3' AS delta" < assets/sql/merge_update_delta.sql
 --
 -- Any failed check or statement exits before COMMIT (-bail), so prod is left untouched.
 -- Records the release in release_history (created if missing); merging a release twice fails on its primary key.
 -- Kept from prod: consensus, hmm_length, converged, seed_msa_blob, hmm_blob, rf_blob, seed_size, mgnifam_model_pfams,
 -- and the TM columns / biome_blob unless the delta's update_info says they were computed.
+--
+-- An annotation-only delta (update_info annotation_only = 'true', from an annotate_not_updated outdir) changes only
+-- the s4pred columns, the TM columns (when computed) and the pfams / funfams / folds rows of its families; it keeps
+-- the representative, size, structure, domain and biome columns and writes no release_history row. Merge a release's
+-- update delta first, then its annotation-only delta. Re-merging an annotation-only delta changes no content.
 
 PRAGMA foreign_keys = ON;
 
@@ -17,7 +22,8 @@ BEGIN IMMEDIATE;
 CREATE TEMP TABLE merge_check (
     delta_complete INTEGER DEFAULT 1 CONSTRAINT delta_lacks_update_info_child_tables CHECK (delta_complete IS 1),
     ids_in_prod    INTEGER DEFAULT 1 CONSTRAINT delta_has_ids_missing_from_prod CHECK (ids_in_prod IS 1),
-    foreign_keys   INTEGER DEFAULT 1 CONSTRAINT merge_breaks_foreign_keys CHECK (foreign_keys IS 1)
+    foreign_keys   INTEGER DEFAULT 1 CONSTRAINT merge_breaks_foreign_keys CHECK (foreign_keys IS 1),
+    afdb_searched  INTEGER DEFAULT 1 CONSTRAINT annotation_delta_lacks_afdb CHECK (afdb_searched IS 1)
 );
 
 -- Preflight: a complete delta (update_info written last by UPDATE_SQLITE_BLOBS_STAGED) of existing families only
@@ -25,8 +31,12 @@ INSERT INTO temp.merge_check (delta_complete) SELECT
     (SELECT value FROM delta.update_info WHERE key = 'child_tables') = 'pfams,funfams,folds';
 INSERT INTO temp.merge_check (ids_in_prod) SELECT
     NOT EXISTS (SELECT 1 FROM delta.mgnifam WHERE id NOT IN (SELECT id FROM main.mgnifam));
+-- An annotation-only delta replaces all fold rows of its families: without the AlphaFoldDB search it would drop them
+INSERT INTO temp.merge_check (afdb_searched) SELECT
+    coalesce((SELECT value FROM delta.update_info WHERE key = 'annotation_only'), 'false') <> 'true'
+    OR coalesce((SELECT value FROM delta.update_info WHERE key = 'afdb_computed'), 'false') = 'true';
 
--- Same DDL as assets/data/db_schema.sqlite. NOT NULL fails a delta without the release keys in update_info
+-- Same DDL as assets/sql/db_schema.sqlite. NOT NULL fails a delta without the release keys in update_info
 CREATE TABLE IF NOT EXISTS main.release_history (
     release TEXT PRIMARY KEY NOT NULL, -- MGnifams release, MAJOR.MINOR
     date TEXT NOT NULL, -- YYYY-MM-DD
@@ -48,7 +58,8 @@ SELECT
     (SELECT value FROM delta.update_info WHERE key = 'pipeline_version'),
     (SELECT count(*) FROM main.mgnifam),
     (SELECT count(*) FROM delta.mgnifam),
-    (SELECT count(*) FROM main.mgnifam) - (SELECT count(*) FROM delta.mgnifam);
+    (SELECT count(*) FROM main.mgnifam) - (SELECT count(*) FROM delta.mgnifam)
+WHERE coalesce((SELECT value FROM delta.update_info WHERE key = 'annotation_only'), 'false') <> 'true';
 
 UPDATE main.mgnifam AS m SET
     full_size      = d.full_size,
@@ -58,11 +69,15 @@ UPDATE main.mgnifam AS m SET
     rep_sequence   = d.rep_sequence,
     plddt          = d.plddt,
     ptm            = d.ptm,
+    cif_blob       = d.cif_blob,
+    domain_blob    = d.domain_blob
+FROM delta.mgnifam AS d
+WHERE m.id = d.id AND coalesce((SELECT value FROM delta.update_info WHERE key = 'annotation_only'), 'false') <> 'true';
+
+UPDATE main.mgnifam AS m SET
     helix_percent  = d.helix_percent,
     strand_percent = d.strand_percent,
     coil_percent   = d.coil_percent,
-    cif_blob       = d.cif_blob,
-    domain_blob    = d.domain_blob,
     s4pred_blob    = d.s4pred_blob
 FROM delta.mgnifam AS d
 WHERE m.id = d.id;
@@ -81,7 +96,7 @@ WHERE m.id = d.id AND (SELECT value FROM delta.update_info WHERE key = 'tm_compu
 UPDATE main.mgnifam AS m SET
     biome_blob = d.biome_blob
 FROM delta.mgnifam AS d
-WHERE m.id = d.id AND (SELECT value FROM delta.update_info WHERE key = 'biome_computed') = 'true';
+WHERE m.id = d.id AND (SELECT value FROM delta.update_info WHERE key = 'biome_computed') = 'true' AND coalesce((SELECT value FROM delta.update_info WHERE key = 'annotation_only'), 'false') <> 'true';
 
 -- Child tables are replaced for the updated families; the AUTOINCREMENT id is left to prod
 DELETE FROM main.mgnifam_pfams   WHERE mgnifam_id IN (SELECT id FROM delta.mgnifam);

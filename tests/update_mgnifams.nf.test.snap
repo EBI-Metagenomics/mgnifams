@@ -1,7 +1,7 @@
 {
     "-profile test_update_mgnifams": {
         "content": [
-            34,
+            42,
             {
                 "BUILD_PARQUET_DOMAIN_QUERIES": {
                     "python": "3.13.1",
@@ -93,10 +93,16 @@
                     "sed": 4.7
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v3.0.0"
+                    "ebi-metagenomics/mgnifams": "v3.1.0dev"
                 }
             },
             [
+                "annotate_not_updated",
+                "annotate_not_updated/annotation",
+                "annotate_not_updated/annotation/structures",
+                "annotate_not_updated/annotation/structures/foldseek",
+                "annotate_not_updated/table_data",
+                "annotate_not_updated/update_families",
                 "annotation",
                 "annotation/reps",
                 "annotation/reps/funfams",
@@ -105,16 +111,16 @@
                 "annotation/reps/pfam/reps_fasta.domtbl.gz",
                 "annotation/reps/s4pred",
                 "annotation/reps/s4pred/composition.csv",
-                "annotation/reps/s4pred/horiz",
-                "annotation/reps/s4pred/horiz/1.horiz",
-                "annotation/reps/s4pred/horiz/2.horiz",
-                "annotation/reps/s4pred/horiz/3.horiz",
-                "annotation/reps/s4pred/horiz/4.horiz",
-                "annotation/reps/s4pred/horiz/5.horiz",
-                "annotation/reps/s4pred/horiz/6.horiz",
-                "annotation/reps/s4pred/horiz/7.horiz",
-                "annotation/reps/s4pred/horiz/8.horiz",
-                "annotation/reps/s4pred/horiz/9.horiz",
+                "annotation/reps/s4pred/horiz_1",
+                "annotation/reps/s4pred/horiz_1/1.horiz",
+                "annotation/reps/s4pred/horiz_1/2.horiz",
+                "annotation/reps/s4pred/horiz_1/3.horiz",
+                "annotation/reps/s4pred/horiz_1/4.horiz",
+                "annotation/reps/s4pred/horiz_1/5.horiz",
+                "annotation/reps/s4pred/horiz_1/6.horiz",
+                "annotation/reps/s4pred/horiz_1/7.horiz",
+                "annotation/reps/s4pred/horiz_1/8.horiz",
+                "annotation/reps/s4pred/horiz_1/9.horiz",
                 "annotation/reps/s4pred/json",
                 "annotation/reps/s4pred/json/1.json",
                 "annotation/reps/s4pred/json/2.json",
@@ -263,10 +269,10 @@
             "/annotation: 23",
             "/table_data: 4"
         ],
-        "timestamp": "2026-09-30T15:12:51.880919708",
+        "timestamp": "2026-11-04T14:58:53.597293254",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
+            "nextflow": "26.10.3"
         }
     }
 }

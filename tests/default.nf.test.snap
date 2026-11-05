@@ -130,7 +130,7 @@
                     "sed": 4.7
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v3.0.0"
+                    "ebi-metagenomics/mgnifams": "v3.1.0dev"
                 }
             },
             [
@@ -342,7 +342,7 @@
             "/annotation: 32",
             "/table_data: 5"
         ],
-        "timestamp": "2026-11-02T09:37:15.362967119",
+        "timestamp": "2026-11-04T15:09:01.010164577",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.3"

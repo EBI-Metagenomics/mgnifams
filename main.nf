@@ -18,6 +18,7 @@ include { INIT_DB                        } from './workflows/init_db'
 include { UPDATE_DB                      } from './workflows/update_db'
 include { UPDATE_MGNIFAMS                } from './workflows/update_mgnifams'
 include { POST_UPDATE_MGNIFAMS_UPDATE_DB } from './workflows/post_update_mgnifams_update_db'
+include { ANNOTATE_NOT_UPDATED           } from './workflows/annotate_not_updated'
 include { PIPELINE_INITIALISATION        } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 include { PIPELINE_COMPLETION            } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
@@ -34,6 +35,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
 
     take:
     samplesheet // channel: samplesheet read in from --input
+    reannotate  // channel: update_mgnifams [ meta, reps fasta or [], structures folder or [] ]
 
     main:
 
@@ -93,13 +95,23 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.family_query_chunks, params.s4pred_chunk_size, \
             params.run_alphafold2, params.colabfold_params_path, params.af2_max_msa_seqs, params.af2_num_recycles, \
             params.mgnifams_release, params.mgnify_proteins_release, params.outdir, \
-            params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
+            params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description, reannotate
         )
         ch_multiqc = UPDATE_MGNIFAMS.out
     }
     //
     // WORKFLOW: Delta DB from an update_mgnifams outdir
     //
+    //
+    // WORKFLOW: Re-annotate the not-updated families of a finished update
+    //
+    else if (params.mode == 'annotate_not_updated') {
+        ANNOTATE_NOT_UPDATED(
+            samplesheet, params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, \
+            params.s4pred_chunk_size, foldseek_pdb_db, foldseek_alphafold_db, params.query_hmm_length_threshold, \
+            params.mgnifams_release, params.mgnify_proteins_release, params.outdir
+        )
+    }
     else if (params.mode == 'post_update_mgnifams_update_db') {
         POST_UPDATE_MGNIFAMS_UPDATE_DB(
             samplesheet
@@ -137,7 +149,8 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     EBIMETAGENOMICS_MGNIFAMS (
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.samplesheet,
+        PIPELINE_INITIALISATION.out.reannotate
     )
 
     //
