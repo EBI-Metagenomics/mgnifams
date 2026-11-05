@@ -25,12 +25,13 @@ process SPLIT_FAMILY_MEMBERS {
     mkdir chunks
 
     # Streams once, in constant memory (plus one entry per family id): about n_chunks chunks of equal bytes, a
-    # chunk only ever starting at a family's first line, so a family never spans two chunks
+    # chunk only ever starting at a family's first line, so a family never spans two chunks.
+    # \$1 "" compares as strings: awk compares number-like fields numerically (9 == 09)
     awk -F '\\t' -v n=${n_chunks} -v size="\$(stat -L -c %s ${tsv})" '
-        \$1 != prev {
+        \$1 "" != prev {
             if (\$1 in seen) { print "${tsv}: family " \$1 " is not contiguous (line " NR ")" > "/dev/stderr"; exit 1 }
             seen[\$1] = 1
-            prev = \$1
+            prev = \$1 ""
             k = int(bytes * n / size)
             name = sprintf("chunks/families_%05d.tsv", k)
             if (name != out) { if (out) close(out); out = name }
