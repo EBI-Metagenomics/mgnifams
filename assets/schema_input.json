@@ -43,8 +43,7 @@
             "mgnprotein_db_config": {
                 "type": "string",
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.ini$",
-                "exists": true,
-                "description": "The mgnify proteins database config file with secrets",
+                "description": "The mgnify proteins database config file with secrets (update_mgnifams_db, which checks it exists; deprecated and ignored in update_mgnifams)",
                 "errorMessage": "Must be a .ini file."
             },
             "mgnify_proteins_sequences": {
@@ -60,7 +59,7 @@
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.parquet$",
-                "description": "update_mgnifams: MGnify protein clusters parquet (cluster_rep); only the cluster representatives are searched",
+                "description": "update_mgnifams: MGnify protein clusters parquet (cluster_rep, cluster_rep_biomes); only the cluster representatives are searched. rebuild_biomes: the same parquet, for the members' biomes",
                 "errorMessage": "Must be a .parquet file."
             },
             "mgnify_proteins_pfam": {
@@ -98,6 +97,20 @@
                 "format": "directory-path",
                 "exists": true,
                 "description": "annotate_not_updated, update_mgnifams (optional): folder of the previous representatives' structures, <family_id>.pdb"
+            },
+            "refined_families": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.tsv$",
+                "description": "rebuild_biomes: update_families/refined_families.tsv of a finished update (family<TAB>member, the updated families only)",
+                "errorMessage": "Must be a .tsv file."
+            },
+            "biome_results": {
+                "type": "string",
+                "format": "directory-path",
+                "exists": true,
+                "description": "post_update_mgnifams_update_db (optional): biome_results folder (<family_id>.csv) of a rebuild_biomes run; replaces <results_folder>/biome_results and implies biome_computed"
             }
         },
         "required": ["sample"]

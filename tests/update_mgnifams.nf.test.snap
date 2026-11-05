@@ -3,6 +3,10 @@
         "content": [
             42,
             {
+                "BUILD_PARQUET_BIOME_QUERIES": {
+                    "python": "3.13.1",
+                    "pyarrow": "21.0.0"
+                },
                 "BUILD_PARQUET_DOMAIN_QUERIES": {
                     "python": "3.13.1",
                     "pyarrow": "21.0.0"
@@ -68,10 +72,6 @@
                 },
                 "POOL_UPDATED_FAMILIES": {
                     "sed": 4.7
-                },
-                "QUERY_MGNPROTEIN_DB": {
-                    "python": "3.13.5",
-                    "psycopg2": "2.9.10"
                 },
                 "RUN_ESMFOLD": {
                     "esm-fold": "1.0.3"
@@ -155,19 +155,6 @@
                 "domain_results/7.json",
                 "domain_results/8.json",
                 "domain_results/9.json",
-                "mgnprotein_db_query",
-                "mgnprotein_db_query/biome_mapping.tsv",
-                "mgnprotein_db_query/pfam_mapping.tsv",
-                "mgnprotein_db_query/query_results",
-                "mgnprotein_db_query/query_results/1.tsv",
-                "mgnprotein_db_query/query_results/2.tsv",
-                "mgnprotein_db_query/query_results/3.tsv",
-                "mgnprotein_db_query/query_results/4.tsv",
-                "mgnprotein_db_query/query_results/5.tsv",
-                "mgnprotein_db_query/query_results/6.tsv",
-                "mgnprotein_db_query/query_results/7.tsv",
-                "mgnprotein_db_query/query_results/8.tsv",
-                "mgnprotein_db_query/query_results/9.tsv",
                 "multiqc",
                 "multiqc/multiqc_data",
                 "multiqc/multiqc_data/llms-full.txt",
@@ -258,8 +245,6 @@
                 "7.json:md5,a5d561c07ad6c4e9859d64dff30c3ffc",
                 "8.json:md5,fa3ff69063e0d5c0d86f7f325f183ca6",
                 "9.json:md5,2714ae154fb56b9cca110eeec53ad66b",
-                "biome_mapping.tsv:md5,65ff966ee76df9fba449d68f343b5075",
-                "pfam_mapping.tsv:md5,df81e15cbe5f9261a3250bffc4910cf9",
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
                 "multiqc_seqkit_stats_summary.txt:md5,6b2b1cd54fbd941f39d70ed148dd0dfb",
                 "mgnifams_update_test.tsv:md5,9d89f4960f83efbc6c8c5101443abe2b",

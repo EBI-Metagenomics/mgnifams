@@ -1,0 +1,32 @@
+{
+    "-profile test_rebuild_biomes": {
+        "content": [
+            5,
+            {
+                "BUILD_PARQUET_BIOME_QUERIES": {
+                    "python": "3.13.1",
+                    "pyarrow": "21.0.0"
+                },
+                "PARSE_BIOMES": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
+                },
+                "SPLIT_FAMILY_MEMBERS": {
+                    "awk": "mawk 1.3.4 20200120"
+                },
+                "Workflow": {
+                    "ebi-metagenomics/mgnifams": "v3.1.0dev"
+                }
+            },
+            [
+                "2.csv:md5,38d087e5b0d1601a891ffee738d3a559",
+                "4.csv:md5,ca1ab4036c74b8558425cebd278643a3"
+            ]
+        ],
+        "timestamp": "2026-11-05T11:25:44.423682493",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.3"
+        }
+    }
+}

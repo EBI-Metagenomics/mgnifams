@@ -90,6 +90,7 @@ For MGnify only; After the main pipeline finishes its execution, `init_db` and `
 
 To refresh the existing families with new MGnify proteins later, run the `update_mgnifams` workflow and merge its delta database into the production one (see [update_mgnifams workflow](#update_mgnifams-workflow)).
 Families an update leaves as they were keep their previous annotations unless they are re-annotated: with `update_mgnifams`' `reps_fasta` / `structures` columns, or afterwards with [`annotate_not_updated`](#annotate_not_updated-workflow), whose annotation-only delta is merged after the update delta.
+The biomes of a finished update can be recomputed from the clusters parquet with [`rebuild_biomes`](#rebuild_biomes-workflow), without resuming it; its `biome_results/` then goes into the update's delta database.
 
 After the db has been produced by the pipeline, do the following:
 
@@ -216,17 +217,17 @@ port = ***
 ### update_mgnifams workflow
 
 The `update_mgnifams` workflow (`--mode update_mgnifams`) refreshes existing families against new MGnify proteins without touching their seed MSAs or HMMs.
-It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`; only the MGnify90 cluster representatives listed in `mgy_clusters.parquet` are kept, as for MGnifams 1.0), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and, optionally, biomes (from the MGnify proteins DB).
+It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`; only the MGnify90 cluster representatives listed in `mgy_clusters.parquet` are kept, as for MGnifams 1.0), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and biomes (each member's own `cluster_rep_biomes` lineages in `mgy_clusters.parquet`).
 `--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
 
 The samplesheet must have exactly one row:
 
 ```csv
-sample,mgnify_proteins_sequences,mgnify_proteins_clusters,mgnify_proteins_pfam,mgnifams_hmms,mgnprotein_db_config,mgnifams_families
-mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_clusters.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,,/path/to/families.tsv.gz
+sample,mgnify_proteins_sequences,mgnify_proteins_clusters,mgnify_proteins_pfam,mgnifams_hmms,mgnifams_families
+mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_clusters.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,/path/to/families.tsv.gz
 ```
 
-`mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgnprotein_db_config` is optional; when it is empty, biomes are not recomputed.
+`mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgy_clusters.parquet` needs `cluster_rep` and `cluster_rep_biomes` (`;`-joined biome lineages, as in MGnify Proteins 2026_07). `mgnprotein_db_config` is deprecated for this mode: a value is ignored with a warning.
 `mgnifams_families` is the `families.tsv.gz` of the release being updated (from its FTP release folder); every family in it must be in `mgnifams_hmms`, and vice versa.
 Optional `reps_fasta` and `structures` columns (the previous release's representatives and `<family_id>.pdb` structures, as for [`annotate_not_updated`](#annotate_not_updated-workflow)) make the run re-annotate its not-updated families too, under `annotate_not_updated/`. Without them those families keep their previous annotations. Pfam and FunFam `hmmsearch` use `-Z` = the number of families in `mgnifams_families`.
 Set `--mgnifams_release` (the MGnifams release this update produces, `MAJOR.MINOR`; default `1.1`) and `--mgnify_proteins_release` (the MGnify Proteins release of the parquet files, `YYYY_MM`; default `2026_07`) for every run: the merge records them in `release_history`. Set `mgnifams_release` in a config (`params { mgnifams_release = '1.2' }`) or a `-params-file`, not on the command line: Nextflow reads `--mgnifams_release 1.2` as a number, which fails validation.
@@ -256,6 +257,24 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_an
 
 Everything is published under `annotate_not_updated/`. `update_families/update_info.csv` there has `annotation_only,true`, and `post_update_mgnifams_update_db` run on that folder builds the annotation-only delta database.
 
+### rebuild_biomes workflow
+
+`--mode rebuild_biomes` recomputes the biome distributions of a finished update's families from the clusters parquet, the same step `update_mgnifams` runs (each member's own `cluster_rep_biomes`), without touching the update's work directory. It covers the families in the update's `update_families/refined_families.tsv`, the updated ones; not-updated families keep their previous biomes.
+The samplesheet has exactly one row:
+
+```csv
+sample,refined_families,mgnify_proteins_clusters
+mgnifams_rebuild_biomes,/path/to/output_update/update_families/refined_families.tsv,/path/to/mgy_clusters.parquet
+```
+
+Every member must be a `cluster_rep` of `mgy_clusters.parquet` (the update's members are), or the run fails. `refined_families.tsv` is cut into about `--family_query_chunks` chunks of whole families (`SPLIT_FAMILY_MEMBERS`, one streaming pass); each chunk is one lookup task, which scans the parquet and holds its chunk's members in memory, so raise `--family_query_chunks` for a big update. `--query_result_chunks` families go into each `PARSE_BIOMES` task.
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_rebuild_biomes.csv --mode rebuild_biomes --outdir '/path/to/mgnifams/output_rebuild_biomes' -profile slurm,singularity -resume
+```
+
+It publishes `biome_results/<family_id>.csv`. Give that folder to `post_update_mgnifams_update_db` in its `biome_results` column. Use an outdir of its own: an `update_mgnifams` outdir is refused, so the update's `pipeline_info` and `biome_results` stay as they were.
+
 ### post_update_mgnifams_update_db workflow
 
 `--mode post_update_mgnifams_update_db` builds the delta database from the `update_mgnifams` outdir; it only runs sqlite and Python, so it can run on the database host.
@@ -265,6 +284,8 @@ The samplesheet has exactly one row:
 sample,results_folder
 mgnifams_update,/path/to/mgnifams/output_update
 ```
+
+An optional `biome_results` column (the `biome_results/` folder of a [`rebuild_biomes`](#rebuild_biomes-workflow) run) replaces `<results_folder>/biome_results`, and the delta records `biome_computed=true`. The merge is the same. It is rejected for an annotation-only folder.
 
 ```bash
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume

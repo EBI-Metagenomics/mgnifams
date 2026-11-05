@@ -71,7 +71,7 @@ workflow PIPELINE_INITIALISATION {
     if (params.mode == "run_mgnifams_pipeline" && !params.hhdb_path) {
         error("run_mgnifams_pipeline: --hhdb_path is required")
     }
-    if (params.mode in ["update_mgnifams", "post_update_mgnifams_update_db", "annotate_not_updated"]) {
+    if (params.mode in ["update_mgnifams", "post_update_mgnifams_update_db", "annotate_not_updated", "rebuild_biomes"]) {
         // All collected outputs and the delta DB are per run
         if (samplesheet_rows.size() != 1) {
             error("${params.mode}: the samplesheet must have exactly one row, found ${samplesheet_rows.size()}")
@@ -84,7 +84,7 @@ workflow PIPELINE_INITIALISATION {
         if (params.run_alphafold2 && !workflow.stubRun && !params.colabfold_params_path) {
             error("update_mgnifams: --run_alphafold2 needs --colabfold_params_path")
         }
-        // Optional reps_fasta / structures (the last two schema columns): re-annotate the not-updated families
+        // Optional reps_fasta / structures (schema columns 11 and 12): re-annotate the not-updated families
         def row = samplesheet_rows[0]
         if (!row[11] != !row[12]) {
             error("update_mgnifams: set both reps_fasta and structures, or neither")
@@ -103,29 +103,33 @@ workflow PIPELINE_INITIALISATION {
 
     if (params.mode == "run_mgnifams_pipeline") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures ->
+            .map { sample, protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures, _refined_families, _biome_results ->
                 [ sample, file(protein_input, checkIfExists: true) ]
             }
     }
     else if (params.mode == "init_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, _existing_db, schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures ->
+            .map { sample, _protein_input, results_folder, _existing_db, schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures, _refined_families, _biome_results ->
                 [ sample, schema, results_folder ]
             }
     }
     else if (params.mode == "update_mgnifams_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures ->
-                [ sample, results_folder, existing_db, mgnprotein_db_config ]
+            .map { sample, _protein_input, results_folder, existing_db, _schema, mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures, _refined_families, _biome_results ->
+                // Not checked by the schema: update_mgnifams ignores the column
+                [ sample, results_folder, existing_db, file(mgnprotein_db_config, checkIfExists: true) ]
             }
     }
     else if (params.mode == "update_mgnifams") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, _results_folder, _existing_db, _schema, mgnprotein_db_config, sequences, clusters, pfam, hmms, families, _reps, _structures ->
+            .map { sample, _protein_input, _results_folder, _existing_db, _schema, mgnprotein_db_config, sequences, clusters, pfam, hmms, families, _reps, _structures, _refined_families, _biome_results ->
                 if (!sequences || !clusters || !pfam || !hmms || !families) {
                     error("update_mgnifams: samplesheet row '${sample.id}' needs mgnify_proteins_sequences, mgnify_proteins_clusters, mgnify_proteins_pfam, mgnifams_hmms and mgnifams_families")
                 }
-                [ sample, file(sequences), file(clusters), file(pfam), file(hmms), mgnprotein_db_config ? file(mgnprotein_db_config) : [], file(families) ]
+                if (mgnprotein_db_config) {
+                    log.warn("update_mgnifams: mgnprotein_db_config is deprecated and ignored; biomes come from mgnify_proteins_clusters (cluster_rep_biomes)")
+                }
+                [ sample, file(sequences), file(clusters), file(pfam), file(hmms), file(families) ]
             }
     }
     else if (params.mode == "annotate_not_updated") {
@@ -134,20 +138,34 @@ workflow PIPELINE_INITIALISATION {
             error("annotate_not_updated: the AlphaFoldDB Foldseek search runs only under a slurm profile; without it the merge would drop the families' AlphaFoldDB hits")
         }
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, families, reps, structures ->
+            .map { sample, _protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, families, reps, structures, _refined_families, _biome_results ->
                 if (!families || !reps || !structures) {
                     error("annotate_not_updated: samplesheet row '${sample.id}' needs mgnifams_families, reps_fasta and structures")
                 }
                 [ sample, file(families), file(reps), file(structures) ]
             }
     }
+    else if (params.mode == "rebuild_biomes") {
+        // Its pipeline_info and biome_results would overwrite the update's own
+        if (file("${params.outdir}/update_families/update_info.csv").exists()) {
+            error("rebuild_biomes: --outdir ${params.outdir} is an update_mgnifams outdir; use a separate outdir")
+        }
+        ch_samplesheet = ch_samplesheet
+            .map { sample, _protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, clusters, _pfam, _hmms, _families, _reps, _structures, refined_families, _biome_results ->
+                if (!refined_families || !clusters) {
+                    error("rebuild_biomes: samplesheet row '${sample.id}' needs refined_families and mgnify_proteins_clusters")
+                }
+                [ sample, file(refined_families), file(clusters) ]
+            }
+    }
     else if (params.mode == "post_update_mgnifams_update_db") {
         ch_samplesheet = ch_samplesheet
-            .map { sample, _protein_input, results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures ->
+            .map { sample, _protein_input, results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, _clusters, _pfam, _hmms, _families, _reps, _structures, _refined_families, biome_results ->
                 if (!results_folder) {
                     error("post_update_mgnifams_update_db: samplesheet row '${sample.id}' needs results_folder (an update_mgnifams outdir)")
                 }
-                [ sample, results_folder ]
+                // Optional biome_results (a rebuild_biomes outdir's biome_results/) replaces results_folder/biome_results
+                [ sample, results_folder, biome_results ?: [] ]
             }
     }
 
@@ -219,6 +237,13 @@ workflow PIPELINE_COMPLETION {
 //
 // Validate channels from input samplesheet
 //
+//
+// Query-result files in batches of n, named <meta.id>_batch_<index> (PARSE_DOMAINS / PARSE_BIOMES inputs)
+//
+def batchQueryResults(meta, files, n) {
+    return [files].flatten().collate( n ).withIndex().collect { flist, index -> [ [id: "${meta.id}_batch_${index}"], flist ] }
+}
+
 //
 // Number of families (one rep per family) in a release's families.tsv.gz (data rows, header excluded): hmmsearch -Z for the reps searches
 //

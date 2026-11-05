@@ -15,26 +15,35 @@ include { UPDATE_SQLITE_BLOBS_STAGED } from '../modules/local/update_sqlite_blob
 workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
 
     take:
-    samplesheet // channel: [ meta, update_mgnifams outdir ]
+    samplesheet // channel: [ meta, update_mgnifams outdir, biome_results folder or [] ]
 
     main:
     ch_versions = channel.empty()
 
     // An annotate_not_updated outdir (annotation_only,true) has no structures, domains or biomes: prod keeps them
     ch_input = samplesheet
-        .map { meta, results -> [ meta, results.toUriString() ] }
-        .map { meta, r -> [ meta, r, file("${r}/update_families/update_info.csv").exists() && file("${r}/update_families/update_info.csv").readLines().contains('annotation_only,true') ] }
-        .multiMap { meta, r, annotation_only ->
+        .map { meta, results, biomes ->
+            def r = results.toUriString()
+            def b = biomes ? biomes.toUriString() : ''
+            def info = file("${r}/update_families/update_info.csv")
+            def annotation_only = info.exists() && info.readLines().contains('annotation_only,true')
+            if (b && annotation_only) {
+                error("post_update_mgnifams_update_db: biome_results is for update deltas; an annotation-only delta keeps prod's biomes")
+            }
+            [ meta, r, b, annotation_only ]
+        }
+        .multiMap { meta, r, b, annotation_only ->
             schema : [ meta, file("${projectDir}/assets/sql/db_schema.sqlite", checkIfExists: true) ]
             tables : [ meta, files("${r}/table_data/*.csv", checkIfExists: true) ]
             cifs   : annotation_only ? [] : files("${r}/structures/esmfold/cif/*.cif", checkIfExists: true)
             s4pred : files("${r}/annotation/reps/s4pred/json/*.json", checkIfExists: true)
             tm     : files("${r}/annotation/reps/deeptmhmm/json/*.json")
-            biomes : annotation_only ? [] : files("${r}/biome_results/*")
+            // An override must hold the CSVs (a rebuild_biomes outdir's biome_results/, not the outdir itself)
+            biomes : annotation_only ? [] : b ? files("${b}/*.csv", checkIfExists: true) : files("${r}/biome_results/*")
             domains: annotation_only ? [] : files("${r}/domain_results/*", checkIfExists: true)
             ids    : file("${r}/update_families/family_ids.fasta", checkIfExists: true)
             // Written by update_mgnifams; also tells an update outdir apart from a run_mgnifams_pipeline one
-            info   : file("${r}/update_families/update_info.csv", checkIfExists: true)
+            info   : [ file("${r}/update_families/update_info.csv", checkIfExists: true), b as boolean ]
         }
 
     INIT_SQLITE( ch_input.schema )
@@ -49,11 +58,12 @@ workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
 
     // tm_computed / biome_computed make those blobs required; the merge reads them back from update_info
     ch_info = ch_input.info
-        .map { csv ->
+        .map { csv, biomes_override ->
             def info = csv.splitCsv( header: true ).collectEntries { row -> [ row.key, row.value ] }
             info + [
                 tm_computed   : info.tm_computed == 'true',
-                biome_computed: info.biome_computed == 'true',
+                // Rebuilt biomes (biome_results column) are computed whatever the update run recorded
+                biome_computed: info.biome_computed == 'true' || biomes_override,
                 child_tables  : 'pfams,funfams,folds'
             ] + ( info.annotation_only == 'true' ? [ annotation_only: true ] : [:] )
         }

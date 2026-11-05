@@ -1,0 +1,2 @@
+sample,refined_families,mgnify_proteins_clusters
+mgnifams_rebuild_biomes_test,tests/fixtures/rebuild_biomes/refined_families.tsv,assets/data/mgy_clusters.parquet

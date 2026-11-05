@@ -9,7 +9,7 @@ process PARSE_BIOMES {
 
     input:
     tuple val(meta) , path(query_results, stageAs: "query_results/*")
-    tuple val(meta2), path(biome_mapping)
+    tuple val(meta2), path(biome_mapping) // [] when the query results hold biome lineages (BUILD_PARQUET_BIOME_QUERIES)
 
     output:
     tuple val(meta), path("biome_results/*"), emit: res
@@ -19,10 +19,11 @@ process PARSE_BIOMES {
     task.ext.when == null || task.ext.when
 
     script:
+    def mapping = biome_mapping ? "--biome_mapping ${biome_mapping}" : ''
     """
     parse_biomes.py \\
         --query_results query_results \\
-        --biome_mapping ${biome_mapping} \\
+        ${mapping} \\
         --output_dir biome_results
 
     cat <<-END_VERSIONS > versions.yml

@@ -1,0 +1,36 @@
+nextflow_pipeline {
+
+    name "Test pipeline --mode rebuild_biomes"
+    script "../main.nf"
+    tag "pipeline"
+    tag "rebuild_biomes"
+    profile "test_rebuild_biomes"
+
+    // Families 2 and 4 of an update_mgnifams test run; no external databases, cheap
+    test("-profile test_rebuild_biomes") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+                // The profile's samplesheet paths are relative to the repo root; nf-test launches elsewhere
+                input  = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,refined_families,mgnify_proteins_clusters\n" +
+                        "mgnifams_rebuild_biomes_test,${projectDir}/tests/fixtures/rebuild_biomes/refined_families.tsv,${projectDir}/assets/data/mgy_clusters.parquet\n"
+                    ss.toString() }()
+            }
+        }
+
+        then {
+            def biomes = getAllFilesFromDir("${params.outdir}/biome_results")
+            assertAll(
+                { assert workflow.success },
+                { assert biomes.collect { f -> f.name }.sort() == ['2.csv', '4.csv'] },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_pipeline_software_mqc_versions.yml"),
+                    biomes.sort { f -> f.name }
+                ).match() }
+            )
+        }
+    }
+}
