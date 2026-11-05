@@ -1,5 +1,6 @@
 include { BUILD_PARQUET_BIOME_QUERIES } from '../../../modules/local/build_parquet_biome_queries/main'
 include { PARSE_BIOMES                } from '../../../modules/local/parse_biomes/main'
+include { batchQueryResults           } from '../utils_nfcore_mgnifams_pipeline'
 
 //
 // Biome distributions of family members from the MGnify clusters parquet (cluster_rep_biomes): each member's own
@@ -18,9 +19,7 @@ workflow BIOMES_FROM_PARQUET {
     ch_versions = ch_versions.mix( BUILD_PARQUET_BIOME_QUERIES.out.versions )
 
     ch_biome_batches = BUILD_PARQUET_BIOME_QUERIES.out.res
-        .flatMap { meta, files ->
-            [files].flatten().collate( query_result_chunks ).withIndex().collect { flist, index -> [ [id: "${meta.id}_batch_${index}"], flist ] }
-        }
+        .flatMap { meta, files -> batchQueryResults( meta, files, query_result_chunks ) }
     PARSE_BIOMES( ch_biome_batches, [ [id: 'lineages'], [] ] )
     ch_versions = ch_versions.mix( PARSE_BIOMES.out.versions )
 

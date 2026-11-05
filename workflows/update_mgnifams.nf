@@ -28,6 +28,7 @@ include { COLABFOLD_BATCH_MSA          } from '../modules/local/colabfold_batch_
 include { EXPORT_FAMILIES_TSV          } from '../modules/local/export_families_tsv/main'
 include { ANNOTATE_FAMILY_SUBSET       } from '../subworkflows/local/annotate_family_subset'
 include { countFamilies                } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
+include { batchQueryResults            } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
 workflow UPDATE_MGNIFAMS {
 
@@ -169,9 +170,7 @@ workflow UPDATE_MGNIFAMS {
     ch_versions = ch_versions.mix( BUILD_PARQUET_DOMAIN_QUERIES.out.versions )
 
     ch_domain_batches = BUILD_PARQUET_DOMAIN_QUERIES.out.res
-        .flatMap { meta, files ->
-            [files].flatten().collate( query_result_chunks ).withIndex().collect { flist, index -> [ [id: "${meta.id}_batch_${index}"], flist ] }
-        }
+        .flatMap { meta, files -> batchQueryResults( meta, files, query_result_chunks ) }
     PARSE_DOMAINS( ch_domain_batches, BUILD_PARQUET_DOMAIN_QUERIES.out.pfam_mapping.first(), UPDATE_FAMILIES.out.refined_families.first() )
     ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
 

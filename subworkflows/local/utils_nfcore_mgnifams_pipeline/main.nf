@@ -238,6 +238,13 @@ workflow PIPELINE_COMPLETION {
 // Validate channels from input samplesheet
 //
 //
+// Query-result files in batches of n, named <meta.id>_batch_<index> (PARSE_DOMAINS / PARSE_BIOMES inputs)
+//
+def batchQueryResults(meta, files, n) {
+    return [files].flatten().collate( n ).withIndex().collect { flist, index -> [ [id: "${meta.id}_batch_${index}"], flist ] }
+}
+
+//
 // Number of families (one rep per family) in a release's families.tsv.gz (data rows, header excluded): hmmsearch -Z for the reps searches
 //
 def countFamilies(families) {
