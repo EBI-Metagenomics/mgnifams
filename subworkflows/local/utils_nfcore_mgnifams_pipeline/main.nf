@@ -145,6 +145,10 @@ workflow PIPELINE_INITIALISATION {
             }
     }
     else if (params.mode == "rebuild_biomes") {
+        // Its pipeline_info and biome_results would overwrite the update's own
+        if (file("${params.outdir}/update_families/update_info.csv").exists()) {
+            error("rebuild_biomes: --outdir ${params.outdir} is an update_mgnifams outdir; use a separate outdir")
+        }
         ch_samplesheet = ch_samplesheet
             .map { sample, _protein_input, _results_folder, _existing_db, _schema, _mgnprotein_db_config, _sequences, clusters, _pfam, _hmms, _families, _reps, _structures, refined_families, _biome_results ->
                 if (!refined_families || !clusters) {

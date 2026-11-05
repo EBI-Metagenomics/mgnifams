@@ -273,7 +273,7 @@ Every member must be a `cluster_rep` of `mgy_clusters.parquet` (the update's mem
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_rebuild_biomes.csv --mode rebuild_biomes --outdir '/path/to/mgnifams/output_rebuild_biomes' -profile slurm,singularity -resume
 ```
 
-It publishes `biome_results/<family_id>.csv`. Give that folder to `post_update_mgnifams_update_db` in its `biome_results` column.
+It publishes `biome_results/<family_id>.csv`. Give that folder to `post_update_mgnifams_update_db` in its `biome_results` column. Use an outdir of its own: an `update_mgnifams` outdir is refused, so the update's `pipeline_info` and `biome_results` stay as they were.
 
 ### post_update_mgnifams_update_db workflow
 
