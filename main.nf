@@ -19,6 +19,7 @@ include { UPDATE_DB                      } from './workflows/update_db'
 include { UPDATE_MGNIFAMS                } from './workflows/update_mgnifams'
 include { POST_UPDATE_MGNIFAMS_UPDATE_DB } from './workflows/post_update_mgnifams_update_db'
 include { ANNOTATE_NOT_UPDATED           } from './workflows/annotate_not_updated'
+include { REBUILD_BIOMES                 } from './workflows/rebuild_biomes'
 include { PIPELINE_INITIALISATION        } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 include { PIPELINE_COMPLETION            } from './subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
@@ -111,6 +112,12 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.s4pred_chunk_size, foldseek_pdb_db, foldseek_alphafold_db, params.query_hmm_length_threshold, \
             params.mgnifams_release, params.mgnify_proteins_release, params.outdir
         )
+    }
+    //
+    // WORKFLOW: Rebuild the biomes of a finished update from the clusters parquet
+    //
+    else if (params.mode == 'rebuild_biomes') {
+        REBUILD_BIOMES( samplesheet, params.family_query_chunks, params.query_result_chunks, params.outdir )
     }
     else if (params.mode == 'post_update_mgnifams_update_db') {
         POST_UPDATE_MGNIFAMS_UPDATE_DB(
