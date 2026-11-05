@@ -26,6 +26,9 @@ nextflow run . -c ../conf/slurm.config --input input/samplesheet_update_db.csv -
 # Update existing families with new MGnify proteins
 nextflow run . -c ../conf/local.config -profile test_update_mgnifams,local,singularity -resume
 
+# Biomes of a finished update from the clusters parquet (default: the tests/fixtures/rebuild_biomes fixture; run from the repo root)
+nextflow run . -profile test_rebuild_biomes,singularity
+
 # Delta DB from an update_mgnifams outdir (default: the tests/fixtures/update_results fixture; run from the repo root)
 nextflow run . -profile test_post_update_mgnifams_update_db,singularity
 ```
@@ -37,6 +40,7 @@ nextflow run . -profile test_post_update_mgnifams_update_db,singularity
 nf-test test tests/default.nf.test --profile +singularity,test
 nf-test test tests/update_mgnifams.nf.test --profile +singularity
 nf-test test tests/post_update_mgnifams_update_db.nf.test --profile +singularity
+nf-test test tests/rebuild_biomes.nf.test --profile +singularity
 
 # Module tests and script self-checks
 nf-test test modules/local/<module> --profile +singularity
@@ -56,7 +60,7 @@ The test profile requires paths to external databases set in your local config:
 
 ## Pipeline Architecture
 
-Five modes controlled by `--mode` parameter:
+Seven modes controlled by `--mode` parameter:
 
 ### `run_mgnifams_pipeline` (default) — `workflows/mgnifams.nf`
 
@@ -108,9 +112,20 @@ previous release's FTP `families.tsv.gz`).
    `cluster_rep_biomes`, members being cluster reps). `mgnprotein_db_config` is deprecated here (ignored with a warning). `--run_alphafold2` adds ColabFold predictions from the full MSAs (`structures/alphafold2/`, not used downstream).
 3. `update_families/update_info.csv` records `tm_computed` / `biome_computed` for the DB mode below. No sqlite work.
 
+### `rebuild_biomes` — `workflows/rebuild_biomes.nf`
+
+Recovery mode (one entry point per recovery job): the biomes of a finished update, from the clusters parquet, without
+resuming it. Samplesheet `sample,refined_families,mgnify_proteins_clusters`, one row; `refined_families` is the update's
+`update_families/refined_families.tsv` (updated families only, each family's rows contiguous).
+`SPLIT_FAMILY_MEMBERS` cuts it into about `--family_query_chunks` byte-equal chunks of whole families (streaming awk,
+fails on a non-contiguous family), then `BIOMES_FROM_PARQUET` (the `update_mgnifams` code path) publishes
+`biome_results/<id>.csv`. Lookup memory scales with the chunk's members. Test: `tests/rebuild_biomes.nf.test` (cheap).
+
 ### `post_update_mgnifams_update_db` — `workflows/post_update_mgnifams_update_db.nf`
 
-Delta DB `db/<sample>_update.sqlite3` from an `update_mgnifams` outdir (samplesheet `sample,results_folder`, one row):
+Delta DB `db/<sample>_update.sqlite3` from an `update_mgnifams` outdir (samplesheet `sample,results_folder`, optional
+`biome_results`, one row; `biome_results`, a `rebuild_biomes` output, replaces `<results_folder>/biome_results` and
+forces `biome_computed`):
 `INIT_SQLITE` → `IMPORT_QUERIES` → `UPDATE_SQLITE_BLOBS_STAGED` (fails instead of publishing a partial DB), staging the
 published CSVs, CIFs, feature JSONs, domain/biome results and `family_ids.fasta` ids. Its `update_info` table comes from
 `update_info.csv`. The pipeline never touches prod: `assets/sql/merge_update_delta.sql` merges the delta (see the README

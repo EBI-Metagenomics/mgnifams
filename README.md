@@ -90,6 +90,7 @@ For MGnify only; After the main pipeline finishes its execution, `init_db` and `
 
 To refresh the existing families with new MGnify proteins later, run the `update_mgnifams` workflow and merge its delta database into the production one (see [update_mgnifams workflow](#update_mgnifams-workflow)).
 Families an update leaves as they were keep their previous annotations unless they are re-annotated: with `update_mgnifams`' `reps_fasta` / `structures` columns, or afterwards with [`annotate_not_updated`](#annotate_not_updated-workflow), whose annotation-only delta is merged after the update delta.
+The biomes of a finished update can be recomputed from the clusters parquet with [`rebuild_biomes`](#rebuild_biomes-workflow), without resuming it; its `biome_results/` then goes into the update's delta database.
 
 After the db has been produced by the pipeline, do the following:
 
@@ -256,6 +257,24 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_an
 
 Everything is published under `annotate_not_updated/`. `update_families/update_info.csv` there has `annotation_only,true`, and `post_update_mgnifams_update_db` run on that folder builds the annotation-only delta database.
 
+### rebuild_biomes workflow
+
+`--mode rebuild_biomes` recomputes the biome distributions of a finished update's families from the clusters parquet, the same step `update_mgnifams` runs (each member's own `cluster_rep_biomes`), without touching the update's work directory. It covers the families in the update's `update_families/refined_families.tsv`, the updated ones; not-updated families keep their previous biomes.
+The samplesheet has exactly one row:
+
+```csv
+sample,refined_families,mgnify_proteins_clusters
+mgnifams_rebuild_biomes,/path/to/output_update/update_families/refined_families.tsv,/path/to/mgy_clusters.parquet
+```
+
+Every member must be a `cluster_rep` of `mgy_clusters.parquet` (the update's members are), or the run fails. `refined_families.tsv` is cut into about `--family_query_chunks` chunks of whole families (`SPLIT_FAMILY_MEMBERS`, one streaming pass); each chunk is one lookup task, which scans the parquet and holds its chunk's members in memory, so raise `--family_query_chunks` for a big update. `--query_result_chunks` families go into each `PARSE_BIOMES` task.
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_rebuild_biomes.csv --mode rebuild_biomes --outdir '/path/to/mgnifams/output_rebuild_biomes' -profile slurm,singularity -resume
+```
+
+It publishes `biome_results/<family_id>.csv`. Give that folder to `post_update_mgnifams_update_db` in its `biome_results` column.
+
 ### post_update_mgnifams_update_db workflow
 
 `--mode post_update_mgnifams_update_db` builds the delta database from the `update_mgnifams` outdir; it only runs sqlite and Python, so it can run on the database host.
@@ -265,6 +284,8 @@ The samplesheet has exactly one row:
 sample,results_folder
 mgnifams_update,/path/to/mgnifams/output_update
 ```
+
+An optional `biome_results` column (the `biome_results/` folder of a [`rebuild_biomes`](#rebuild_biomes-workflow) run) replaces `<results_folder>/biome_results`, and the delta records `biome_computed=true`. The merge is the same. It is rejected for an annotation-only folder.
 
 ```bash
 nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume
