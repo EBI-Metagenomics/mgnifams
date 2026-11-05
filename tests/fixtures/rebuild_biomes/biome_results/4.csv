@@ -1,0 +1,31 @@
+ids,labels,parents,counts
+root,root,,46
+root:Host-associated,Host-associated,root,18
+root:Environmental,Environmental,root,15
+root:Environmental:Aquatic,Aquatic,root:Environmental,15
+root:Host-associated:Human,Human,root:Host-associated,15
+root:Host-associated:Human:Digestive system,Digestive system,root:Host-associated:Human,15
+root:Environmental:Aquatic:Marine,Marine,root:Environmental:Aquatic,11
+root:Engineered,Engineered,root,9
+root:Host-associated:Human:Digestive system:Large intestine,Large intestine,root:Host-associated:Human:Digestive system,8
+root:Environmental:Aquatic:Marine:Oceanic,Oceanic,root:Environmental:Aquatic:Marine,7
+root:Host-associated:Human:Digestive system:Large intestine:Fecal,Fecal,root:Host-associated:Human:Digestive system:Large intestine,6
+root:Engineered:Wastewater,Wastewater,root:Engineered,6
+root:Engineered:Wastewater:Activated Sludge,Activated Sludge,root:Engineered:Wastewater,5
+root:Mixed,Mixed,root,4
+root:Host-associated:Plants:Rhizosphere,Rhizosphere,root:Host-associated:Plants,2
+root:Host-associated:Plants,Plants,root:Host-associated,2
+root:Environmental:Aquatic:Estuary:Sediment,Sediment,root:Environmental:Aquatic:Estuary,2
+root:Environmental:Aquatic:Estuary,Estuary,root:Environmental:Aquatic,2
+root:Engineered:Biogas plant,Biogas plant,root:Engineered,1
+root:Host-associated:Mammals,Mammals,root:Host-associated,1
+root:Host-associated:Mammals:Digestive system,Digestive system,root:Host-associated:Mammals,1
+root:Environmental:Aquatic:Marine:Oceanic:Aphotic zone,Aphotic zone,root:Environmental:Aquatic:Marine:Oceanic,1
+root:Engineered:Bioreactor,Bioreactor,root:Engineered,1
+root:Environmental:Aquatic:Non-marine Saline and Alkaline,Non-marine Saline and Alkaline,root:Environmental:Aquatic,1
+root:Environmental:Aquatic:Non-marine Saline and Alkaline:Salt crystallizer pond,Salt crystallizer pond,root:Environmental:Aquatic:Non-marine Saline and Alkaline,1
+root:Environmental:Aquatic:Marine:Coastal,Coastal,root:Environmental:Aquatic:Marine,1
+root:Environmental:Aquatic:Marine:Coastal:Sediment,Sediment,root:Environmental:Aquatic:Marine:Coastal,1
+root:Engineered:Wastewater:Water and sludge,Water and sludge,root:Engineered:Wastewater,1
+root:Environmental:Aquatic:Freshwater,Freshwater,root:Environmental:Aquatic,1
+root:Environmental:Aquatic:Freshwater:Lentic,Lentic,root:Environmental:Aquatic:Freshwater,1
