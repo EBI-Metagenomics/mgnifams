@@ -10,7 +10,7 @@ import os
 from collections import defaultdict
 
 import pyarrow.dataset as ds
-from parse_domains import extract_mgyp
+from parse_domains import load_families
 
 COLUMNS = ["protein_id", "pfam_accession", "i_evalue", "score", "hmm_from", "hmm_to", "env_from", "env_to"]
 
@@ -22,13 +22,7 @@ def main(args=None):
     parser.add_argument("--output_dir", default="query_results")
     a = parser.parse_args(args)
 
-    families = defaultdict(set)
-    for refined_families in a.refined_families:
-        with open(refined_families) as fh:
-            for line in fh:
-                family, member = line.rstrip("\n").split("\t")
-                families[family].add(int(extract_mgyp(member)))  # non-numeric protein ids fail here
-
+    families = load_families(a.refined_families)
     ids = sorted({p for members in families.values() for p in members})
     pfams = defaultdict(list)
     table = ds.dataset(a.pfam, format="parquet").to_table(columns=COLUMNS, filter=ds.field("protein_id").isin(ids))
