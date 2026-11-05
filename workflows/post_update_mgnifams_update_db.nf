@@ -22,9 +22,11 @@ workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
 
     // An annotate_not_updated outdir (annotation_only,true) has no structures, domains or biomes: prod keeps them
     ch_input = samplesheet
-        .map { meta, results, biomes -> [ meta, results.toUriString(), biomes ? biomes.toUriString() : '' ] }
-        .map { meta, r, b -> [ meta, r, b, file("${r}/update_families/update_info.csv").exists() && file("${r}/update_families/update_info.csv").readLines().contains('annotation_only,true') ] }
-        .map { meta, r, b, annotation_only ->
+        .map { meta, results, biomes ->
+            def r = results.toUriString()
+            def b = biomes ? biomes.toUriString() : ''
+            def info = file("${r}/update_families/update_info.csv")
+            def annotation_only = info.exists() && info.readLines().contains('annotation_only,true')
             if (b && annotation_only) {
                 error("post_update_mgnifams_update_db: biome_results is for update deltas; an annotation-only delta keeps prod's biomes")
             }
@@ -36,7 +38,8 @@ workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
             cifs   : annotation_only ? [] : files("${r}/structures/esmfold/cif/*.cif", checkIfExists: true)
             s4pred : files("${r}/annotation/reps/s4pred/json/*.json", checkIfExists: true)
             tm     : files("${r}/annotation/reps/deeptmhmm/json/*.json")
-            biomes : annotation_only ? [] : files("${b ?: "${r}/biome_results"}/*")
+            // An override must hold the CSVs (a rebuild_biomes outdir's biome_results/, not the outdir itself)
+            biomes : annotation_only ? [] : b ? files("${b}/*.csv", checkIfExists: true) : files("${r}/biome_results/*")
             domains: annotation_only ? [] : files("${r}/domain_results/*", checkIfExists: true)
             ids    : file("${r}/update_families/family_ids.fasta", checkIfExists: true)
             // Written by update_mgnifams; also tells an update outdir apart from a run_mgnifams_pipeline one
