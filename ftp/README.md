@@ -47,6 +47,8 @@ mgnifams/
         |-- release_manifest.json
         |-- md5sums.txt
         |-- families.tsv.gz
+        |-- clans.tsv.gz          clans (from 1.1)
+        |-- clan_edges.tsv.gz
         |-- mgnifams_hmm.lib.gz   same file as 1.0 (hard link, same md5)
         |-- seed_msa.tar.gz       same file as 1.0 (hard link, same md5)
         |-- full_msa.tar          latest release only
@@ -100,6 +102,8 @@ from `/nfs/production`, so files are copied to it, not hard-linked.
 | `seed_msa.tar.gz`       | every release       | per-family seed alignments, `<family_id>.fas.gz` (aligned FASTA, gaps as `-`), from which the HMMs are built    |
 | `full_msa.tar`          | latest release only | per-family full alignments, `<family_id>.sto.gz` (Stockholm): every MGnify sequence recruited by the family HMM |
 | `families.tsv.gz`       | every release       | one row per family with its provenance (below)                                                                  |
+| `clans.tsv.gz`          | from 1.1            | clan membership (below)                                                                                         |
+| `clan_edges.tsv.gz`     | from 1.1            | residue overlap of similar family pairs, from which the clans are built (below)                                 |
 | `release_manifest.json` | every release       | release metadata, inputs, tool and database versions, file checksums                                            |
 | `md5sums.txt`           | every release       | `md5sum -c` compatible checksums of the release files                                                           |
 
@@ -125,7 +129,32 @@ Tab-separated, with a header row. Families are never removed or renumbered, and 
 | `full_size`                | number of sequences in the full MSA                                                           |
 | `seed_size`                | number of sequences in the seed MSA                                                           |
 | `rep_id`                   | representative MGnify protein (`MGYP...`)                                                     |
-| `rep_region`               | representative region, `start-end` (1-based, inclusive); `-` = the whole protein (1.0 only)   |
+| `rep_region`               | representative region, `start-end` (1-based, inclusive); `-` = the whole protein              |
+
+### `clans.tsv.gz`
+
+Tab-separated, with a header row; one row per family in a clan. Families in no clan are not listed. Clan ids are
+release-specific (`<release>_clan_<n>`, numbered by size, largest first) and are not stable across releases.
+
+| Column              | Meaning                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| `clan_id`           | clan id                                                                                             |
+| `family_id`         | integer MGnifams family id                                                                          |
+| `is_representative` | `True` for one family per clan: the one with the largest sum of residue Jaccard over its clan edges |
+
+### `clan_edges.tsv.gz`
+
+Tab-separated, with a header row; one row per pair of families that share a member protein and have a residue
+Jaccard >= 0.1 or a residue containment >= 0.5, with `family_1` < `family_2` (as text). Overlapping regions of one
+family on one protein are merged first. The clans are the connected components of the pairs with residue Jaccard >= 0.5.
+
+| Column                 | Meaning                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| `family_1`, `family_2` | integer MGnifams family ids                                                     |
+| `shared_proteins`      | proteins carrying members of both families                                      |
+| `protein_jaccard`      | shared proteins over the proteins of either family                              |
+| `residue_jaccard`      | (protein, position) pairs covered by both families over those covered by either |
+| `residue_containment`  | (protein, position) pairs covered by both over those of the smaller family      |
 
 MGnify Proteins releases are cited by their numbered folder (`peptide_database/2026_07/`), never by
 `current_release`.

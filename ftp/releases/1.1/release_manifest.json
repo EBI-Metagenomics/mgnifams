@@ -69,6 +69,28 @@
         "full_msa.tar": {
             "md5": "690c5c02649f9c96a6d654554c839b56",
             "bytes": 626352291840
+        },
+        "clans.tsv.gz": {
+            "md5": "e81e4f774da056d6b4b17f6d376f925c",
+            "bytes": 94732
+        },
+        "clan_edges.tsv.gz": {
+            "md5": "a00645761367a2861989225851f6119d",
+            "bytes": 11320518
         }
+    },
+    "clans": {
+        "tool": "mgnifam compute_clans",
+        "version": "4.1.0",
+        "container": "quay.io/biocontainers/mgnifam:4.1.0--pyhdfd78af_0",
+        "date": "2026-11-09",
+        "families": 35459,
+        "min_edge_jaccard": 0.1,
+        "min_edge_containment": 0.5,
+        "clan_jaccard": 0.5,
+        "n_clans": 4363,
+        "families_in_clans": 20964,
+        "singleton_families": 14495,
+        "n_edges": 630109
     }
 }
