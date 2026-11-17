@@ -126,7 +126,7 @@ Tab-separated, with a header row. Families are never removed or renumbered, and 
 | `first_release`            | release in which the family first appeared                                                    |
 | `model_release`            | release that built the family's seed MSA and HMM                                              |
 | `model_proteins_release`   | MGnify Proteins release of the seed MSA                                                       |
-| `members_release`          | release that last computed the full MSA, representative and annotations                       |
+| `members_release`          | release that last computed the full MSA and representative                                    |
 | `members_proteins_release` | MGnify Proteins release of the full MSA members                                               |
 | `full_size`                | number of sequences in the full MSA                                                           |
 | `seed_size`                | number of sequences in the seed MSA                                                           |
