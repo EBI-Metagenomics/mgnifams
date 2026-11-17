@@ -44,7 +44,9 @@ def load(con, manifests):
             if row[0] != date:
                 raise ValueError(f"{path}: date {date} != release_history date {row[0]} of release {release}")
             con.execute("DELETE FROM release_info WHERE release = ?", (release,))
-            con.executemany("INSERT INTO release_info VALUES (?, ?, ?)", [(release, k, v) for k, v in flatten(manifest)])
+            con.executemany(
+                "INSERT INTO release_info VALUES (?, ?, ?)", [(release, k, v) for k, v in flatten(manifest)]
+            )
         con.execute("COMMIT")
     except (sqlite3.Error, ValueError) as e:
         con.execute("ROLLBACK")

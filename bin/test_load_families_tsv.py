@@ -40,9 +40,11 @@ def run(db, tsv):
 
 
 def status(db):
-    return sqlite3.connect(db).execute(
-        "SELECT id, status, not_updated_reason, members_release FROM mgnifam ORDER BY id"
-    ).fetchall()
+    return (
+        sqlite3.connect(db)
+        .execute("SELECT id, status, not_updated_reason, members_release FROM mgnifam ORDER BY id")
+        .fetchall()
+    )
 
 
 def main():
@@ -67,10 +69,22 @@ def main():
 
         # A DB without the columns: refused, then migrated (appended columns) and loaded
         old = (SQL / "db_schema.sqlite").read_text()
-        old = "\n".join(line for line in old.splitlines() if not any(
-            line.strip().startswith(c + " ") for c in ("status", "not_updated_reason", "first_release", "model_release",
-                                                      "model_proteins_release", "members_release",
-                                                      "members_proteins_release")))
+        old = "\n".join(
+            line
+            for line in old.splitlines()
+            if not any(
+                line.strip().startswith(c + " ")
+                for c in (
+                    "status",
+                    "not_updated_reason",
+                    "first_release",
+                    "model_release",
+                    "model_proteins_release",
+                    "members_release",
+                    "members_proteins_release",
+                )
+            )
+        )
         db2 = f"{tmp}/b.sqlite3"
         make_db(db2, old)
         out = run(db2, tsv)
