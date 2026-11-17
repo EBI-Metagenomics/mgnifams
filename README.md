@@ -326,7 +326,13 @@ Then load the release manifests (`ftp/releases/X.Y/release_manifest.json`, one p
 python3 bin/load_release_manifest.py --db "$db" --manifests ftp/releases/1.0/release_manifest.json ftp/releases/1.1/release_manifest.json
 ```
 
-This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script, `python3 bin/test_load_families_tsv.py` and `python3 bin/test_load_release_manifest.py` the loads.
+Then load the release's clans (`clans.tsv.gz`, `clan_edges.tsv.gz`, from `mgnifam compute_clans`) into `mgnifam_clans` (clan, representative per family) and `mgnifam_clan_edges` (similar family pairs with their overlaps). They replace the clans the database held, since clan ids are release-specific. One transaction; it changes nothing unless every family is in the database, each clan has one representative, and the clans are the connected components of the edges with residue Jaccard >= `--clan-jaccard` (default 0.5, the manifest's `clans.clan_jaccard`).
+
+```bash
+python3 bin/load_clans.py --db "$db" --clans /path/to/clans.tsv.gz --edges /path/to/clan_edges.tsv.gz
+```
+
+This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script, `python3 bin/test_load_families_tsv.py` `python3 bin/test_load_release_manifest.py` and `python3 bin/test_load_clans.py` the loads.
 Do not speed up the merge with `PRAGMA journal_mode = OFF`: the rollback on a failed check would no longer work. Such PRAGMAs are only safe on a copy that is swapped in afterwards.
 After changing indexes in `assets/sql/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/sql/finalize_db.sql`; idempotent).
 

@@ -119,3 +119,21 @@ CREATE TABLE release_info (
     value TEXT, -- strings as is; numbers, booleans and lists as JSON
     PRIMARY KEY (release, key)
 );
+
+-- Clans of the release the DB holds (FTP clans.tsv.gz; bin/load_clans.py): one row per family in a clan
+CREATE TABLE mgnifam_clans (
+    mgnifam_id INTEGER PRIMARY KEY REFERENCES mgnifam(id),
+    clan_id TEXT NOT NULL, -- <release>_clan_<n>, numbered by size; not stable across releases
+    is_representative INTEGER NOT NULL -- 1 for one family per clan
+);
+
+-- Similar family pairs of that release (FTP clan_edges.tsv.gz), family_1 < family_2 as text
+CREATE TABLE mgnifam_clan_edges (
+    family_1 INTEGER NOT NULL REFERENCES mgnifam(id),
+    family_2 INTEGER NOT NULL REFERENCES mgnifam(id),
+    shared_proteins INTEGER,
+    protein_jaccard REAL,
+    residue_jaccard REAL,
+    residue_containment REAL,
+    PRIMARY KEY (family_1, family_2)
+);

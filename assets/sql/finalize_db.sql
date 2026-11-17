@@ -9,6 +9,8 @@ CREATE INDEX IF NOT EXISTS idx_pfams_mgnifam          ON mgnifam_pfams (mgnifam_
 CREATE INDEX IF NOT EXISTS idx_funfams_mgnifam        ON mgnifam_funfams (mgnifam_id);
 CREATE INDEX IF NOT EXISTS idx_folds_mgnifam          ON mgnifam_folds (mgnifam_id);
 CREATE INDEX IF NOT EXISTS idx_model_pfams_mgnifam    ON mgnifam_model_pfams (mgnifam_id);
+CREATE INDEX IF NOT EXISTS idx_clans_clan             ON mgnifam_clans (clan_id);
+CREATE INDEX IF NOT EXISTS idx_clan_edges_family_2    ON mgnifam_clan_edges (family_2);
 
 UPDATE mgnifam SET
     has_pfam       = EXISTS (SELECT 1 FROM mgnifam_pfams       WHERE mgnifam_id = mgnifam.id),
