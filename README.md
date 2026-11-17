@@ -312,7 +312,15 @@ db=/path/to/mgnifams.sqlite3
 sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/sql/merge_update_delta.sql
 ```
 
-This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
+After a release's merges, load its `families.tsv.gz` (the `families/` output; the FTP file of the release) into `mgnifam`: `status`, `not_updated_reason`, `first_release`, `model_release`, `model_proteins_release`, `members_release` and `members_proteins_release` (column meanings in `ftp/README.md`). One transaction, every family refreshed; it changes nothing if the DB and the file hold different family ids. A database without these columns is migrated once first (guarded):
+
+```bash
+[ "$(sqlite3 "$db" "SELECT count(*) FROM pragma_table_info('mgnifam') WHERE name = 'status'")" = 0 ] \
+    && sqlite3 -bail "$db" < assets/sql/migrate_schema_family_status.sql
+python3 bin/load_families_tsv.py --db "$db" --families /path/to/families.tsv.gz
+```
+
+This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script, `python3 bin/test_load_families_tsv.py` the load.
 Do not speed up the merge with `PRAGMA journal_mode = OFF`: the rollback on a failed check would no longer work. Such PRAGMAs are only safe on a copy that is swapped in afterwards.
 After changing indexes in `assets/sql/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/sql/finalize_db.sql`; idempotent).
 

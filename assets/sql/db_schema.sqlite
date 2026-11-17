@@ -20,6 +20,14 @@ CREATE TABLE mgnifam (
     signal_percent REAL,
     membrane_beta_percent REAL,
     periplasm_percent REAL,
+    -- Provenance of the release's families.tsv.gz (bin/load_families_tsv.py); not_updated_reason NULL unless not_updated
+    status TEXT, -- new, updated or not_updated
+    not_updated_reason TEXT,
+    first_release TEXT,
+    model_release TEXT,
+    model_proteins_release TEXT,
+    members_release TEXT,
+    members_proteins_release TEXT,
     has_pfam INTEGER NOT NULL DEFAULT 0,
     has_funfam INTEGER NOT NULL DEFAULT 0,
     has_model_pfam INTEGER NOT NULL DEFAULT 0,
