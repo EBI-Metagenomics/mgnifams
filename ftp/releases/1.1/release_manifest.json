@@ -35,6 +35,7 @@
     },
     "databases": {
         "pfam": "Pfam-A 38.2",
+        "pfam_profile_profile": "Pfam 35.0",
         "funfams": "FunFams v4.3.0",
         "foldseek": {
             "search_version": "10.941cd33",

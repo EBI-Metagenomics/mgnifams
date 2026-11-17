@@ -84,7 +84,9 @@ from `/nfs/production`, so files are copied to it, not hard-linked.
    complete `full_msa.tar` (the previous alignments of the `not_updated` families), copies `families.tsv.gz` and
    `pipeline_info/`, and writes `md5sums.txt`. It stops on any count mismatch.
 3. **Fill** `releases/X.Y/release_manifest.json`, `README.md` and the `RELEASES.tsv` row in this repository, from the
-   staging log (md5s and sizes) and the run's `pipeline_info/`.
+   staging log (md5s and sizes) and the run's `pipeline_info/`. `databases` names every database whose hits the
+   release's families carry, including kept ones (`pfam_profile_profile`: the hhsearch model-level hits); the website
+   reads the manifest through the DB's `release_info`.
 4. **Copy into a hidden folder** `<FTP>/releases/.X.Y_tmp`: hard-link `mgnifams_hmm.lib.gz` and `seed_msa.tar.gz` from
    `releases/X.(Y-1)/`, copy the staged files and the metadata from this repository, then run `md5sum -c md5sums.txt`
    there.

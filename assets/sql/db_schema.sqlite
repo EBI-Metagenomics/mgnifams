@@ -111,3 +111,11 @@ CREATE TABLE release_history (
     n_updated INTEGER,
     n_not_updated INTEGER
 );
+
+-- Metadata of each release this DB holds: its FTP release_manifest.json flattened to dotted keys (bin/load_release_manifest.py)
+CREATE TABLE release_info (
+    release TEXT NOT NULL REFERENCES release_history(release),
+    key TEXT NOT NULL, -- e.g. databases.pfam, databases.foldseek.pdb.pdb_date, pipeline.version
+    value TEXT, -- strings as is; numbers, booleans and lists as JSON
+    PRIMARY KEY (release, key)
+);

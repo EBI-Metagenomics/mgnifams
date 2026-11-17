@@ -320,7 +320,13 @@ After a release's merges, load its `families.tsv.gz` (the `families/` output; th
 python3 bin/load_families_tsv.py --db "$db" --families /path/to/families.tsv.gz
 ```
 
-This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script, `python3 bin/test_load_families_tsv.py` the load.
+Then load the release manifests (`ftp/releases/X.Y/release_manifest.json`, one per release the database holds) into `release_info` (release, dotted key, value: database and tool versions, dates, clan parameters), which the website reads for its version labels. Each manifest replaces its release's rows; a release missing from `release_history`, or with another date there, is refused and nothing changes. The merge records the merge date in `release_history`, so set it to the release date first.
+
+```bash
+python3 bin/load_release_manifest.py --db "$db" --manifests ftp/releases/1.0/release_manifest.json ftp/releases/1.1/release_manifest.json
+```
+
+This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script, `python3 bin/test_load_families_tsv.py` and `python3 bin/test_load_release_manifest.py` the loads.
 Do not speed up the merge with `PRAGMA journal_mode = OFF`: the rollback on a failed check would no longer work. Such PRAGMAs are only safe on a copy that is swapped in afterwards.
 After changing indexes in `assets/sql/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/sql/finalize_db.sql`; idempotent).
 
