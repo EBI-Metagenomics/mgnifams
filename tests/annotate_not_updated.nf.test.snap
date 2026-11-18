@@ -35,7 +35,7 @@
                     "python": "3.13.1"
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v3.1.0"
+                    "ebi-metagenomics/mgnifams": "v3.2.0dev"
                 }
             },
             [
@@ -81,7 +81,7 @@
                 "funfams_lib,funfam-hmm3-v4_3_0_test.lib.gz",
                 "mgnifams_release,1.1",
                 "mgnify_proteins_release,2026_07",
-                "pipeline_version,3.1.0"
+                "pipeline_version,3.2.0dev"
             ]
         ],
         "timestamp": "2026-11-04T13:58:47.53755905",

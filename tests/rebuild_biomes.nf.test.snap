@@ -15,7 +15,7 @@
                     "awk": "mawk 1.3.4 20200120"
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v3.1.0"
+                    "ebi-metagenomics/mgnifams": "v3.2.0dev"
                 }
             },
             [
