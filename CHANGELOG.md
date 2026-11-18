@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `export_mgnifams.py` takes the structure scores (`--structure_scores`) as optional, and accepts metadata with only `family_id`.
 - The SQL files moved to `assets/sql/` (`db_schema.sqlite`, `finalize_db.sql`, `merge_update_delta.sql`, `migrate_schema_seed_size_tmscores.sql`) and the samplesheets to `assets/samplesheets/`. Update the paths in hand-run `sqlite3` commands and in custom samplesheets that use the raw GitHub URL of `db_schema.sqlite`.
 
+### `Fixed`
+
+- `nextflow_schema.json` gave `--clusters_chunk_size` a default of 30 (the pipeline uses 20) and `--esmfold_params_path` a default of `null/params/*`; both now match `nextflow.config`. It no longer lists parameters the pipeline does not read (`mgnprotein_db_config_file`, `db_schema_file`, `validationShowHiddenParams`, `validationFailUnrecognisedParams`, `validationLenientMode`).
+
 ## v3.0.0 - [2026/11/02]
 
 ### `Added`
