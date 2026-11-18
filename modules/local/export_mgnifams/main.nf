@@ -23,11 +23,12 @@ process EXPORT_MGNIFAMS {
 
     script:
     def tm = tm_composition ? "${tm_composition}" : '""'
+    def scores_arg = scores ? "${scores}" : '""'
     def seeds = seed_sizes ? "${seed_sizes}" : '""'
     """
     export_mgnifams.py \\
         --metadata ${metadata} \\
-        --structure_scores ${scores} \\
+        --structure_scores ${scores_arg} \\
         --composition ${composition} \\
         --tm_composition ${tm} \\
         --seed_sizes ${seeds} \\

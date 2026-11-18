@@ -25,6 +25,17 @@ def extract_mgyp(protein_name):
     return protein_name
 
 
+def load_families(paths):
+    """family -> set of int member protein ids, from family<TAB>member TSVs (the build_parquet_*_queries.py input)"""
+    families = defaultdict(set)
+    for path in paths:
+        with open(path) as fh:
+            for line in fh:
+                family, member = line.rstrip("\n").split("\t")
+                families[family].add(int(extract_mgyp(member)))  # non-numeric protein ids fail here
+    return families
+
+
 def calculate_mgnifam_start(protein_name):
     """1-based start of the MGnifam region on the full protein.
 

@@ -6,7 +6,7 @@ Guidance for coding agents (Claude Code, Codex and others) working in this repos
 
 MGnifams is a Nextflow (DSL2) pipeline that converts metagenomics-derived amino acid sequences into protein families. It follows nf-core standards and is deployed at EMBL-EBI for the MGnify platform.
 
-`dev` is at `3.0.0`, the release candidate: the version was bumped before the SLURM update run because `workflow.manifest.version` is written into `update_info.csv` and from there into `release_history.pipeline_version` of MGnifams 1.1. After the tag, `dev` goes to `3.1.0dev`. The release is a major because it holds breaking changes (see the CHANGELOG). `CHANGELOG.md` entries link their PR, newest first, with same-PR points of one category grouped as a sub-list; tool version changes go in the `Dependencies` table.
+`dev` is at `3.1.0`, the release candidate; after the tag it goes to `3.2.0dev`. An update run that builds a release runs on a release version, not a `dev` one: `workflow.manifest.version` is written into `update_info.csv` and from there into `release_history.pipeline_version`. `CHANGELOG.md` entries link their PR, newest first, with same-PR points of one category grouped as a sub-list; tool version changes go in the `Dependencies` table.
 
 ## Running the Pipeline
 
@@ -26,7 +26,10 @@ nextflow run . -c ../conf/slurm.config --input input/samplesheet_update_db.csv -
 # Update existing families with new MGnify proteins
 nextflow run . -c ../conf/local.config -profile test_update_mgnifams,local,singularity -resume
 
-# Delta DB from an update_mgnifams outdir (default: the tests/data/update_results fixture; run from the repo root)
+# Biomes of a finished update from the clusters parquet (default: the tests/fixtures/rebuild_biomes fixture; run from the repo root)
+nextflow run . -profile test_rebuild_biomes,singularity
+
+# Delta DB from an update_mgnifams outdir (default: the tests/fixtures/update_results fixture; run from the repo root)
 nextflow run . -profile test_post_update_mgnifams_update_db,singularity
 ```
 
@@ -37,6 +40,7 @@ nextflow run . -profile test_post_update_mgnifams_update_db,singularity
 nf-test test tests/default.nf.test --profile +singularity,test
 nf-test test tests/update_mgnifams.nf.test --profile +singularity
 nf-test test tests/post_update_mgnifams_update_db.nf.test --profile +singularity
+nf-test test tests/rebuild_biomes.nf.test --profile +singularity
 
 # Module tests and script self-checks
 nf-test test modules/local/<module> --profile +singularity
@@ -56,7 +60,7 @@ The test profile requires paths to external databases set in your local config:
 
 ## Pipeline Architecture
 
-Five modes controlled by `--mode` parameter:
+Seven modes controlled by `--mode` parameter:
 
 ### `run_mgnifams_pipeline` (default) — `workflows/mgnifams.nf`
 
@@ -77,8 +81,8 @@ Five sequential subworkflows:
 
 ### `init_mgnifams_db` — `workflows/init_db.nf`
 
-Initializes SQLite schema (`assets/data/db_schema.sqlite`), imports pipeline results, then `FINALIZE_SQLITE` runs
-`assets/finalize_db.sql` (`has_*` flags, indexes, `ANALYZE`).
+Initializes SQLite schema (`assets/sql/db_schema.sqlite`), imports pipeline results, then `FINALIZE_SQLITE` runs
+`assets/sql/finalize_db.sql` (`has_*` flags, indexes, `ANALYZE`).
 
 ### `update_mgnifams_db` — `workflows/update_db.nf`
 
@@ -88,7 +92,7 @@ Queries MGnify proteins PostgreSQL DB (`bin/query_mgnprotein_db.py`) to enrich f
 
 Refreshes the full MSAs and representatives of existing families; seed MSAs and HMMs do not change. The samplesheet has
 exactly one row: `mgnify_proteins_sequences`, `mgnify_proteins_clusters` and `mgnify_proteins_pfam` (MGnify proteins parquet files),
-`mgnifams_hmms` (HMM library with numeric `NAME`s), an optional `mgnprotein_db_config` and `mgnifams_families` (the
+`mgnifams_hmms` (HMM library with numeric `NAME`s) and `mgnifams_families` (the
 previous release's FTP `families.tsv.gz`).
 
 1. **UPDATE_FAMILIES** (`subworkflows/local/update_families/`) — `EXTRACT_UNANNOTATED_PARQUET_SLICES` slices known Pfam
@@ -103,18 +107,30 @@ previous release's FTP `families.tsv.gz`).
    `EXPORT_FAMILIES_TSV` then writes the release's `update_families/families.tsv.gz` from `mgnifams_families`, the delta
    and `family_metadata.csv` (`bin/export_families_tsv.py`; fails unless the previous and updated family sets match).
 2. On the successful families: `PREDICT_STRUCTURES`, `ANNOTATE_REPS`, `ANNOTATE_STRUCTURES`, `EXPORT_DATA`; domain
-   architectures from the Pfam parquet (`BUILD_PARQUET_DOMAIN_QUERIES` → `PARSE_DOMAINS`); biomes only with
-   `mgnprotein_db_config`. `--run_alphafold2` adds ColabFold predictions from the full MSAs (`structures/alphafold2/`, not used downstream).
+   architectures from the Pfam parquet (`BUILD_PARQUET_DOMAIN_QUERIES` → `PARSE_DOMAINS`); biomes from the clusters
+   parquet (`BIOMES_FROM_PARQUET`: `BUILD_PARQUET_BIOME_QUERIES` → `PARSE_BIOMES` without a mapping; each member's own
+   `cluster_rep_biomes`, members being cluster reps). `mgnprotein_db_config` is deprecated here (ignored with a warning). `--run_alphafold2` adds ColabFold predictions from the full MSAs (`structures/alphafold2/`, not used downstream).
 3. `update_families/update_info.csv` records `tm_computed` / `biome_computed` for the DB mode below. No sqlite work.
+
+### `rebuild_biomes` — `workflows/rebuild_biomes.nf`
+
+Recovery mode (one entry point per recovery job): the biomes of a finished update, from the clusters parquet, without
+resuming it. Samplesheet `sample,refined_families,mgnify_proteins_clusters`, one row; `refined_families` is the update's
+`update_families/refined_families.tsv` (updated families only, each family's rows contiguous).
+`SPLIT_FAMILY_MEMBERS` cuts it into about `--family_query_chunks` byte-equal chunks of whole families (streaming awk,
+fails on a non-contiguous family), then `BIOMES_FROM_PARQUET` (the `update_mgnifams` code path) publishes
+`biome_results/<id>.csv`. Lookup memory scales with the chunk's members. Test: `tests/rebuild_biomes.nf.test` (cheap).
 
 ### `post_update_mgnifams_update_db` — `workflows/post_update_mgnifams_update_db.nf`
 
-Delta DB `db/<sample>_update.sqlite3` from an `update_mgnifams` outdir (samplesheet `sample,results_folder`, one row):
+Delta DB `db/<sample>_update.sqlite3` from an `update_mgnifams` outdir (samplesheet `sample,results_folder`, optional
+`biome_results`, one row; `biome_results`, a `rebuild_biomes` output, replaces `<results_folder>/biome_results` and
+forces `biome_computed`):
 `INIT_SQLITE` → `IMPORT_QUERIES` → `UPDATE_SQLITE_BLOBS_STAGED` (fails instead of publishing a partial DB), staging the
 published CSVs, CIFs, feature JSONs, domain/biome results and `family_ids.fasta` ids. Its `update_info` table comes from
-`update_info.csv`. The pipeline never touches prod: `assets/merge_update_delta.sql` merges the delta (see the README
+`update_info.csv`. The pipeline never touches prod: `assets/sql/merge_update_delta.sql` merges the delta (see the README
 for which columns it overwrites and keeps). Test: `tests/post_update_mgnifams_update_db.nf.test` on the two-family
-fixture `tests/data/update_results` (no external DBs, cheap).
+fixture `tests/fixtures/update_results` (no external DBs, cheap).
 
 ## Key Configuration
 
@@ -128,7 +144,7 @@ The `conf/slurm.config` and `conf/local.config` files are gitignored — create 
 
 ## DB schema
 
-`assets/data/db_schema.sqlite` (SQL text) now has `mgnifam.seed_size` and the Foldseek TM-scores
+`assets/sql/db_schema.sqlite` (SQL text) now has `mgnifam.seed_size` and the Foldseek TM-scores
 `mgnifam_folds.aln_tmscore/q_tmscore/t_tmscore`. `IMPORT_QUERIES` imports `mgnifam.csv` by header name (every
 `export_mgnifams.py` header column must exist in the schema, checked by `bin/test_export_mgnifams.py`); columns missing
 from the CSV keep their DEFAULT. Child CSVs are imported by position (their `id` column is the `mgnifam_id`).
@@ -136,7 +152,7 @@ Migrated prod DBs have `seed_size`/`hmm_length` last instead; that is fine, sinc
 The `has_*` flags are derived from the child tables: `finalize_db.sql` fills them (init DB), the merge recomputes them
 for the delta families; the delta DB leaves them at 0. Fast PRAGMAs (journal/fsync off) only on throwaway build files, never prod.
 `mgnifam.hmm_length` = `length(consensus)` (one consensus residue per match state), stored so the website can index/sort on it.
-Existing DBs are migrated once with `assets/migrate_schema_seed_size_tmscores.sql`.
+Existing DBs are migrated once with `assets/sql/migrate_schema_seed_size_tmscores.sql`.
 `release_history` has one row per MGnifams release in the DB (`release` is `MAJOR.MINOR`, independent of the MGnify Proteins
 `YYYY_MM` release it records). `merge_update_delta.sql` creates it if missing and adds the update row from the delta's
 `update_info` (`mgnifams_release`, `mgnify_proteins_release` come from the `update_mgnifams` params of the same names).
@@ -165,7 +181,10 @@ does not yet; 1.0's was a one-off export from the prod DB. Generate it there (al
 - **`bin/`** — Python helper scripts called by Nextflow processes. `generate_families.py` is the core algorithm (~26KB).
 - **`bin/test_*.py`** — Assert-based self-checks of the scripts next to them (`python3 bin/test_<name>.py`)
 - **`modules/local/`** — Custom Nextflow process definitions
-- **`assets/*.sql`** — Out-of-pipeline SQL for production DBs: schema migration, update-delta merge
+- **`assets/sql/`** — DB schema (`db_schema.sqlite`, SQL text), `finalize_db.sql`, and out-of-pipeline SQL for production DBs: schema migration, update-delta merge
+- **`assets/data/`** — Small input test data for the test profiles (parquets, HMM library, families TSV, protein CSV)
+- **`assets/samplesheets/`** — Samplesheets of the `test*` profiles and examples per mode
+- **`tests/fixtures/`** — Only fixtures of the end-to-end nf-tests (`tests/*.nf.test`); module fixtures stay in `modules/local/<name>/tests/fixtures/`
 - **`modules/nf-core/`** — Standard nf-core modules (don't modify directly)
 - **`subworkflows/local/`** — Custom subworkflow logic
 - **`subworkflows/nf-core/`** — Standard nf-core subworkflows

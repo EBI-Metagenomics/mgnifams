@@ -1,0 +1,26 @@
+{
+    "families - 3 chunks": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test"
+                    },
+                    [
+                        "families_00000.tsv:md5,1b268aaa66670d5d33ae3399ca4ae1af",
+                        "families_00001.tsv:md5,6720119aa1534e3fa4eae5546fc8b655",
+                        "families_00002.tsv:md5,af6779a524f419c2ec524bcfce45a826"
+                    ]
+                ]
+            ],
+            [
+                "versions.yml:md5,da3a8a6f81afec016a6580fa46e011dd"
+            ]
+        ],
+        "timestamp": "2026-11-05T11:23:34.804937704",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.3"
+        }
+    }
+}

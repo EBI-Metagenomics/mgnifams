@@ -3,6 +3,39 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v3.1.0 - [2026/11/18]
+
+### `Added`
+
+- New `--mode annotate_not_updated`: re-annotates the not-updated families of a finished update (`status` `not_updated` in its `families.tsv.gz`) from their previous representatives and structures, with the current Pfam, FunFam, Foldseek, s4pred and DeepTMHMM. Everything is published under `annotate_not_updated/` (subworkflow `ANNOTATE_FAMILY_SUBSET`, module `SELECT_FAMILY_SUBSET`). New samplesheet columns `reps_fasta` and `structures`. The mode needs a `slurm` profile, where AlphaFoldDB is searched.
+- `--mode post_update_mgnifams_update_db` on an `annotate_not_updated/` folder builds an annotation-only delta database (`update_info` `annotation_only=true`): s4pred, TM, Pfam, FunFam and Foldseek results only, with no structure, domain or biome blobs.
+- `assets/sql/merge_update_delta.sql` merges annotation-only deltas: the representative, size, structure, domain and biome columns are kept, and no `release_history` row is written. An annotation-only delta without the AlphaFoldDB search (`afdb_computed` not `true`) is rejected, because it replaces all fold rows. The update-delta merge is unchanged.
+- `BIOMES_FROM_PARQUET` subworkflow and `BUILD_PARQUET_BIOME_QUERIES` module: biome distributions from the clusters parquet's `cluster_rep_biomes`, one entry point for `update_mgnifams` and later biome rebuilds. `PARSE_BIOMES` takes biome lineages when no `biome_mapping` is given, and fails on biome-ID query results then.
+- New `--mode rebuild_biomes`: recomputes the biome distributions of a finished update's families (its `update_families/refined_families.tsv`) from the clusters parquet with `BIOMES_FROM_PARQUET`, without resuming the update, and publishes `biome_results/`. `SPLIT_FAMILY_MEMBERS` cuts the member list into about `--family_query_chunks` chunks of whole families. New samplesheet column `refined_families`. An `update_mgnifams` outdir is refused as `--outdir`.
+- `post_update_mgnifams_update_db` takes an optional samplesheet column `biome_results` (a `rebuild_biomes` output) that replaces `<results_folder>/biome_results` and sets `biome_computed=true` in the delta. The merge is unchanged.
+- `update_mgnifams` takes the optional samplesheet columns `reps_fasta` and `structures` (the previous release's representatives and `<family_id>.pdb` structures). With both set, it also re-annotates its own not-updated families with `ANNOTATE_FAMILY_SUBSET` under `annotate_not_updated/`. With neither set, it warns and behaves as before. Setting only one fails.
+- Per-family provenance in the DB: `mgnifam` gets `status`, `not_updated_reason`, `first_release`, `model_release`, `model_proteins_release`, `members_release` and `members_proteins_release` (`assets/sql/db_schema.sqlite`, before the blobs), loaded from a release's `families.tsv.gz` after its merges by `bin/load_families_tsv.py` (one transaction; refused if the family ids differ). Existing databases are migrated once with `assets/sql/migrate_schema_family_status.sql`.
+- `release_info` table (release, key, value): each release's FTP `release_manifest.json` flattened to dotted keys, loaded by `bin/load_release_manifest.py` (one transaction; refused for a release missing from `release_history` or with another date there). The 1.0 and 1.1 manifests gain `databases.pfam_profile_profile` (`Pfam 35.0`, the hhsearch model-level hits every family keeps), and 1.0 `databases.pfam_masking` (`Pfam 36.0`).
+- Clan tables `mgnifam_clans` and `mgnifam_clan_edges` (indexes in `finalize_db.sql`), loaded from a release's `clans.tsv.gz` and `clan_edges.tsv.gz` by `bin/load_clans.py`, replacing the previous release's clans. One transaction; refused when a family is missing from the DB, a clan lacks exactly one representative, or the clans are not the components of the edges at the clan threshold.
+
+### `Changed`
+
+- `update_mgnifams` computes biomes from `mgnify_proteins_clusters` (`cluster_rep_biomes`, each member's own biomes, the 1.0 rule) instead of the MGnify proteins DB (`QUERY_MGNPROTEIN_DB`), so every updated family gets biomes from the release it was built on and `update_info.csv` always has `biome_computed,true`. The clusters parquet must have `cluster_rep_biomes`. `mgnprotein_db_config` is deprecated for this mode and ignored with a warning; `update_mgnifams_db` still uses it. `mgnprotein_db_query/` is no longer published by `update_mgnifams`.
+- Pfam and FunFam `hmmsearch` of the representatives take `-Z` from `meta.z` when it is set: the number of families of the release, so a search of a subset of the representatives reports E-values on the same base as a whole-release search. `ANNOTATE_REPS` builds the `hmmsearch` inputs from the FASTA channel's `meta`.
+- `update_mgnifams` runs Pfam and FunFam `hmmsearch` with `-Z` = the number of families in `mgnifams_families`, so updated and re-annotated families share one E-value base.
+- `EXPORT_FAMILIES_TSV` stub copies the previous `families.tsv.gz` (it wrote an empty file), so stub runs keep real statuses.
+- `export_mgnifams.py` takes the structure scores (`--structure_scores`) as optional, and accepts metadata with only `family_id`.
+- The SQL files moved to `assets/sql/` (`db_schema.sqlite`, `finalize_db.sql`, `merge_update_delta.sql`, `migrate_schema_seed_size_tmscores.sql`) and the samplesheets to `assets/samplesheets/`. Update the paths in hand-run `sqlite3` commands and in custom samplesheets that use the raw GitHub URL of `db_schema.sqlite`.
+- `--pfam_path`, `--funfams_path` and `--foldseek_db_path` are required only by the modes that search them (`run_mgnifams_pipeline`, `update_mgnifams`, `annotate_not_updated`). The other modes no longer need placeholder values; a searching mode without them stops before any task and names the missing ones.
+- `--run_alphafold2` is marked experimental: it has only run on test data.
+- The README metro map shows the update branch (stage 10 `update_mgnifams`, the delta database and stage 11 merge into the production database), and reads on dark backgrounds.
+
+### `Fixed`
+
+- A merged update recorded the merge date and the bare pipeline version (`3.0.0`) in `release_history`. It now records the release date given to `post_update_mgnifams_update_db` with `--release_date` (required for update deltas) and the tag form (`v3.0.0`), as the FTP `RELEASES.tsv`. Deltas built before 3.1.0 still get the merge date.
+- `nextflow_schema.json` gave `--clusters_chunk_size` a default of 30 (the pipeline uses 20) and `--esmfold_params_path` a default of `null/params/*`; both now match `nextflow.config`. It no longer lists parameters the pipeline does not read (`mgnprotein_db_config_file`, `db_schema_file`, `validationShowHiddenParams`, `validationFailUnrecognisedParams`, `validationLenientMode`).
+- The MultiQC report put the methods description and workflow summary sections in MultiQC's default place: `assets/multiqc_config.yml` named them `nf-core-mgnifams-*`. They now come first, as intended.
+
 ## v3.0.0 - [2026/11/02]
 
 ### `Added`

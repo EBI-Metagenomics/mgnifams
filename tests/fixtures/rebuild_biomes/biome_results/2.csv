@@ -1,0 +1,27 @@
+ids,labels,parents,counts
+root,root,,22
+root:Host-associated,Host-associated,root,9
+root:Host-associated:Human,Human,root:Host-associated,8
+root:Host-associated:Human:Digestive system,Digestive system,root:Host-associated:Human,8
+root:Engineered,Engineered,root,8
+root:Host-associated:Human:Digestive system:Large intestine,Large intestine,root:Host-associated:Human:Digestive system,4
+root:Host-associated:Human:Digestive system:Large intestine:Fecal,Fecal,root:Host-associated:Human:Digestive system:Large intestine,4
+root:Environmental:Aquatic:Marine,Marine,root:Environmental:Aquatic,4
+root:Environmental:Aquatic,Aquatic,root:Environmental,4
+root:Environmental,Environmental,root,4
+root:Engineered:Biogas plant,Biogas plant,root:Engineered,3
+root:Environmental:Aquatic:Marine:Oceanic,Oceanic,root:Environmental:Aquatic:Marine,2
+root:Engineered:Wastewater,Wastewater,root:Engineered,2
+root:Engineered:Wastewater:Water and sludge,Water and sludge,root:Engineered:Wastewater,1
+root:Engineered:Lab enrichment:Defined media:Marine media,Marine media,root:Engineered:Lab enrichment:Defined media,1
+root:Mixed,Mixed,root,1
+root:Engineered:Lab enrichment,Lab enrichment,root:Engineered,1
+root:Environmental:Aquatic:Marine:Intertidal zone,Intertidal zone,root:Environmental:Aquatic:Marine,1
+root:Engineered:Lab enrichment:Defined media,Defined media,root:Engineered:Lab enrichment,1
+root:Engineered:Wastewater:Activated Sludge,Activated Sludge,root:Engineered:Wastewater,1
+root:Host-associated:Birds,Birds,root:Host-associated,1
+root:Engineered:Solid waste:Composting,Composting,root:Engineered:Solid waste,1
+root:Engineered:Solid waste,Solid waste,root:Engineered,1
+root:Engineered:Bioreactor,Bioreactor,root:Engineered,1
+root:Engineered:Biogas plant:Wet fermentation,Wet fermentation,root:Engineered:Biogas plant,1
+root:Environmental:Aquatic:Marine:Intertidal zone:Estuary,Estuary,root:Environmental:Aquatic:Marine:Intertidal zone,1

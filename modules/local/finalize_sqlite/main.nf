@@ -9,7 +9,7 @@ process FINALIZE_SQLITE {
 
     input:
     tuple val(meta), path(db, stageAs: 'input/db.sqlite3')
-    path sql // e.g. assets/finalize_db.sql
+    path sql // e.g. assets/sql/finalize_db.sql
 
     output:
     tuple val(meta), path("${prefix}.sqlite3"), emit: db

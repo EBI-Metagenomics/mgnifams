@@ -1,9 +1,9 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    POST_UPDATE_MGNIFAMS_UPDATE_DB: delta sqlite DB from an update_mgnifams outdir
+    POST_UPDATE_MGNIFAMS_UPDATE_DB: delta sqlite DB from an update_mgnifams or annotate_not_updated outdir
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Only the successful families (update_families/family_ids.fasta), with the tables and
-    blobs the update run published, ready to be merged (assets/merge_update_delta.sql).
+    blobs the update run published, ready to be merged (assets/sql/merge_update_delta.sql).
     UPDATE_SQLITE_BLOBS_STAGED fails instead of publishing a partial DB.
 ----------------------------------------------------------------------------------------
 */
@@ -15,24 +15,40 @@ include { UPDATE_SQLITE_BLOBS_STAGED } from '../modules/local/update_sqlite_blob
 workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
 
     take:
-    samplesheet // channel: [ meta, update_mgnifams outdir ]
+    samplesheet  // channel: [ meta, update_mgnifams outdir, biome_results folder or [] ]
+    release_date // string: YYYY-MM-DD of the release; required for an update delta
 
     main:
     ch_versions = channel.empty()
 
+    // An annotate_not_updated outdir (annotation_only,true) has no structures, domains or biomes: prod keeps them
     ch_input = samplesheet
-        .map { meta, results -> [ meta, results.toUriString() ] }
-        .multiMap { meta, r ->
-            schema : [ meta, file("${projectDir}/assets/data/db_schema.sqlite", checkIfExists: true) ]
+        .map { meta, results, biomes ->
+            def r = results.toUriString()
+            def b = biomes ? biomes.toUriString() : ''
+            def info = file("${r}/update_families/update_info.csv")
+            def annotation_only = info.exists() && info.readLines().contains('annotation_only,true')
+            if (b && annotation_only) {
+                error("post_update_mgnifams_update_db: biome_results is for update deltas; an annotation-only delta keeps prod's biomes")
+            }
+            // The merge writes the release's release_history row from an update delta only
+            if (!annotation_only && !release_date) {
+                error("post_update_mgnifams_update_db: an update delta needs --release_date (YYYY-MM-DD, as the FTP RELEASES.tsv)")
+            }
+            [ meta, r, b, annotation_only ]
+        }
+        .multiMap { meta, r, b, annotation_only ->
+            schema : [ meta, file("${projectDir}/assets/sql/db_schema.sqlite", checkIfExists: true) ]
             tables : [ meta, files("${r}/table_data/*.csv", checkIfExists: true) ]
-            cifs   : files("${r}/structures/esmfold/cif/*.cif", checkIfExists: true)
+            cifs   : annotation_only ? [] : files("${r}/structures/esmfold/cif/*.cif", checkIfExists: true)
             s4pred : files("${r}/annotation/reps/s4pred/json/*.json", checkIfExists: true)
             tm     : files("${r}/annotation/reps/deeptmhmm/json/*.json")
-            biomes : files("${r}/biome_results/*")
-            domains: files("${r}/domain_results/*", checkIfExists: true)
+            // An override must hold the CSVs (a rebuild_biomes outdir's biome_results/, not the outdir itself)
+            biomes : annotation_only ? [] : b ? files("${b}/*.csv", checkIfExists: true) : files("${r}/biome_results/*")
+            domains: annotation_only ? [] : files("${r}/domain_results/*", checkIfExists: true)
             ids    : file("${r}/update_families/family_ids.fasta", checkIfExists: true)
             // Written by update_mgnifams; also tells an update outdir apart from a run_mgnifams_pipeline one
-            info   : file("${r}/update_families/update_info.csv", checkIfExists: true)
+            info   : [ file("${r}/update_families/update_info.csv", checkIfExists: true), b as boolean ]
         }
 
     INIT_SQLITE( ch_input.schema )
@@ -47,13 +63,14 @@ workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
 
     // tm_computed / biome_computed make those blobs required; the merge reads them back from update_info
     ch_info = ch_input.info
-        .map { csv ->
+        .map { csv, biomes_override ->
             def info = csv.splitCsv( header: true ).collectEntries { row -> [ row.key, row.value ] }
             info + [
                 tm_computed   : info.tm_computed == 'true',
-                biome_computed: info.biome_computed == 'true',
+                // Rebuilt biomes (biome_results column) are computed whatever the update run recorded
+                biome_computed: info.biome_computed == 'true' || biomes_override,
                 child_tables  : 'pfams,funfams,folds'
-            ]
+            ] + ( info.annotation_only == 'true' ? [ annotation_only: true ] : [ release_date: release_date ] )
         }
 
     UPDATE_SQLITE_BLOBS_STAGED(

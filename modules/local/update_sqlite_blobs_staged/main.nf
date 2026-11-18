@@ -27,7 +27,8 @@ process UPDATE_SQLITE_BLOBS_STAGED {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    def required = ['cif', 's4pred', 'domain'] + (info.tm_computed ? ['tm'] : []) + (info.biome_computed ? ['biome'] : [])
+    // annotate_not_updated deltas keep reps, structures, domains and biomes from prod
+    def required = (info.annotation_only ? ['s4pred'] : ['cif', 's4pred', 'domain']) + (info.tm_computed ? ['tm'] : []) + (info.biome_computed ? ['biome'] : [])
     def info_args = info.collect { k, v -> "'${k}=${v}'" }.join(' ')
     """
     mkdir -p cif s4pred tm biome domain

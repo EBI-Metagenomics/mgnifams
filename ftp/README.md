@@ -47,6 +47,8 @@ mgnifams/
         |-- release_manifest.json
         |-- md5sums.txt
         |-- families.tsv.gz
+        |-- clans.tsv.gz          clans (from 1.1)
+        |-- clan_edges.tsv.gz
         |-- mgnifams_hmm.lib.gz   same file as 1.0 (hard link, same md5)
         |-- seed_msa.tar.gz       same file as 1.0 (hard link, same md5)
         |-- full_msa.tar          latest release only
@@ -70,13 +72,29 @@ From the flat layout (1.0 files at the top level):
 2. Link `current_release -> releases/1.0`, and the three old top-level names to their files in `releases/1.0/`.
 3. Replace the top-level `README` with this file, and add `RELEASES.tsv` with the 1.0 row only.
 
-When 1.1 is published:
+### Publishing an update release
 
-1. Create `releases/1.1/`: hard-link `mgnifams_hmm.lib.gz` and `seed_msa.tar.gz` from `releases/1.0/`, and add
-   `full_msa.tar` and the metadata files (`families.tsv.gz` is the update run's `update_families/families.tsv.gz`).
-   Check it with `md5sum -c md5sums.txt`.
-2. Point `current_release` to `releases/1.1` and add the 1.1 row to `RELEASES.tsv`.
-3. Remove `releases/1.0/full_msa.tar.gz` and the top-level `full_msa.tar.gz` link.
+How 1.1 was published (2026-11-02), for the next `X.Y` after `X.(Y-1)`. On Codon, `/nfs/ftp` is mounted only on the
+datamover nodes, so every step that touches it runs there (`sbatch -p datamover`). The FTP is a separate filesystem
+from `/nfs/production`, so files are copied to it, not hard-linked.
+
+1. **Back up** the previous release's `full_msa.tar*` outside the FTP, and check it against that release's `md5sums.txt`.
+2. **Stage** the new files outside the public tree:
+   `sbatch -p datamover build_update_release.sh <update outdir> <FTP>/releases/X.(Y-1) <stage dir>`. It builds the
+   complete `full_msa.tar` (the previous alignments of the `not_updated` families), copies `families.tsv.gz` and
+   `pipeline_info/`, and writes `md5sums.txt`. It stops on any count mismatch.
+3. **Fill** `releases/X.Y/release_manifest.json`, `README.md` and the `RELEASES.tsv` row in this repository, from the
+   staging log (md5s and sizes) and the run's `pipeline_info/`. `databases` names every database whose hits the
+   release's families carry, including kept ones (`pfam_profile_profile`: the hhsearch model-level hits); the website
+   reads the manifest through the DB's `release_info`.
+4. **Copy into a hidden folder** `<FTP>/releases/.X.Y_tmp`: hard-link `mgnifams_hmm.lib.gz` and `seed_msa.tar.gz` from
+   `releases/X.(Y-1)/`, copy the staged files and the metadata from this repository, then run `md5sum -c md5sums.txt`
+   there.
+5. **Go live:** rename `.X.Y_tmp` to `X.Y`, swap the link in one step
+   (`ln -s releases/X.Y .cr && mv -T .cr current_release`), and replace `RELEASES.tsv` and the top-level `README.md`
+   (without this repository's "Draft" note).
+6. **Retire** the previous `full_msa.tar*`: remove it and its line in that release's `md5sums.txt` (the checksum stays
+   in its `release_manifest.json`). Then delete the stage dir.
 
 ## Files
 
@@ -86,6 +104,8 @@ When 1.1 is published:
 | `seed_msa.tar.gz`       | every release       | per-family seed alignments, `<family_id>.fas.gz` (aligned FASTA, gaps as `-`), from which the HMMs are built    |
 | `full_msa.tar`          | latest release only | per-family full alignments, `<family_id>.sto.gz` (Stockholm): every MGnify sequence recruited by the family HMM |
 | `families.tsv.gz`       | every release       | one row per family with its provenance (below)                                                                  |
+| `clans.tsv.gz`          | from 1.1            | clan membership (below)                                                                                         |
+| `clan_edges.tsv.gz`     | from 1.1            | residue overlap of similar family pairs, from which the clans are built (below)                                 |
 | `release_manifest.json` | every release       | release metadata, inputs, tool and database versions, file checksums                                            |
 | `md5sums.txt`           | every release       | `md5sum -c` compatible checksums of the release files                                                           |
 
@@ -106,12 +126,37 @@ Tab-separated, with a header row. Families are never removed or renumbered, and 
 | `first_release`            | release in which the family first appeared                                                    |
 | `model_release`            | release that built the family's seed MSA and HMM                                              |
 | `model_proteins_release`   | MGnify Proteins release of the seed MSA                                                       |
-| `members_release`          | release that last computed the full MSA, representative and annotations                       |
+| `members_release`          | release that last computed the full MSA and representative                                    |
 | `members_proteins_release` | MGnify Proteins release of the full MSA members                                               |
 | `full_size`                | number of sequences in the full MSA                                                           |
 | `seed_size`                | number of sequences in the seed MSA                                                           |
 | `rep_id`                   | representative MGnify protein (`MGYP...`)                                                     |
-| `rep_region`               | representative region, `start-end` (1-based, inclusive); `-` = the whole protein (1.0 only)   |
+| `rep_region`               | representative region, `start-end` (1-based, inclusive); `-` = the whole protein              |
+
+### `clans.tsv.gz`
+
+Tab-separated, with a header row; one row per family in a clan. Families in no clan are not listed. Clan ids are
+release-specific (`<release>_clan_<n>`, numbered by size, largest first) and are not stable across releases.
+
+| Column              | Meaning                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| `clan_id`           | clan id                                                                                             |
+| `family_id`         | integer MGnifams family id                                                                          |
+| `is_representative` | `True` for one family per clan: the one with the largest sum of residue Jaccard over its clan edges |
+
+### `clan_edges.tsv.gz`
+
+Tab-separated, with a header row; one row per pair of families that share a member protein and have a residue
+Jaccard >= 0.1 or a residue containment >= 0.5, with `family_1` < `family_2` (as text). Overlapping regions of one
+family on one protein are merged first. The clans are the connected components of the pairs with residue Jaccard >= 0.5.
+
+| Column                 | Meaning                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| `family_1`, `family_2` | integer MGnifams family ids                                                     |
+| `shared_proteins`      | proteins carrying members of both families                                      |
+| `protein_jaccard`      | shared proteins over the proteins of either family                              |
+| `residue_jaccard`      | (protein, position) pairs covered by both families over those covered by either |
+| `residue_containment`  | (protein, position) pairs covered by both over those of the smaller family      |
 
 MGnify Proteins releases are cited by their numbered folder (`peptide_database/2026_07/`), never by
 `current_release`.

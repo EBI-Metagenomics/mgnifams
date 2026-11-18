@@ -21,17 +21,19 @@ include { ANNOTATE_STRUCTURES          } from '../subworkflows/local/annotate_st
 include { EXPORT_DATA                  } from '../subworkflows/local/export_data'
 include { BUILD_PARQUET_DOMAIN_QUERIES } from '../modules/local/build_parquet_domain_queries/main'
 include { PARSE_DOMAINS                } from '../modules/local/parse_domains/main'
-include { QUERY_MGNPROTEIN_DB          } from '../modules/local/query_mgnprotein_db/main'
-include { PARSE_BIOMES                 } from '../modules/local/parse_biomes/main'
+include { BIOMES_FROM_PARQUET          } from '../subworkflows/local/biomes_from_parquet'
 include { HHSUITE_REFORMAT as REFORMAT_FULL_MSA_A3M } from '../modules/nf-core/hhsuite/reformat/main'
 include { TRUNCATE_A3M                 } from '../modules/local/truncate_a3m/main'
 include { COLABFOLD_BATCH_MSA          } from '../modules/local/colabfold_batch_msa/main'
 include { EXPORT_FAMILIES_TSV          } from '../modules/local/export_families_tsv/main'
+include { ANNOTATE_FAMILY_SUBSET       } from '../subworkflows/local/annotate_family_subset'
+include { countFamilies                } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
+include { batchQueryResults            } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
 workflow UPDATE_MGNIFAMS {
 
     take:
-    ch_samplesheet      // channel: [ meta, sequences_parquet, clusters_parquet, pfam_parquet, hmm_lib, db_config or [], families_tsv ]
+    ch_samplesheet      // channel: [ meta, sequences_parquet, clusters_parquet, pfam_parquet, hmm_lib, families_tsv ]
     parquet_chunks
     min_sequence_length
     hmm_chunk_size
@@ -63,12 +65,17 @@ workflow UPDATE_MGNIFAMS {
     multiqc_config
     multiqc_logo
     multiqc_methods_description
+    reannotate          // channel: [ meta, previous reps fasta or [], previous structures folder or [] ]
 
     main:
     ch_versions      = channel.empty()
     ch_multiqc_files = channel.empty()
     // Same condition ANNOTATE_REPS uses to run DeepTMHMM
     def tm_computed  = !skip_deeptmhmm && !workflow.profile.contains("conda")
+    // hmmsearch -Z: every family of the release, so updated and re-annotated reps share one E-value base
+    ch_z = ch_samplesheet
+        .map { _meta, _sequences, _clusters, _pfam, _hmms, families -> countFamilies(families) }
+        .first()
 
     UPDATE_FAMILIES( ch_samplesheet, parquet_chunks, min_sequence_length, hmm_chunk_size, outdir )
     ch_versions = ch_versions.mix( UPDATE_FAMILIES.out.versions )
@@ -76,7 +83,7 @@ workflow UPDATE_MGNIFAMS {
     // FTP families.tsv.gz: the previous release's rows, refreshed for the successful families
     EXPORT_FAMILIES_TSV(
         ch_samplesheet
-            .map { meta, _sequences, _clusters, _pfam, _hmms, _db_config, families -> [ meta, families ] }
+            .map { meta, _sequences, _clusters, _pfam, _hmms, families -> [ meta, families ] }
             .join( UPDATE_FAMILIES.out.delta )
             .combine( UPDATE_FAMILIES.out.metadata.map { _meta, csv -> csv } ),
         mgnifams_release,
@@ -109,7 +116,10 @@ workflow UPDATE_MGNIFAMS {
     }
 
     // Not ANNOTATE_FAMILIES: its HH-suite model annotation (ANNOTATE_MODELS) works on the seed MSA, which does not change
-    ANNOTATE_REPS( UPDATE_FAMILIES.out.family_ids_fasta, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size )
+    ANNOTATE_REPS(
+        UPDATE_FAMILIES.out.family_ids_fasta.combine( ch_z ).map { meta, fa, n -> [ meta + [ z: n ], fa ] },
+        skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size
+    )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
     ANNOTATE_STRUCTURES( PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
@@ -120,6 +130,22 @@ workflow UPDATE_MGNIFAMS {
         ANNOTATE_REPS.out.pfam_domains, ANNOTATE_REPS.out.funfam_domains, query_hmm_length_threshold, \
         channel.empty(), ANNOTATE_STRUCTURES.out.foldseek_hits, outdir )
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
+
+    //
+    // Optional: re-annotate the not-updated families from the previous reps and structures, under annotate_not_updated/
+    //
+    ch_reannotate = EXPORT_FAMILIES_TSV.out.tsv
+        .join( reannotate.filter { _meta, reps, structures -> reps && structures } )
+    ANNOTATE_FAMILY_SUBSET(
+        ch_reannotate.map { meta, families, _reps, _structures -> [ meta, families ] },
+        ch_reannotate.map { meta, _families, reps, _structures -> [ meta, reps ] },
+        ch_reannotate.map { meta, _families, _reps, structures -> [ meta, structures ] },
+        ch_z,
+        skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size,
+        foldseek_pdb_db, foldseek_alphafold_db, query_hmm_length_threshold,
+        mgnifams_release, mgnify_proteins_release, outdir
+    )
+    ch_versions = ch_versions.mix( ANNOTATE_FAMILY_SUBSET.out.versions )
 
     //
     // Per-family queries in about family_query_chunks tasks, each over whole update chunks
@@ -138,45 +164,35 @@ workflow UPDATE_MGNIFAMS {
     // Domain architectures of the new members, from the Pfam parquet
     //
     BUILD_PARQUET_DOMAIN_QUERIES(
-        ch_family_chunks.combine( ch_samplesheet.map { _meta, _sequences, _clusters, pfam, _hmms, _db_config, _families -> pfam } ),
+        ch_family_chunks.combine( ch_samplesheet.map { _meta, _sequences, _clusters, pfam, _hmms, _families -> pfam } ),
         file(pfam_path, checkIfExists: true)
     )
     ch_versions = ch_versions.mix( BUILD_PARQUET_DOMAIN_QUERIES.out.versions )
 
     ch_domain_batches = BUILD_PARQUET_DOMAIN_QUERIES.out.res
-        .flatMap { meta, files ->
-            [files].flatten().collate( query_result_chunks ).withIndex().collect { flist, index -> [ [id: "${meta.id}_batch_${index}"], flist ] }
-        }
+        .flatMap { meta, files -> batchQueryResults( meta, files, query_result_chunks ) }
     PARSE_DOMAINS( ch_domain_batches, BUILD_PARQUET_DOMAIN_QUERIES.out.pfam_mapping.first(), UPDATE_FAMILIES.out.refined_families.first() )
     ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
 
     //
-    // Biome distributions of the new members, from the MGnify proteins DB (only with mgnprotein_db_config)
+    // Biome distributions of the new members, from the clusters parquet (cluster_rep_biomes)
     //
-    ch_db_config = ch_samplesheet
-        .filter { _meta, _sequences, _clusters, _pfam, _hmms, db_config, _families -> db_config }
-        .map { meta, _sequences, _clusters, _pfam, _hmms, db_config, _families -> [ meta, db_config ] }
-    QUERY_MGNPROTEIN_DB(
-        ch_db_config.combine( ch_family_chunks ).map { _meta, db_config, chunk_meta, tsvs -> [ chunk_meta, db_config, tsvs ] }
+    BIOMES_FROM_PARQUET(
+        ch_family_chunks,
+        ch_samplesheet.map { _meta, _sequences, clusters, _pfam, _hmms, _families -> clusters }.first(),
+        query_result_chunks
     )
-    ch_versions = ch_versions.mix( QUERY_MGNPROTEIN_DB.out.versions )
-
-    ch_biome_batches = QUERY_MGNPROTEIN_DB.out.res
-        .flatMap { meta, files ->
-            [files].flatten().collate( query_result_chunks ).withIndex().collect { flist, index -> [ [id: "${meta.id}_batch_${index}"], flist ] }
-        }
-    PARSE_BIOMES( ch_biome_batches, QUERY_MGNPROTEIN_DB.out.biome_mapping.first() )
-    ch_versions = ch_versions.mix( PARSE_BIOMES.out.versions )
+    ch_versions = ch_versions.mix( BIOMES_FROM_PARQUET.out.versions )
 
     //
     // What this run computed, for the delta DB (post_update_mgnifams_update_db)
     //
     ch_samplesheet
-        .map { _meta, _sequences, _clusters, _pfam, _hmms, db_config, _families ->
+        .map { _meta, _sequences, _clusters, _pfam, _hmms, _families ->
             [
                 'key,value',
                 "tm_computed,${tm_computed}",
-                "biome_computed,${db_config ? true : false}",
+                "biome_computed,true",
                 "pfam_lib,${file(pfam_path).name}",
                 "funfams_lib,${file(funfams_path).name}",
                 "mgnifams_release,${mgnifams_release}",

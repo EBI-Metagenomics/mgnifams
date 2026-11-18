@@ -20,6 +20,14 @@ CREATE TABLE mgnifam (
     signal_percent REAL,
     membrane_beta_percent REAL,
     periplasm_percent REAL,
+    -- Provenance of the release's families.tsv.gz (bin/load_families_tsv.py); not_updated_reason NULL unless not_updated
+    status TEXT, -- new, updated or not_updated
+    not_updated_reason TEXT,
+    first_release TEXT,
+    model_release TEXT,
+    model_proteins_release TEXT,
+    members_release TEXT,
+    members_proteins_release TEXT,
     has_pfam INTEGER NOT NULL DEFAULT 0,
     has_funfam INTEGER NOT NULL DEFAULT 0,
     has_model_pfam INTEGER NOT NULL DEFAULT 0,
@@ -102,4 +110,30 @@ CREATE TABLE release_history (
     n_families INTEGER,
     n_updated INTEGER,
     n_not_updated INTEGER
+);
+
+-- Metadata of each release this DB holds: its FTP release_manifest.json flattened to dotted keys (bin/load_release_manifest.py)
+CREATE TABLE release_info (
+    release TEXT NOT NULL REFERENCES release_history(release),
+    key TEXT NOT NULL, -- e.g. databases.pfam, databases.foldseek.pdb.pdb_date, pipeline.version
+    value TEXT, -- strings as is; numbers, booleans and lists as JSON
+    PRIMARY KEY (release, key)
+);
+
+-- Clans of the release the DB holds (FTP clans.tsv.gz; bin/load_clans.py): one row per family in a clan
+CREATE TABLE mgnifam_clans (
+    mgnifam_id INTEGER PRIMARY KEY REFERENCES mgnifam(id),
+    clan_id TEXT NOT NULL, -- <release>_clan_<n>, numbered by size; not stable across releases
+    is_representative INTEGER NOT NULL -- 1 for one family per clan
+);
+
+-- Similar family pairs of that release (FTP clan_edges.tsv.gz), family_1 < family_2 as text
+CREATE TABLE mgnifam_clan_edges (
+    family_1 INTEGER NOT NULL REFERENCES mgnifam(id),
+    family_2 INTEGER NOT NULL REFERENCES mgnifam(id),
+    shared_proteins INTEGER,
+    protein_jaccard REAL,
+    residue_jaccard REAL,
+    residue_containment REAL,
+    PRIMARY KEY (family_1, family_2)
 );

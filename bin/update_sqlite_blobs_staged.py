@@ -19,6 +19,8 @@ BLOBS = {  # name: (column, extension)
     "domain": ("domain_blob", ".json"),
 }
 SCALARS = "full_size protein_rep rep_region rep_length rep_sequence plddt ptm helix_percent strand_percent coil_percent"
+# annotate_not_updated deltas (update_info annotation_only=true): reps and structures are kept, only s4pred reruns
+ANNOTATION_SCALARS = "helix_percent strand_percent coil_percent"
 TM_SCALARS = (
     "inside_percent membrane_alpha_percent outside_percent signal_percent membrane_beta_percent periplasm_percent"
 )
@@ -71,7 +73,9 @@ def main(args=None):
                     con.execute(f"UPDATE mgnifam SET {column} = ? WHERE id = ?", (data, family))
 
             checks = [f"{BLOBS[r][0]} IS NULL OR length({BLOBS[r][0]}) = 0" for r in required]
-            scalars = SCALARS.split() + (TM_SCALARS.split() if "tm" in required else [])
+            annotation_only = "annotation_only=true" in a.info
+            scalars = (ANNOTATION_SCALARS if annotation_only else SCALARS).split()
+            scalars += TM_SCALARS.split() if "tm" in required else []
             checks += [f"{c} IS NULL OR {c} = ''" for c in scalars]
             bad = [str(r[0]) for r in con.execute(f"SELECT id FROM mgnifam WHERE {' OR '.join(checks)} ORDER BY id")]
             if bad:

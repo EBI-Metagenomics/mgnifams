@@ -1,0 +1,95 @@
+nextflow_process {
+
+    name "Test Process SPLIT_FAMILY_MEMBERS"
+    script "../main.nf"
+    process "SPLIT_FAMILY_MEMBERS"
+
+    tag "modules"
+    tag "modules_local"
+    tag "split_family_members"
+
+    test("families - 3 chunks") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'test' ], file("${moduleDir}/tests/fixtures/families.tsv", checkIfExists: true) ])
+                input[1] = 3
+                """
+            }
+        }
+
+        then {
+            def chunks  = [process.out.chunks[0][1]].flatten()
+            def ids     = { f -> path(f).readLines().collect { line -> line.split('\t')[0] } }
+            def all_ids = path("${moduleDir}/tests/fixtures/families.tsv").readLines().collect { line -> line.split('\t')[0] }
+            assertAll(
+                { assert process.success },
+                // Concatenated in name order, the chunks are the input
+                { assert chunks.collectMany { f -> path(f).readLines() } == path("${moduleDir}/tests/fixtures/families.tsv").readLines() },
+                // No family in two chunks
+                { assert chunks.collectMany { f -> ids(f).unique() }.size() == all_ids.unique().size() },
+                { assert snapshot(process.out.chunks, process.out.versions).match() }
+            )
+        }
+    }
+
+    test("families - more chunks than families") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'test' ], file("${moduleDir}/tests/fixtures/families.tsv", checkIfExists: true) ])
+                input[1] = 50
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert [process.out.chunks[0][1]].flatten().size() == 4 }
+            )
+        }
+    }
+
+    test("not contiguous - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'test' ], file("${moduleDir}/tests/fixtures/families_not_contiguous.tsv", checkIfExists: true) ])
+                input[1] = 2
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.stdout.any { line -> line.contains('is not contiguous') } || process.errorReport.contains('is not contiguous') }
+            )
+        }
+    }
+
+    test("families - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = channel.of([ [ id:'test' ], file("${moduleDir}/tests/fixtures/families.tsv", checkIfExists: true) ])
+                input[1] = 3
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert file(process.out.chunks[0][1]).name == "families_00000.tsv" }
+            )
+        }
+    }
+}

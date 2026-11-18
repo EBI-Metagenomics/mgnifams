@@ -58,15 +58,20 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
     )
 
     # HMM length = one consensus residue per match state
-    if "hmm_length" not in df1.columns:
+    # Absent (left empty) for ids-only metadata (annotate_not_updated)
+    if "hmm_length" not in df1.columns and "consensus" in df1.columns:
         df1["hmm_length"] = df1["consensus"].astype("string").str.len()
-    df1["hmm_length"] = df1["hmm_length"].astype("Int64")
+    if "hmm_length" in df1.columns:
+        df1["hmm_length"] = df1["hmm_length"].astype("Int64")
     # Empty under update_families --skip_refine (no seed built); the merge keeps prod's value
     if "seed_size" in df1.columns:
         df1["seed_size"] = df1["seed_size"].astype("Int64")
 
-    df2 = pd.read_csv(structure_scores)
-    merged = pd.merge(df1, df2, on="id", how="left")
+    # Optional: structure scores; absent in annotate_not_updated, where structures do not change
+    if structure_scores and os.path.isfile(structure_scores) and os.path.getsize(structure_scores) > 0:
+        merged = pd.merge(df1, pd.read_csv(structure_scores), on="id", how="left")
+    else:
+        merged = df1
 
     df3 = pd.read_csv(composition)
     merged = pd.merge(merged, df3, on="id", how="left")
@@ -96,7 +101,9 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
 def main():
     parser = argparse.ArgumentParser(description="Export MGnifams sql-ready table CSV files.")
     parser.add_argument("--metadata", required=True, help="family_metadata.csv (with header)")
-    parser.add_argument("--structure_scores", required=True, help="Tertiary prediction structure scores (plddt, ptm)")
+    parser.add_argument(
+        "--structure_scores", default="", help="Optional tertiary prediction structure scores (plddt, ptm)"
+    )
     parser.add_argument("--composition", required=True, help="Predicted compositional features --helix, strand or coil")
     parser.add_argument(
         "--tm_composition", default="", help="Predicted transmembrane features --inside, membrane or outside"

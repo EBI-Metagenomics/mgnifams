@@ -6,6 +6,16 @@ From metagenomics derived amino acid sequences, to protein families.
 
 This pipeline is developed in Nextflow, following nf-core standards.
 
+### Upgrading from 2.x
+
+Pipeline 3.0.0 changed these, so check them in setups and code written for 2.x:
+
+- The samplesheet `sample` must match `^[A-Za-z0-9._-]+$`.
+- `generate_families/families/family_metadata.csv` and the Foldseek `pdb.m8` / `all_hits.tsv` start with a header row.
+- `--foldseek_alphafold_db` defaults to `afdb50` (a subdirectory of `--foldseek_db_path`), not an `alphafold` directory.
+- `QUERY_MGNPROTEIN_DB` outputs are under `mgnprotein_db_query/`; the `INIT_SQLITE` / `IMPORT_QUERIES` intermediate databases are no longer published.
+- `mgnifam` columns are grouped by topic in new databases, and migrated ones keep the added columns last: select DB columns by name, never by `SELECT *` position. `mgnifam_pfams.e_value` / `score` hold per-domain values.
+
 ### Input
 
 `samplesheet.csv`
@@ -89,6 +99,8 @@ The end-to-end MGnifams pipeline chains five major subworkflows; `setup_clusters
 For MGnify only; After the main pipeline finishes its execution, `init_db` and `update_db` must be executed. Then, the produced `sqlite` database can be copied to either the mgnifams-site repo for local testing, or directly to ifs (path/to/metagenomics/mgnifams/dbs) to be finally deployed online with k8s.
 
 To refresh the existing families with new MGnify proteins later, run the `update_mgnifams` workflow and merge its delta database into the production one (see [update_mgnifams workflow](#update_mgnifams-workflow)).
+Families an update leaves as they were keep their previous annotations unless they are re-annotated: with `update_mgnifams`' `reps_fasta` / `structures` columns, or afterwards with [`annotate_not_updated`](#annotate_not_updated-workflow), whose annotation-only delta is merged after the update delta.
+The biomes of a finished update can be recomputed from the clusters parquet with [`rebuild_biomes`](#rebuild_biomes-workflow), without resuming it; its `biome_results/` then goes into the update's delta database.
 
 After the db has been produced by the pipeline, do the following:
 
@@ -170,7 +182,7 @@ The samplesheet must be in this format:
 
 ```csv
 sample,schema,results_folder
-mgnifams_test,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/db_schema.sqlite,/path/to/mgnifams/output
+mgnifams_test,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/sql/db_schema.sqlite,/path/to/mgnifams/output
 ```
 
 The `sample` column contains a given identifier.
@@ -184,7 +196,7 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_in
 ```
 
 Make sure to manually delete any previous `init_db` workflow cached work jobs.
-The last step (`assets/finalize_db.sql`) fills the `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit) search flags, creates the website indexes and runs `ANALYZE`.
+The last step (`assets/sql/finalize_db.sql`) fills the `has_pfam`, `has_funfam`, `has_model_pfam` and `has_structure` (has a Foldseek hit) search flags, creates the website indexes and runs `ANALYZE`.
 
 ### update_db workflow
 
@@ -215,18 +227,19 @@ port = ***
 ### update_mgnifams workflow
 
 The `update_mgnifams` workflow (`--mode update_mgnifams`) refreshes existing families against new MGnify proteins without touching their seed MSAs or HMMs.
-It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`; only the MGnify90 cluster representatives listed in `mgy_clusters.parquet` are kept, as for MGnifams 1.0), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and, optionally, biomes (from the MGnify proteins DB).
-`--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
+It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`; only the MGnify90 cluster representatives listed in `mgy_clusters.parquet` are kept, as for MGnifams 1.0), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and biomes (each member's own `cluster_rep_biomes` lineages in `mgy_clusters.parquet`).
+Experimental: `--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` (only run on test data so far) also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
 
 The samplesheet must have exactly one row:
 
 ```csv
-sample,mgnify_proteins_sequences,mgnify_proteins_clusters,mgnify_proteins_pfam,mgnifams_hmms,mgnprotein_db_config,mgnifams_families
-mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_clusters.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,,/path/to/families.tsv.gz
+sample,mgnify_proteins_sequences,mgnify_proteins_clusters,mgnify_proteins_pfam,mgnifams_hmms,mgnifams_families
+mgnifams_update,/path/to/mgy_protein_sequences.parquet,/path/to/mgy_clusters.parquet,/path/to/mgy_proteins_pfam.parquet,/path/to/mgnifams_hmm.lib.gz,/path/to/families.tsv.gz
 ```
 
-`mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgnprotein_db_config` is optional; when it is empty, biomes are not recomputed.
+`mgnifams_hmms` is the HMM library of the families to update (numeric `NAME`s, as in the MGnifams DB). `mgy_clusters.parquet` needs `cluster_rep` and `cluster_rep_biomes` (`;`-joined biome lineages, as in MGnify Proteins 2026_07). `mgnprotein_db_config` is deprecated for this mode: a value is ignored with a warning.
 `mgnifams_families` is the `families.tsv.gz` of the release being updated (from its FTP release folder); every family in it must be in `mgnifams_hmms`, and vice versa.
+Optional `reps_fasta` and `structures` columns (the previous release's representatives and `<family_id>.pdb` structures, as for [`annotate_not_updated`](#annotate_not_updated-workflow)) make the run re-annotate its not-updated families too, under `annotate_not_updated/`. Without them those families keep their previous annotations. Pfam and FunFam `hmmsearch` use `-Z` = the number of families in `mgnifams_families`.
 Set `--mgnifams_release` (the MGnifams release this update produces, `MAJOR.MINOR`; default `1.1`) and `--mgnify_proteins_release` (the MGnify Proteins release of the parquet files, `YYYY_MM`; default `2026_07`) for every run: the merge records them in `release_history`. Set `mgnifams_release` in a config (`params { mgnifams_release = '1.2' }`) or a `-params-file`, not on the command line: Nextflow reads `--mgnifams_release 1.2` as a number, which fails validation.
 
 ```bash
@@ -234,6 +247,43 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_up
 ```
 
 Its outcome per family is listed in `update_families/updated_delta.csv` (discarded families also in `updated_discarded.csv`, for curation), the full MSAs are in `update_families/full_msa/<family_id>.sto.gz`, `update_families/update_info.csv` records what the run computed, and `update_families/families.tsv.gz` is the new release's FTP family table (the previous one with the successful families `updated`, and the others `not_updated` with their discard reason).
+
+### annotate_not_updated workflow
+
+`--mode annotate_not_updated` re-annotates the families an update left as they were (`status` `not_updated` in its `families.tsv.gz`) with the current databases. Their representatives and structures don't change, so only the annotations rerun: s4pred, DeepTMHMM, Pfam and FunFam (`hmmsearch`) and Foldseek. ESMFold, hhsearch model Pfams, biomes and domain architectures don't rerun. The run never touches the update's work directory.
+The samplesheet has exactly one row:
+
+```csv
+sample,mgnifams_families,reps_fasta,structures
+mgnifams_annotate,/path/to/output_update/update_families/families.tsv.gz,/path/to/previous/family_ids.fasta,/path/to/previous/structures/esmfold/pdb
+```
+
+`reps_fasta` holds the representatives (headers start with the family id) and `structures` the `<family_id>.pdb` files of the release that last computed them. Both may hold more families. A selected family missing from either fails the run, and so does a `families.tsv.gz` with no `not_updated` row.
+Pfam and FunFam `hmmsearch` get `-Z` = the number of families in `mgnifams_families`, so their E-values share the search space of a whole-release search. Run it under a `slurm` profile: the AlphaFoldDB Foldseek search runs only there, and the merge replaces all fold rows of these families.
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_annotate_not_updated.csv --mode annotate_not_updated --outdir '/path/to/mgnifams/output_annotate' -profile slurm,singularity -resume
+```
+
+Everything is published under `annotate_not_updated/`. `update_families/update_info.csv` there has `annotation_only,true`, and `post_update_mgnifams_update_db` run on that folder builds the annotation-only delta database.
+
+### rebuild_biomes workflow
+
+`--mode rebuild_biomes` recomputes the biome distributions of a finished update's families from the clusters parquet, the same step `update_mgnifams` runs (each member's own `cluster_rep_biomes`), without touching the update's work directory. It covers the families in the update's `update_families/refined_families.tsv`, the updated ones; not-updated families keep their previous biomes.
+The samplesheet has exactly one row:
+
+```csv
+sample,refined_families,mgnify_proteins_clusters
+mgnifams_rebuild_biomes,/path/to/output_update/update_families/refined_families.tsv,/path/to/mgy_clusters.parquet
+```
+
+Every member must be a `cluster_rep` of `mgy_clusters.parquet` (the update's members are), or the run fails. `refined_families.tsv` is cut into about `--family_query_chunks` chunks of whole families (`SPLIT_FAMILY_MEMBERS`, one streaming pass); each chunk is one lookup task, which scans the parquet and holds its chunk's members in memory, so raise `--family_query_chunks` for a big update. `--query_result_chunks` families go into each `PARSE_BIOMES` task.
+
+```bash
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_rebuild_biomes.csv --mode rebuild_biomes --outdir '/path/to/mgnifams/output_rebuild_biomes' -profile slurm,singularity -resume
+```
+
+It publishes `biome_results/<family_id>.csv`. Give that folder to `post_update_mgnifams_update_db` in its `biome_results` column. Use an outdir of its own: an `update_mgnifams` outdir is refused, so the update's `pipeline_info` and `biome_results` stay as they were.
 
 ### post_update_mgnifams_update_db workflow
 
@@ -245,8 +295,12 @@ sample,results_folder
 mgnifams_update,/path/to/mgnifams/output_update
 ```
 
+An optional `biome_results` column (the `biome_results/` folder of a [`rebuild_biomes`](#rebuild_biomes-workflow) run) replaces `<results_folder>/biome_results`, and the delta records `biome_computed=true`. The merge is the same. It is rejected for an annotation-only folder.
+
+An update delta needs `--release_date YYYY-MM-DD`, the release's date as in the FTP `RELEASES.tsv`: the merge records it in `release_history`. An annotation-only delta writes no `release_history` row and needs none.
+
 ```bash
-nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --release_date 2026-11-02 --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume
 ```
 
 It reads the published files, so keep `--publish_dir_mode copy` (the default) for the `update_mgnifams` run, and do not reuse its outdir for a different update.
@@ -258,20 +312,41 @@ The pipeline does not modify the production database. It publishes a delta datab
 - Kept from production: `consensus`, `hmm_length`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size`, `has_model_pfam` and `mgnifam_model_pfams`.
 - Recomputed for these families: `has_pfam`, `has_funfam` and `has_structure`.
 - Families the update discarded are not in the delta, so they keep their previous version.
-- Recorded: one `release_history` row (the table is created if missing) with the release, merge date, MGnify Proteins release, pipeline version and the counts of families, updated families and not updated families. Merging the same release twice fails and changes nothing.
+- Recorded: one `release_history` row (the table is created if missing) with the release, its date (`--release_date` of `post_update_mgnifams_update_db`; the merge date for deltas built before 3.1.0), MGnify Proteins release, pipeline version (tag form, `v3.0.0`) and the counts of families, updated families and not updated families. Merging the same release twice fails and changes nothing.
+- An annotation-only delta (`annotation_only=true`, built from an `annotate_not_updated/` folder) overwrites only the secondary structure percents and `s4pred_blob`, the transmembrane columns when `tm_computed`, and the `mgnifam_pfams`, `mgnifam_funfams` and `mgnifam_folds` rows of its families, and recomputes their `has_pfam`, `has_funfam` and `has_structure`. It records no `release_history` row, and merging it again changes no content. The merge rejects it (`annotation_delta_lacks_afdb`) unless its `update_info` has `afdb_computed=true`, because it replaces all fold rows of these families. Merge a release's update delta first, then its annotation-only delta.
 
 To apply it, migrate the production database once (this adds `seed_size`, `hmm_length` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
 
 ```bash
 db=/path/to/mgnifams.sqlite3
 [ "$(sqlite3 "$db" "SELECT count(*) FROM pragma_table_info('mgnifam') WHERE name = 'seed_size'")" = 0 ] \
-    && sqlite3 -bail "$db" < assets/migrate_schema_seed_size_tmscores.sql
-sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/merge_update_delta.sql
+    && sqlite3 -bail "$db" < assets/sql/migrate_schema_seed_size_tmscores.sql
+sqlite3 -bail "$db" -cmd "ATTACH '/path/to/output_update/db/mgnifams_update_update.sqlite3' AS delta" < assets/sql/merge_update_delta.sql
 ```
 
-This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script.
+After a release's merges, load its `families.tsv.gz` (the `families/` output; the FTP file of the release) into `mgnifam`: `status`, `not_updated_reason`, `first_release`, `model_release`, `model_proteins_release`, `members_release` and `members_proteins_release` (column meanings in `ftp/README.md`). One transaction, every family refreshed; it changes nothing if the DB and the file hold different family ids. A database without these columns is migrated once first (guarded):
+
+```bash
+[ "$(sqlite3 "$db" "SELECT count(*) FROM pragma_table_info('mgnifam') WHERE name = 'status'")" = 0 ] \
+    && sqlite3 -bail "$db" < assets/sql/migrate_schema_family_status.sql
+python3 bin/load_families_tsv.py --db "$db" --families /path/to/families.tsv.gz
+```
+
+Then load the release manifests (`ftp/releases/X.Y/release_manifest.json`, one per release the database holds) into `release_info` (release, dotted key, value: database and tool versions, dates, clan parameters), which the website reads for its version labels. Each manifest replaces its release's rows; a release missing from `release_history`, or with another date there, is refused and nothing changes. The merge records the merge date in `release_history`, so set it to the release date first.
+
+```bash
+python3 bin/load_release_manifest.py --db "$db" --manifests ftp/releases/1.0/release_manifest.json ftp/releases/1.1/release_manifest.json
+```
+
+Then load the release's clans (`clans.tsv.gz`, `clan_edges.tsv.gz`, from `mgnifam compute_clans`) into `mgnifam_clans` (clan, representative per family) and `mgnifam_clan_edges` (similar family pairs with their overlaps). They replace the clans the database held, since clan ids are release-specific. One transaction; it changes nothing unless every family is in the database, each clan has one representative, and the clans are the connected components of the edges with residue Jaccard >= `--clan-jaccard` (default 0.5, the manifest's `clans.clan_jaccard`).
+
+```bash
+python3 bin/load_clans.py --db "$db" --clans /path/to/clans.tsv.gz --edges /path/to/clan_edges.tsv.gz
+```
+
+This needs sqlite3 ≥ 3.33 (`UPDATE … FROM`) and the `has_*` columns in production. Back up the production database first. `python3 bin/test_merge_update_delta.py` checks the merge script, `python3 bin/test_load_families_tsv.py` `python3 bin/test_load_release_manifest.py` and `python3 bin/test_load_clans.py` the loads.
 Do not speed up the merge with `PRAGMA journal_mode = OFF`: the rollback on a failed check would no longer work. Such PRAGMAs are only safe on a copy that is swapped in afterwards.
-After changing indexes in `assets/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/finalize_db.sql`; idempotent).
+After changing indexes in `assets/sql/finalize_db.sql`, apply them to production by hand (`sqlite3 -bail "$db" < assets/sql/finalize_db.sql`; idempotent).
 
 ## Website
 

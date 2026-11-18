@@ -1,0 +1,39 @@
+nextflow_workflow {
+
+    name "Test Subworkflow BIOMES_FROM_PARQUET"
+    script "../main.nf"
+    workflow "BIOMES_FROM_PARQUET"
+    tag "subworkflows"
+    tag "biomes_from_parquet"
+
+    // Families 2, 5 and 8 of the update test run; family 2 and 5 members include multi-biome cluster reps.
+    // The expected rows equal that run's MGnify proteins DB path (QUERY_MGNPROTEIN_DB -> PARSE_BIOMES).
+    test("two family chunks, test clusters parquet") {
+
+        when {
+            workflow {
+                """
+                input[0] = channel.of(
+                    [ [ id: 'families_0' ], [ file('${moduleDir}/tests/fixtures/families_a.tsv', checkIfExists: true) ] ],
+                    [ [ id: 'families_1' ], [ file('${moduleDir}/tests/fixtures/families_b.tsv', checkIfExists: true) ] ]
+                )
+                input[1] = channel.value( file('${projectDir}/assets/data/mgy_clusters.parquet', checkIfExists: true) )
+                input[2] = 1
+                """
+            }
+        }
+
+        then {
+            def csvs = workflow.out.biomes.collect { _meta, f -> f }.flatten().sort { f -> new File(f.toString()).name }
+            assertAll(
+                { assert workflow.success },
+                { assert csvs.collect { f -> new File(f.toString()).name } == ['2.csv', '5.csv', '8.csv'] },
+                { assert path(csvs[0].toString()).readLines()[0] == 'ids,labels,parents,counts' },
+                { assert snapshot(
+                    csvs,
+                    workflow.out.versions.collect { v -> path(v).yaml }.unique().sort { y -> y.toString() }
+                ).match() }
+            )
+        }
+    }
+}

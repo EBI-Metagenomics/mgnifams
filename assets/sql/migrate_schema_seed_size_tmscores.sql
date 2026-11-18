@@ -5,7 +5,7 @@
 --
 --   db=mgnifams.sqlite3
 --   [ "$(sqlite3 "$db" "SELECT count(*) FROM pragma_table_info('mgnifam') WHERE name = 'seed_size'")" = 0 ] \
---       && sqlite3 -bail "$db" < assets/migrate_schema_seed_size_tmscores.sql
+--       && sqlite3 -bail "$db" < assets/sql/migrate_schema_seed_size_tmscores.sql
 --
 -- Without the guard, a second run fails on "duplicate column name" and -bail rolls it back.
 

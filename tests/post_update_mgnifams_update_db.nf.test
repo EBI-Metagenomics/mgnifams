@@ -6,7 +6,7 @@ nextflow_pipeline {
     tag "post_update_mgnifams_update_db"
     profile "test_post_update_mgnifams_update_db"
 
-    // tests/data/update_results: families 2 and 4 of an update_mgnifams test run (no DeepTMHMM, no biomes)
+    // tests/fixtures/update_results: families 2 and 4 of an update_mgnifams test run (no DeepTMHMM, no biomes)
     test("-profile test_post_update_mgnifams_update_db") {
 
         when {
@@ -14,7 +14,7 @@ nextflow_pipeline {
                 outdir = "$outputDir"
                 // The profile's samplesheet path is relative to the repo root; nf-test launches elsewhere
                 input  = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
-                    ss.text = "sample,results_folder\nmgnifams_update_test,${projectDir}/tests/data/update_results\n"; ss.toString() }()
+                    ss.text = "sample,results_folder\nmgnifams_update_test,${projectDir}/tests/fixtures/update_results\n"; ss.toString() }()
             }
         }
 
@@ -24,6 +24,8 @@ nextflow_pipeline {
 
             assertAll(
                 { assert workflow.success },
+                // The profile's --release_date, recorded for the merge's release_history row
+                { assert sqlite3("SELECT value FROM update_info WHERE key = 'release_date'") == '2026-11-02' },
                 { assert snapshot(
                     workflow.trace.succeeded().size(),
                     sqlite3("SELECT group_concat(id, ',') FROM (SELECT id FROM mgnifam ORDER BY id)"),
@@ -37,6 +39,83 @@ nextflow_pipeline {
                     sqlite3("SELECT (SELECT count(*) FROM mgnifam_pfams), (SELECT count(*) FROM mgnifam_funfams), (SELECT count(*) FROM mgnifam_folds)"),
                     sqlite3("SELECT group_concat(key || '=' || value, ';') FROM (SELECT key, value FROM update_info ORDER BY key)")
                 ).match() }
+            )
+        }
+    }
+    // The same update outdir (biome_computed false) with the biome_results of a rebuild_biomes test run of families 2 and 4
+    test("-profile test_post_update_mgnifams_update_db, biome_results") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+                input  = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,results_folder,biome_results\nmgnifams_update_test,${projectDir}/tests/fixtures/update_results,${projectDir}/tests/fixtures/rebuild_biomes/biome_results\n"; ss.toString() }()
+            }
+        }
+
+        then {
+            def db      = "${params.outdir}/db/mgnifams_update_test_update.sqlite3"
+            def sqlite3 = { String query -> ["sqlite3", db, query].execute().text.trim() }
+            def fixture = "${projectDir}/tests/fixtures/rebuild_biomes/biome_results"
+
+            assertAll(
+                { assert workflow.success },
+                { assert sqlite3("SELECT value FROM update_info WHERE key = 'biome_computed'") == 'true' },
+                // Each family's biome blob is its rebuild_biomes CSV
+                { assert sqlite3("SELECT group_concat(id || ':' || length(biome_blob), ',') FROM (SELECT id, biome_blob FROM mgnifam ORDER BY id)") ==
+                    "2:${new File("${fixture}/2.csv").length()},4:${new File("${fixture}/4.csv").length()}" },
+                { assert sqlite3("SELECT sum(biome_blob = CAST(readfile('${fixture}/' || id || '.csv') AS BLOB)) FROM mgnifam") == '2' }
+            )
+        }
+    }
+
+    // tests/fixtures/annotate_results: families 2 and 3 of an annotate_not_updated test run (annotate_not_updated/ folder)
+    test("-profile test_post_update_mgnifams_update_db, annotation-only") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+                input  = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,results_folder\nmgnifams_annotate_test,${projectDir}/tests/fixtures/annotate_results\n"; ss.toString() }()
+            }
+        }
+
+        then {
+            def db      = "${params.outdir}/db/mgnifams_annotate_test_update.sqlite3"
+            def sqlite3 = { String query -> ["sqlite3", db, query].execute().text.trim() }
+
+            assertAll(
+                { assert workflow.success },
+                { assert sqlite3("SELECT group_concat(id, ',') FROM (SELECT id FROM mgnifam ORDER BY id)") == '2,3' },
+                // s4pred blobs and percents present; no structure, domain or biome blob, no rep columns
+                { assert sqlite3("SELECT sum(s4pred_blob IS NULL), sum(coil_percent IS NULL), sum(cif_blob IS NOT NULL OR domain_blob IS NOT NULL OR biome_blob IS NOT NULL), sum(protein_rep IS NOT NULL OR full_size IS NOT NULL) FROM mgnifam") == '0|0|0|0' },
+                { assert sqlite3("SELECT value FROM update_info WHERE key = 'annotation_only'") == 'true' },
+                // An annotation-only delta writes no release_history row, so it needs no release date
+                { assert sqlite3("SELECT count(*) FROM update_info WHERE key = 'release_date'") == '0' },
+                { assert snapshot(
+                    sqlite3("SELECT (SELECT count(*) FROM mgnifam_pfams), (SELECT count(*) FROM mgnifam_funfams), (SELECT count(*) FROM mgnifam_folds)"),
+                    sqlite3("SELECT group_concat(key || '=' || value, ';') FROM (SELECT key, value FROM update_info ORDER BY key)")
+                ).match() }
+            )
+        }
+    }
+
+    // An update delta without --release_date stops before building the DB
+    test("-profile test_post_update_mgnifams_update_db, no release_date") {
+
+        when {
+            params {
+                outdir       = "$outputDir"
+                input        = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,results_folder\nmgnifams_update_test,${projectDir}/tests/fixtures/update_results\n"; ss.toString() }()
+                release_date = null
+            }
+        }
+
+        then {
+            assertAll(
+                { assert !workflow.success },
+                { assert (workflow.stdout + workflow.stderr).any { line -> line.contains('post_update_mgnifams_update_db: an update delta needs --release_date') } }
             )
         }
     }

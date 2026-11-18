@@ -36,9 +36,10 @@ process EXPORT_FAMILIES_TSV {
     END_VERSIONS
     """
 
+    // The previous table: stub runs keep real statuses for what reads it (ANNOTATE_FAMILY_SUBSET)
     stub:
     """
-    echo "" | gzip > families.tsv.gz
+    cp -L ${previous} families.tsv.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -1,0 +1,30 @@
+{
+    "two family chunks, test clusters parquet": {
+        "content": [
+            [
+                "2.csv:md5,38d087e5b0d1601a891ffee738d3a559",
+                "5.csv:md5,e911cc97a64ecdc7bd29c6e0f9addcbc",
+                "8.csv:md5,ef62dd6d9a9794b0b0a9a6cfa5436d50"
+            ],
+            [
+                {
+                    "BIOMES_FROM_PARQUET:BUILD_PARQUET_BIOME_QUERIES": {
+                        "python": "3.13.1",
+                        "pyarrow": "21.0.0"
+                    }
+                },
+                {
+                    "BIOMES_FROM_PARQUET:PARSE_BIOMES": {
+                        "python": "3.10.6",
+                        "pandas": "1.4.3"
+                    }
+                }
+            ]
+        ],
+        "timestamp": "2026-11-05T10:53:14.204626458",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.3"
+        }
+    }
+}
