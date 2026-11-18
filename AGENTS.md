@@ -166,6 +166,14 @@ committed. `update_mgnifams` writes the release's `families.tsv.gz` (`EXPORT_FAM
 does not yet; 1.0's was a one-off export from the prod DB. Generate it there (all `new`, `first_release` = `model_release` =
 `members_release`) when that workflow switches to `mgnifam/generatefamilies`.
 
+## Pipeline releases
+
+1. On `dev`, bump every version string from `X.Y.Zdev` to `X.Y.Z` (`grep -rn "X.Y.Zdev"` lists them): `manifest.version` in `nextflow.config`, the CHANGELOG heading (`## vX.Y.Z - [YYYY/MM/DD]`), `"ebi-metagenomics/mgnifams"` in every `tests/*.nf.test.snap`, `pipeline_version` in `tests/fixtures/annotate_results/update_families/update_info.csv` and the snapshots that carry it (`annotate_not_updated`, `post_update_mgnifams_update_db`), and the `dev` line in this file. The snapshot lines of the tests that need the external databases (`default`, `update_mgnifams`, `annotate_not_updated`) can be edited by hand; rerun the others (`rebuild_biomes`, `post_update_mgnifams_update_db`) without `--update-snapshot` to check the edits.
+2. `nf-core pipelines lint` (`HOME=$(mktemp -d) nf-core pipelines lint --dir .`: a global `init.defaultBranch` otherwise breaks `files_unchanged`): the only new warning is `manifest.version should end in dev`.
+3. PR `dev` → `main` titled `vX.Y release`, its body the CHANGELOG section; a maintainer merges it.
+4. Tag and GitHub release on the merge commit: `gh release create X.Y.Z --target $(git rev-parse origin/main) --title vX.Y.Z --notes-file <the CHANGELOG section> --latest`. Tags have no `v`; `--target` needs the full SHA (a short one fails with `Release.target_commitish is invalid`).
+5. Fast-forward `dev` to `main` and bump it to the next `X.Y.Zdev` the same way, with an empty CHANGELOG section (`### Added`, `### Changed`).
+
 ## Linting & hooks
 
 - `prek install` once, then `prek run --all-files` (config: `.pre-commit-config.yaml`): ruff check/format for `bin/`,
