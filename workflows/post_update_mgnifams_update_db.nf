@@ -15,7 +15,8 @@ include { UPDATE_SQLITE_BLOBS_STAGED } from '../modules/local/update_sqlite_blob
 workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
 
     take:
-    samplesheet // channel: [ meta, update_mgnifams outdir, biome_results folder or [] ]
+    samplesheet  // channel: [ meta, update_mgnifams outdir, biome_results folder or [] ]
+    release_date // string: YYYY-MM-DD of the release; required for an update delta
 
     main:
     ch_versions = channel.empty()
@@ -29,6 +30,10 @@ workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
             def annotation_only = info.exists() && info.readLines().contains('annotation_only,true')
             if (b && annotation_only) {
                 error("post_update_mgnifams_update_db: biome_results is for update deltas; an annotation-only delta keeps prod's biomes")
+            }
+            // The merge writes the release's release_history row from an update delta only
+            if (!annotation_only && !release_date) {
+                error("post_update_mgnifams_update_db: an update delta needs --release_date (YYYY-MM-DD, as the FTP RELEASES.tsv)")
             }
             [ meta, r, b, annotation_only ]
         }
@@ -65,7 +70,7 @@ workflow POST_UPDATE_MGNIFAMS_UPDATE_DB {
                 // Rebuilt biomes (biome_results column) are computed whatever the update run recorded
                 biome_computed: info.biome_computed == 'true' || biomes_override,
                 child_tables  : 'pfams,funfams,folds'
-            ] + ( info.annotation_only == 'true' ? [ annotation_only: true ] : [:] )
+            ] + ( info.annotation_only == 'true' ? [ annotation_only: true ] : [ release_date: release_date ] )
         }
 
     UPDATE_SQLITE_BLOBS_STAGED(

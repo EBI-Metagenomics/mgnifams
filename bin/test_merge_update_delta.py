@@ -5,6 +5,7 @@ import hashlib
 import sqlite3
 import subprocess
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
@@ -60,6 +61,7 @@ INFO = {
     "mgnifams_release": "1.1",
     "mgnify_proteins_release": "2026_07",
     "pipeline_version": "3.0.0",
+    "release_date": "2026-11-02",
 }
 
 with tempfile.TemporaryDirectory() as d:
@@ -112,9 +114,11 @@ with tempfile.TemporaryDirectory() as d:
     # Recomputed for the delta families only (no funfams, family 2 lost its fold); has_model_pfam is kept
     assert flags == [(1, 1, 0, 1, 1), (2, 1, 0, 1, 0), (3, 1, 1, 1, 1)], flags
     history = con.execute(
-        "SELECT release, type, mgnify_proteins_release, pipeline_version, n_families, n_updated, n_not_updated FROM release_history"
+        "SELECT release, date, type, mgnify_proteins_release, pipeline_version, n_families, n_updated, n_not_updated"
+        " FROM release_history"
     ).fetchall()
-    assert history == [("1.1", "update", "2026_07", "3.0.0", 3, 2, 1)], history
+    # The release's own date and the tag form of the version, as the FTP RELEASES.tsv
+    assert history == [("1.1", "2026-11-02", "update", "2026_07", "v3.0.0", 3, 2, 1)], history
     con.close()
 
     # The same release cannot be merged twice
@@ -136,11 +140,14 @@ with tempfile.TemporaryDirectory() as d:
     with sqlite3.connect(prod) as con:
         con.execute("DROP TABLE release_history")
     Path(delta).unlink()
-    make_db(delta, [(1, 11, b"new")], {**INFO, "mgnifams_release": "1.2"})
+    # A delta built before release_date existed gets the merge date (UTC, as sqlite date('now'))
+    old_info = {k: v for k, v in INFO.items() if k != "release_date"}
+    make_db(delta, [(1, 11, b"new")], {**old_info, "mgnifams_release": "1.2"})
     r = merge(prod, delta)
     assert r.returncode == 0, r.stderr
     con = sqlite3.connect(prod)
-    assert con.execute("SELECT release, n_not_updated FROM release_history").fetchall() == [("1.2", 0)]
+    today = datetime.now(timezone.utc).date().isoformat()
+    assert con.execute("SELECT release, date, n_not_updated FROM release_history").fetchall() == [("1.2", today, 0)]
     con.close()
 
 # Annotation-only deltas (annotate_not_updated): only s4pred, TM (when computed) and the child tables change

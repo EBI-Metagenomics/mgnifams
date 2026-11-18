@@ -24,6 +24,8 @@ nextflow_pipeline {
 
             assertAll(
                 { assert workflow.success },
+                // The profile's --release_date, recorded for the merge's release_history row
+                { assert sqlite3("SELECT value FROM update_info WHERE key = 'release_date'") == '2026-11-02' },
                 { assert snapshot(
                     workflow.trace.succeeded().size(),
                     sqlite3("SELECT group_concat(id, ',') FROM (SELECT id FROM mgnifam ORDER BY id)"),
@@ -88,10 +90,32 @@ nextflow_pipeline {
                 // s4pred blobs and percents present; no structure, domain or biome blob, no rep columns
                 { assert sqlite3("SELECT sum(s4pred_blob IS NULL), sum(coil_percent IS NULL), sum(cif_blob IS NOT NULL OR domain_blob IS NOT NULL OR biome_blob IS NOT NULL), sum(protein_rep IS NOT NULL OR full_size IS NOT NULL) FROM mgnifam") == '0|0|0|0' },
                 { assert sqlite3("SELECT value FROM update_info WHERE key = 'annotation_only'") == 'true' },
+                // An annotation-only delta writes no release_history row, so it needs no release date
+                { assert sqlite3("SELECT count(*) FROM update_info WHERE key = 'release_date'") == '0' },
                 { assert snapshot(
                     sqlite3("SELECT (SELECT count(*) FROM mgnifam_pfams), (SELECT count(*) FROM mgnifam_funfams), (SELECT count(*) FROM mgnifam_folds)"),
                     sqlite3("SELECT group_concat(key || '=' || value, ';') FROM (SELECT key, value FROM update_info ORDER BY key)")
                 ).match() }
+            )
+        }
+    }
+
+    // An update delta without --release_date stops before building the DB
+    test("-profile test_post_update_mgnifams_update_db, no release_date") {
+
+        when {
+            params {
+                outdir       = "$outputDir"
+                input        = { def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,results_folder\nmgnifams_update_test,${projectDir}/tests/fixtures/update_results\n"; ss.toString() }()
+                release_date = null
+            }
+        }
+
+        then {
+            assertAll(
+                { assert !workflow.success },
+                { assert (workflow.stdout + workflow.stderr).any { line -> line.contains('post_update_mgnifams_update_db: an update delta needs --release_date') } }
             )
         }
     }

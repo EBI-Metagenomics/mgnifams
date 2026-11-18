@@ -121,7 +121,8 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     }
     else if (params.mode == 'post_update_mgnifams_update_db') {
         POST_UPDATE_MGNIFAMS_UPDATE_DB(
-            samplesheet
+            samplesheet,
+            params.release_date
         )
     }
 

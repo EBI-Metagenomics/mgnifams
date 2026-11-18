@@ -52,10 +52,12 @@ INSERT INTO main.release_history
     (release, date, type, mgnify_proteins_release, pipeline_version, n_families, n_updated, n_not_updated)
 SELECT
     (SELECT value FROM delta.update_info WHERE key = 'mgnifams_release'),
-    date('now'),
+    -- The release's own date (post_update_mgnifams_update_db --release_date); deltas built before 3.1.0 lack it
+    coalesce((SELECT value FROM delta.update_info WHERE key = 'release_date'), date('now')),
     'update',
     (SELECT value FROM delta.update_info WHERE key = 'mgnify_proteins_release'),
-    (SELECT value FROM delta.update_info WHERE key = 'pipeline_version'),
+    -- Tag form (v3.0.0), as the FTP RELEASES.tsv
+    'v' || ltrim((SELECT value FROM delta.update_info WHERE key = 'pipeline_version'), 'v'),
     (SELECT count(*) FROM main.mgnifam),
     (SELECT count(*) FROM delta.mgnifam),
     (SELECT count(*) FROM main.mgnifam) - (SELECT count(*) FROM delta.mgnifam)

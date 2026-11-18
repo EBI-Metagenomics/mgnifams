@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- A merged update recorded the merge date and the bare pipeline version (`3.0.0`) in `release_history`. It now records the release date given to `post_update_mgnifams_update_db` with `--release_date` (required for update deltas) and the tag form (`v3.0.0`), as the FTP `RELEASES.tsv`. Deltas built before 3.1.0 still get the merge date.
 - `nextflow_schema.json` gave `--clusters_chunk_size` a default of 30 (the pipeline uses 20) and `--esmfold_params_path` a default of `null/params/*`; both now match `nextflow.config`. It no longer lists parameters the pipeline does not read (`mgnprotein_db_config_file`, `db_schema_file`, `validationShowHiddenParams`, `validationFailUnrecognisedParams`, `validationLenientMode`).
 - The MultiQC report put the methods description and workflow summary sections in MultiQC's default place: `assets/multiqc_config.yml` named them `nf-core-mgnifams-*`. They now come first, as intended.
 

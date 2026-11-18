@@ -287,8 +287,10 @@ mgnifams_update,/path/to/mgnifams/output_update
 
 An optional `biome_results` column (the `biome_results/` folder of a [`rebuild_biomes`](#rebuild_biomes-workflow) run) replaces `<results_folder>/biome_results`, and the delta records `biome_computed=true`. The merge is the same. It is rejected for an annotation-only folder.
 
+An update delta needs `--release_date YYYY-MM-DD`, the release's date as in the FTP `RELEASES.tsv`: the merge records it in `release_history`. An annotation-only delta writes no `release_history` row and needs none.
+
 ```bash
-nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --release_date 2026-11-02 --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume
 ```
 
 It reads the published files, so keep `--publish_dir_mode copy` (the default) for the `update_mgnifams` run, and do not reuse its outdir for a different update.
@@ -300,7 +302,7 @@ The pipeline does not modify the production database. It publishes a delta datab
 - Kept from production: `consensus`, `hmm_length`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size`, `has_model_pfam` and `mgnifam_model_pfams`.
 - Recomputed for these families: `has_pfam`, `has_funfam` and `has_structure`.
 - Families the update discarded are not in the delta, so they keep their previous version.
-- Recorded: one `release_history` row (the table is created if missing) with the release, merge date, MGnify Proteins release, pipeline version and the counts of families, updated families and not updated families. Merging the same release twice fails and changes nothing.
+- Recorded: one `release_history` row (the table is created if missing) with the release, its date (`--release_date` of `post_update_mgnifams_update_db`; the merge date for deltas built before 3.1.0), MGnify Proteins release, pipeline version (tag form, `v3.0.0`) and the counts of families, updated families and not updated families. Merging the same release twice fails and changes nothing.
 - An annotation-only delta (`annotation_only=true`, built from an `annotate_not_updated/` folder) overwrites only the secondary structure percents and `s4pred_blob`, the transmembrane columns when `tm_computed`, and the `mgnifam_pfams`, `mgnifam_funfams` and `mgnifam_folds` rows of its families, and recomputes their `has_pfam`, `has_funfam` and `has_structure`. It records no `release_history` row, and merging it again changes no content. The merge rejects it (`annotation_delta_lacks_afdb`) unless its `update_info` has `afdb_computed=true`, because it replaces all fold rows of these families. Merge a release's update delta first, then its annotation-only delta.
 
 To apply it, migrate the production database once (this adds `seed_size`, `hmm_length` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:
