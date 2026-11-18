@@ -6,6 +6,16 @@ From metagenomics derived amino acid sequences, to protein families.
 
 This pipeline is developed in Nextflow, following nf-core standards.
 
+### Upgrading from 2.x
+
+Pipeline 3.0.0 changed these, so check them in setups and code written for 2.x:
+
+- The samplesheet `sample` must match `^[A-Za-z0-9._-]+$`.
+- `generate_families/families/family_metadata.csv` and the Foldseek `pdb.m8` / `all_hits.tsv` start with a header row.
+- `--foldseek_alphafold_db` defaults to `afdb50` (a subdirectory of `--foldseek_db_path`), not an `alphafold` directory.
+- `QUERY_MGNPROTEIN_DB` outputs are under `mgnprotein_db_query/`; the `INIT_SQLITE` / `IMPORT_QUERIES` intermediate databases are no longer published.
+- `mgnifam` columns are grouped by topic in new databases, and migrated ones keep the added columns last: select DB columns by name, never by `SELECT *` position. `mgnifam_pfams.e_value` / `score` hold per-domain values.
+
 ### Input
 
 `samplesheet.csv`
@@ -218,7 +228,7 @@ port = ***
 
 The `update_mgnifams` workflow (`--mode update_mgnifams`) refreshes existing families against new MGnify proteins without touching their seed MSAs or HMMs.
 It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`; only the MGnify90 cluster representatives listed in `mgy_clusters.parquet` are kept, as for MGnifams 1.0), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and biomes (each member's own `cluster_rep_biomes` lineages in `mgy_clusters.parquet`).
-`--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
+Experimental: `--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` (only run on test data so far) also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
 
 The samplesheet must have exactly one row:
 
@@ -287,8 +297,10 @@ mgnifams_update,/path/to/mgnifams/output_update
 
 An optional `biome_results` column (the `biome_results/` folder of a [`rebuild_biomes`](#rebuild_biomes-workflow) run) replaces `<results_folder>/biome_results`, and the delta records `biome_computed=true`. The merge is the same. It is rejected for an annotation-only folder.
 
+An update delta needs `--release_date YYYY-MM-DD`, the release's date as in the FTP `RELEASES.tsv`: the merge records it in `release_history`. An annotation-only delta writes no `release_history` row and needs none.
+
 ```bash
-nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume
+nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_post_update_mgnifams_update_db.csv --mode post_update_mgnifams_update_db --release_date 2026-11-02 --outdir '/path/to/mgnifams/output_update' -profile slurm,singularity -resume
 ```
 
 It reads the published files, so keep `--publish_dir_mode copy` (the default) for the `update_mgnifams` run, and do not reuse its outdir for a different update.
@@ -300,7 +312,7 @@ The pipeline does not modify the production database. It publishes a delta datab
 - Kept from production: `consensus`, `hmm_length`, `converged`, `seed_msa_blob`, `hmm_blob`, `rf_blob`, `seed_size`, `has_model_pfam` and `mgnifam_model_pfams`.
 - Recomputed for these families: `has_pfam`, `has_funfam` and `has_structure`.
 - Families the update discarded are not in the delta, so they keep their previous version.
-- Recorded: one `release_history` row (the table is created if missing) with the release, merge date, MGnify Proteins release, pipeline version and the counts of families, updated families and not updated families. Merging the same release twice fails and changes nothing.
+- Recorded: one `release_history` row (the table is created if missing) with the release, its date (`--release_date` of `post_update_mgnifams_update_db`; the merge date for deltas built before 3.1.0), MGnify Proteins release, pipeline version (tag form, `v3.0.0`) and the counts of families, updated families and not updated families. Merging the same release twice fails and changes nothing.
 - An annotation-only delta (`annotation_only=true`, built from an `annotate_not_updated/` folder) overwrites only the secondary structure percents and `s4pred_blob`, the transmembrane columns when `tm_computed`, and the `mgnifam_pfams`, `mgnifam_funfams` and `mgnifam_folds` rows of its families, and recomputes their `has_pfam`, `has_funfam` and `has_structure`. It records no `release_history` row, and merging it again changes no content. The merge rejects it (`annotation_delta_lacks_afdb`) unless its `update_info` has `afdb_computed=true`, because it replaces all fold rows of these families. Merge a release's update delta first, then its annotation-only delta.
 
 To apply it, migrate the production database once (this adds `seed_size`, `hmm_length` and the Foldseek TM-score columns; the guard makes a rerun a no-op), then merge. The merge is one transaction that checks the delta first and changes nothing if any step fails:

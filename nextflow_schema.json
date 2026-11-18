@@ -1,10 +1,10 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
-    "title": ". pipeline parameters",
-    "description": "",
+    "$id": "https://raw.githubusercontent.com/ebi-metagenomics/mgnifams/main/nextflow_schema.json",
+    "title": "ebi-metagenomics/mgnifams pipeline parameters",
+    "description": "MGnify-derived protein families.",
     "type": "object",
-    "defs": {
+    "$defs": {
         "input_output_options": {
             "title": "input_output_options",
             "type": "object",
@@ -45,14 +45,6 @@
                 "esm_conda_path": {
                     "type": "string",
                     "description": "predict_structures ESMfold conda env"
-                },
-                "mgnprotein_db_config_file": {
-                    "type": "string",
-                    "description": "secrets for sqlite db"
-                },
-                "db_schema_file": {
-                    "type": "string",
-                    "description": "schema for sqlite db"
                 },
                 "outdir": {
                     "type": "string",
@@ -218,27 +210,6 @@
                     "fa_icon": "fas fa-check-square",
                     "hidden": true
                 },
-                "validationShowHiddenParams": {
-                    "type": "boolean",
-                    "fa_icon": "far fa-eye-slash",
-                    "description": "Show all params when using `--help`",
-                    "hidden": true,
-                    "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
-                },
-                "validationFailUnrecognisedParams": {
-                    "type": "boolean",
-                    "fa_icon": "far fa-check-circle",
-                    "description": "Validation of parameters fails when an unrecognised parameter is found.",
-                    "hidden": true,
-                    "help_text": "By default, when an unrecognised parameter is found, it returns a warinig."
-                },
-                "validationLenientMode": {
-                    "type": "boolean",
-                    "fa_icon": "far fa-check-circle",
-                    "description": "Validation of parameters in lenient more.",
-                    "hidden": true,
-                    "help_text": "Allows string values that are parseable as numbers or booleans. For further information see [JSONSchema docs](https://github.com/everit-org/json-schema#lenient-mode)."
-                },
                 "pipelines_testdata_base_path": {
                     "type": "string",
                     "fa_icon": "far fa-check-circle",
@@ -300,7 +271,7 @@
                 },
                 "clusters_chunk_size": {
                     "type": "integer",
-                    "default": 30,
+                    "default": 20,
                     "description": "Chunk size to break the MMseqs clustering into, to then feed family generation in parallel"
                 }
             }
@@ -412,8 +383,7 @@
                 "esmfold_params_path": {
                     "type": "string",
                     "description": "Link to the ESMFold parameters",
-                    "fa_icon": "fas fa-folder-open",
-                    "default": "null/params/*"
+                    "fa_icon": "fas fa-folder-open"
                 },
                 "esmfold_3B_v1": {
                     "type": "string",
@@ -557,8 +527,7 @@
                     "default": "afdb50",
                     "description": "Subdirectory of foldseek_db_path holding the AlphaFold/UniProt50 foldseek database (searched on SLURM non-test runs only)"
                 }
-            },
-            "required": ["pfam_path", "funfams_path", "foldseek_db_path"]
+            }
         },
         "update_mgnifams_params": {
             "title": "update_mgnifams_params",
@@ -566,6 +535,11 @@
             "fa_icon": "fas fa-sync",
             "description": "Options of the update_mgnifams mode (refresh full MSAs and representatives of existing families).",
             "properties": {
+                "release_date": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                    "description": "Date of the release (YYYY-MM-DD), as the FTP RELEASES.tsv. post_update_mgnifams_update_db records it in an update delta; the merge writes it to release_history. Required for update deltas"
+                },
                 "mgnifams_release": {
                     "type": "string",
                     "default": "1.1",
@@ -599,7 +573,7 @@
                 },
                 "run_alphafold2": {
                     "type": "boolean",
-                    "description": "Also predict representative structures with ColabFold (AlphaFold2) from the family full MSA. Needs a GPU; published only, not loaded in the DB"
+                    "description": "Experimental, only run on test data so far: also predict representative structures with ColabFold (AlphaFold2) from the family full MSA. Needs a GPU; published only, not loaded in the DB"
                 },
                 "colabfold_params_path": {
                     "type": "string",
@@ -623,37 +597,37 @@
     },
     "allOf": [
         {
-            "$ref": "#/defs/input_output_options"
+            "$ref": "#/$defs/input_output_options"
         },
         {
-            "$ref": "#/defs/institutional_config_options"
+            "$ref": "#/$defs/institutional_config_options"
         },
         {
-            "$ref": "#/defs/generic_options"
+            "$ref": "#/$defs/generic_options"
         },
         {
-            "$ref": "#/defs/clustering_params"
+            "$ref": "#/$defs/clustering_params"
         },
         {
-            "$ref": "#/defs/family_generation_params"
+            "$ref": "#/$defs/family_generation_params"
         },
         {
-            "$ref": "#/defs/structural_prediction_params"
+            "$ref": "#/$defs/structural_prediction_params"
         },
         {
-            "$ref": "#/defs/annotation_params"
+            "$ref": "#/$defs/annotation_params"
         },
         {
-            "$ref": "#/defs/export_params"
+            "$ref": "#/$defs/export_params"
         },
         {
-            "$ref": "#/defs/update_db_params"
+            "$ref": "#/$defs/update_db_params"
         },
         {
-            "$ref": "#/defs/update_mgnifams_params"
+            "$ref": "#/$defs/update_mgnifams_params"
         },
         {
-            "$ref": "#/defs/reference_databases"
+            "$ref": "#/$defs/reference_databases"
         }
     ]
 }

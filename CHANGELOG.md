@@ -26,6 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `EXPORT_FAMILIES_TSV` stub copies the previous `families.tsv.gz` (it wrote an empty file), so stub runs keep real statuses.
 - `export_mgnifams.py` takes the structure scores (`--structure_scores`) as optional, and accepts metadata with only `family_id`.
 - The SQL files moved to `assets/sql/` (`db_schema.sqlite`, `finalize_db.sql`, `merge_update_delta.sql`, `migrate_schema_seed_size_tmscores.sql`) and the samplesheets to `assets/samplesheets/`. Update the paths in hand-run `sqlite3` commands and in custom samplesheets that use the raw GitHub URL of `db_schema.sqlite`.
+- `--pfam_path`, `--funfams_path` and `--foldseek_db_path` are required only by the modes that search them (`run_mgnifams_pipeline`, `update_mgnifams`, `annotate_not_updated`). The other modes no longer need placeholder values; a searching mode without them stops before any task and names the missing ones.
+- `--run_alphafold2` is marked experimental: it has only run on test data.
+- The README metro map shows the update branch (stage 10 `update_mgnifams`, the delta database and stage 11 merge into the production database), and reads on dark backgrounds.
+
+### `Fixed`
+
+- A merged update recorded the merge date and the bare pipeline version (`3.0.0`) in `release_history`. It now records the release date given to `post_update_mgnifams_update_db` with `--release_date` (required for update deltas) and the tag form (`v3.0.0`), as the FTP `RELEASES.tsv`. Deltas built before 3.1.0 still get the merge date.
+- `nextflow_schema.json` gave `--clusters_chunk_size` a default of 30 (the pipeline uses 20) and `--esmfold_params_path` a default of `null/params/*`; both now match `nextflow.config`. It no longer lists parameters the pipeline does not read (`mgnprotein_db_config_file`, `db_schema_file`, `validationShowHiddenParams`, `validationFailUnrecognisedParams`, `validationLenientMode`).
+- The MultiQC report put the methods description and workflow summary sections in MultiQC's default place: `assets/multiqc_config.yml` named them `nf-core-mgnifams-*`. They now come first, as intended.
 
 ## v3.0.0 - [2026/11/02]
 

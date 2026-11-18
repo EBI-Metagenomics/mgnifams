@@ -69,4 +69,28 @@ nextflow_pipeline {
             )
         }
     }
+
+    // The search databases are required by the modes that search only: without them the mode stops before any task
+    test("-profile test_annotate_not_updated -stub, no search databases") {
+        options "-stub"
+
+        when {
+            params {
+                outdir           = "$outputDir"
+                input            = { def d = "${projectDir}/tests/fixtures/annotate_not_updated"; def ss = new File("$outputDir/samplesheet.csv"); ss.parentFile.mkdirs()
+                    ss.text = "sample,mgnifams_families,reps_fasta,structures\nmgnifams_annotate_test,${d}/families.tsv.gz,${d}/family_ids.fasta,${d}/pdb\n"; ss.toString() }()
+                pfam_path        = ''
+                funfams_path     = ''
+                foldseek_db_path = ''
+            }
+        }
+
+        then {
+            assertAll(
+                { assert !workflow.success },
+                { assert workflow.trace.tasks().size() == 0 },
+                { assert (workflow.stdout + workflow.stderr).any { line -> line.contains('annotate_not_updated: --pfam_path, --funfams_path, --foldseek_db_path required') } }
+            )
+        }
+    }
 }
