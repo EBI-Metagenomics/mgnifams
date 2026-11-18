@@ -573,7 +573,7 @@
                 },
                 "run_alphafold2": {
                     "type": "boolean",
-                    "description": "Also predict representative structures with ColabFold (AlphaFold2) from the family full MSA. Needs a GPU; published only, not loaded in the DB"
+                    "description": "Experimental, only run on test data so far: also predict representative structures with ColabFold (AlphaFold2) from the family full MSA. Needs a GPU; published only, not loaded in the DB"
                 },
                 "colabfold_params_path": {
                     "type": "string",

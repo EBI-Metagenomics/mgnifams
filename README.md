@@ -6,6 +6,16 @@ From metagenomics derived amino acid sequences, to protein families.
 
 This pipeline is developed in Nextflow, following nf-core standards.
 
+### Upgrading from 2.x
+
+Pipeline 3.0.0 changed these, so check them in setups and code written for 2.x:
+
+- The samplesheet `sample` must match `^[A-Za-z0-9._-]+$`.
+- `generate_families/families/family_metadata.csv` and the Foldseek `pdb.m8` / `all_hits.tsv` start with a header row.
+- `--foldseek_alphafold_db` defaults to `afdb50` (a subdirectory of `--foldseek_db_path`), not an `alphafold` directory.
+- `QUERY_MGNPROTEIN_DB` outputs are under `mgnprotein_db_query/`; the `INIT_SQLITE` / `IMPORT_QUERIES` intermediate databases are no longer published.
+- `mgnifam` columns are grouped by topic in new databases, and migrated ones keep the added columns last: select DB columns by name, never by `SELECT *` position. `mgnifam_pfams.e_value` / `score` hold per-domain values.
+
 ### Input
 
 `samplesheet.csv`
@@ -218,7 +228,7 @@ port = ***
 
 The `update_mgnifams` workflow (`--mode update_mgnifams`) refreshes existing families against new MGnify proteins without touching their seed MSAs or HMMs.
 It slices the known Pfam domains off the new proteins (both read from the MGnify proteins parquet files, chunked by row group with `--parquet_chunks`; only the MGnify90 cluster representatives listed in `mgy_clusters.parquet` are kept, as for MGnifams 1.0), searches them with the family HMMs (`mgnifam update_families --skip_refine`, in chunks of `--hmm_chunk_size` models), and recomputes everything derived from the family representatives: structures (ESMFold), representative annotations, Foldseek hits, domain architectures (from the Pfam parquet) and biomes (each member's own `cluster_rep_biomes` lineages in `mgy_clusters.parquet`).
-`--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
+Experimental: `--run_alphafold2 true --colabfold_params_path /path/to/alphafold_params` (only run on test data so far) also predicts each representative with ColabFold from its family full MSA (the first `--af2_max_msa_seqs` rows). These are published under `structures/alphafold2/` only (GPU).
 
 The samplesheet must have exactly one row:
 
