@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The SQL files moved to `assets/sql/` (`db_schema.sqlite`, `finalize_db.sql`, `merge_update_delta.sql`, `migrate_schema_seed_size_tmscores.sql`) and the samplesheets to `assets/samplesheets/`. Update the paths in hand-run `sqlite3` commands and in custom samplesheets that use the raw GitHub URL of `db_schema.sqlite`.
 - `--pfam_path`, `--funfams_path` and `--foldseek_db_path` are required only by the modes that search them (`run_mgnifams_pipeline`, `update_mgnifams`, `annotate_not_updated`). The other modes no longer need placeholder values; a searching mode without them stops before any task and names the missing ones.
 - `--run_alphafold2` is marked experimental: it has only run on test data.
+- The README metro map shows the update branch (stage 10 `update_mgnifams`, the delta database and stage 11 merge into the production database), and reads on dark backgrounds.
 
 ### `Fixed`
 
