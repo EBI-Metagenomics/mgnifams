@@ -527,8 +527,7 @@
                     "default": "afdb50",
                     "description": "Subdirectory of foldseek_db_path holding the AlphaFold/UniProt50 foldseek database (searched on SLURM non-test runs only)"
                 }
-            },
-            "required": ["pfam_path", "funfams_path", "foldseek_db_path"]
+            }
         },
         "update_mgnifams_params": {
             "title": "update_mgnifams_params",

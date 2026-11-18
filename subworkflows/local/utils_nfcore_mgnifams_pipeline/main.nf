@@ -71,6 +71,13 @@ workflow PIPELINE_INITIALISATION {
     if (params.mode == "run_mgnifams_pipeline" && !params.hhdb_path) {
         error("run_mgnifams_pipeline: --hhdb_path is required")
     }
+    // Only the modes that search Pfam, FunFam and Foldseek need their databases
+    if (params.mode in ["run_mgnifams_pipeline", "update_mgnifams", "annotate_not_updated"]) {
+        def missing = ["pfam_path", "funfams_path", "foldseek_db_path"].findAll { name -> !params[name] }
+        if (missing) {
+            error("${params.mode}: --${missing.join(', --')} required")
+        }
+    }
     if (params.mode in ["update_mgnifams", "post_update_mgnifams_update_db", "annotate_not_updated", "rebuild_biomes"]) {
         // All collected outputs and the delta DB are per run
         if (samplesheet_rows.size() != 1) {
