@@ -1,1 +1,59 @@
 repository_type: pipeline
+# EBI-Metagenomics pipeline on the nf-core template, not an nf-core pipeline:
+# skip the checks for nf-core branding, community files and template files it does not ship.
+lint:
+  files_exist:
+    - .gitattributes
+    - CITATIONS.md
+    - CODE_OF_CONDUCT.md
+    - .github/.dockstore.yml
+    - .github/ISSUE_TEMPLATE/bug_report.yml
+    - .github/ISSUE_TEMPLATE/config.yml
+    - .github/ISSUE_TEMPLATE/feature_request.yml
+    - .github/PULL_REQUEST_TEMPLATE.md
+    - .github/workflows/branch.yml
+    - .github/workflows/nf-test.yml
+    - .github/actions/get-shards/action.yml
+    - .github/actions/nf-test/action.yml
+    - .github/workflows/pr-comment.yml
+    - .github/workflows/linting.yml
+    - .github/workflows/awstest.yml
+    - .github/workflows/awsfulltest.yml
+    - assets/nf-core-mgnifams_logo_light.png
+    - docs/images/nf-core-mgnifams_logo_light.png
+    - docs/images/nf-core-mgnifams_logo_dark.png
+    - conf/test_full.config
+    - conf/igenomes.config
+    - conf/igenomes_ignored.config
+    - docs/CONTRIBUTING.md
+    - docs/output.md
+    - docs/README.md
+    - docs/usage.md
+    - ro-crate-metadata.json
+  files_unchanged:
+    - .gitignore
+    - .prettierignore
+    - LICENSE
+    - assets/email_template.html
+    - assets/email_template.txt
+    - assets/sendmail_template.txt
+  nextflow_config:
+    - manifest.name
+    - manifest.homePage
+    - manifest.diagram
+    - custom_config
+    - timeline.enabled
+    - timeline.file
+    - report.enabled
+    - report.file
+    - trace.enabled
+    - trace.file
+    - dag.enabled
+    - dag.file
+  multiqc_config:
+    - report_comment
+  nf_test_content:
+    - tests/post_update_mgnifams_update_db.nf.test
+  readme:
+    - nextflow_badge
+    - nfcore_template_badge
