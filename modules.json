@@ -45,9 +45,14 @@
                         "git_sha": "3a42d4fbb69436f53e0f06d2fe65b48f9d0085cc",
                         "installed_by": ["modules"]
                     },
+                    "mgnifam/generatefamilies": {
+                        "branch": "master",
+                        "git_sha": "87ece67983443cf3aee31828f95376ca4af5df5c",
+                        "installed_by": ["modules"]
+                    },
                     "mgnifam/updatefamilies": {
                         "branch": "master",
-                        "git_sha": "b2b539f0e91c55f67502cf389eac872766bcc915",
+                        "git_sha": "87ece67983443cf3aee31828f95376ca4af5df5c",
                         "installed_by": ["modules"]
                     },
                     "mmseqs/createdb": {
