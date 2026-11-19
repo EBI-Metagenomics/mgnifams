@@ -66,7 +66,7 @@ Seven modes controlled by `--mode` parameter:
 
 Five sequential subworkflows:
 
-1. **SETUP_CLUSTERS** (`subworkflows/local/setup_clusters/`) — Extract unannotated sequences from MGnify CSV (or use FASTA directly via `--fasta_input_mode`), filter by length, quality check with seqkit, cluster with mmseqs linclust, distribute into chunks.
+1. **SETUP_CLUSTERS** (`subworkflows/local/setup_clusters/`) — Input: a sliced FASTA (`protein_input`) or the Pfam-free slices of the MGnify sequences parquet (`EXTRACT_UNANNOTATED_PARQUET_SLICES`), filter by length, quality check with seqkit, cluster with mmseqs linclust, distribute into chunks.
 
 2. **GENERATE_NONREDUNDANT_FAMILIES** (`subworkflows/local/generate_nonredundant_families/`) — Core algorithm in `bin/generate_families.py` (to be replaced by nf-core `mgnifam/generatefamilies` 4.0.0, [#68](https://github.com/EBI-Metagenomics/mgnifams/issues/68)). Iteratively builds families: seed MSA (pyfamsa) → HMM (pyhmmer) → recruit sequences → align (pyhmmer/hmmalign) → trim (pytrimal), repeated up to 3 times. Redundancy removed via `subworkflows/local/remove_redundancy/` using `bin/identify_redundant_fams.py`.
 

@@ -37,11 +37,6 @@
                     ],
                     "fa_icon": "fas fa-cogs"
                 },
-                "fasta_input_mode": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "If this flag is set, the pipeline starts from a fasta-file, without executing the preprocessing steps required for the sequence_explorer_protein file from MGnify proteins."
-                },
                 "esm_conda_path": {
                     "type": "string",
                     "description": "predict_structures ESMfold conda env"
@@ -230,20 +225,10 @@
             "type": "object",
             "description": "Parameters for setup_clusters subworkflow",
             "properties": {
-                "compress_mode": {
-                    "type": "string",
-                    "default": "none",
-                    "description": "compression mode of starting CSV input [gz, bz2, none]"
-                },
                 "min_sequence_length": {
                     "type": "integer",
                     "default": 100,
                     "description": "Sequence (and slice) length threshold to continue to clustering"
-                },
-                "input_csv_chunk_size": {
-                    "type": "integer",
-                    "default": 50000000,
-                    "description": "Chunk size for parallel slicing and filtering of sequence space"
                 },
                 "linclust_seq_identity": {
                     "type": "number",

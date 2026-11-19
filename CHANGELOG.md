@@ -5,7 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v3.2.0dev - [unreleased]
 
+### `Breaking`
+
+- Default mode (`run_mgnifams_pipeline`) input: the samplesheet takes either a sliced protein FASTA (`protein_input`, `.fa`/`.fasta`/`.faa`, optionally `.gz`) or the MGnify proteins sequences parquet (`mgnify_proteins_sequences`, Pfam slicing by `EXTRACT_UNANNOTATED_PARQUET_SLICES`, as `update_mgnifams`), and `mgnify_proteins_clusters` and `mgnify_proteins_pfam` on every row. The `sequence_explorer_protein` CSV input is removed with `BZ2_UNCOMPRESS`, `EXTRACT_UNANNOTATED_FASTA`, `EXTRACT_UNANNOTATED_SLICES`, `bin/extract_unannotated_slices.py` and the params `--fasta_input_mode`, `--compress_mode` and `--input_csv_chunk_size`.
+
 ### `Added`
+
+- `bin/slice_protein.py`: the shared `sliceProtein`, with a `start` offset so slices of slices keep protein coordinates.
+- Optional samplesheet column `mgnifam_regions` (a folder of MGnifam region files).
+- Default test inputs `assets/data/mgnifams_test_input.fa.gz`, `mgnifams_test_clusters.parquet` and `mgnifams_test_pfam.parquet`, made once from the removed CSV test file.
 
 ### `Changed`
 

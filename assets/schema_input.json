@@ -15,10 +15,11 @@
             },
             "protein_input": {
                 "type": "string",
-                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.(gz|bz2|csv|fa|fasta)$",
+                "format": "file-path",
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.(fa|fasta|faa)(\\.gz)?$",
                 "exists": true,
-                "description": "The pipeline main input data. Either sequence_explorer_protein from MGnify proteins, or a protein fasta file with fasta_input_mode set to true.",
-                "errorMessage": "Must be either sequence_explorer_protein from MGnify proteins, or a protein fasta file with fasta_input_mode set to true."
+                "description": "run_mgnifams_pipeline: protein FASTA already sliced as wanted (e.g. update_mgnifams' update_families/mgnifams_update.faa); instead of mgnify_proteins_sequences",
+                "errorMessage": "Must be a .fa, .fasta or .faa file, optionally gzipped."
             },
             "results_folder": {
                 "type": "string",
@@ -51,7 +52,7 @@
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.parquet$",
-                "description": "update_mgnifams: MGnify protein sequences parquet (protein_id, sequence)",
+                "description": "update_mgnifams: MGnify protein sequences parquet (protein_id, sequence). run_mgnifams_pipeline: instead of protein_input, its Pfam-free slices are the input",
                 "errorMessage": "Must be a .parquet file."
             },
             "mgnify_proteins_clusters": {
@@ -59,7 +60,7 @@
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.parquet$",
-                "description": "update_mgnifams: MGnify protein clusters parquet (cluster_rep, cluster_rep_biomes); only the cluster representatives are searched. rebuild_biomes: the same parquet, for the members' biomes",
+                "description": "update_mgnifams, run_mgnifams_pipeline: MGnify protein clusters parquet (cluster_rep, cluster_rep_biomes); only the cluster representatives are sliced and searched, and give the members' biomes. rebuild_biomes: the same parquet, for the members' biomes",
                 "errorMessage": "Must be a .parquet file."
             },
             "mgnify_proteins_pfam": {
@@ -67,7 +68,7 @@
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.parquet$",
-                "description": "update_mgnifams: MGnify protein Pfam hits parquet (protein_id, pfam_accession, i_evalue, score, hmm_from, hmm_to, env_from, env_to)",
+                "description": "update_mgnifams, run_mgnifams_pipeline: MGnify protein Pfam hits parquet (protein_id, pfam_accession, i_evalue, score, hmm_from, hmm_to, env_from, env_to): the regions sliced off, and the members' domain architectures",
                 "errorMessage": "Must be a .parquet file."
             },
             "mgnifams_hmms": {
@@ -111,6 +112,12 @@
                 "format": "directory-path",
                 "exists": true,
                 "description": "post_update_mgnifams_update_db (optional): biome_results folder (<family_id>.csv) of a rebuild_biomes run; replaces <results_folder>/biome_results and implies biome_computed"
+            },
+            "mgnifam_regions": {
+                "type": "string",
+                "format": "directory-path",
+                "exists": true,
+                "description": "run_mgnifams_pipeline (optional): folder of MGnifam region files (*.tsv, family<TAB>MGYP/start-end, a bare MGYP = the whole protein), masked from the input like the Pfam regions"
             }
         },
         "required": ["sample"]
