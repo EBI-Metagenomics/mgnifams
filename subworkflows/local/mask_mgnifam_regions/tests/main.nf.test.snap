@@ -1,0 +1,53 @@
+{
+    "fixture FASTA, two region files, 4 buckets": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "mask_test"
+                    },
+                    "mgnifams_input.fa:md5,d3b981db2e5df7eea2d56f59fd261007"
+                ]
+            ],
+            [
+                {
+                    "MASK_MGNIFAM_REGIONS:MASK_BUCKET": {
+                        "python": "3.13.0"
+                    }
+                },
+                {
+                    "MASK_MGNIFAM_REGIONS:SPLIT_FASTA_BUCKETS": {
+                        "python": "3.13.0"
+                    }
+                },
+                {
+                    "MASK_MGNIFAM_REGIONS:SPLIT_REGIONS_BUCKETS": {
+                        "python": "3.13.0"
+                    }
+                }
+            ]
+        ],
+        "timestamp": "2026-11-19T13:06:15.993064378",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.3"
+        }
+    },
+    "fixture FASTA, two region files - stub": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "mask_test"
+                    },
+                    "mgnifams_input.fa:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-19T13:06:26.616879348",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.3"
+        }
+    }
+}

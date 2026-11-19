@@ -1,0 +1,64 @@
+nextflow_workflow {
+
+    name "Test Subworkflow MASK_MGNIFAM_REGIONS"
+    script "../main.nf"
+    workflow "MASK_MGNIFAM_REGIONS"
+    tag "subworkflows"
+    tag "mask_mgnifam_regions"
+
+    // Whole (101, 103, 105) and sliced (102, 104, 106) records, two-line sequences; a 1.1 region file and a
+    // 1.0-style one (padded names, the bare MGYP 103 = the whole protein); fixtures in modules/local/mask_mgnifam_regions
+    test("fixture FASTA, two region files, 4 buckets") {
+
+        when {
+            workflow {
+                """
+                def fixtures = '${projectDir}/modules/local/mask_mgnifam_regions/tests/fixtures'
+                input[0] = channel.of( [ [ id: 'mask_test' ], file("\${fixtures}/input.fa", checkIfExists: true) ] )
+                input[1] = channel.of( [ [ id: 'mask_test' ], files("\${fixtures}/regions/*.tsv", checkIfExists: true) ] )
+                input[2] = 4
+                input[3] = 10
+                """
+            }
+        }
+
+        then {
+            def fa = workflow.out.fasta[0][1]
+            assertAll(
+                { assert workflow.success },
+                { assert new File(fa.toString()).name == 'mgnifams_input.fa' },
+                // bucket order (104 in 000, 101 and 105 in 001, 102 and 106 in 002), pieces in protein coordinates
+                { assert path(fa).readLines().findAll { line -> line.startsWith('>') } ==
+                    [ '>104_5_104', '>101_1_19', '>101_61_150', '>105_1_29', '>105_51_90', '>102_41_180', '>106_211_249' ] },
+                { assert snapshot(
+                    workflow.out.fasta,
+                    workflow.out.versions.collect { v -> path(v).yaml }.unique().sort { y -> y.toString() }
+                ).match() }
+            )
+        }
+    }
+
+    test("fixture FASTA, two region files - stub") {
+
+        options "-stub"
+
+        when {
+            workflow {
+                """
+                def fixtures = '${projectDir}/modules/local/mask_mgnifam_regions/tests/fixtures'
+                input[0] = channel.of( [ [ id: 'mask_test' ], file("\${fixtures}/input.fa", checkIfExists: true) ] )
+                input[1] = channel.of( [ [ id: 'mask_test' ], files("\${fixtures}/regions/*.tsv", checkIfExists: true) ] )
+                input[2] = 4
+                input[3] = 10
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert snapshot(workflow.out.fasta).match() }
+            )
+        }
+    }
+}

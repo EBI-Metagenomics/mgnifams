@@ -1,5 +1,6 @@
 include { PIGZ_UNCOMPRESS                    } from '../../../modules/nf-core/pigz/uncompress/main'
 include { EXTRACT_UNANNOTATED_PARQUET_SLICES } from '../../../modules/local/extract_unannotated_parquet_slices/main'
+include { MASK_MGNIFAM_REGIONS               } from '../../../subworkflows/local/mask_mgnifam_regions'
 include { CHECK_QUALITY                      } from '../../../subworkflows/local/check_quality'
 include { EXECUTE_CLUSTERING                 } from '../../../subworkflows/local/execute_clustering'
 include { CALCULATE_CLUSTER_DISTRIBUTION     } from '../../../modules/local/calculate_cluster_distribution/main'
@@ -44,9 +45,35 @@ workflow SETUP_CLUSTERS {
         .combine( ch_branch.parquet.map { meta, _fasta, _sequences, _clusters, _pfam, _regions -> meta } )
         .map { fa, meta -> [ meta, fa ] }
 
-    ch_mgnifams_input_fa = ch_branch.fasta
+    ch_unmasked_fa = ch_branch.fasta
         .map { meta, fasta, _sequences, _clusters, _pfam, _regions -> [ meta, fasta ] }
         .mix( PIGZ_UNCOMPRESS.out.file, ch_sliced )
+
+    // MGnifam regions of earlier releases cut out as well, when the row has a mgnifam_regions folder
+    ch_mask = ch_unmasked_fa
+        .join( input.map { meta, _fasta, _sequences, _clusters, _pfam, regions -> [ meta, regions ] } )
+        .branch { _meta, _fa, regions ->
+            mask : regions
+            plain: true
+        }
+    ch_region_files = ch_mask.mask
+        .map { meta, _fa, regions ->
+            def tsvs = files("${regions}/*.tsv")
+            if (!tsvs) {
+                error("run_mgnifams_pipeline: mgnifam_regions ${regions} holds no *.tsv region file")
+            }
+            [ meta, tsvs ]
+        }
+    // 256 buckets: ~10M regions and ~2M sequences each for release 2.0 (2.6B regions, 508M sequences)
+    MASK_MGNIFAM_REGIONS( ch_mask.mask.map { meta, fa, _regions -> [ meta, fa ] }, ch_region_files, 256, min_sequence_length )
+    ch_versions = ch_versions.mix( MASK_MGNIFAM_REGIONS.out.versions )
+    MASK_MGNIFAM_REGIONS.out.fasta
+        .map { _meta, fa -> fa }
+        .collectFile( name: 'mgnifams_input.fa', storeDir: "${outdir}/setup_clusters" ) // Published copy only, as above
+
+    ch_mgnifams_input_fa = ch_mask.plain
+        .map { meta, fa, _regions -> [ meta, fa ] }
+        .mix( MASK_MGNIFAM_REGIONS.out.fasta )
 
     CHECK_QUALITY( ch_mgnifams_input_fa )
     ch_versions = ch_versions.mix( CHECK_QUALITY.out.versions )
