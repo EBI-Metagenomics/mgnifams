@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - `bin/slice_protein.py`: the shared `sliceProtein`, with a `start` offset so slices of slices keep protein coordinates.
-- Optional samplesheet column `mgnifam_regions` (a folder of MGnifam region files).
+- Optional samplesheet column `mgnifam_regions` (a folder of MGnifam region files, `refined_families.tsv` format): `MASK_MGNIFAM_REGIONS` (`bin/mask_mgnifam_regions.py`, 256 hash buckets) cuts every region out of the input FASTA before clustering, keeping whole-protein coordinates; published as `setup_clusters/mgnifams_input.fa`.
 - Default test inputs `assets/data/mgnifams_test_input.fa.gz`, `mgnifams_test_clusters.parquet` and `mgnifams_test_pfam.parquet`, made once from the removed CSV test file.
 
 ### `Changed`

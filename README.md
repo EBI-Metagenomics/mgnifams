@@ -113,6 +113,17 @@ This is the first subworkflow to be executed before the main family generation. 
 
 A `protein_input` FASTA is used as is (a `.gz` is decompressed first), e.g. the `update_families/mgnifams_update.faa` of an `update_mgnifams` run, which is already Pfam-masked. With `mgnify_proteins_sequences` instead, the known Pfam domains (`mgnify_proteins_pfam`) are sliced off the cluster representatives (`mgnify_proteins_clusters`) in `--parquet_chunks` parallel tasks, exactly as in `update_mgnifams`, and the slices are published as `setup_clusters/mgnifams_input.faa`. Slices shorter than `--min_sequence_length` (100) are dropped.
 
+With an optional `mgnifam_regions` folder, the regions of earlier MGnifams releases are cut out of that FASTA too (`MASK_MGNIFAM_REGIONS`): every `*.tsv` in the folder is a member list in the `refined_families.tsv` format (`family<TAB>MGYP/start-end`, a bare `MGYP` = the whole protein), and every region is removed, with no length or score filter; pieces shorter than `--min_sequence_length` are dropped, and the rest keep whole-protein coordinates in their names (`MGYP_start_end`). Removing these regions from an already Pfam-masked FASTA gives the same slices as removing the Pfam and MGnifam regions in one pass. The FASTA and the regions are split into 256 hash buckets by protein id and masked in parallel; the masked FASTA is published as `setup_clusters/mgnifams_input.fa`.
+
+For a release after 1.1, the folder holds the 1.1 members of the updated families (`update_families/refined_families.tsv` of the 1.1 run) and the 1.0 members of the 1,040 families 1.1 did not update, cut from the 1.0 run's pooled member list by the `not_updated` ids of the 1.1 `families.tsv.gz`:
+
+```bash
+zcat 1.1/families.tsv.gz | awk -F'\t' 'NR == 1 { for (i = 1; i <= NF; i++) c[$i] = i; next } $c["status"] == "not_updated" { print $c["family_id"] }' > not_updated.txt
+awk -F'\t' 'NR == FNR { want[$1] = 1; next } $1 in want' not_updated.txt 1.0/generate_families/families/refined_families.tsv > regions/members_1.0_not_updated.tsv
+wc -l < regions/members_1.0_not_updated.tsv   # 235,986,464 rows for the 1,040 families of 1.1
+ln -s /path/to/1.1/update_families/refined_families.tsv regions/members_1.1.tsv
+```
+
 Following, a quality statistics report is produced via `seqkit/stats`. Sequences are then clustered via the `mmseqs` suite and are chunked for downstream parallel processing.
 
 #### 2. generate_nonredundant_families
