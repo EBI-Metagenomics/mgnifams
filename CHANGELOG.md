@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Changed`
 
 - `mgnifam/updatefamilies` bumped to mgnifam 4.1.0 (no change to `update_families`).
+- `EXTRACT_UNIQUE_CLUSTER_REPS` and `POOL_NONREDUNDANT_FAMILIES` stubs emit one representative and one pooled family, so the default `-stub-run` runs to the end.
 
 ### `Removed`
 

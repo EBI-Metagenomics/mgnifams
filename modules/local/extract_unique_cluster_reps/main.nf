@@ -32,7 +32,7 @@ process EXTRACT_UNIQUE_CLUSTER_REPS {
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}_unique_reps.txt
+    echo 1 > ${prefix}_unique_reps.txt # one representative, so the -stub-run reaches family generation
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
