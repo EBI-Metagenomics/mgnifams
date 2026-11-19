@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Self-check: pool_nonredundant_families.py on real mgnifam 4.1.0 generate_families outputs of two chunks that both
-hold local families 1 and 2 (modules/local/pool_nonredundant_families/tests/fixtures/mgnifam_4.1.0, made once with
+hold local families 1 and 2 (modules/local/pool_nonredundant_families/tests/fixtures/mgnifam_4.1.0.tar.gz, made once with
 `mgnifam generate_families --chunk_id 000|001` on two halves of the nf-core test-datasets
 proteomics/proteinfamilies/mgnify_proteins_trimmed_clustering.tsv, the .ssi, log and stats removed).
 Run: python3 bin/test_pool_nonredundant_families.py"""
@@ -8,13 +8,15 @@ Run: python3 bin/test_pool_nonredundant_families.py"""
 import gzip
 import json
 import shutil
+import tarfile
 import tempfile
 from pathlib import Path
 
 from pool_nonredundant_families import METADATA_HEADER, main
 
-FIXTURE = (
-    Path(__file__).resolve().parent.parent / "modules/local/pool_nonredundant_families/tests/fixtures/mgnifam_4.1.0"
+FIXTURE_TAR = (
+    Path(__file__).resolve().parent.parent
+    / "modules/local/pool_nonredundant_families/tests/fixtures/mgnifam_4.1.0.tar.gz"
 )
 # POOL_NONREDUNDANT_FAMILIES stageAs folder <- mgnifam output (per chunk)
 STAGING = {
@@ -32,6 +34,9 @@ STAGING = {
 
 with tempfile.TemporaryDirectory() as tmp:
     d = Path(tmp)
+    with tarfile.open(FIXTURE_TAR) as tar:
+        tar.extractall(d, filter="data")
+    FIXTURE = d / "mgnifam_4.1.0"
     for folder, pattern in STAGING.items():
         (d / "in" / folder).mkdir(parents=True)
         for chunk in ("000", "001"):
