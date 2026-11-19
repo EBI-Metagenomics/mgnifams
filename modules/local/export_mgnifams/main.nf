@@ -12,7 +12,6 @@ process EXPORT_MGNIFAMS {
     tuple val(meta2), path(scores)
     tuple val(meta3), path(composition)
     tuple val(meta4), path(tm_composition)
-    tuple val(meta5), path(seed_sizes)
 
     output:
     tuple val(meta), path("mgnifam.csv"), emit: csv
@@ -24,14 +23,12 @@ process EXPORT_MGNIFAMS {
     script:
     def tm = tm_composition ? "${tm_composition}" : '""'
     def scores_arg = scores ? "${scores}" : '""'
-    def seeds = seed_sizes ? "${seed_sizes}" : '""'
     """
     export_mgnifams.py \\
         --metadata ${metadata} \\
         --structure_scores ${scores_arg} \\
         --composition ${composition} \\
         --tm_composition ${tm} \\
-        --seed_sizes ${seeds} \\
         --outfile mgnifam.csv
 
     cat <<-END_VERSIONS > versions.yml

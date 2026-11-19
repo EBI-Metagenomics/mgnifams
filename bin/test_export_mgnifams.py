@@ -18,21 +18,14 @@ QUERY = (
 )
 
 
-def imported_row(metadata, seed_sizes, scores=True):
-    """Export one family and import it; `seed_sizes` is the id,seed_size CSV text, or None; scores=False passes no
-    structure scores (annotate_not_updated)."""
+def imported_row(metadata, scores=True):
+    """Export one family and import it; scores=False passes no structure scores (annotate_not_updated)."""
     with tempfile.TemporaryDirectory() as tmp:
         d = Path(tmp)
         (d / "meta.csv").write_text(metadata)
         (d / "scores.csv").write_text("id,plddt,ptm\n1,80.5,0.7\n")
         (d / "comp.csv").write_text("id,helix_percent,strand_percent,coil_percent\n1,10.0,20.0,70.0\n")
-        seeds = ""
-        if seed_sizes is not None:
-            seeds = d / "seeds.csv"
-            seeds.write_text(seed_sizes)
-        write_mgnifam_csv(
-            d / "meta.csv", d / "scores.csv" if scores else "", d / "comp.csv", "", d / "mgnifam.csv", seeds
-        )
+        write_mgnifam_csv(d / "meta.csv", d / "scores.csv" if scores else "", d / "comp.csv", "", d / "mgnifam.csv")
 
         db = d / "db.sqlite3"
         sqlite3.connect(db).executescript(SCHEMA)
@@ -43,25 +36,22 @@ def imported_row(metadata, seed_sizes, scores=True):
         return sqlite3.connect(db).execute(QUERY).fetchone()
 
 
-# Default mode: bin/generate_families.py metadata, seed sizes from COUNT_SEED_MSA_SIZES, hmm_length from the consensus.
-# has_* keep their DEFAULT (FINALIZE_SQLITE fills them); empty blob cells become NULL
-row = imported_row(
-    "family_id,full_msa_size,protein,region,length,sequence,consensus,converged\n"
-    '1,21,"33",357-470,114,QLDP,lldp,True\n',
-    "id,seed_size\n1,14\n",
+METADATA_HEADER = (
+    "family_id,converged,seed_msa_size,full_msa_size,rep_protein,rep_region,rep_length,consensus_length,"
+    "rep_sequence,consensus_sequence\n"
 )
+
+# Default mode: mgnifam generate_families metadata (pooled), read by name; seed size and HMM length from mgnifam.
+# has_* keep their DEFAULT (FINALIZE_SQLITE fills them); empty blob cells become NULL
+row = imported_row(METADATA_HEADER + '1,True,14,21,"33",357-470,114,4,QLDP,lldp\n')
 assert row == (21, 14, "True", 33, "357-470", 114, "QLDP", "lldp", 4, 80.5, 0.7, 70.0, 0, None), row
 
 # Update mode: mgnifam update_families --skip_refine metadata, read by name; seed size and converged are empty
-row = imported_row(
-    "family_id,converged,seed_msa_size,full_msa_size,rep_protein,rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence\n"
-    '1,,,21,"33",357-470,114,4,QLDP,lldp\n',
-    None,
-)
+row = imported_row(METADATA_HEADER + '1,,,21,"33",357-470,114,4,QLDP,lldp\n')
 assert row == (21, None, None, 33, "357-470", 114, "QLDP", "lldp", 4, 80.5, 0.7, 70.0, 0, None), row
 
 # ids_only_metadata (annotate_not_updated): only family_id and no structure scores; only the s4pred columns are filled
-row = imported_row("family_id\n1\n", None, scores=False)
+row = imported_row("family_id\n1\n", scores=False)
 assert row == (None, None, None, None, None, None, None, None, None, None, None, 70.0, 0, None), row
 
 print("ok")

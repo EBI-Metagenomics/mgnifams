@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 
-def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, outfile, seed_sizes=""):
+def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, outfile):
     mgnifam_headers = [
         "id",
         "full_size",
@@ -38,29 +38,21 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
         "tm_blob",
     ]
 
-    # family_metadata.csv columns renamed to the mgnifam column names. Default mode writes
-    # family_id,full_msa_size,protein,region,length,sequence,consensus,converged (bin/generate_families.py);
-    # update mode writes mgnifam update_families' family_id,converged,seed_msa_size,full_msa_size,rep_protein,
-    # rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence
+    # family_metadata.csv (mgnifam generate_families / update_families: family_id,converged,seed_msa_size,
+    # full_msa_size,rep_protein,rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence)
+    # columns renamed to the mgnifam table's column names
     df1 = pd.read_csv(metadata).rename(
         columns={
             "family_id": "id",
             "full_msa_size": "full_size",
             "seed_msa_size": "seed_size",
-            "protein": "protein_rep",
             "rep_protein": "protein_rep",
-            "region": "rep_region",
-            "length": "rep_length",
-            "sequence": "rep_sequence",
             "consensus_sequence": "consensus",
             "consensus_length": "hmm_length",
         }
     )
 
-    # HMM length = one consensus residue per match state
     # Absent (left empty) for ids-only metadata (annotate_not_updated)
-    if "hmm_length" not in df1.columns and "consensus" in df1.columns:
-        df1["hmm_length"] = df1["consensus"].astype("string").str.len()
     if "hmm_length" in df1.columns:
         df1["hmm_length"] = df1["hmm_length"].astype("Int64")
     # Empty under update_families --skip_refine (no seed built); the merge keeps prod's value
@@ -83,11 +75,6 @@ def write_mgnifam_csv(metadata, structure_scores, composition, tm_composition, o
     else:
         print("Note: TM composition file not provided or empty. Skipping...")
 
-    # Optional: seed MSA sizes (id,seed_size); absent in update mode, where seeds do not change
-    if seed_sizes and os.path.isfile(seed_sizes) and os.path.getsize(seed_sizes) > 0:
-        merged = pd.merge(merged, pd.read_csv(seed_sizes), on="id", how="left")
-        merged["seed_size"] = merged["seed_size"].astype("Int64")
-
     # Ensure all expected columns are present
     for col in mgnifam_headers:
         if col not in merged.columns:
@@ -108,14 +95,11 @@ def main():
     parser.add_argument(
         "--tm_composition", default="", help="Predicted transmembrane features --inside, membrane or outside"
     )
-    parser.add_argument("--seed_sizes", default="", help="Optional CSV with id,seed_size (seed MSA sequence counts)")
     parser.add_argument("--outfile", required=True, help="CSV for mgnifam table")
 
     args = parser.parse_args()
 
-    write_mgnifam_csv(
-        args.metadata, args.structure_scores, args.composition, args.tm_composition, args.outfile, args.seed_sizes
-    )
+    write_mgnifam_csv(args.metadata, args.structure_scores, args.composition, args.tm_composition, args.outfile)
 
 
 if __name__ == "__main__":

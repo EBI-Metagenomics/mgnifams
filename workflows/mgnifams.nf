@@ -14,7 +14,6 @@ include { GENERATE_NONREDUNDANT_FAMILIES } from '../subworkflows/local/generate_
 include { PREDICT_STRUCTURES             } from '../subworkflows/local/predict_structures'
 include { ANNOTATE_FAMILIES              } from '../subworkflows/local/annotate_families'
 include { EXPORT_DATA                    } from '../subworkflows/local/export_data'
-include { COUNT_SEED_MSA_SIZES           } from '../modules/local/count_seed_msa_sizes/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,14 +30,6 @@ workflow MGNIFAMS {
     outdir
     minimum_members
     clusters_chunk_size
-    mgnifams_discard_min_rep_length
-    mgnifams_discard_max_rep_length
-    mgnifams_discard_min_starting_membership
-    mgnifams_max_seq_identity
-    mgnifams_max_seed_seqs
-    mgnifams_max_gap_occupancy
-    mgnifams_recruit_evalue_cutoff
-    mgnifams_recruit_hit_length_percentage
     redundant_length_threshold
     redundant_score_threshold
     similarity_score_threshold
@@ -75,11 +66,7 @@ workflow MGNIFAMS {
     ch_versions = ch_versions.mix( SETUP_CLUSTERS.out.versions )
 
     GENERATE_NONREDUNDANT_FAMILIES( SETUP_CLUSTERS.out.cluster_chunks, \
-        SETUP_CLUSTERS.out.mgnifams_input_fa,  mgnifams_discard_min_rep_length, \
-        mgnifams_discard_max_rep_length, mgnifams_discard_min_starting_membership, \
-        mgnifams_max_seq_identity, mgnifams_max_seed_seqs, mgnifams_max_gap_occupancy, \
-        mgnifams_recruit_evalue_cutoff, mgnifams_recruit_hit_length_percentage, \
-        outdir, redundant_length_threshold, redundant_score_threshold, \
+        SETUP_CLUSTERS.out.mgnifams_input_fa, outdir, redundant_length_threshold, redundant_score_threshold, \
         similarity_score_threshold, starting_id )
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
@@ -95,11 +82,8 @@ workflow MGNIFAMS {
         hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
-    COUNT_SEED_MSA_SIZES( GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa_sto )
-    ch_versions = ch_versions.mix( COUNT_SEED_MSA_SIZES.out.versions )
-
     EXPORT_DATA( GENERATE_NONREDUNDANT_FAMILIES.out.metadata, PREDICT_STRUCTURES.out.scores, \
-        ANNOTATE_FAMILIES.out.composition, ANNOTATE_FAMILIES.out.tm_composition, COUNT_SEED_MSA_SIZES.out.csv, \
+        ANNOTATE_FAMILIES.out.composition, ANNOTATE_FAMILIES.out.tm_composition, \
         ANNOTATE_FAMILIES.out.pfam_domains, ANNOTATE_FAMILIES.out.funfam_domains, query_hmm_length_threshold, \
         ANNOTATE_FAMILIES.out.pfam_model_hits, ANNOTATE_FAMILIES.out.foldseek_hits, outdir )
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )

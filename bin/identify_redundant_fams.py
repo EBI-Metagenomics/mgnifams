@@ -75,46 +75,36 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
+def metadata_rows(folder_path):
+    """(family key, row) for every family in the per-chunk `<chunk>_metadata.csv` files of mgnifam generate_families;
+    the key is the pooling key `<chunk>_<family_id>`."""
+    for filename in sorted(os.listdir(folder_path)):
+        if filename.endswith("_metadata.csv"):
+            chunk = filename.removesuffix("_metadata.csv")
+            with open(os.path.join(folder_path, filename), newline="") as csvfile:
+                for row in csv.DictReader(csvfile):
+                    yield f"{chunk}_{row['family_id']}", row
+
+
 def create_size_dict(folder_path):
-    family_to_size = {}
-    for filename in os.listdir(folder_path):
-        if filename.endswith(".csv"):
-            file_path = os.path.join(folder_path, filename)
-            base_name = os.path.splitext(filename)[0]
-            with open(file_path, newline="") as csvfile:
-                reader = csv.reader(csvfile)
-                for row in reader:
-                    if len(row) < 7:
-                        continue
-                    id_col, size, *_ = row
-                    key = f"{base_name}_{id_col}"
-                    family_to_size[key] = size
-    return family_to_size
+    return {key: row["full_msa_size"] for key, row in metadata_rows(folder_path)}
 
 
 def create_rep_to_family_dict(folder_path, family_to_size, redundant_fam_names):
     representative_to_family = {}
-    for filename in os.listdir(folder_path):
-        if filename.endswith(".csv"):
-            file_path = os.path.join(folder_path, filename)
-            base_name = os.path.splitext(filename)[0]
-            with open(file_path, newline="") as csvfile:
-                reader = csv.reader(csvfile)
-                for row in reader:
-                    if len(row) < 6:
-                        continue
-                    id_col, _, rep, region, *_ = row
-                    key = f"{rep}/{region}" if region != "'-" else rep
-                    value = f"{base_name}_{id_col}"
-                    if key in representative_to_family:
-                        existing_value = representative_to_family[key]
-                        if int(family_to_size[value]) > int(family_to_size[existing_value]):
-                            redundant_fam_names.add(existing_value)
-                            representative_to_family[key] = value
-                        else:
-                            redundant_fam_names.add(value)
-                    else:
-                        representative_to_family[key] = value
+    for value, row in metadata_rows(folder_path):
+        # The representative's name in the reps FASTA (and so in the domtbl): <protein>/<start>-<end>, or the protein
+        rep, region = row["rep_protein"], row["rep_region"]
+        key = f"{rep}/{region}" if region != "-" else rep
+        if key in representative_to_family:
+            existing_value = representative_to_family[key]
+            if int(family_to_size[value]) > int(family_to_size[existing_value]):
+                redundant_fam_names.add(existing_value)
+                representative_to_family[key] = value
+            else:
+                redundant_fam_names.add(value)
+        else:
+            representative_to_family[key] = value
     return representative_to_family
 
 

@@ -26,7 +26,7 @@ process PRESENT_FAMILY_METADATA {
     # description: "Generated family metadata."
     # format: "csv"
     # plot_type: "table"
-    Family Id,Size,Representative Id,Region,Representative Length,Sequence,HMM consensus,Converged
+    Family Id,Converged,Seed Size,Size,Representative Id,Region,Representative Length,HMM Length,Sequence,HMM consensus
     EOF
 
     tail -n +2 ${metadata} >> ${prefix}_mqc.csv

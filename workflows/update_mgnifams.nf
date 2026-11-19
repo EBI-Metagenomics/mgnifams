@@ -126,7 +126,7 @@ workflow UPDATE_MGNIFAMS {
     ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
 
     EXPORT_DATA( UPDATE_FAMILIES.out.metadata, PREDICT_STRUCTURES.out.scores, \
-        ANNOTATE_REPS.out.composition, ANNOTATE_REPS.out.tm_composition, channel.value([ [id: 'seed_sizes'], [] ]), \
+        ANNOTATE_REPS.out.composition, ANNOTATE_REPS.out.tm_composition, \
         ANNOTATE_REPS.out.pfam_domains, ANNOTATE_REPS.out.funfam_domains, query_hmm_length_threshold, \
         channel.empty(), ANNOTATE_STRUCTURES.out.foldseek_hits, outdir )
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )

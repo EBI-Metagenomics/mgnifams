@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Breaking`
 
 - Default mode (`run_mgnifams_pipeline`) input: the samplesheet takes either a sliced protein FASTA (`protein_input`, `.fa`/`.fasta`/`.faa`, optionally `.gz`) or the MGnify proteins sequences parquet (`mgnify_proteins_sequences`, Pfam slicing by `EXTRACT_UNANNOTATED_PARQUET_SLICES`, as `update_mgnifams`), and `mgnify_proteins_clusters` and `mgnify_proteins_pfam` on every row. The `sequence_explorer_protein` CSV input is removed with `BZ2_UNCOMPRESS`, `EXTRACT_UNANNOTATED_FASTA`, `EXTRACT_UNANNOTATED_SLICES`, `bin/extract_unannotated_slices.py` and the params `--fasta_input_mode`, `--compress_mode` and `--input_csv_chunk_size`.
+- Default-mode family generation runs on nf-core `mgnifam/generatefamilies` (mgnifam 4.1.0, [#68](https://github.com/EBI-Metagenomics/mgnifams/issues/68)) with the input FASTA's `HMMER_ESLSFETCHINDEX` index, in place of `GENERATE_FAMILIES` (`bin/generate_families.py`); the eight `--mgnifams_*` generation params reach it unchanged. `generate_families/families/family_metadata.csv` gets mgnifam's header, the one `update_mgnifams` already writes: `family_id,converged,seed_msa_size,full_msa_size,rep_protein,rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence`. Pooling reads mgnifam's per-chunk names and gzip artifacts and publishes the pooled HMMs, MSAs and representatives decompressed, under the same names as before.
 
 ### `Added`
 
@@ -16,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default test inputs `assets/data/mgnifams_test_input.fa.gz`, `mgnifams_test_clusters.parquet` and `mgnifams_test_pfam.parquet`, made once from the removed CSV test file.
 
 ### `Changed`
+
+- `mgnifam/updatefamilies` bumped to mgnifam 4.1.0 (no change to `update_families`).
+
+### `Removed`
+
+- `COUNT_SEED_MSA_SIZES` and `EXPORT_MGNIFAMS`'s `seed_sizes` input: seed size and HMM length come from mgnifam's metadata; `bin/export_mgnifams.py` reads only mgnifam's header.
 
 ## v3.1.0 - [2026/11/18]
 

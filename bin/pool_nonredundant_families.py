@@ -4,9 +4,9 @@ import argparse
 import os
 import shutil
 import json
-import fileinput
-import re
 import csv
+import gzip
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -64,25 +64,48 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
+# mgnifam generate_families (4.x) per-chunk file names: the chunk id is the name minus its suffix
+METADATA_HEADER = (
+    "family_id,converged,seed_msa_size,full_msa_size,"
+    "rep_protein,rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence"
+)
+DISCARDED_HEADER = "representative,reason,value"
+ARTIFACT_SUFFIXES = (".hmm.gz", ".sto.gz", ".txt")  # per-family hmm/, seed and full MSAs, rf/
+
+
 def read_non_redundant_fam_ids(file_path):
     with open(file_path, "r") as file:
         return set(file.read().splitlines())
 
 
+def chunk_of(filename, suffix):
+    if not filename.endswith(suffix):
+        raise ValueError(f"{filename}: expected a name ending in {suffix}")
+    return filename[: -len(suffix)]
+
+
+def split_artifact(filename):
+    """`<chunk>_<n>.hmm.gz` -> (`<chunk>_<n>`, `.hmm`): the family key and the pooled (decompressed) extension."""
+    for suffix in ARTIFACT_SUFFIXES:
+        if filename.endswith(suffix):
+            return filename[: -len(suffix)], suffix.removesuffix(".gz")
+    raise ValueError(f"{filename}: expected one of {', '.join(ARTIFACT_SUFFIXES)}")
+
+
+def open_text(path):
+    return gzip.open(path, "rt") if path.endswith(".gz") else open(path, "r", buffering=1 << 20)
+
+
 def create_mapping_dict():
     hmm_folder = os.path.join(arg_families_dir, "hmm")
-    hmm_files = sorted(
-        [name for name in os.listdir(hmm_folder) if os.path.basename(name).split(".")[0] not in redundant_fam_ids]
-    )
-
-    family_to_id = {
-        os.path.basename(filename).split(".")[0]: idx + arg_starting_id for idx, filename in enumerate(hmm_files)
-    }
-
-    return family_to_id
+    keys = sorted(split_artifact(name)[0] for name in os.listdir(hmm_folder))
+    keys = [key for key in keys if key not in redundant_fam_ids]
+    return {key: idx + arg_starting_id for idx, key in enumerate(keys)}
 
 
-def pool_directory(input_dir, output_filename, splitChar, header=""):
+def pool_directory(input_dir, suffix, output_filename, splitChar, header=""):
+    """Concatenates per-chunk files, rewriting each row's chunk-local family id to its pooled id. With `header`, each
+    input must start with it (a changed mgnifam format would otherwise be read under the wrong column names)."""
     path_to_folder = os.path.join(arg_families_dir, input_dir)
     output_file = os.path.join(arg_out_dir, output_filename)
 
@@ -90,71 +113,62 @@ def pool_directory(input_dir, output_filename, splitChar, header=""):
         if header:
             outfile.write(header + "\n")
         for filename in sorted(os.listdir(path_to_folder)):
-            filepath = os.path.join(path_to_folder, filename)
-            base_filename = os.path.splitext(filename)[0]
-            with open(filepath, "r", buffering=1 << 20) as infile:
-                if splitChar:
-                    for line in infile:
-                        value = line.strip()
-                        if not value:
-                            continue
-                        first_element, _, remaining_elements = value.partition(splitChar)
-                        fam_id = base_filename + "_" + first_element
-                        if fam_id in redundant_fam_ids:
-                            continue
-                        outfile.write(str(family_to_id[fam_id]) + splitChar + remaining_elements + "\n")
-                else:  # converged_families: one value per line
-                    for line in infile:
-                        value = line.strip()
-                        if not value:
-                            continue
-                        fam_id = base_filename + "_" + value
+            chunk = chunk_of(filename, suffix)
+            with open(os.path.join(path_to_folder, filename), "r", buffering=1 << 20) as infile:
+                if header and infile.readline().rstrip("\n") != header:
+                    raise ValueError(f"{filename}: header is not {header}")
+                for line in infile:
+                    value = line.strip()
+                    if not value:
+                        continue
+                    if not splitChar:  # converged ids: one per line, families without an HMM skipped
+                        fam_id = chunk + "_" + value
                         if fam_id in redundant_fam_ids or fam_id not in family_to_id:
                             continue
                         outfile.write(str(family_to_id[fam_id]) + "\n")
+                        continue
+                    first_element, _, remaining_elements = value.partition(splitChar)
+                    fam_id = chunk + "_" + first_element
+                    if fam_id in redundant_fam_ids:
+                        continue
+                    outfile.write(str(family_to_id[fam_id]) + splitChar + remaining_elements + "\n")
 
 
-def pool_clusters_directory(input_dir, output_filename):
+def pool_clusters_directory(input_dir, output_filename, header=""):
+    """Concatenates per-chunk cluster lists; with `header`, each input starts with it and it is dropped."""
     path_to_folder = os.path.join(arg_families_dir, input_dir)
     output_file = os.path.join(arg_out_dir, output_filename)
 
     with open(output_file, "w") as outfile:
         for filename in sorted(os.listdir(path_to_folder)):
-            filepath = os.path.join(path_to_folder, filename)
-            with open(filepath, "r") as infile:
-                content = infile.read().strip()  # Read and strip leading/trailing whitespace
-                if content:  # Only write if the file is not empty
+            with open(os.path.join(path_to_folder, filename), "r") as infile:
+                if header and infile.readline().rstrip("\n") != header:
+                    raise ValueError(f"{filename}: header is not {header}")
+                content = infile.read().strip()
+                if content:
                     outfile.write(content + "\n")
 
 
-def update_hmm_name_inplace(hmm_file):
-    for line in fileinput.input(hmm_file, inplace=True):
-        match = re.match(r"^(NAME\s+)(\S+)", line)
-        if match:
-            original_name = match.group(2)
-            if original_name in family_to_id:
-                line = f"{match.group(1)}{family_to_id[original_name]}\n"
-        print(line, end="")
-
-
 def translate_directory(input_dir):
+    """Copies each non-redundant family's file as `<pooled id><ext>`, decompressed; HMM NAME lines get the pooled id."""
     input_folder = os.path.join(arg_families_dir, input_dir)
-    os.makedirs(os.path.join(arg_out_dir, input_dir), exist_ok=True)
     output_folder = os.path.join(arg_out_dir, input_dir)
+    os.makedirs(output_folder, exist_ok=True)
 
-    filenames = sorted(os.listdir(input_folder))
-    for filename in filenames:
-        basename = os.path.splitext(filename)[0]
-        if basename in redundant_fam_ids:
+    for filename in sorted(os.listdir(input_folder)):
+        key, extension = split_artifact(filename)
+        if key in redundant_fam_ids:
             continue
-        source_path = os.path.join(input_folder, filename)
-        new_filename = f"{family_to_id[basename]}{os.path.splitext(filename)[1]}"
-        destination_path = os.path.join(output_folder, new_filename)
-
-        shutil.copy(source_path, destination_path)
-
-        if input_dir == "hmm":
-            update_hmm_name_inplace(destination_path)
+        destination_path = os.path.join(output_folder, f"{family_to_id[key]}{extension}")
+        with open_text(os.path.join(input_folder, filename)) as infile, open(destination_path, "w") as outfile:
+            if input_dir != "hmm":
+                shutil.copyfileobj(infile, outfile, 1 << 20)
+                continue
+            for line in infile:
+                match = re.match(r"^(NAME\s+)(\S+)", line)
+                if match and match.group(2) in family_to_id:
+                    line = f"{match.group(1)}{family_to_id[match.group(2)]}\n"
+                outfile.write(line)
 
 
 def translate_edgelist(file_path, out_path):
@@ -190,11 +204,8 @@ def pool_nonredundant_reps(input_folder, output_file, ids_only_file):
 
     with open(output_file, "w") as out_f, open(ids_only_file, "w") as ids_f:
         for filename in sorted(os.listdir(path_to_folder)):
-            file_path = os.path.join(path_to_folder, filename)
-            if not os.path.isfile(file_path) or not filename.endswith((".fa", ".fasta", ".faa")):
-                continue
-
-            with open(file_path, "r") as fasta_file:
+            chunk_of(filename, "_reps.fasta.gz")
+            with open_text(os.path.join(path_to_folder, filename)) as fasta_file:
                 write_sequence = False
                 for line in fasta_file:
                     if line.startswith(">"):
@@ -239,20 +250,13 @@ def main(args=None):
     family_to_id = create_mapping_dict()
 
     tasks = [
-        # Same header as the update_mgnifams family_metadata.csv (from mgnifam update_families)
-        (
-            pool_directory,
-            (
-                "family_metadata",
-                "family_metadata.csv",
-                ",",
-                "family_id,full_msa_size,protein,region,length,sequence,consensus,converged",
-            ),
-        ),
-        (pool_directory, ("refined_families", "refined_families.tsv", "\t")),
-        (pool_directory, ("converged_families", "converged_families.txt", "")),
+        # Same header as the update_mgnifams family_metadata.csv (both from mgnifam)
+        (pool_directory, ("family_metadata", "_metadata.csv", "family_metadata.csv", ",", METADATA_HEADER)),
+        (pool_directory, ("refined_families", "_families.tsv", "refined_families.tsv", "\t")),
+        (pool_directory, ("converged_families", "_converged.txt", "converged_families.txt", "")),
         (pool_clusters_directory, ("successful_clusters", "successful_clusters.txt")),
-        (pool_clusters_directory, ("discarded_clusters", "discarded_clusters.txt")),
+        # Pooled without its header: PRESENT_DISCARDED_FAMILIES writes the MultiQC one
+        (pool_clusters_directory, ("discarded_clusters", "discarded_clusters.txt", DISCARDED_HEADER)),
         (translate_directory, ("rf",)),
         (translate_directory, ("hmm",)),
         (translate_directory, ("full_msa_sto",)),
