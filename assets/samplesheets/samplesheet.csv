@@ -1,2 +1,2 @@
-sample,protein_input
-plp2024,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/sequence_explorer_protein_test_100001.csv.gz
+sample,protein_input,mgnify_proteins_clusters,mgnify_proteins_pfam
+plp2024,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/mgnifams_test_input.fa.gz,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/mgnifams_test_clusters.parquet,https://raw.githubusercontent.com/EBI-Metagenomics/mgnifams/dev/assets/data/mgnifams_test_pfam.parquet

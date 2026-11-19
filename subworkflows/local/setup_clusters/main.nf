@@ -1,16 +1,15 @@
-include { EXTRACT_UNANNOTATED_FASTA      } from '../../../subworkflows/local/extract_unannotated_fasta'
-include { CHECK_QUALITY                  } from '../../../subworkflows/local/check_quality'
-include { EXECUTE_CLUSTERING             } from '../../../subworkflows/local/execute_clustering'
-include { CALCULATE_CLUSTER_DISTRIBUTION } from '../../../modules/local/calculate_cluster_distribution/main'
-include { EXTRACT_UNIQUE_CLUSTER_REPS    } from '../../../modules/local/extract_unique_cluster_reps/main'
-include { CHUNK_CLUSTERS                 } from '../../../modules/local/chunk_clusters/main'
+include { PIGZ_UNCOMPRESS                    } from '../../../modules/nf-core/pigz/uncompress/main'
+include { EXTRACT_UNANNOTATED_PARQUET_SLICES } from '../../../modules/local/extract_unannotated_parquet_slices/main'
+include { CHECK_QUALITY                      } from '../../../subworkflows/local/check_quality'
+include { EXECUTE_CLUSTERING                 } from '../../../subworkflows/local/execute_clustering'
+include { CALCULATE_CLUSTER_DISTRIBUTION     } from '../../../modules/local/calculate_cluster_distribution/main'
+include { EXTRACT_UNIQUE_CLUSTER_REPS        } from '../../../modules/local/extract_unique_cluster_reps/main'
+include { CHUNK_CLUSTERS                     } from '../../../modules/local/chunk_clusters/main'
 
 workflow SETUP_CLUSTERS {
     take:
-    input
-    fasta_input_mode
-    compress_mode
-    input_csv_chunk_size
+    input               // channel: [ meta, protein_input FASTA or [], sequences parquet or [], clusters parquet, pfam parquet, mgnifam_regions dir or [] ]
+    parquet_chunks      // integer: parallel Pfam-slicing tasks over the sequence parquet row groups
     min_sequence_length
     outdir
     minimum_members
@@ -19,13 +18,35 @@ workflow SETUP_CLUSTERS {
     main:
     ch_versions = channel.empty()
 
-    if (!fasta_input_mode) {
-        ch_mgnifams_input_fa = EXTRACT_UNANNOTATED_FASTA( input, compress_mode, \
-            input_csv_chunk_size, min_sequence_length, outdir ).fasta
-        ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_FASTA.out.versions )
-    } else {
-        ch_mgnifams_input_fa = input
+    // One plain FASTA for everything downstream (clustering, the SSI index, generation): a pre-sliced FASTA as is
+    // (.gz decompressed), or the Pfam-free slices of the sequence parquet, as update_mgnifams makes them
+    ch_branch = input.branch { _meta, fasta, _sequences, _clusters, _pfam, _regions ->
+        gz     : fasta && fasta.name.endsWith('.gz')
+        fasta  : fasta
+        parquet: true
     }
+
+    PIGZ_UNCOMPRESS( ch_branch.gz.map { meta, fasta, _sequences, _clusters, _pfam, _regions -> [ meta, fasta ] } )
+
+    ch_slice_input = ch_branch.parquet
+        .combine( channel.of(0..<parquet_chunks) )
+        .map { meta, _fasta, sequences, clusters, pfam, _regions, chunk_index -> [ meta, sequences, clusters, pfam, chunk_index ] }
+    EXTRACT_UNANNOTATED_PARQUET_SLICES( ch_slice_input, parquet_chunks, min_sequence_length )
+    ch_versions = ch_versions.mix( EXTRACT_UNANNOTATED_PARQUET_SLICES.out.versions )
+
+    // Zero-padded chunk names: name order is chunk order, so the FASTA is byte-identical across runs.
+    // shortcut: one parquet row per run (as update_mgnifams); several rows would be concatenated into one FASTA
+    ch_sliced_file = EXTRACT_UNANNOTATED_PARQUET_SLICES.out.fa
+        .map { _meta, fa -> fa }
+        .collectFile( name: 'mgnifams_input.faa', sort: { fa -> fa.name } )
+    ch_sliced_file.collectFile( name: 'mgnifams_input.faa', storeDir: "${outdir}/setup_clusters" ) // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
+    ch_sliced = ch_sliced_file
+        .combine( ch_branch.parquet.map { meta, _fasta, _sequences, _clusters, _pfam, _regions -> meta } )
+        .map { fa, meta -> [ meta, fa ] }
+
+    ch_mgnifams_input_fa = ch_branch.fasta
+        .map { meta, fasta, _sequences, _clusters, _pfam, _regions -> [ meta, fasta ] }
+        .mix( PIGZ_UNCOMPRESS.out.file, ch_sliced )
 
     CHECK_QUALITY( ch_mgnifams_input_fa )
     ch_versions = ch_versions.mix( CHECK_QUALITY.out.versions )

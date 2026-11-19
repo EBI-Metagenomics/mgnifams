@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Equivalence check: parquet slicer == CSV slicer on the same proteins. Run: python3 bin/test_extract_unannotated_parquet_slices.py"""
+"""Check: parquet slicer == sliceProtein (bin/slice_protein.py) on the same proteins.
+Run: python3 bin/test_extract_unannotated_parquet_slices.py"""
 
-import csv
-import json
 import subprocess
 import sys
 import tempfile
@@ -10,6 +9,9 @@ from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from slice_protein import sliceProtein  # noqa: E402
 
 BIN = Path(__file__).resolve().parent
 MIN = 10
@@ -32,28 +34,29 @@ def records(fasta):
     return sorted(">" + r for r in text.split(">") if r)
 
 
+# Output of the removed CSV slicer (extract_unannotated_slices.py, pipeline 3.x) on these proteins: sliceProtein
+# with the default start must keep it byte for byte
+GOLDEN = (
+    ">1_31_60\nMNPQRSTVWYACDEFGHIKLMNPQRSTVWY\n>2_1_10\nACDEFGHIKL\n>2_31_60\nMNPQRSTVWYACDEFGHIKLMNPQRSTVWY\n"
+    ">3_46_60\nGHIKLMNPQRSTVWY\n>4\nACDEFGHIKLMNPQRSTVWYACDEFGHIKLMNPQRSTVWYACDEFGHIKLMNPQRSTVWY\n"
+    ">5_1_19\nACDEFGHIKLMNPQRSTVW\n>5_41_60\nACDEFGHIKLMNPQRSTVWY\n"
+)
+expected = []
+for p, regs in proteins.items():
+    if regs:
+        expected += sliceProtein(p, seqs[p], {"p": [["PF00001", 1e-5, 30.0, 1, 10, s, e] for s, e in regs]}, MIN)
+    elif len(seqs[p]) >= MIN:
+        expected.append(f">{p}\n{seqs[p]}\n")
+assert "".join(expected) == GOLDEN, expected
+expected = sorted(expected)
+# start = protein coordinate of sequence[0]: a slice keeps protein coordinates in its headers
+assert sliceProtein(9, "A" * 30, {"m": [[11, 15]]}, 5, start=101) == [
+    ">9_101_110\nAAAAAAAAAA\n",
+    ">9_116_130\nAAAAAAAAAAAAAAA\n",
+]
+
 with tempfile.TemporaryDirectory() as d:
     d = Path(d)
-    with open(d / "in.csv", "w", newline="") as fh:
-        w = csv.writer(fh)
-        w.writerow(["mgyp", "sequence", "full_length", "cluster_size", "metadata"])
-        for p, regs in proteins.items():
-            meta = {"p": [["PF00001", 1e-5, 30.0, 1, 10, s, e] for s, e in regs]} if regs else {"b": [[1, 1]]}
-            w.writerow([p, seqs[p], "true", 1, json.dumps(meta)])
-    subprocess.run(
-        [
-            sys.executable,
-            BIN / "extract_unannotated_slices.py",
-            "-i",
-            d / "in.csv",
-            "-o",
-            d / "csv.faa",
-            "-l",
-            str(MIN),
-        ],
-        check=True,
-    )
-
     # protein 8 is a cluster member, not a representative: the parquet slicer must drop it
     ids = [*proteins, 8]
     pq.write_table(
@@ -94,7 +97,7 @@ with tempfile.TemporaryDirectory() as d:
                 check=True,
             )
             parquet_records += records(out)
-        assert sorted(parquet_records) == records(d / "csv.faa"), (n_chunks, parquet_records, records(d / "csv.faa"))
+        assert sorted(parquet_records) == expected, (n_chunks, parquet_records, expected)
 
     # more chunks than row groups -> empty output, no error
     subprocess.run(

@@ -49,8 +49,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     //
     if (params.mode == 'run_mgnifams_pipeline') {
         MGNIFAMS(
-            samplesheet, params.fasta_input_mode, params.compress_mode, \
-            params.input_csv_chunk_size, params.min_sequence_length, params.outdir, \
+            samplesheet, params.parquet_chunks, params.min_sequence_length, params.outdir, \
             params.minimum_members, params.clusters_chunk_size, params.mgnifams_discard_min_rep_length, \
             params.mgnifams_discard_max_rep_length, params.mgnifams_discard_min_starting_membership, \
             params.mgnifams_max_seq_identity, params.mgnifams_max_seed_seqs, params.mgnifams_max_gap_occupancy, \

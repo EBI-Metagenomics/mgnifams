@@ -25,10 +25,8 @@ include { COUNT_SEED_MSA_SIZES           } from '../modules/local/count_seed_msa
 workflow MGNIFAMS {
 
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
-    fasta_input_mode
-    compress_mode
-    input_csv_chunk_size
+    ch_samplesheet // channel: [ meta, protein_input FASTA or [], sequences parquet or [], clusters parquet, pfam parquet, mgnifam_regions dir or [] ]
+    parquet_chunks
     min_sequence_length
     outdir
     minimum_members
@@ -72,8 +70,7 @@ workflow MGNIFAMS {
     ch_versions      = channel.empty()
     ch_multiqc_files = channel.empty()
 
-    SETUP_CLUSTERS( ch_samplesheet, fasta_input_mode, compress_mode, \
-        input_csv_chunk_size, min_sequence_length, outdir, \
+    SETUP_CLUSTERS( ch_samplesheet, parquet_chunks, min_sequence_length, outdir, \
         minimum_members, clusters_chunk_size )
     ch_versions = ch_versions.mix( SETUP_CLUSTERS.out.versions )
 

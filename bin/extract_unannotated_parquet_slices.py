@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Parquet twin of extract_unannotated_slices.py: slice the regions of MGnify proteins not covered by known Pfam
-domains (same sliceProtein logic), reading the sequence and Pfam parquet files joined on protein_id.
+"""Slice the regions of MGnify proteins not covered by known Pfam domains (bin/slice_protein.py), reading the sequence and Pfam parquet files joined on protein_id.
 Only the cluster representatives (`cluster_rep` of the clusters parquet) are kept, as for MGnifams 1.0.
 
 Chunk `chunk_index` of `n_chunks` processes the sequence row groups rg with rg % n_chunks == chunk_index.
@@ -12,7 +11,7 @@ import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.dataset as ds
 import pyarrow.parquet as pq
-from extract_unannotated_slices import sliceProtein
+from slice_protein import sliceProtein
 
 
 def parse_args(args=None):
