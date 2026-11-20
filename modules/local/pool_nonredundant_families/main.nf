@@ -20,7 +20,6 @@ process POOL_NONREDUNDANT_FAMILIES {
     tuple val(meta10), path(family_reps_ch , stageAs: "families_prepooled/family_reps/*")
     tuple val(meta11), path(logs_ch        , stageAs: "families_prepooled/logs/*")
     tuple val(meta12), path(redundant_family_ids)
-    tuple val(meta13), path(similarity_csv)
     val(starting_id)
 
     output:
@@ -36,7 +35,6 @@ process POOL_NONREDUNDANT_FAMILIES {
     tuple val(meta10), path("families/family_reps.fasta")      , emit: family_reps
     tuple val(meta10), path("families/family_ids.fasta")       , emit: family_ids_fasta
     tuple val(meta12), path("families/family_to_id.json")      , emit: id_mapping
-    tuple val(meta13), path("families/similarity_mqc.csv")     , emit: similarity_mqc
     path "versions.yml"                                        , emit: versions
 
     when:
@@ -48,7 +46,6 @@ process POOL_NONREDUNDANT_FAMILIES {
         --input_dir families_prepooled \\
         --output_dir families \\
         --redundant ${redundant_family_ids} \\
-        --similarity_csv ${similarity_csv} \\
         --iter ${starting_id} \\
         --threads ${task.cpus}
 
@@ -70,7 +67,6 @@ process POOL_NONREDUNDANT_FAMILIES {
     printf '>1/1-30\\t%s\\nACDEFGHIKLMNPQRSTVWYACDEFGHIKL\\n' ${starting_id} > families/family_reps.fasta
     printf '>%s\\nACDEFGHIKLMNPQRSTVWYACDEFGHIKL\\n' ${starting_id} > families/family_ids.fasta
     echo '{}' > families/family_to_id.json
-    touch families/similarity_mqc.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

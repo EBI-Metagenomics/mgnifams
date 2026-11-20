@@ -30,9 +30,8 @@ workflow MGNIFAMS {
     outdir
     minimum_members
     clusters_chunk_size
-    redundant_length_threshold
     redundant_score_threshold
-    similarity_score_threshold
+    redundant_residue_threshold
     starting_id
     pdb_chunk_size
     esmfold_db
@@ -66,8 +65,8 @@ workflow MGNIFAMS {
     ch_versions = ch_versions.mix( SETUP_CLUSTERS.out.versions )
 
     GENERATE_NONREDUNDANT_FAMILIES( SETUP_CLUSTERS.out.cluster_chunks, \
-        SETUP_CLUSTERS.out.mgnifams_input_fa, outdir, redundant_length_threshold, redundant_score_threshold, \
-        similarity_score_threshold, starting_id )
+        SETUP_CLUSTERS.out.mgnifams_input_fa, redundant_score_threshold, redundant_residue_threshold, \
+        starting_id )
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
     PREDICT_STRUCTURES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, \
@@ -137,7 +136,6 @@ workflow MGNIFAMS {
     ch_multiqc_files = ch_multiqc_files.mix(SETUP_CLUSTERS.out.cluster_distr_mqc.collect { t -> t[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.discarded_mqc.collect { t -> t[1] }.ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.metadata_mqc.collect { t -> t[1] }.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(GENERATE_NONREDUNDANT_FAMILIES.out.similarity_mqc.collect { t -> t[1] }.ifEmpty([]))
 
     MULTIQC(
         ch_multiqc_files.flatten().collect().map { files ->

@@ -10,11 +10,6 @@
                         "git_sha": "7b3452a23773f687ededb4befd037920e5a51341",
                         "installed_by": ["modules"]
                     },
-                    "find/concatenate": {
-                        "branch": "master",
-                        "git_sha": "7b3452a23773f687ededb4befd037920e5a51341",
-                        "installed_by": ["modules"]
-                    },
                     "foldseek/easysearch": {
                         "branch": "master",
                         "git_sha": "574ad1868a466e73d0f5ef8c139a260fbf2d8b9c",
@@ -43,6 +38,11 @@
                     "hmmer/hmmsearch": {
                         "branch": "master",
                         "git_sha": "7b3452a23773f687ededb4befd037920e5a51341",
+                        "installed_by": ["modules"]
+                    },
+                    "mgnifam/computeclans": {
+                        "branch": "master",
+                        "git_sha": "e78a2112a36afcaffa31810216eb2d97cdbce290",
                         "installed_by": ["modules"]
                     },
                     "mgnifam/generatefamilies": {

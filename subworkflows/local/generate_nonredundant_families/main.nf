@@ -1,6 +1,8 @@
 include { HMMER_ESLSFETCHINDEX                  } from '../../../modules/nf-core/hmmer/eslsfetchindex/main'
 include { MGNIFAM_GENERATEFAMILIES              } from '../../../modules/nf-core/mgnifam/generatefamilies/main'
 include { REMOVE_REDUNDANCY                     } from '../../../subworkflows/local/remove_redundancy'
+include { MGNIFAM_COMPUTECLANS                  } from '../../../modules/nf-core/mgnifam/computeclans/main'
+include { FORMAT_CLANS                          } from '../../../modules/local/format_clans/main'
 include { HHSUITE_REFORMAT as REFORMAT_SEED_MSA } from '../../../modules/nf-core/hhsuite/reformat/main'
 include { HHSUITE_REFORMAT as REFORMAT_FULL_MSA } from '../../../modules/nf-core/hhsuite/reformat/main'
 include { PRESENT_DISCARDED_FAMILIES            } from '../../../modules/local/present_discarded_families/main'
@@ -10,10 +12,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     take:
     cluster_chunks // channel: [ meta, clusters_chunk.tsv ]; the mgnifams_* generation params reach mgnifam via ext.args
     mgnifams_fa    // channel: [ meta, mgnifams_input.fa ] (plain: the SSI index needs an uncompressed file)
-    outdir
-    redundant_length_threshold
     redundant_score_threshold
-    similarity_score_threshold
+    redundant_residue_threshold
     starting_id
 
     main:
@@ -37,12 +37,15 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     ch_converged   = collectedAs( ch_families.converged , 'converged' )
     ch_logs        = collectedAs( ch_families.log       , 'logs' )
 
-    REMOVE_REDUNDANCY( ch_reps_fasta, outdir, ch_hmm, ch_metadata, \
+    REMOVE_REDUNDANCY( mgnifams_fa, ch_reps_fasta, ch_hmm, ch_metadata, \
         ch_seed_msa_sto, ch_full_msa_sto, ch_rf, ch_tsv, \
-        redundant_length_threshold, redundant_score_threshold, \
-        similarity_score_threshold, ch_discarded, ch_successful, \
-        ch_converged, ch_logs, starting_id )
+        redundant_score_threshold, redundant_residue_threshold, \
+        ch_discarded, ch_successful, ch_converged, ch_logs, starting_id )
     ch_versions = ch_versions.mix( REMOVE_REDUNDANCY.out.versions )
+
+    // The release's clans, over the kept families under their pooled ids
+    MGNIFAM_COMPUTECLANS( REMOVE_REDUNDANCY.out.tsv.combine( mgnifams_fa.map { _meta, fa -> fa } ) )
+    FORMAT_CLANS( MGNIFAM_COMPUTECLANS.out.clans.join( MGNIFAM_COMPUTECLANS.out.clan_edges ) )
 
     ch_input_for_reformat_seed = REMOVE_REDUNDANCY.out.seed_msa_sto
         .transpose()
@@ -79,7 +82,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     full_msa         = REFORMAT_FULL_MSA.out.msa
     discarded_mqc    = PRESENT_DISCARDED_FAMILIES.out.mqc
     metadata_mqc     = PRESENT_FAMILY_METADATA.out.mqc
-    similarity_mqc   = REMOVE_REDUNDANCY.out.similarity_mqc
+    clans            = FORMAT_CLANS.out.clans
+    clan_edges       = FORMAT_CLANS.out.clan_edges
 }
 
 // All per-chunk files of one MGNIFAM_GENERATEFAMILIES output, as one [ [id: id], files ] item.
