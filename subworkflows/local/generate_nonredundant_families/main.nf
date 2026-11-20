@@ -82,7 +82,8 @@ workflow GENERATE_NONREDUNDANT_FAMILIES {
     similarity_mqc   = REMOVE_REDUNDANCY.out.similarity_mqc
 }
 
-// All per-chunk files of one MGNIFAM_GENERATEFAMILIES output, as one [ [id: id], files ] item
+// All per-chunk files of one MGNIFAM_GENERATEFAMILIES output, as one [ [id: id], files ] item.
+// Sorted by name: collect() keeps task-completion order, which would change the task hash and break -resume.
 def collectedAs(ch, id) {
-    return ch.map { _meta, files -> files }.collect().map { files -> [ [id: id], files ] }
+    return ch.map { _meta, files -> files }.collect(sort: { a, b -> a.name <=> b.name }).map { files -> [ [id: id], files ] }
 }

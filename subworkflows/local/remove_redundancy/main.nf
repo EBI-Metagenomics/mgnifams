@@ -1,9 +1,9 @@
-include { FIND_CONCATENATE               } from '../../../modules/nf-core/find/concatenate/main'
+include { FIND_CONCATENATE                     } from '../../../modules/nf-core/find/concatenate/main'
 include { FIND_CONCATENATE as CONCATENATE_REPS } from '../../../modules/nf-core/find/concatenate/main'
-include { HMMER_HMMSEARCH                } from '../../../modules/nf-core/hmmer/hmmsearch/main'
-include { POOL_PREREDUNDANT_FAMILIES_TSV } from '../../../modules/local/pool_preredundant_families_tsv/main'
-include { IDENTIFY_REDUNDANT_FAMS        } from '../../../modules/local/identify_redundant_fams/main'
-include { POOL_NONREDUNDANT_FAMILIES     } from '../../../modules/local/pool_nonredundant_families/main'
+include { HMMER_HMMSEARCH                      } from '../../../modules/nf-core/hmmer/hmmsearch/main'
+include { POOL_PREREDUNDANT_FAMILIES_TSV       } from '../../../modules/local/pool_preredundant_families_tsv/main'
+include { IDENTIFY_REDUNDANT_FAMS              } from '../../../modules/local/identify_redundant_fams/main'
+include { POOL_NONREDUNDANT_FAMILIES           } from '../../../modules/local/pool_nonredundant_families/main'
 
 workflow REMOVE_REDUNDANCY {
     take:
