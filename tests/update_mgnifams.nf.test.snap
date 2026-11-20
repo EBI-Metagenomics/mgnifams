@@ -15,7 +15,7 @@
                     "python": "3.13.1"
                 },
                 "EXPORT_FOLDS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "EXPORT_MGNIFAMS": {
                     "python": "3.10.6",
@@ -25,17 +25,17 @@
                     "python": "3.13.0"
                 },
                 "EXTRACT_ESMFOLD_SCORES": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "EXTRACT_UNANNOTATED_PARQUET_SLICES": {
                     "python": "3.13.1",
                     "pyarrow": "21.0.0"
                 },
                 "FILTER_EXPORT_FUNFAMS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "FILTER_EXPORT_PFAMS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "FOLDSEEK_EASYSEARCH_PDB": {
                     "foldseek": "10.941cd33"
@@ -52,7 +52,7 @@
                     "hmmer": 3.4
                 },
                 "MGNIFAM_UPDATEFAMILIES": {
-                    "mgnifam": "4.0.0"
+                    "mgnifam": "4.1.0"
                 },
                 "PARSE_BIOMES": {
                     "python": "3.10.6",
@@ -61,7 +61,7 @@
                 "PARSE_CIF": {
                     "python": "3.13.1",
                     "numpy": "2.3.1",
-                    "biopython": 1.85
+                    "biopython": "1.85"
                 },
                 "PARSE_DOMAINS": {
                     "python": "3.10.6",
@@ -71,7 +71,7 @@
                     "python": "3.13.0"
                 },
                 "POOL_UPDATED_FAMILIES": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "RUN_ESMFOLD": {
                     "esm-fold": "1.0.3"
@@ -83,17 +83,17 @@
                     "seqkit": "2.13.0"
                 },
                 "SEQKIT_STATS_TO_MQC": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "SPLIT_HMM_LIB": {
                     "awk": "mawk 1.3.4 20200120",
-                    "gzip": 1.1
+                    "gzip": "1.10"
                 },
                 "TRIM_REPS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v3.2.0dev"
+                    "ebi-metagenomics/mgnifams": "v4.0.0"
                 }
             },
             [
@@ -177,6 +177,7 @@
                 "pipeline_info/nf_core_pipeline_software_mqc_versions.yml",
                 "qc",
                 "qc/mgnifams_update_test.tsv",
+                "samplesheet.csv",
                 "structures",
                 "structures/esmfold",
                 "structures/esmfold/cif",
@@ -236,6 +237,34 @@
                 "update_families/updated_discarded.csv"
             ],
             [
+                "composition.csv:md5,4a9cd015f63e4c0442ce57b30be74361",
+                "1.horiz:md5,223a0fb987c26c0da5b5b8a06c97a69f",
+                "2.horiz:md5,291a30fb26f35d4a8a621cd8ad738782",
+                "3.horiz:md5,1d4c482e174d2d6b39c654113bf0d2d3",
+                "4.horiz:md5,5598676a14e70887ef063a05606a3f92",
+                "5.horiz:md5,6f96239e00d0f9c982b1404ec4a43fad",
+                "6.horiz:md5,8ceab51d24ea4cf485748208e5f219a0",
+                "7.horiz:md5,45a55433ad1326a0680ac47a835d582c",
+                "8.horiz:md5,6ac3f3625f81c5200239bd10953f8b8c",
+                "9.horiz:md5,b1a93e517f3a5888212b4cd48f035357",
+                "1.json:md5,1e75140d4845e1f62e44fcb3f10f2d52",
+                "2.json:md5,fde7e9a1f79ed81cb80d4f32c558ebf7",
+                "3.json:md5,c9de9e030304c0b961d293180e22949b",
+                "4.json:md5,edbb13d7c0d8cd7b2bd57f4cb5161beb",
+                "5.json:md5,605297cc41dcdf4a6fd8e51b740c0891",
+                "6.json:md5,9fdb026d601efedb4731eeb57d7d211a",
+                "7.json:md5,7f304fb115523b6136b8b664f1788ce4",
+                "8.json:md5,383d1475a4516b64a63688db18d1c3ca",
+                "9.json:md5,30c8cd833dcf6f69c911e7f51e6a3c25",
+                "1.csv:md5,7d5591e5fe535ba45b375e7492d87735",
+                "2.csv:md5,38d087e5b0d1601a891ffee738d3a559",
+                "3.csv:md5,7d5591e5fe535ba45b375e7492d87735",
+                "4.csv:md5,ca1ab4036c74b8558425cebd278643a3",
+                "5.csv:md5,e911cc97a64ecdc7bd29c6e0f9addcbc",
+                "6.csv:md5,9703b5bdb17a066184910fb1c23eeb86",
+                "7.csv:md5,5d0ca45e9b5242d8288bfb0ec867adbf",
+                "8.csv:md5,ef62dd6d9a9794b0b0a9a6cfa5436d50",
+                "9.csv:md5,179499f308c878e9162a70f98c63270f",
                 "1.json:md5,81ee9422fb78265892b009a67802d0ad",
                 "2.json:md5,5ca5baae2e5bd05b2869eb3228210800",
                 "3.json:md5,4c0e2d3d01f8caccbdb63c716893feb0",
@@ -248,13 +277,18 @@
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
                 "multiqc_seqkit_stats_summary.txt:md5,6b2b1cd54fbd941f39d70ed148dd0dfb",
                 "mgnifams_update_test.tsv:md5,9d89f4960f83efbc6c8c5101443abe2b",
-                "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
+                "samplesheet.csv:md5,b240a508832f2bdf0f2d0e0bdd7f1c8d",
+                "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "mgnifam_funfams.csv:md5,58b64fab3a619fce89430194266f1c85",
+                "mgnifam_pfams.csv:md5,c707782d1bb479a4e551598f74ad75b1",
+                "family_ids.1_trimmed.fasta:md5,4fab858760dbd108cd4f26394d81a989",
+                "family_ids.2_trimmed.fasta:md5,213f20b86b089a832d6e182851aa6713"
             ],
             "/update_families: 19",
             "/annotation: 23",
             "/table_data: 4"
         ],
-        "timestamp": "2026-11-04T14:58:53.597293254",
+        "timestamp": "2026-11-20T17:22:45.969456366",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.3"
