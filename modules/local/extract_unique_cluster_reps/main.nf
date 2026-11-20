@@ -21,7 +21,7 @@ process EXTRACT_UNIQUE_CLUSTER_REPS {
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    awk -F'\t' '{count[\$1]++} END {for (key in count) if (count[key] >= ${minimum_members}) print key}' ${clusters} > ${prefix}_unique_reps.txt
+    awk -F'\t' '{count[\$1]++} END {for (key in count) if (count[key] >= ${minimum_members}) print key}' ${clusters} | LC_ALL=C sort > ${prefix}_unique_reps.txt # sorted: chunks hold the same reps every run
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
