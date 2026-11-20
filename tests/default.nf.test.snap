@@ -1,19 +1,30 @@
 {
     "-profile test": {
         "content": [
-            88,
+            122,
             {
+                "BUILD_PARQUET_BIOME_QUERIES": {
+                    "python": "3.13.1",
+                    "pyarrow": "21.0.0"
+                },
+                "BUILD_PARQUET_DOMAIN_QUERIES": {
+                    "python": "3.13.1",
+                    "pyarrow": "21.0.0"
+                },
                 "CALCULATE_CLUSTER_DISTRIBUTION": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "CHUNK_CLUSTERS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
-                "COUNT_SEED_MSA_SIZES": {
-                    "awk": "mawk 1.3.4 20200120"
+                "CLASSIFY_MULTI_HITS": {
+                    "python": "3.13.0"
+                },
+                "EXPORT_FAMILIES_TSV": {
+                    "python": "3.13.1"
                 },
                 "EXPORT_FOLDS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "EXPORT_MGNIFAMS": {
                     "python": "3.10.6",
@@ -26,36 +37,22 @@
                     "python": "3.13.0"
                 },
                 "EXTRACT_ESMFOLD_SCORES": {
-                    "sed": 4.7
-                },
-                "EXTRACT_UNANNOTATED_SLICES": {
-                    "python": "3.13.0"
+                    "sed": "4.7"
                 },
                 "EXTRACT_UNIQUE_CLUSTER_REPS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "FILTER_EXPORT_FUNFAMS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "FILTER_EXPORT_PFAMS": {
-                    "sed": 4.7
-                },
-                "FIND_CONCATENATE": {
-                    "coreutils": 9.4,
-                    "find": "4.6.0",
-                    "pigz": 2.8
+                    "sed": "4.7"
                 },
                 "FOLDSEEK_EASYSEARCH_PDB": {
                     "foldseek": "10.941cd33"
                 },
-                "GENERATE_FAMILIES": {
-                    "python": "3.13.5",
-                    "pandas": "2.3.2",
-                    "pyfamsa": "0.6.0",
-                    "pyhmmer": "0.11.1",
-                    "pytrimal": "0.8.2",
-                    "numpy": "2.3.2",
-                    "biopython": 1.85
+                "FORMAT_CLANS": {
+                    "gzip": 1.12
                 },
                 "HHSUITE_HHBLITS": {
                     "hhsuite": "3.3.0"
@@ -63,7 +60,9 @@
                 "HHSUITE_REFORMAT": {
                     "hhsuite": "3.3.0"
                 },
-                "HMMER_HMMSEARCH": {
+                "HMMER_ESLSFETCHINDEX": {
+                    "coreutils": 9.5,
+                    "easel": 0.49,
                     "hmmer": 3.4
                 },
                 "HMMER_HMMSEARCH_FUNFAMS": {
@@ -72,9 +71,11 @@
                 "HMMER_HMMSEARCH_PFAM": {
                     "hmmer": 3.4
                 },
-                "IDENTIFY_REDUNDANT_FAMS": {
-                    "python": "3.10.6",
-                    "pandas": "1.4.3"
+                "MGNIFAM_COMPUTECLANS": {
+                    "mgnifam": "4.1.0"
+                },
+                "MGNIFAM_GENERATEFAMILIES": {
+                    "mgnifam": "4.1.0"
                 },
                 "MMSEQS_CREATEDB": {
                     "mmseqs": "18.8cc5c"
@@ -85,10 +86,18 @@
                 "MMSEQS_LINCLUST": {
                     "mmseqs": "18.8cc5c"
                 },
+                "PARSE_BIOMES": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
+                },
                 "PARSE_CIF": {
                     "python": "3.13.1",
                     "numpy": "2.3.1",
-                    "biopython": 1.85
+                    "biopython": "1.85"
+                },
+                "PARSE_DOMAINS": {
+                    "python": "3.10.6",
+                    "pandas": "1.4.3"
                 },
                 "PARSE_S4PRED_TO_FEATURE_VIEWER": {
                     "python": "3.13.0"
@@ -103,10 +112,10 @@
                     "python": "3.13.0"
                 },
                 "PRESENT_DISCARDED_FAMILIES": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "PRESENT_FAMILY_METADATA": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "REFORMAT_FULL_MSA": {
                     "hhsuite": "3.3.0"
@@ -120,17 +129,23 @@
                 "S4PRED_RUNMODEL": {
                     "s4pred": "1.2.1"
                 },
+                "SELECT_NONREDUNDANT_FAMILIES": {
+                    "python": "3.13.0"
+                },
                 "SEQKIT_STATS": {
                     "seqkit": "2.13.0"
                 },
                 "SEQKIT_STATS_TO_MQC": {
-                    "sed": 4.7
+                    "sed": "4.7"
+                },
+                "SPLIT_FAMILY_MEMBERS": {
+                    "awk": "mawk 1.3.4 20200120"
                 },
                 "TRIM_REPS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v3.2.0dev"
+                    "ebi-metagenomics/mgnifams": "v4.0.0"
                 }
             },
             [
@@ -177,9 +192,35 @@
                 "annotation/structures/foldseek",
                 "annotation/structures/foldseek/all_hits.tsv",
                 "annotation/structures/foldseek/pdb.m8",
+                "biome_results",
+                "biome_results/1.csv",
+                "biome_results/2.csv",
+                "biome_results/3.csv",
+                "biome_results/4.csv",
+                "biome_results/5.csv",
+                "biome_results/6.csv",
+                "biome_results/7.csv",
+                "biome_results/8.csv",
+                "biome_results/9.csv",
+                "domain_results",
+                "domain_results/1.json",
+                "domain_results/2.json",
+                "domain_results/3.json",
+                "domain_results/4.json",
+                "domain_results/5.json",
+                "domain_results/6.json",
+                "domain_results/7.json",
+                "domain_results/8.json",
+                "domain_results/9.json",
                 "generate_families",
+                "generate_families/clan_edges.tsv.gz",
+                "generate_families/clans",
+                "generate_families/clans.tsv.gz",
+                "generate_families/clans/1.1_clans.log",
+                "generate_families/clans/1.1_clans_summary.json",
                 "generate_families/discarded_discarded_mqc.csv",
                 "generate_families/families",
+                "generate_families/families.tsv.gz",
                 "generate_families/families/converged_families.txt",
                 "generate_families/families/discarded_clusters.txt",
                 "generate_families/families/family_ids.fasta",
@@ -247,12 +288,10 @@
                 "generate_families/families/seed_msa_sto/7.sto",
                 "generate_families/families/seed_msa_sto/8.sto",
                 "generate_families/families/seed_msa_sto/9.sto",
-                "generate_families/families/seed_sizes.csv",
-                "generate_families/families/similarity_mqc.csv",
                 "generate_families/families/successful_clusters.txt",
                 "generate_families/metadata_mqc.csv",
-                "generate_families/pre_redundant_reps.fasta",
-                "mgnifams_v2.fa",
+                "generate_families/multi_hits.tsv",
+                "generate_families/update_info.csv",
                 "multiqc",
                 "multiqc/multiqc_data",
                 "multiqc/multiqc_data/llms-full.txt",
@@ -262,7 +301,6 @@
                 "multiqc/multiqc_data/multiqc_cluster_distribution.txt",
                 "multiqc/multiqc_data/multiqc_data.json",
                 "multiqc/multiqc_data/multiqc_family_metadata.txt",
-                "multiqc/multiqc_data/multiqc_family_similarities.txt",
                 "multiqc/multiqc_data/multiqc_seqkit_stats_summary.txt",
                 "multiqc/multiqc_data/multiqc_software_versions.txt",
                 "multiqc/multiqc_data/multiqc_sources.txt",
@@ -270,28 +308,29 @@
                 "multiqc/multiqc_plots/pdf",
                 "multiqc/multiqc_plots/pdf/cluster_distribution.pdf",
                 "multiqc/multiqc_plots/pdf/family_metadata.pdf",
-                "multiqc/multiqc_plots/pdf/family_similarities.pdf",
                 "multiqc/multiqc_plots/pdf/seqkit_stats_summary.pdf",
                 "multiqc/multiqc_plots/png",
                 "multiqc/multiqc_plots/png/cluster_distribution.png",
                 "multiqc/multiqc_plots/png/family_metadata.png",
-                "multiqc/multiqc_plots/png/family_similarities.png",
                 "multiqc/multiqc_plots/png/seqkit_stats_summary.png",
                 "multiqc/multiqc_plots/svg",
                 "multiqc/multiqc_plots/svg/cluster_distribution.svg",
                 "multiqc/multiqc_plots/svg/family_metadata.svg",
-                "multiqc/multiqc_plots/svg/family_similarities.svg",
                 "multiqc/multiqc_plots/svg/seqkit_stats_summary.svg",
                 "multiqc/multiqc_report.html",
                 "pipeline_info",
                 "pipeline_info/nf_core_pipeline_software_mqc_versions.yml",
                 "qc",
-                "qc/mgnifams_v2.tsv",
+                "qc/plp2024.tsv",
+                "remove_redundancy",
+                "remove_redundancy/pre_redundant_clans.log",
+                "remove_redundancy/pre_redundant_clans_summary.json",
+                "remove_redundancy/pre_redundant_redundant.txt",
                 "setup_clusters",
-                "setup_clusters/mgnifams_v2_clustering_distribution_mqc.csv",
-                "setup_clusters/mgnifams_v2_unique_reps.txt",
                 "setup_clusters/mmseqs",
-                "setup_clusters/mmseqs/mgnifams_v2.tsv",
+                "setup_clusters/mmseqs/plp2024.tsv",
+                "setup_clusters/plp2024_clustering_distribution_mqc.csv",
+                "setup_clusters/plp2024_unique_reps.txt",
                 "structures",
                 "structures/esmfold",
                 "structures/esmfold/cif",
@@ -331,18 +370,134 @@
                 "trim/family_ids.2_trimmed.fasta"
             ],
             [
+                "composition.csv:md5,ac62e80a7790a2c500e28cd8ca1d1e62",
+                "1.horiz:md5,44a24c8232d18ee007097123dbf40e7c",
+                "2.horiz:md5,aa27b6a486b34a513ac0a5d8ae9cb5b5",
+                "3.horiz:md5,9770a4b25e6077d733545ddbeced4b61",
+                "4.horiz:md5,65be0a54738e6ca27abb4ace3737329c",
+                "5.horiz:md5,a1ab8ece0637390ead0a6854e9d528d1",
+                "6.horiz:md5,851c266aab30fb072d7e9608ff0a0845",
+                "7.horiz:md5,45a55433ad1326a0680ac47a835d582c",
+                "8.horiz:md5,a52f89394d4fb20b2058123e32bb1d5f",
+                "9.horiz:md5,5931f9d79b60da0e70912463536493b1",
+                "1.json:md5,f8fb4f7828a72b7b23e89a9e7cafda4f",
+                "2.json:md5,52f4594d53b8bcf13c887f08945c6340",
+                "3.json:md5,d4634597f18483b6426b82a20b143a4f",
+                "4.json:md5,3d54e5ac3d3d1b87a30ef063f0107a9a",
+                "5.json:md5,1c570b9a06425863f645e3af8e340a0b",
+                "6.json:md5,3e8102ab7378209919bf6dfad4f81d4b",
+                "7.json:md5,7f304fb115523b6136b8b664f1788ce4",
+                "8.json:md5,4cb99ded5faeddeaba0bac2463bbc601",
+                "9.json:md5,3980dea985599a80b1584f2d881e9243",
+                "1.csv:md5,8d66c27b9f6a96d7d83ad265596483f3",
+                "2.csv:md5,4f0fc721f29a6746f2883bfbbb50b8e2",
+                "3.csv:md5,b0a1d25530e9fb66372a8d1aae4ac014",
+                "4.csv:md5,ee6910eac80d7be2d14f923e95c08d7e",
+                "5.csv:md5,b2aa406ffe007bd30c3d9e4dd918ced6",
+                "6.csv:md5,224c698edc88e52aa3dcf94ca0da95d1",
+                "7.csv:md5,48c98a96bd119f1202614864d4b931c0",
+                "8.csv:md5,221bbed75e781e3d2eef55ef1dc4811f",
+                "9.csv:md5,a9440d2f5e4bf83f759381e419a20438",
+                "1.json:md5,e67395caf6cd2b4bee20a4d5ceab8d31",
+                "2.json:md5,d0a48068ac74df5b0d2fb33c12461c52",
+                "3.json:md5,0cec36d129df72f5fc6c67cbece09829",
+                "4.json:md5,62bdf1df940a0df0be7f12a69381f959",
+                "5.json:md5,36b624ad777b8c06ee05752d9c58885a",
+                "6.json:md5,168f6570e2fabf4e2ad1ccf88466c6cc",
+                "7.json:md5,bcd8482162be3f670380a92fcb6631b9",
+                "8.json:md5,2ceb529ba5d3d2eef1e7922cec8680ec",
+                "9.json:md5,b576d39dd88d1b2b92495d2307d29b2a",
+                "clan_edges.tsv.gz:md5,55a1dffa0d9c026db500e6ba02e8e41f",
+                "clans.tsv.gz:md5,a721dded3d6cda0666d783488982a8e7",
+                "1.1_clans_summary.json:md5,6a3544fb353ec6ac43727bd3f389d660",
+                "discarded_discarded_mqc.csv:md5,8b1bc1022cfbd63e99f0df85d5011bd8",
+                "families.tsv.gz:md5,5be449361f3f254e20c6b7cb47196b47",
+                "converged_families.txt:md5,74e779a8ca33c659fd6cd7dcef97f3f3",
+                "discarded_clusters.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "family_ids.fasta:md5,b947c78ad3fef92d095b2910c53b272b",
+                "family_metadata.csv:md5,de1116fc16ac9a90c84858c039bae7e6",
+                "family_reps.fasta:md5,9195dc284210f4bf4077af23dae91881",
+                "family_to_id.json:md5,b0bea951b0b9e6c789e410d277d158e6",
+                "1.fas.gz:md5,aaaa08cbc339256d518028d1684bde6b",
+                "2.fas.gz:md5,417349f5a0f39c0c0a76f3170819af40",
+                "3.fas.gz:md5,27ac07b7373a29c1ebbef5662a6b3a1d",
+                "4.fas.gz:md5,152abb27dbbddb27ec0b822384780ff3",
+                "5.fas.gz:md5,3a8148a99c5f48f09e8e4ed7a4bac633",
+                "6.fas.gz:md5,9193bb3ed1d4a3dd8e10c0db6549d935",
+                "7.fas.gz:md5,3d7cba97fe44fe3cd00f9c668956652e",
+                "8.fas.gz:md5,acede2ac7205d6efd62e032f7cb83b7a",
+                "9.fas.gz:md5,da5c8cd1855f8e3affecc702ab13d760",
+                "1.sto:md5,7f6fa01bcdfb83a757b14c3fa52fea8d",
+                "2.sto:md5,a15f6dff38b434bc892a75f10c6a933c",
+                "3.sto:md5,20dd7064ba3541b1c4b80ce86e5267fc",
+                "4.sto:md5,0d365c4a684bc87cf6006a795051e4db",
+                "5.sto:md5,28a145853c8d3e0c39f6b59177c0981d",
+                "6.sto:md5,686a08067f056d6b0b7f57a8d7ad5435",
+                "7.sto:md5,ddbb71c459e28212bef225c9b6adb510",
+                "8.sto:md5,5e80a1931b11cd18d7530d44fa692055",
+                "9.sto:md5,dac07db0bd2e37f1faabd70f922620ce",
+                "1.hmm:md5,a543d24efdcfb697bfc316c1b9a80e6a",
+                "2.hmm:md5,9cc0787d0818738877ee8980635ba70f",
+                "3.hmm:md5,2a59c98e987a109e34821f93a6b79a98",
+                "4.hmm:md5,f8d025b27e69f53c1dfef1932e44cf4d",
+                "5.hmm:md5,685ff80a8d2b30fd9a9c0b86c85482c1",
+                "6.hmm:md5,378f2cfa749bd8a5ed3dca1030031a9c",
+                "7.hmm:md5,f2118d48f0dd650ca1fdb8fe8c3819c6",
+                "8.hmm:md5,76d0865eb3d85da6fcd69ecd95eb729a",
+                "9.hmm:md5,b2ec3e4fa5ff3d9bd04f827501f7c0f5",
+                "refined_families.tsv:md5,68a2ce081850d36727fd4ed4528f0f7f",
+                "1.txt:md5,74a27d33c625ad938e91e11d12bd3d82",
+                "2.txt:md5,45c9af1d677e062cfa22ebdfd9f5a092",
+                "3.txt:md5,e6ead19bb9058c6ff4f51eeb65c9f5bf",
+                "4.txt:md5,0fc51433c98fb45bfc030fb5dcd32a72",
+                "5.txt:md5,5cf2a361a9fb107ea17268bb68b8b262",
+                "6.txt:md5,a375994dd68b1e793ef297fceae436e8",
+                "7.txt:md5,e2fbcee378c26a8b0dc2f43e5e61286c",
+                "8.txt:md5,a931e046c13d9fe20fa18250b9146fc3",
+                "9.txt:md5,0ec6e1bc0ddb0b9a0e55978c2d8c4eef",
+                "1.fas.gz:md5,a930351dd638222ae47debdb50857bc4",
+                "2.fas.gz:md5,66e73dabf80cc00f7a1c29e295945a97",
+                "3.fas.gz:md5,c0186629c45d81d4b274853c74bc6489",
+                "4.fas.gz:md5,264e4bbae6cef84ecbf17eb2b9651c24",
+                "5.fas.gz:md5,e9d12035a5bc0d7fbfb578efa96bbbbd",
+                "6.fas.gz:md5,619314610e73fff4a6bd3fe3ed139213",
+                "7.fas.gz:md5,5a76bc8b0ff421d44feb17c9247f372e",
+                "8.fas.gz:md5,b2b02f6e59f1d2bba01b762db8652b02",
+                "9.fas.gz:md5,9d246d1a745a25c05d53d627cd12e380",
+                "1.sto:md5,a29a84e258b27ee9ad8b8b786fe63847",
+                "2.sto:md5,534413d8c2e8408d3def4566135809a1",
+                "3.sto:md5,c1ffcfaed2d6d7884a7a810b1179ab74",
+                "4.sto:md5,146f2125074659508e9ba8e286ed08ba",
+                "5.sto:md5,b36159eac7d6e8310a21d09996d4ed3f",
+                "6.sto:md5,e7da3406cfaeb4d5507ca470eaf14e5a",
+                "7.sto:md5,77437d9f40f51c0af25a6563adc74b3f",
+                "8.sto:md5,e609d735ae05dd7a5706ba2640b538a6",
+                "9.sto:md5,04ad2e4257795eeb7b70a3771e6f8f4e",
+                "successful_clusters.txt:md5,94ee08b0af6c53848add6d93f1d7477a",
+                "metadata_mqc.csv:md5,fe16ca4e58ff970dff4367709540e95d",
+                "multi_hits.tsv:md5,f13a22c64fd467b54cd34b0e544ccf08",
+                "update_info.csv:md5,2c9a4f931f04c8af575e79494d780e7a",
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
-                "multiqc_seqkit_stats_summary.txt:md5,4618d86bd1669a76fae7308d827743ac",
-                "mgnifams_v2.tsv:md5,1a51d6374f085bb4f8b084b39464b402",
-                "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e"
+                "multiqc_seqkit_stats_summary.txt:md5,8c5da2f37af96db8d78747e7f957e8af",
+                "plp2024.tsv:md5,6ec64cc0cc0713d7f4a7fdd4d131466e",
+                "pre_redundant_clans_summary.json:md5,1bd914546cf1a4ba63aba06fe0a36b6d",
+                "pre_redundant_redundant.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "plp2024_clustering_distribution_mqc.csv:md5,2ded4d7e5ab30b9392e8ab83f23b711e",
+                "plp2024_unique_reps.txt:md5,94ee08b0af6c53848add6d93f1d7477a",
+                "cuda_failed_reps.fasta:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "mgnifam_funfams.csv:md5,5c2cb347511be14a10afaed0d83c1c22",
+                "mgnifam_model_pfams.csv:md5,ee8058acd53ee36ffe868618590aaf8c",
+                "mgnifam_pfams.csv:md5,ddccbe7d040cc9aeccacdb5ae596619d",
+                "family_ids.1_trimmed.fasta:md5,f4aad3e0113f19ff8b50067551909faa",
+                "family_ids.2_trimmed.fasta:md5,9f2f80ff3d8796733465cd18754033b0"
             ],
             "/structures: 22",
             "/setup_clusters: 3",
-            "/generate_families: 67",
+            "/generate_families: 71",
             "/annotation: 32",
             "/table_data: 5"
         ],
-        "timestamp": "2026-11-04T15:09:01.010164577",
+        "timestamp": "2026-11-20T17:00:11.24925705",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.3"
