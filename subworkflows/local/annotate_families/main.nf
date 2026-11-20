@@ -18,11 +18,14 @@ workflow ANNOTATE_FAMILIES {
     foldseek_pdb_db
     foldseek_alphafold_db
     outdir
+    starting_id // integer: first id of this release, so -Z = every family up to this release's last
 
     main:
     ch_versions = channel.empty()
 
-    ANNOTATE_REPS( reps, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size )
+    // hmmsearch -Z (meta.z): the cumulative family count, so E-values share one base with earlier releases
+    ch_reps = reps.map { meta, fa -> [ meta + [ z: (starting_id as int) - 1 + fa.countFasta() ], fa ] }
+    ANNOTATE_REPS( ch_reps, skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size )
     ch_versions = ch_versions.mix( ANNOTATE_REPS.out.versions )
 
     ANNOTATE_MODELS( seed_msa, hh_mode, hhdb_path )
@@ -40,4 +43,5 @@ workflow ANNOTATE_FAMILIES {
     funfam_domains     = ANNOTATE_REPS.out.funfam_domains
     pfam_model_hits    = ANNOTATE_MODELS.out
     foldseek_hits      = ANNOTATE_STRUCTURES.out.foldseek_hits
+    z                  = ch_reps.map { meta, _fa -> meta.z }
 }

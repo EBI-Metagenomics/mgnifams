@@ -9,6 +9,7 @@ process EXPORT_FAMILIES_TSV {
         'community.wave.seqera.io/library/python_pip_biopython_numpy:e51160118726626c' }"
 
     input:
+    // previous and delta: [] for a release of new families
     tuple val(meta), path(previous, stageAs: 'previous/*'), path(delta), path(metadata)
     val mgnifams_release
     val mgnify_proteins_release
@@ -21,10 +22,10 @@ process EXPORT_FAMILIES_TSV {
     task.ext.when == null || task.ext.when
 
     script:
+    def update = previous ? "--previous ${previous} --delta ${delta}" : ''
     """
     export_families_tsv.py \\
-        --previous ${previous} \\
-        --delta ${delta} \\
+        ${update} \\
         --metadata ${metadata} \\
         --release ${mgnifams_release} \\
         --proteins_release ${mgnify_proteins_release} \\
@@ -38,8 +39,9 @@ process EXPORT_FAMILIES_TSV {
 
     // The previous table: stub runs keep real statuses for what reads it (ANNOTATE_FAMILY_SUBSET)
     stub:
+    def header = 'family_id\\tstatus\\tnot_updated_reason\\tfirst_release\\tmodel_release\\tmodel_proteins_release\\tmembers_release\\tmembers_proteins_release\\tfull_size\\tseed_size\\trep_id\\trep_region'
     """
-    cp -L ${previous} families.tsv.gz
+    ${previous ? "cp -L ${previous} families.tsv.gz" : "printf '${header}\\n' | gzip -n > families.tsv.gz"}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

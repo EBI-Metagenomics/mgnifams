@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Write an update release's families.tsv.gz (columns in ftp/README.md) from the previous release's file.
+"""Write a release's families.tsv.gz (columns in ftp/README.md).
 
-Every previous family is kept: `updated` rows take the new members from family_metadata.csv, `not_updated`
-rows keep their previous values with the update's discard reason (updated_delta.csv `outcome`).
+Update release (--previous, --delta): every previous family is kept: `updated` rows take the new members from
+family_metadata.csv, `not_updated` rows keep their previous values with the update's discard reason
+(updated_delta.csv `outcome`). New families (no --previous): one `new` row per family of family_metadata.csv.
 """
 
 import argparse
@@ -20,6 +21,42 @@ def read_delta(path):
             fields[0]: fields[-1]
             for fields in (line.rstrip("\n").split(",", len(header) - 1) for line in handle if line.strip())
         }
+
+
+COLUMNS = [
+    "family_id",
+    "status",
+    "not_updated_reason",
+    "first_release",
+    "model_release",
+    "model_proteins_release",
+    "members_release",
+    "members_proteins_release",
+    "full_size",
+    "seed_size",
+    "rep_id",
+    "rep_region",
+]
+
+
+def new_rows(metadata, release, proteins_release):
+    return [
+        {
+            "family_id": family,
+            "status": "new",
+            "not_updated_reason": "",
+            "first_release": release,
+            "model_release": release,
+            "model_proteins_release": proteins_release,
+            "members_release": release,
+            "members_proteins_release": proteins_release,
+            "full_size": meta["full_msa_size"],
+            "seed_size": meta["seed_msa_size"],
+            "rep_id": f"MGYP{int(meta['rep_protein']):012d}",
+            "rep_region": meta["rep_region"],
+        }
+        for family, meta in metadata.items()
+    ]
 
 
 def update_rows(previous, outcomes, metadata, release, proteins_release):
@@ -59,22 +96,27 @@ def update_rows(previous, outcomes, metadata, release, proteins_release):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--previous", required=True, help="previous release's families.tsv.gz")
-    parser.add_argument("--delta", required=True, help="updated_delta.csv")
+    parser.add_argument("--previous", help="previous release's families.tsv.gz; omit for a release of new families")
+    parser.add_argument("--delta", help="updated_delta.csv; with --previous only")
     parser.add_argument("--metadata", required=True, help="family_metadata.csv")
     parser.add_argument("--release", required=True, help="this MGnifams release, MAJOR.MINOR")
     parser.add_argument("--proteins_release", required=True, help="MGnify Proteins release of the members, YYYY_MM")
     parser.add_argument("--output", required=True, help="families.tsv.gz")
     args = parser.parse_args()
+    if (args.previous is None) != (args.delta is None):
+        parser.error("--previous and --delta go together")
 
-    with gzip.open(args.previous, "rt", newline="") as handle:
-        reader = csv.DictReader(handle, delimiter="\t")
-        columns = reader.fieldnames
-        previous = list(reader)
     with open(args.metadata, newline="") as handle:
         metadata = {row["family_id"]: row for row in csv.DictReader(handle)}
-
-    rows = update_rows(previous, read_delta(args.delta), metadata, args.release, args.proteins_release)
+    if args.previous is None:
+        columns = COLUMNS
+        rows = new_rows(metadata, args.release, args.proteins_release)
+    else:
+        with gzip.open(args.previous, "rt", newline="") as handle:
+            reader = csv.DictReader(handle, delimiter="\t")
+            columns = reader.fieldnames
+            previous = list(reader)
+        rows = update_rows(previous, read_delta(args.delta), metadata, args.release, args.proteins_release)
     # mtime=0: the same inputs give a byte-identical file
     with gzip.GzipFile(args.output, "wb", mtime=0) as raw, io.TextIOWrapper(raw, newline="") as handle:
         writer = csv.DictWriter(handle, columns, delimiter="\t", lineterminator="\n")

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- Default mode writes `generate_families/families.tsv.gz` (A17): one `new` row per family, every release column from `--mgnifams_release` / `--mgnify_proteins_release` (`export_families_tsv.py` without `--previous`).
 - The release's clans: a second `compute_clans` run over the kept families (mgnifam defaults, named by `--mgnifams_release`) publishes `generate_families/clans.tsv.gz` and `clan_edges.tsv.gz`, tab-separated as on the FTP (`FORMAT_CLANS`); logs and summaries under `generate_families/clans/` and `remove_redundancy/`.
 - `bin/slice_protein.py`: the shared `sliceProtein`, with a `start` offset so slices of slices keep protein coordinates.
 - Optional samplesheet column `mgnifam_regions` (a folder of MGnifam region files, `refined_families.tsv` format): `MASK_MGNIFAM_REGIONS` (`bin/mask_mgnifam_regions.py`, 256 hash buckets) cuts every region out of the input FASTA before clustering, keeping whole-protein coordinates; published as `setup_clusters/mgnifams_input.fa`.
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
+- Default-mode hmmsearch `-Z` (Pfam, FunFams) is the cumulative family count, `starting_id - 1` plus this release's families, as `annotate_not_updated` and `update_mgnifams` use the release's whole family count.
 - `mgnifam/updatefamilies` bumped to mgnifam 4.1.0 (no change to `update_families`).
 - nf-core modules and subworkflows updated to nf-core/modules master (2026-11-20): container references only for the modules; `utils_nfschema_plugin` needs nf-schema 3.0.0 (bumped from 2.7.2) and gains `--help`; software versions in `nf_core_pipeline_software_mqc_versions.yml` stay strings (`sed: '4.7'`).
 - `EXTRACT_UNIQUE_CLUSTER_REPS` and `POOL_NONREDUNDANT_FAMILIES` stubs emit one representative and one pooled family, so the default `-stub-run` runs to the end.
