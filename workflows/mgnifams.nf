@@ -15,6 +15,7 @@ include { PREDICT_STRUCTURES             } from '../subworkflows/local/predict_s
 include { ANNOTATE_FAMILIES              } from '../subworkflows/local/annotate_families'
 include { EXPORT_DATA                    } from '../subworkflows/local/export_data'
 include { EXPORT_FAMILIES_TSV            } from '../modules/local/export_families_tsv/main'
+include { CLASSIFY_MULTI_HITS            } from '../modules/local/classify_multi_hits/main'
 include { SPLIT_FAMILY_MEMBERS           } from '../modules/local/split_family_members/main'
 include { BUILD_PARQUET_DOMAIN_QUERIES   } from '../modules/local/build_parquet_domain_queries/main'
 include { PARSE_DOMAINS                  } from '../modules/local/parse_domains/main'
@@ -87,6 +88,18 @@ workflow MGNIFAMS {
         mgnify_proteins_release
     )
     ch_versions = ch_versions.mix( EXPORT_FAMILIES_TSV.out.versions )
+
+    // Per-family multi-hit summary (A15): full-length vs partial regions; split, tandem, mixed, partial-repeat proteins
+    CLASSIFY_MULTI_HITS(
+        GENERATE_NONREDUNDANT_FAMILIES.out.full_msa_sto
+            .flatMap { _meta, msas ->
+                [msas].flatten().sort { msa -> msa.name }.collate( query_result_chunks ).withIndex()
+                    .collect { batch, index -> [ [id: "multi_hits_${String.format('%05d', index)}"], batch ] }
+            }
+    )
+    CLASSIFY_MULTI_HITS.out.tsv
+        .map { _meta, tsv -> tsv }
+        .collectFile( name: 'multi_hits.tsv', keepHeader: true, skip: 1, sort: { tsv -> tsv.name }, storeDir: "${outdir}/generate_families" )
 
     //
     // Members' domain architectures (Pfam parquet) and biomes (clusters parquet), as update_mgnifams

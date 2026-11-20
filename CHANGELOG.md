@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- `generate_families/multi_hits.tsv` (A15): per family, its full-MSA regions, full-length regions, single full / partial proteins, and proteins with several regions classified as split, tandem, mixed or partial repeat, with copy counts (`CLASSIFY_MULTI_HITS`, `bin/classify_multi_hits.py`, `--query_result_chunks` families per task).
 - Default mode computes the members' domain architectures and biomes from the samplesheet's Pfam and clusters parquets, as `update_mgnifams` (`SPLIT_FAMILY_MEMBERS`, `BUILD_PARQUET_DOMAIN_QUERIES`, `PARSE_DOMAINS`, `BIOMES_FROM_PARQUET`; `domain_results/`, `biome_results/`), and writes `generate_families/update_info.csv` with `update_mgnifams`' keys plus `afdb_computed`, `hmmsearch_z` and `delta_type,new_families`, for the DB build.
 - Default mode writes `generate_families/families.tsv.gz` (A17): one `new` row per family, every release column from `--mgnifams_release` / `--mgnify_proteins_release` (`export_families_tsv.py` without `--previous`).
 - The release's clans: a second `compute_clans` run over the kept families (mgnifam defaults, named by `--mgnifams_release`) publishes `generate_families/clans.tsv.gz` and `clan_edges.tsv.gz`, tab-separated as on the FTP (`FORMAT_CLANS`); logs and summaries under `generate_families/clans/` and `remove_redundancy/`.
