@@ -2,6 +2,7 @@
 
 include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_PDB         } from '../../../modules/nf-core/foldseek/easysearch/main'
 include { FOLDSEEK_EASYSEARCH as FOLDSEEK_EASYSEARCH_ALPHAFOLDDB } from '../../../modules/nf-core/foldseek/easysearch/main'
+include { afdbComputed                                           } from '../../../subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
 workflow ANNOTATE_STRUCTURES {
     take:
@@ -17,7 +18,7 @@ workflow ANNOTATE_STRUCTURES {
     ch_pdb_db = channel.of(file(foldseek_pdb_db, checkIfExists: true)).map { db -> [ [ id:db.name ], db ] }
     FOLDSEEK_EASYSEARCH_PDB( pdb, ch_pdb_db ).aln
 
-    if (workflow.profile.contains("slurm") && !workflow.profile.contains("test")) {
+    if (afdbComputed()) {
         ch_alphafold_db = channel.of(file(foldseek_alphafold_db, checkIfExists: true)).map { db -> [ [ id:db.name ], db ] }
         ch_alphafold_aln = FOLDSEEK_EASYSEARCH_ALPHAFOLDDB( pdb, ch_alphafold_db ).aln
     }

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Breaking`
 
+- Default mode (`run_mgnifams_pipeline`) takes exactly one samplesheet row, as the other modes: the domain and biome lookups use that row's parquets.
 - Default mode (`run_mgnifams_pipeline`) input: the samplesheet takes either a sliced protein FASTA (`protein_input`, `.fa`/`.fasta`/`.faa`, optionally `.gz`) or the MGnify proteins sequences parquet (`mgnify_proteins_sequences`, Pfam slicing by `EXTRACT_UNANNOTATED_PARQUET_SLICES`, as `update_mgnifams`), and `mgnify_proteins_clusters` and `mgnify_proteins_pfam` on every row. The `sequence_explorer_protein` CSV input is removed with `BZ2_UNCOMPRESS`, `EXTRACT_UNANNOTATED_FASTA`, `EXTRACT_UNANNOTATED_SLICES`, `bin/extract_unannotated_slices.py` and the params `--fasta_input_mode`, `--compress_mode` and `--input_csv_chunk_size`.
 - Default-mode family generation runs on nf-core `mgnifam/generatefamilies` (mgnifam 4.1.0, [#68](https://github.com/EBI-Metagenomics/mgnifams/issues/68)) with the input FASTA's `HMMER_ESLSFETCHINDEX` index, in place of `GENERATE_FAMILIES` (`bin/generate_families.py`); the eight `--mgnifams_*` generation params reach it unchanged. `generate_families/families/family_metadata.csv` gets mgnifam's header, the one `update_mgnifams` already writes: `family_id,converged,seed_msa_size,full_msa_size,rep_protein,rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence`. Pooling reads mgnifam's per-chunk names and gzip artifacts and publishes the pooled HMMs, MSAs and representatives decompressed, under the same names as before.
 - `--hook_url` (Slack / Teams run notifications) is removed, with `assets/adaptivecard.json` and `assets/slackreport.json`: the updated nf-core `utils_nfcore_pipeline` no longer ships `imNotification`.
@@ -14,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- Default mode computes the members' domain architectures and biomes from the samplesheet's Pfam and clusters parquets, as `update_mgnifams` (`SPLIT_FAMILY_MEMBERS`, `BUILD_PARQUET_DOMAIN_QUERIES`, `PARSE_DOMAINS`, `BIOMES_FROM_PARQUET`; `domain_results/`, `biome_results/`), and writes `generate_families/update_info.csv` with `update_mgnifams`' keys plus `afdb_computed`, `hmmsearch_z` and `delta_type,new_families`, for the DB build.
 - Default mode writes `generate_families/families.tsv.gz` (A17): one `new` row per family, every release column from `--mgnifams_release` / `--mgnify_proteins_release` (`export_families_tsv.py` without `--previous`).
 - The release's clans: a second `compute_clans` run over the kept families (mgnifam defaults, named by `--mgnifams_release`) publishes `generate_families/clans.tsv.gz` and `clan_edges.tsv.gz`, tab-separated as on the FTP (`FORMAT_CLANS`); logs and summaries under `generate_families/clans/` and `remove_redundancy/`.
 - `bin/slice_protein.py`: the shared `sliceProtein`, with a `start` offset so slices of slices keep protein coordinates.

@@ -10,6 +10,7 @@ include { SELECT_FAMILY_SUBSET } from '../../../modules/local/select_family_subs
 include { ANNOTATE_REPS        } from '../../../subworkflows/local/annotate_reps'
 include { ANNOTATE_STRUCTURES  } from '../../../subworkflows/local/annotate_structures'
 include { EXPORT_DATA          } from '../../../subworkflows/local/export_data'
+include { afdbComputed         } from '../../../subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
 workflow ANNOTATE_FAMILY_SUBSET {
     take:
@@ -34,7 +35,7 @@ workflow ANNOTATE_FAMILY_SUBSET {
     def subset_outdir = "${outdir}/annotate_not_updated"
     // Same conditions as ANNOTATE_REPS (DeepTMHMM) and ANNOTATE_STRUCTURES (AlphaFoldDB)
     def tm_computed   = !skip_deeptmhmm && !workflow.profile.contains("conda")
-    def afdb_computed = workflow.profile.contains("slurm") && !workflow.profile.contains("test")
+    def afdb_computed = afdbComputed()
 
     SELECT_FAMILY_SUBSET( families.join( reps ).join( structures ) )
     ch_versions = ch_versions.mix( SELECT_FAMILY_SUBSET.out.versions )

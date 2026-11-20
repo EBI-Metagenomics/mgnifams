@@ -93,8 +93,8 @@ workflow PIPELINE_INITIALISATION {
             error("${params.mode}: --${missing.join(', --')} required")
         }
     }
-    if (params.mode in ["update_mgnifams", "post_update_mgnifams_update_db", "annotate_not_updated", "rebuild_biomes"]) {
-        // All collected outputs and the delta DB are per run
+    if (params.mode in ["run_mgnifams_pipeline", "update_mgnifams", "post_update_mgnifams_update_db", "annotate_not_updated", "rebuild_biomes"]) {
+        // All collected outputs and the delta DB are per run (default mode: one clusters and one Pfam parquet for the lookups)
         if (samplesheet_rows.size() != 1) {
             error("${params.mode}: the samplesheet must have exactly one row, found ${samplesheet_rows.size()}")
         }
@@ -264,6 +264,11 @@ workflow PIPELINE_COMPLETION {
 //
 // Query-result files in batches of n, named <meta.id>_batch_<index> (PARSE_DOMAINS / PARSE_BIOMES inputs)
 //
+// ANNOTATE_STRUCTURES searches AlphaFoldDB only under a slurm profile (not test); the info files record the same rule
+def afdbComputed() {
+    return workflow.profile.contains("slurm") && !workflow.profile.contains("test")
+}
+
 def batchQueryResults(meta, files, n) {
     return [files].flatten().collate( n ).withIndex().collect { flist, index -> [ [id: "${meta.id}_batch_${index}"], flist ] }
 }
