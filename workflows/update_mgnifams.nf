@@ -126,7 +126,7 @@ workflow UPDATE_MGNIFAMS {
     ch_versions = ch_versions.mix( ANNOTATE_STRUCTURES.out.versions )
 
     EXPORT_DATA( UPDATE_FAMILIES.out.metadata, PREDICT_STRUCTURES.out.scores, \
-        ANNOTATE_REPS.out.composition, ANNOTATE_REPS.out.tm_composition, channel.value([ [id: 'seed_sizes'], [] ]), \
+        ANNOTATE_REPS.out.composition, ANNOTATE_REPS.out.tm_composition, \
         ANNOTATE_REPS.out.pfam_domains, ANNOTATE_REPS.out.funfam_domains, query_hmm_length_threshold, \
         channel.empty(), ANNOTATE_STRUCTURES.out.foldseek_hits, outdir )
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )
@@ -229,8 +229,7 @@ workflow UPDATE_MGNIFAMS {
     //
     // MODULE: MultiQC
     //
-    summary_params      = paramsSummaryMap(
-        workflow, parameters_schema: "nextflow_schema.json")
+    summary_params      = paramsSummaryMap(parameters_schema: "nextflow_schema.json")
     ch_workflow_summary = channel.value(paramsSummaryMultiqc(summary_params))
     ch_multiqc_files = ch_multiqc_files.mix(
         ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))

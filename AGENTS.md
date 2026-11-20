@@ -68,7 +68,7 @@ Five sequential subworkflows:
 
 1. **SETUP_CLUSTERS** (`subworkflows/local/setup_clusters/`) — Input: a sliced FASTA (`protein_input`) or the Pfam-free slices of the MGnify sequences parquet (`EXTRACT_UNANNOTATED_PARQUET_SLICES`), filter by length, quality check with seqkit, cluster with mmseqs linclust, distribute into chunks.
 
-2. **GENERATE_NONREDUNDANT_FAMILIES** (`subworkflows/local/generate_nonredundant_families/`) — Core algorithm in `bin/generate_families.py` (to be replaced by nf-core `mgnifam/generatefamilies` 4.0.0, [#68](https://github.com/EBI-Metagenomics/mgnifams/issues/68)). Iteratively builds families: seed MSA (pyfamsa) → HMM (pyhmmer) → recruit sequences → align (pyhmmer/hmmalign) → trim (pytrimal), repeated up to 3 times. Redundancy removed via `subworkflows/local/remove_redundancy/` using `bin/identify_redundant_fams.py`.
+2. **GENERATE_NONREDUNDANT_FAMILIES** (`subworkflows/local/generate_nonredundant_families/`) — One nf-core `mgnifam/generatefamilies` (mgnifam 4.1.0, [#68](https://github.com/EBI-Metagenomics/mgnifams/issues/68)) task per cluster chunk, reading the input FASTA through one `HMMER_ESLSFETCHINDEX` index. Iteratively builds families: seed MSA (pyfamsa) → HMM (pyhmmer) → recruit sequences → align (pyhmmer/hmmalign) → trim (pytrimal), repeated up to 3 times. Redundancy removed via `subworkflows/local/remove_redundancy/` using `bin/identify_redundant_fams.py`.
 
 3. **PREDICT_STRUCTURES** (`subworkflows/local/predict_structures/`) — ESMFold protein structure prediction with GPU support. CUDA OOM failures are caught and re-run on CPU (`bin/extract_cuda_failed.py`). The CPU re-run (`RUN_ESMFOLD_CPU`) is an alias of `RUN_ESMFOLD`, so it carries the static `process_gpu` label; `conf/base.config` clears its `accelerator` (a config `withName` cannot remove a label). Site configs must therefore request GPUs from `task.accelerator` (`clusterOptions = { task.accelerator ? '--gres=gpu:1' : '' }`), because the Nextflow SLURM executor ignores `accelerator` itself. Outputs PDB/CIF files with pLDDT and pTM scores.
 
@@ -135,7 +135,7 @@ fixture `tests/fixtures/update_results` (no external DBs, cheap).
 ## Key Configuration
 
 - **`nextflow.config`** — Main config with 80+ parameters, profiles (docker/singularity/conda/slurm/gpu/test), and the nf-schema 2.7.2 plugin
-- **`conf/base.config`** — Resource tiers: single (1 CPU/6GB/4h), low, medium, high, plus custom GENERATE_FAMILIES (4 CPU, 1400 GB/72 h × attempt, 3 retries)
+- **`conf/base.config`** — Resource tiers: single (1 CPU/6GB/4h), low, medium, high, plus custom MGNIFAM_GENERATEFAMILIES (4 CPU, 64 GB/72 h × attempt, 3 retries)
 - **`conf/modules.config`** — Per-process resource overrides and tool parameters
 - **`nextflow_schema.json`** — Full parameter validation schema
 - **`assets/schema_input.json`** — Samplesheet validation
@@ -186,7 +186,7 @@ does not yet; 1.0's was a one-off export from the prod DB. Generate it there (al
 
 ## Code Layout
 
-- **`bin/`** — Python helper scripts called by Nextflow processes. `generate_families.py` is the core algorithm (~26KB).
+- **`bin/`** — Python helper scripts called by Nextflow processes; family generation itself is the `mgnifam` package.
 - **`bin/test_*.py`** — Assert-based self-checks of the scripts next to them (`python3 bin/test_<name>.py`)
 - **`modules/local/`** — Custom Nextflow process definitions
 - **`assets/sql/`** — DB schema (`db_schema.sqlite`, SQL text), `finalize_db.sql`, and out-of-pipeline SQL for production DBs: schema migration, update-delta merge

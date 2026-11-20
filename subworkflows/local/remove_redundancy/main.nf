@@ -1,8 +1,9 @@
-include { FIND_CONCATENATE               } from '../../../modules/nf-core/find/concatenate/main'
-include { HMMER_HMMSEARCH                } from '../../../modules/nf-core/hmmer/hmmsearch/main'
-include { POOL_PREREDUNDANT_FAMILIES_TSV } from '../../../modules/local/pool_preredundant_families_tsv/main'
-include { IDENTIFY_REDUNDANT_FAMS        } from '../../../modules/local/identify_redundant_fams/main'
-include { POOL_NONREDUNDANT_FAMILIES     } from '../../../modules/local/pool_nonredundant_families/main'
+include { FIND_CONCATENATE                     } from '../../../modules/nf-core/find/concatenate/main'
+include { FIND_CONCATENATE as CONCATENATE_REPS } from '../../../modules/nf-core/find/concatenate/main'
+include { HMMER_HMMSEARCH                      } from '../../../modules/nf-core/hmmer/hmmsearch/main'
+include { POOL_PREREDUNDANT_FAMILIES_TSV       } from '../../../modules/local/pool_preredundant_families_tsv/main'
+include { IDENTIFY_REDUNDANT_FAMS              } from '../../../modules/local/identify_redundant_fams/main'
+include { POOL_NONREDUNDANT_FAMILIES           } from '../../../modules/local/pool_nonredundant_families/main'
 
 workflow REMOVE_REDUNDANCY {
     take:
@@ -26,13 +27,10 @@ workflow REMOVE_REDUNDANCY {
     main:
     ch_versions = channel.empty()
 
-    ch_reps_fasta = reps_fasta
-        .map { _meta, files -> files }
-        .flatten()
-        .collectFile(name: "pre_redundant_reps.fasta")
-    ch_reps_fasta.collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families") // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
-    ch_reps_fasta = ch_reps_fasta
-        .map { file -> [[id: 'pre_redundant'], file] }
+    // mgnifam writes gzip representatives; hmmsearch needs a plain (rewindable) FASTA for several queries
+    CONCATENATE_REPS( reps_fasta.map { _meta, files -> [ [id: 'pre_redundant'], files ] } )
+    ch_reps_fasta = CONCATENATE_REPS.out.file_out
+    ch_reps_fasta.map { _meta, fa -> fa }.collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families") // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
 
     FIND_CONCATENATE( hmm )
 

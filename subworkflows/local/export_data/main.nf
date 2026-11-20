@@ -10,7 +10,6 @@ workflow EXPORT_DATA {
     predicted_scores
     composition
     tm_composition
-    seed_sizes // [ meta, seed_sizes.csv ] or [ meta, [] ]
     pfam_domains
     funfam_domains
     query_hmm_length_threshold
@@ -21,7 +20,7 @@ workflow EXPORT_DATA {
     main:
     ch_versions = channel.empty()
 
-    EXPORT_MGNIFAMS( family_metadata, predicted_scores, composition, tm_composition, seed_sizes )
+    EXPORT_MGNIFAMS( family_metadata, predicted_scores, composition, tm_composition )
     ch_versions = ch_versions.mix( EXPORT_MGNIFAMS.out.versions )
 
     FILTER_EXPORT_PFAMS( pfam_domains, query_hmm_length_threshold )

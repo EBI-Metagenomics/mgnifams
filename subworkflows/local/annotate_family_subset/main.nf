@@ -58,7 +58,7 @@ workflow ANNOTATE_FAMILY_SUBSET {
         .map { csv -> [ [ id: 'metadata' ], csv ] }
 
     EXPORT_DATA( ch_metadata, channel.value([ [ id: 'scores' ], [] ]), \
-        ANNOTATE_REPS.out.composition, ANNOTATE_REPS.out.tm_composition, channel.value([ [ id: 'seed_sizes' ], [] ]), \
+        ANNOTATE_REPS.out.composition, ANNOTATE_REPS.out.tm_composition, \
         ANNOTATE_REPS.out.pfam_domains, ANNOTATE_REPS.out.funfam_domains, query_hmm_length_threshold, \
         channel.empty(), ANNOTATE_STRUCTURES.out.foldseek_hits, subset_outdir )
     ch_versions = ch_versions.mix( EXPORT_DATA.out.versions )

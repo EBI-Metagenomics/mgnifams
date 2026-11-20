@@ -59,24 +59,18 @@ process POOL_NONREDUNDANT_FAMILIES {
     """
 
     stub:
+    // One pooled family, id = starting_id, so the default -stub-run continues past pooling
     """
-    mkdir families
-    touch families/refined_families.tsv
-    touch families/discarded_clusters.txt
-    touch families/successful_clusters.txt
-    touch families/converged_families.txt
-    touch families/family_metadata.csv
-    touch families/family_reps.fasta
-    touch families/family_to_id.json
+    mkdir -p families/seed_msa_sto families/full_msa_sto families/hmm families/rf
+    for d in seed_msa_sto full_msa_sto; do printf '# STOCKHOLM 1.0\\n//\\n' > families/\$d/${starting_id}.sto; done
+    touch families/hmm/${starting_id}.hmm families/rf/${starting_id}.txt
+    printf '%s\\t1/1-30\\n' ${starting_id} > families/refined_families.tsv
+    touch families/discarded_clusters.txt families/successful_clusters.txt families/converged_families.txt
+    echo 'family_id,converged,seed_msa_size,full_msa_size,rep_protein,rep_region,rep_length,consensus_length,rep_sequence,consensus_sequence' > families/family_metadata.csv
+    printf '>1/1-30\\t%s\\nACDEFGHIKLMNPQRSTVWYACDEFGHIKL\\n' ${starting_id} > families/family_reps.fasta
+    printf '>%s\\nACDEFGHIKLMNPQRSTVWYACDEFGHIKL\\n' ${starting_id} > families/family_ids.fasta
+    echo '{}' > families/family_to_id.json
     touch families/similarity_mqc.csv
-
-    touch test.txt
-    mkdir families/full_msa_sto
-    cp test.txt families/full_msa_sto/
-    mkdir families/hmm
-    cp test.txt families/hmm/
-    mkdir families/rf
-    cp test.txt families/rf/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

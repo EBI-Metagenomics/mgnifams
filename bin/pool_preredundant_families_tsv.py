@@ -31,7 +31,7 @@ def pool_directory(input_dir, output_filename, splitChar):
         for filename in sorted(os.listdir(input_dir)):
             filepath = os.path.join(input_dir, filename)
             with open(filepath, "r") as infile:
-                base_filename = os.path.splitext(filename)[0]
+                base_filename = filename.removesuffix("_families.tsv")  # mgnifam <chunk>_families.tsv
                 for line in infile:
                     value = line.strip()
                     if value:  # Check if the line is not empty

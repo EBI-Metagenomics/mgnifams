@@ -50,10 +50,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
     if (params.mode == 'run_mgnifams_pipeline') {
         MGNIFAMS(
             samplesheet, params.parquet_chunks, params.min_sequence_length, params.outdir, \
-            params.minimum_members, params.clusters_chunk_size, params.mgnifams_discard_min_rep_length, \
-            params.mgnifams_discard_max_rep_length, params.mgnifams_discard_min_starting_membership, \
-            params.mgnifams_max_seq_identity, params.mgnifams_max_seed_seqs, params.mgnifams_max_gap_occupancy, \
-            params.mgnifams_recruit_evalue_cutoff, params.mgnifams_recruit_hit_length_percentage, \
+            params.minimum_members, params.clusters_chunk_size, \
             params.redundant_length_threshold, params.redundant_score_threshold, \
             params.similarity_score_threshold, params.starting_id, \
             params.pdb_chunk_size, params.esmfold_db, params.esmfold_params_path, \
@@ -169,7 +166,6 @@ workflow {
         params.plaintext_email,
         params.outdir,
         params.monochrome_logs,
-        params.hook_url,
         EBIMETAGENOMICS_MGNIFAMS.out
     )
 }
