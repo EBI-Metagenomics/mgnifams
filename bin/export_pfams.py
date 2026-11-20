@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import re
 from fractions import Fraction
 
 
@@ -20,10 +21,15 @@ def load_descriptions(desc_file):
 
 
 def template_coverage(template_hmm):
-    """`58-470 (471)` -> the fraction of the template the hit spans."""
-    span, length = template_hmm.split()
-    start, end = span.split("-")
-    return Fraction(int(end) - int(start) + 1, int(length.strip("()")))
+    """`58-470 (471)` -> the fraction of the template the hit spans.
+
+    HH-suite drops the space once the numbers fill the column: `1180-1269(1271)`.
+    """
+    m = re.fullmatch(r"(\d+)-(\d+)\s*\((\d+)\)", template_hmm)
+    if not m:
+        raise ValueError(f"unexpected Template HMM column: {template_hmm!r}")
+    start, end, length = map(int, m.groups())
+    return Fraction(end - start + 1, length)
 
 
 def parse_summary_block(hhr_file, desc_map, min_template_coverage=0):
@@ -41,11 +47,11 @@ def parse_summary_block(hhr_file, desc_map, min_template_coverage=0):
                     break
 
                 pfam_id = line[4:34].strip().split(";")[0].strip().split(".")[0]
-                prob = line[35:40].strip()
-                e_value = line[41:48].strip()
-                length = line[70:74].strip()
-                query_hmm = line[75:83].strip()
-                template_hmm = " ".join(line[84:99].strip().split())  # also convert double space to single
+                # Prob E-value P-value Score SS Cols Query-HMM Template-HMM: whitespace-separated, but the
+                # template length may touch its span (`1180-1269(1271)`), so the rest of the line is the template
+                fields = line[34:].split()
+                prob, e_value, length, query_hmm = fields[0], fields[1], fields[5], fields[6]
+                template_hmm = "".join(fields[7:]).replace("(", " (")
 
                 # As FILTER_EXPORT_DOMTBL for hmmsearch: drop hits covering too little of the Pfam model
                 if template_coverage(template_hmm) < min_template_coverage:

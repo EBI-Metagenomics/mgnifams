@@ -36,7 +36,7 @@ workflow EXPORT_DATA {
         .map { _meta, file ->
             file
         }
-        .collectFile(name: "mgnifam_model_pfams.csv", storeDir: outdir + "/table_data/", keepHeader: true)
+        .collectFile(name: "mgnifam_model_pfams.csv", storeDir: outdir + "/table_data/", keepHeader: true, sort: { csv -> csv.name }) // default order hashes path and mtime, so it changes every run
         .map { file ->
             [ [id: "mgnifam_pfams"], file ]
         }

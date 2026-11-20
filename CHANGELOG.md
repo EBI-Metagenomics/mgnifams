@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
+- End-to-end nf-tests read local database paths from the config that `MGNIFAMS_TEST_CONFIG` points to (`tests/nextflow.config`), instead of edits to `conf/test*.config`; `samplesheet_update_mgnifams.csv` holds repo-relative paths and its test writes an absolute copy.
 - [#83](https://github.com/EBI-Metagenomics/mgnifams/pull/83) - HH-suite Pfam model hits (`EXPORT_MODEL_PFAMS`, `mgnifam_model_pfams.csv`) keep only hits spanning at least `--query_hmm_length_threshold` (0.8) of the Pfam template HMM, as hmmsearch hits already do ([#69](https://github.com/EBI-Metagenomics/mgnifams/issues/69)).
 - [#81](https://github.com/EBI-Metagenomics/mgnifams/pull/81) - Default-mode hmmsearch `-Z` (Pfam, FunFams) is the cumulative family count, `starting_id - 1` plus this release's families, as `annotate_not_updated` and `update_mgnifams` use the release's whole family count.
 - [#78](https://github.com/EBI-Metagenomics/mgnifams/pull/78) - `mgnifam/updatefamilies` bumped to mgnifam 4.1.0 (no change to `update_families`).
@@ -44,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Removed`
 
 - [#78](https://github.com/EBI-Metagenomics/mgnifams/pull/78) - `COUNT_SEED_MSA_SIZES` and `EXPORT_MGNIFAMS`'s `seed_sizes` input: seed size and HMM length come from mgnifam's metadata; `bin/export_mgnifams.py` reads only mgnifam's header.
+
+### `Fixed`
+
+- Default-mode family IDs no longer change between identical runs: `CHUNK_CLUSTERS` kept the MMseqs2 clustering TSV's row order, which changes from run to run, so mgnifam numbered a chunk's families (and read their members) in a different order each time. `EXTRACT_UNIQUE_CLUSTER_REPS` now writes the representatives sorted, and each chunk is sorted by representative, then member with the representative first. `mgnifam_model_pfams.csv` rows are now in family-file order too. The default nf-test now snapshots the families, MSAs, HMMs, domain and biome results.
+- `EXPORT_MODEL_PFAMS` (`mgnifam_model_pfams.csv`): a `template_hmm` with a template length of 1,000 or more was cut (`1180-1269(1271`, `4-51 (1271`) by a fixed-column read of the `.hhr` summary since pipeline 2.0.0, and the template-coverage filter of [#83](https://github.com/EBI-Metagenomics/mgnifams/pull/83) failed on it. The columns are now read as tokens; `template_hmm` is `start-end (length)` in every row.
 
 ### `Dependencies`
 

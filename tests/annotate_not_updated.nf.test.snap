@@ -4,17 +4,17 @@
             10,
             {
                 "EXPORT_FOLDS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "EXPORT_MGNIFAMS": {
                     "python": "3.10.6",
                     "pandas": "1.4.3"
                 },
                 "FILTER_EXPORT_FUNFAMS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "FILTER_EXPORT_PFAMS": {
-                    "sed": 4.7
+                    "sed": "4.7"
                 },
                 "FOLDSEEK_EASYSEARCH_PDB": {
                     "foldseek": "10.941cd33"
@@ -35,7 +35,7 @@
                     "python": "3.13.1"
                 },
                 "Workflow": {
-                    "ebi-metagenomics/mgnifams": "v3.2.0dev"
+                    "ebi-metagenomics/mgnifams": "v4.0.0"
                 }
             },
             [
@@ -81,10 +81,10 @@
                 "funfams_lib,funfam-hmm3-v4_3_0_test.lib.gz",
                 "mgnifams_release,1.1",
                 "mgnify_proteins_release,2026_07",
-                "pipeline_version,3.2.0dev"
+                "pipeline_version,4.0.0"
             ]
         ],
-        "timestamp": "2026-11-04T13:58:47.53755905",
+        "timestamp": "2026-11-20T17:30:45.435949558",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.3"

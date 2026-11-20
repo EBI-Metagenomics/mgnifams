@@ -36,8 +36,10 @@ nextflow run . -profile test_post_update_mgnifams_update_db,singularity
 ## Testing
 
 ```bash
-# End-to-end nf-test
-nf-test test tests/default.nf.test --profile +singularity,test
+# End-to-end nf-test (local database paths: see below)
+export MGNIFAMS_TEST_CONFIG=/abs/path/to/local_test.config
+nf-test test --profile +singularity                       # every test
+nf-test test tests/default.nf.test --profile +singularity
 nf-test test tests/update_mgnifams.nf.test --profile +singularity
 nf-test test tests/post_update_mgnifams_update_db.nf.test --profile +singularity
 nf-test test tests/rebuild_biomes.nf.test --profile +singularity
@@ -47,10 +49,10 @@ nf-test test modules/local/<module> --profile +singularity
 python3 bin/test_<script>.py
 ```
 
-`tests/update_mgnifams.nf.test` has a self-contained `-stub` variant. nf-test cannot load `../conf/local.config`, so for its real test (as for `tests/default.nf.test`) add the database paths to `conf/test_update_mgnifams.config` locally, without committing them.
+`tests/update_mgnifams.nf.test` has a self-contained `-stub` variant. The real tests of `default`, `update_mgnifams` and `annotate_not_updated` need local databases: `tests/nextflow.config` includes the config that `MGNIFAMS_TEST_CONFIG` points to (an absolute path, a plain `params {}` block, kept outside the repo), so no `conf/test*.config` or samplesheet is edited. Unset, the tests get none.
 The real pipeline tests run ESMFold, which needs most of a 30 GB machine on CPU.
 
-The test profile requires paths to external databases set in your local config:
+The local test config sets (plus `skip_deeptmhmm = true` where the DeepTMHMM image cannot be pulled):
 
 - `esmfold_db`, `esmfold_params_path` — ESMFold model weights
 - `pfam_path` — Pfam-A HMM database (gzipped)
