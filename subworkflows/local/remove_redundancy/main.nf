@@ -1,23 +1,20 @@
-include { FIND_CONCATENATE                     } from '../../../modules/nf-core/find/concatenate/main'
-include { FIND_CONCATENATE as CONCATENATE_REPS } from '../../../modules/nf-core/find/concatenate/main'
-include { HMMER_HMMSEARCH                      } from '../../../modules/nf-core/hmmer/hmmsearch/main'
-include { POOL_PREREDUNDANT_FAMILIES_TSV       } from '../../../modules/local/pool_preredundant_families_tsv/main'
-include { IDENTIFY_REDUNDANT_FAMS              } from '../../../modules/local/identify_redundant_fams/main'
-include { POOL_NONREDUNDANT_FAMILIES           } from '../../../modules/local/pool_nonredundant_families/main'
+include { POOL_PREREDUNDANT_FAMILIES_TSV } from '../../../modules/local/pool_preredundant_families_tsv/main'
+include { MGNIFAM_COMPUTECLANS           } from '../../../modules/nf-core/mgnifam/computeclans/main'
+include { SELECT_NONREDUNDANT_FAMILIES   } from '../../../modules/local/select_nonredundant_families/main'
+include { POOL_NONREDUNDANT_FAMILIES     } from '../../../modules/local/pool_nonredundant_families/main'
 
 workflow REMOVE_REDUNDANCY {
     take:
+    mgnifams_fa // channel: [ meta, mgnifams_input.fa ]: lengths of whole-protein members
     reps_fasta
-    outdir
     hmm
     metadata
     seed_msa_sto
     full_msa_sto
     rf
     tsv
-    redundant_length_threshold
     redundant_score_threshold
-    similarity_score_threshold
+    redundant_residue_threshold
     discarded
     successful
     converged
@@ -27,31 +24,22 @@ workflow REMOVE_REDUNDANCY {
     main:
     ch_versions = channel.empty()
 
-    // mgnifam writes gzip representatives; hmmsearch needs a plain (rewindable) FASTA for several queries
-    CONCATENATE_REPS( reps_fasta.map { _meta, files -> [ [id: 'pre_redundant'], files ] } )
-    ch_reps_fasta = CONCATENATE_REPS.out.file_out
-    ch_reps_fasta.map { _meta, fa -> fa }.collectFile(name: "pre_redundant_reps.fasta", storeDir: outdir + "/generate_families") // // Published copy only: consumers use the work-dir file, so deleting outdir keeps the -resume cache
-
-    FIND_CONCATENATE( hmm )
-
-    ch_input_for_hmmsearch = FIND_CONCATENATE.out.file_out
-        .combine(ch_reps_fasta, by: 0)
-        .map { meta, model, seqs -> [meta, model, seqs, false, false, true] }
-
-    HMMER_HMMSEARCH( ch_input_for_hmmsearch )
-
+    // Members of every chunk under their pooling key <chunk>_<id>, so two chunks' local family 1 stay apart
     POOL_PREREDUNDANT_FAMILIES_TSV( tsv )
     ch_versions = ch_versions.mix( POOL_PREREDUNDANT_FAMILIES_TSV.out.versions )
 
-    IDENTIFY_REDUNDANT_FAMS( HMMER_HMMSEARCH.out.domain_summary, metadata, \
-        POOL_PREREDUNDANT_FAMILIES_TSV.out.tsv, redundant_length_threshold, \
-        redundant_score_threshold, similarity_score_threshold )
-    ch_versions = ch_versions.mix( IDENTIFY_REDUNDANT_FAMS.out.versions )
+    // Edges at residue Jaccard >= the threshold, plus containment-only edges the selector skips
+    MGNIFAM_COMPUTECLANS(
+        POOL_PREREDUNDANT_FAMILIES_TSV.out.tsv.combine( mgnifams_fa.map { _meta, fa -> fa } )
+    )
+
+    SELECT_NONREDUNDANT_FAMILIES( MGNIFAM_COMPUTECLANS.out.clan_edges, metadata, \
+        redundant_score_threshold, redundant_residue_threshold )
 
     pooled_families = POOL_NONREDUNDANT_FAMILIES( seed_msa_sto, \
         full_msa_sto, hmm, rf, tsv, discarded, successful, \
-        converged, metadata, reps_fasta, logs, IDENTIFY_REDUNDANT_FAMS.out.txt, \
-        IDENTIFY_REDUNDANT_FAMS.out.csv, starting_id )
+        converged, metadata, reps_fasta, logs, SELECT_NONREDUNDANT_FAMILIES.out.txt, \
+        starting_id )
     ch_versions = ch_versions.mix( POOL_NONREDUNDANT_FAMILIES.out.versions )
 
     emit:
@@ -68,5 +56,4 @@ workflow REMOVE_REDUNDANCY {
     family_reps      = pooled_families.family_reps
     family_ids_fasta = pooled_families.family_ids_fasta
     id_mapping       = pooled_families.id_mapping
-    similarity_mqc   = POOL_NONREDUNDANT_FAMILIES.out.similarity_mqc
 }

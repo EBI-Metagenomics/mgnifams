@@ -77,6 +77,15 @@ workflow PIPELINE_INITIALISATION {
     if (params.mode == "run_mgnifams_pipeline" && !params.hhdb_path) {
         error("run_mgnifams_pipeline: --hhdb_path is required")
     }
+    // mgnifam compute_clans takes at most six decimal places; reject here, not after generation
+    if (params.mode == "run_mgnifams_pipeline") {
+        def too_precise = ['redundant_score_threshold', 'redundant_residue_threshold'].findAll { name ->
+            new BigDecimal(params[name].toString()).stripTrailingZeros().scale() > 6
+        }
+        if (too_precise) {
+            error("run_mgnifams_pipeline: --${too_precise.join(', --')} must have at most six decimal places")
+        }
+    }
     // Only the modes that search Pfam, FunFam and Foldseek need their databases
     if (params.mode in ["run_mgnifams_pipeline", "update_mgnifams", "annotate_not_updated"]) {
         def missing = ["pfam_path", "funfams_path", "foldseek_db_path"].findAll { name -> !params[name] }

@@ -51,8 +51,7 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
         MGNIFAMS(
             samplesheet, params.parquet_chunks, params.min_sequence_length, params.outdir, \
             params.minimum_members, params.clusters_chunk_size, \
-            params.redundant_length_threshold, params.redundant_score_threshold, \
-            params.similarity_score_threshold, params.starting_id, \
+            params.redundant_score_threshold, params.redundant_residue_threshold, params.starting_id, \
             params.pdb_chunk_size, params.esmfold_db, params.esmfold_params_path, \
             params.esmfold_3B_v1, params.esm2_t36_3B_UR50D, params.esm2_t36_3B_UR50D_contact_regression, \
             params.num_recycles_esmfold, params.pdb_chunk_size_long, \

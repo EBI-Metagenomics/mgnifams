@@ -43,7 +43,6 @@ with tempfile.TemporaryDirectory() as tmp:
             for f in (FIXTURE / chunk).glob(pattern):
                 shutil.copy(f, d / "in" / folder / f.name)
     (d / "redundant.txt").write_text("001_2\n")
-    (d / "similarity.csv").write_text("")
     main(
         [
             "-d",
@@ -52,8 +51,6 @@ with tempfile.TemporaryDirectory() as tmp:
             str(d / "out"),
             "-r",
             str(d / "redundant.txt"),
-            "-c",
-            str(d / "similarity.csv"),
             "-i",
             "5",
         ]
@@ -121,8 +118,6 @@ with tempfile.TemporaryDirectory() as tmp:
                 str(d / "out2"),
                 "-r",
                 str(d / "redundant.txt"),
-                "-c",
-                str(d / "similarity.csv"),
                 "-i",
                 "5",
             ]
