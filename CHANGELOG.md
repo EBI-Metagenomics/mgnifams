@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
+- HH-suite Pfam model hits (`EXPORT_MODEL_PFAMS`, `mgnifam_model_pfams.csv`) keep only hits spanning at least `--query_hmm_length_threshold` (0.8) of the Pfam template HMM, as hmmsearch hits already do ([#69](https://github.com/EBI-Metagenomics/mgnifams/issues/69)).
 - Default-mode hmmsearch `-Z` (Pfam, FunFams) is the cumulative family count, `starting_id - 1` plus this release's families, as `annotate_not_updated` and `update_mgnifams` use the release's whole family count.
 - `mgnifam/updatefamilies` bumped to mgnifam 4.1.0 (no change to `update_families`).
 - nf-core modules and subworkflows updated to nf-core/modules master (2026-11-20): container references only for the modules; `utils_nfschema_plugin` needs nf-schema 3.0.0 (bumped from 2.7.2) and gains `--help`; software versions in `nf_core_pipeline_software_mqc_versions.yml` stay strings (`sed: '4.7'`).

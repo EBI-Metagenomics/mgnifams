@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+from fractions import Fraction
 
 
 def load_descriptions(desc_file):
@@ -18,7 +19,14 @@ def load_descriptions(desc_file):
     return desc_map
 
 
-def parse_summary_block(hhr_file, desc_map):
+def template_coverage(template_hmm):
+    """`58-470 (471)` -> the fraction of the template the hit spans."""
+    span, length = template_hmm.split()
+    start, end = span.split("-")
+    return Fraction(int(end) - int(start) + 1, int(length.strip("()")))
+
+
+def parse_summary_block(hhr_file, desc_map, min_template_coverage=0):
     records = []
     with open(hhr_file) as f:
         in_block = False
@@ -38,6 +46,10 @@ def parse_summary_block(hhr_file, desc_map):
                 length = line[70:74].strip()
                 query_hmm = line[75:83].strip()
                 template_hmm = " ".join(line[84:99].strip().split())  # also convert double space to single
+
+                # As FILTER_EXPORT_DOMTBL for hmmsearch: drop hits covering too little of the Pfam model
+                if template_coverage(template_hmm) < min_template_coverage:
+                    continue
 
                 desc = desc_map.get(pfam_id, {"name": "", "description": ""})
 
@@ -62,10 +74,16 @@ def main():
     parser.add_argument("--hhr_file", help="Input .hhr file")
     parser.add_argument("--descriptions", help="Pfam Id-Description mapping TSV file")
     parser.add_argument("--outfile", help="Output CSV file")
+    parser.add_argument(
+        "--min_template_coverage",
+        type=Fraction,
+        default=Fraction(0),
+        help="keep a hit only if it spans at least this fraction of the template (Pfam) HMM",
+    )
     args = parser.parse_args()
 
     desc_map = load_descriptions(args.descriptions)
-    records = parse_summary_block(args.hhr_file, desc_map)
+    records = parse_summary_block(args.hhr_file, desc_map, args.min_template_coverage)
 
     with open(args.outfile, "w", encoding="utf-8") as f:
         header = ["id", "pfam", "name", "description", "prob", "e_value", "length", "query_hmm", "template_hmm"]

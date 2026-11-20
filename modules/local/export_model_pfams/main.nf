@@ -9,6 +9,7 @@ process EXPORT_MODEL_PFAMS {
 
     input:
     tuple val(meta ), path(hhr)
+    val(query_hmm_length_threshold)
 
     output:
     tuple val(meta), path("mgnifam_pfams_${prefix}.csv"), emit: csv
@@ -48,7 +49,8 @@ process EXPORT_MODEL_PFAMS {
         --id ${prefix} \\
         --hhr_file ${hhr_name} \\
         --descriptions descriptions.tsv \\
-        --outfile mgnifam_pfams_${prefix}.csv
+        --outfile mgnifam_pfams_${prefix}.csv \\
+        --min_template_coverage ${query_hmm_length_threshold}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
