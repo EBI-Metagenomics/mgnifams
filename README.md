@@ -96,12 +96,14 @@ nextflow run mgnifams -c conf/slurm.config --input mgnifams/input/samplesheet_up
 #### End-to-end nf-test
 
 ```
-nf-test test tests/default.nf.test --profile +singularity,test
+export MGNIFAMS_TEST_CONFIG=/abs/path/to/local_test.config
+nf-test test tests/default.nf.test --profile +singularity
 ```
 
-The test profile will still need to be updated with the following local variables and paths:
+`tests/nextflow.config` includes the config that `MGNIFAMS_TEST_CONFIG` points to; keep it outside the repo, with your local paths:
 
-```
+```groovy
+params {
     use_gpu             = false
     esmfold_db          = 'path/to/esmfold/'
     esmfold_params_path = 'path/to/esmfold/params/*'
@@ -114,6 +116,7 @@ The test profile will still need to be updated with the following local variable
     hhdb_path        = 'path/to/pfamA_35.0'
     // annotate_structures
     foldseek_db_path = 'path/to/foldseek'
+}
 ```
 
 ### Overview
