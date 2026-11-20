@@ -4,7 +4,7 @@
 import os
 import tempfile
 
-from export_families_tsv import read_delta, update_rows
+from export_families_tsv import COLUMNS, new_rows, read_delta, update_rows
 
 row = {
     "family_id": "",
@@ -59,4 +59,27 @@ assert fails(previous, {"1": "successful"}, metadata, "1.1", "2026_07")  # previ
 assert fails(previous, outcomes | {"3": "successful"}, metadata, "1.1", "2026_07")  # unknown family
 assert fails(previous, outcomes, {}, "1.1", "2026_07")  # successful family without metadata
 assert fails(previous, outcomes, metadata, "1.0", "2026_07")  # previous file already from this release
+# New families: one `new` row each, every release column from this release, whole protein as `-`
+new_metadata = {
+    "35460": {"full_msa_size": "31", "seed_msa_size": "22", "rep_protein": "782510898", "rep_region": "278-392"},
+    "35461": {"full_msa_size": "25", "seed_msa_size": "20", "rep_protein": "376297851", "rep_region": "-"},
+}
+new = new_rows(new_metadata, "2.0", "2026_07")
+assert [list(r) for r in new] == [COLUMNS, COLUMNS]
+assert new[0] == {
+    "family_id": "35460",
+    "status": "new",
+    "not_updated_reason": "",
+    "first_release": "2.0",
+    "model_release": "2.0",
+    "model_proteins_release": "2026_07",
+    "members_release": "2.0",
+    "members_proteins_release": "2026_07",
+    "full_size": "31",
+    "seed_size": "22",
+    "rep_id": "MGYP000782510898",
+    "rep_region": "278-392",
+}, new[0]
+assert new[1]["rep_region"] == "-" and new[1]["rep_id"] == "MGYP000376297851"
+assert list(previous[0]) == COLUMNS  # the update path keeps the same columns
 print("ok")

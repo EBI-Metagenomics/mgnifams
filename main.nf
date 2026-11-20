@@ -57,7 +57,8 @@ workflow EBIMETAGENOMICS_MGNIFAMS {
             params.num_recycles_esmfold, params.pdb_chunk_size_long, \
             params.skip_deeptmhmm, params.deeptmhmm_path, params.pfam_path, params.funfams_path, params.s4pred_chunk_size, \
             params.hh_mode, params.hhdb_path, foldseek_pdb_db, foldseek_alphafold_db, params.query_hmm_length_threshold, \
-            params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description
+            params.multiqc_config, params.multiqc_logo, params.multiqc_methods_description, \
+            params.mgnifams_release, params.mgnify_proteins_release
         )
         ch_multiqc = MGNIFAMS.out.multiqc_report
     }

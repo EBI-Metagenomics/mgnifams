@@ -14,6 +14,7 @@ include { GENERATE_NONREDUNDANT_FAMILIES } from '../subworkflows/local/generate_
 include { PREDICT_STRUCTURES             } from '../subworkflows/local/predict_structures'
 include { ANNOTATE_FAMILIES              } from '../subworkflows/local/annotate_families'
 include { EXPORT_DATA                    } from '../subworkflows/local/export_data'
+include { EXPORT_FAMILIES_TSV            } from '../modules/local/export_families_tsv/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -54,6 +55,8 @@ workflow MGNIFAMS {
     multiqc_config
     multiqc_logo
     multiqc_methods_description
+    mgnifams_release        // string: this release, MAJOR.MINOR (families.tsv.gz)
+    mgnify_proteins_release // string: MGnify Proteins release of the input, YYYY_MM
 
     main:
 
@@ -69,6 +72,14 @@ workflow MGNIFAMS {
         starting_id )
     ch_versions = ch_versions.mix( GENERATE_NONREDUNDANT_FAMILIES.out.versions )
 
+    // FTP families.tsv.gz: one `new` row per family (A17)
+    EXPORT_FAMILIES_TSV(
+        GENERATE_NONREDUNDANT_FAMILIES.out.metadata.map { meta, csv -> [ meta, [], [], csv ] },
+        mgnifams_release,
+        mgnify_proteins_release
+    )
+    ch_versions = ch_versions.mix( EXPORT_FAMILIES_TSV.out.versions )
+
     PREDICT_STRUCTURES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, \
         pdb_chunk_size, esmfold_db, esmfold_params_path, esmfold_3B_v1, \
         esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression, num_recycles_esmfold, \
@@ -78,7 +89,7 @@ workflow MGNIFAMS {
     ANNOTATE_FAMILIES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, \
         skip_deeptmhmm, deeptmhmm_path, pfam_path, funfams_path, s4pred_chunk_size, \
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
-        hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir )
+        hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir, starting_id )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
 
     EXPORT_DATA( GENERATE_NONREDUNDANT_FAMILIES.out.metadata, PREDICT_STRUCTURES.out.scores, \
