@@ -80,6 +80,9 @@ with tempfile.TemporaryDirectory() as tmp:
 
     # Members: every row of the kept families, none of 001_2
     members = [line.split("\t") for line in (out / "refined_families.tsv").read_text().splitlines()]
+    # Each family is one contiguous run of rows (SPLIT_FAMILY_MEMBERS' input rule in the default mode)
+    runs = [m[0] for i, m in enumerate(members) if i == 0 or members[i - 1][0] != m[0]]
+    assert len(runs) == len(set(runs)), runs
     n = {
         k: sum(
             1

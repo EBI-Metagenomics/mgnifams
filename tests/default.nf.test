@@ -31,8 +31,21 @@ nextflow_pipeline {
             def table_data_path         = "/table_data"
             def stable_table_data_size  = getAllFilesFromDir(params.outdir + table_data_path, ignoreFile: 'tests/.nftignore')
 
+            // Every family has a domain and a biome file; families.tsv.gz ids and -Z from starting_id
+            def families   = path("${params.outdir}/generate_families/families/family_ids.fasta").readLines().findAll { l -> l.startsWith('>') }.collect { l -> l.substring(1) }
+            def domain_ids = new File("${params.outdir}/domain_results").list().collect { n -> n.tokenize('.')[0] }.sort()
+            def biome_ids  = new File("${params.outdir}/biome_results").list().collect { n -> n.tokenize('.')[0] }.sort()
+            def info       = path("${params.outdir}/generate_families/update_info.csv").readLines()
+            def tsv_ids    = path("${params.outdir}/generate_families/families.tsv.gz").linesGzip.drop(1).collect { l -> l.tokenize('\t')[0] }
+
             assertAll(
                 { assert workflow.success},
+                { assert domain_ids == families.sort() },
+                { assert biome_ids == families.sort() },
+                { assert tsv_ids.sort() == families.sort() },
+                // conf/test.config starting_id = 1
+                { assert tsv_ids.collect { id -> id as int }.min() == 1 },
+                { assert "hmmsearch_z,${families.size()}".toString() in info },
                 { assert snapshot(
                     // Number of successful tasks
                     workflow.trace.succeeded().size(),

@@ -15,6 +15,12 @@ include { PREDICT_STRUCTURES             } from '../subworkflows/local/predict_s
 include { ANNOTATE_FAMILIES              } from '../subworkflows/local/annotate_families'
 include { EXPORT_DATA                    } from '../subworkflows/local/export_data'
 include { EXPORT_FAMILIES_TSV            } from '../modules/local/export_families_tsv/main'
+include { SPLIT_FAMILY_MEMBERS           } from '../modules/local/split_family_members/main'
+include { BUILD_PARQUET_DOMAIN_QUERIES   } from '../modules/local/build_parquet_domain_queries/main'
+include { PARSE_DOMAINS                  } from '../modules/local/parse_domains/main'
+include { BIOMES_FROM_PARQUET            } from '../subworkflows/local/biomes_from_parquet'
+include { afdbComputed                   } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
+include { batchQueryResults              } from '../subworkflows/local/utils_nfcore_mgnifams_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,6 +63,8 @@ workflow MGNIFAMS {
     multiqc_methods_description
     mgnifams_release        // string: this release, MAJOR.MINOR (families.tsv.gz)
     mgnify_proteins_release // string: MGnify Proteins release of the input, YYYY_MM
+    family_query_chunks     // integer: about this many domain / biome lookup tasks, whole families each
+    query_result_chunks     // integer: families per PARSE_DOMAINS / PARSE_BIOMES task
 
     main:
 
@@ -80,6 +88,35 @@ workflow MGNIFAMS {
     )
     ch_versions = ch_versions.mix( EXPORT_FAMILIES_TSV.out.versions )
 
+    //
+    // Members' domain architectures (Pfam parquet) and biomes (clusters parquet), as update_mgnifams
+    // (SPLIT_FAMILY_MEMBERS fails if a family is not one contiguous run of rows)
+    //
+    SPLIT_FAMILY_MEMBERS( GENERATE_NONREDUNDANT_FAMILIES.out.tsv, family_query_chunks )
+    ch_versions = ch_versions.mix( SPLIT_FAMILY_MEMBERS.out.versions )
+    ch_family_chunks = SPLIT_FAMILY_MEMBERS.out.chunks
+        .flatMap { _meta, chunks -> [chunks].flatten().collect { chunk -> [ [id: chunk.baseName], [ chunk ] ] } }
+
+    BUILD_PARQUET_DOMAIN_QUERIES(
+        ch_family_chunks.combine( ch_samplesheet.map { _meta, _fasta, _sequences, _clusters, pfam, _regions -> pfam } ),
+        file(pfam_path, checkIfExists: true)
+    )
+    ch_versions = ch_versions.mix( BUILD_PARQUET_DOMAIN_QUERIES.out.versions )
+
+    PARSE_DOMAINS(
+        BUILD_PARQUET_DOMAIN_QUERIES.out.res.flatMap { meta, files -> batchQueryResults( meta, files, query_result_chunks ) },
+        BUILD_PARQUET_DOMAIN_QUERIES.out.pfam_mapping.first(),
+        GENERATE_NONREDUNDANT_FAMILIES.out.tsv.first()
+    )
+    ch_versions = ch_versions.mix( PARSE_DOMAINS.out.versions )
+
+    BIOMES_FROM_PARQUET(
+        ch_family_chunks,
+        ch_samplesheet.map { _meta, _fasta, _sequences, clusters, _pfam, _regions -> clusters }.first(),
+        query_result_chunks
+    )
+    ch_versions = ch_versions.mix( BIOMES_FROM_PARQUET.out.versions )
+
     PREDICT_STRUCTURES( GENERATE_NONREDUNDANT_FAMILIES.out.family_ids_fasta, \
         pdb_chunk_size, esmfold_db, esmfold_params_path, esmfold_3B_v1, \
         esm2_t36_3B_UR50D, esm2_t36_3B_UR50D_contact_regression, num_recycles_esmfold, \
@@ -91,6 +128,28 @@ workflow MGNIFAMS {
         GENERATE_NONREDUNDANT_FAMILIES.out.seed_msa, GENERATE_NONREDUNDANT_FAMILIES.out.full_msa, \
         hh_mode, hhdb_path, PREDICT_STRUCTURES.out.pdb, foldseek_pdb_db, foldseek_alphafold_db, outdir, starting_id )
     ch_versions = ch_versions.mix( ANNOTATE_FAMILIES.out.versions )
+
+    //
+    // What this run computed, for the DB build (same keys as update_mgnifams' update_info.csv)
+    //
+    def tm_computed = !skip_deeptmhmm && !workflow.profile.contains("conda")
+    ANNOTATE_FAMILIES.out.z
+        .map { z ->
+            [
+                'key,value',
+                "tm_computed,${tm_computed}",
+                "biome_computed,true",
+                "afdb_computed,${afdbComputed()}",
+                "pfam_lib,${file(pfam_path).name}",
+                "funfams_lib,${file(funfams_path).name}",
+                "mgnifams_release,${mgnifams_release}",
+                "mgnify_proteins_release,${mgnify_proteins_release}",
+                "pipeline_version,${workflow.manifest.version}",
+                "hmmsearch_z,${z}",
+                "delta_type,new_families"
+            ].join('\n')
+        }
+        .collectFile( name: 'update_info.csv', storeDir: "${outdir}/generate_families", newLine: true )
 
     EXPORT_DATA( GENERATE_NONREDUNDANT_FAMILIES.out.metadata, PREDICT_STRUCTURES.out.scores, \
         ANNOTATE_FAMILIES.out.composition, ANNOTATE_FAMILIES.out.tm_composition, \
