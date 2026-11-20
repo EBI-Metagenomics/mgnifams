@@ -27,6 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `COUNT_SEED_MSA_SIZES` and `EXPORT_MGNIFAMS`'s `seed_sizes` input: seed size and HMM length come from mgnifam's metadata; `bin/export_mgnifams.py` reads only mgnifam's header.
 
+### `Dependencies`
+
+| Tool      | Previous version | New version |
+| --------- | ---------------- | ----------- |
+| mgnifam   | 4.0.0            | 4.1.0       |
+| nf-schema | 2.7.2            | 3.0.0       |
+| pyhmmer   | 0.11.1           |             |
+| pyfamsa   | 0.6.0            |             |
+| pytrimal  | 0.8.2            |             |
+
 ## v3.1.0 - [2026/11/18]
 
 ### `Added`
