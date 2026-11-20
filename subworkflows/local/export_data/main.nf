@@ -29,7 +29,7 @@ workflow EXPORT_DATA {
     FILTER_EXPORT_FUNFAMS( funfam_domains, query_hmm_length_threshold )
     ch_versions = ch_versions.mix( FILTER_EXPORT_FUNFAMS.out.versions )
 
-    EXPORT_MODEL_PFAMS( pfam_model_hits )
+    EXPORT_MODEL_PFAMS( pfam_model_hits, query_hmm_length_threshold )
     ch_versions = ch_versions.mix( EXPORT_MODEL_PFAMS.out.versions )
 
     EXPORT_MODEL_PFAMS.out.csv
