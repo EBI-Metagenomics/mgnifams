@@ -62,7 +62,7 @@
                     },
                     "mmseqs/createtsv": {
                         "branch": "master",
-                        "git_sha": "7b3452a23773f687ededb4befd037920e5a51341",
+                        "git_sha": "a97d209bbbc524ef0907b3ca55f0114f4e61dd02",
                         "installed_by": ["modules"]
                     },
                     "mmseqs/linclust": {
