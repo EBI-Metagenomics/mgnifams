@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- Runs now write the execution trace, timeline, report and DAG to `pipeline_info/` (`execution_trace_<timestamp>.txt` etc.): the nf-core template's `trace`, `timeline`, `report` and `dag` blocks were missing from `nextflow.config`, so runs recorded no per-task times. Task hashes do not change; `-resume` keeps the cache.
 - Default-mode family IDs no longer change between identical runs: `CHUNK_CLUSTERS` kept the MMseqs2 clustering TSV's row order, which changes from run to run, so mgnifam numbered a chunk's families (and read their members) in a different order each time. `EXTRACT_UNIQUE_CLUSTER_REPS` now writes the representatives sorted, and each chunk is sorted by representative, then member with the representative first. `mgnifam_model_pfams.csv` rows are now in family-file order too. The default nf-test now snapshots the families, MSAs, HMMs, domain and biome results.
 - `EXPORT_MODEL_PFAMS` (`mgnifam_model_pfams.csv`): a `template_hmm` with a template length of 1,000 or more was cut (`1180-1269(1271`, `4-51 (1271`) by a fixed-column read of the `.hhr` summary since pipeline 2.0.0, and the template-coverage filter of [#83](https://github.com/EBI-Metagenomics/mgnifams/pull/83) failed on it. The columns are now read as tokens; `template_hmm` is `start-end (length)` in every row.
 
